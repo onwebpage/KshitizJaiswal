@@ -24,6 +24,7 @@
         initShareButtons();
         initNavbarEffects();
         initFormValidations();
+        initPaymentSystem();
     }
 
     // Smooth scrolling for anchor links
@@ -459,6 +460,86 @@
             });
         }
     });
+
+    // Initialize payment system
+    function initPaymentSystem() {
+        // Make initiatePayment available globally
+        window.initiatePayment = function(amount) {
+            if (!window.razorpayKey || window.razorpayKey === 'rzp_test_dummy_key') {
+                showNotification('Payment system is not configured. Please contact the administrator.', 'error');
+                return;
+            }
+
+            // Show loading
+            showNotification('Preparing payment...', 'info');
+
+            // Create payment order
+            fetch('/create_payment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    amount: amount
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    openRazorpayCheckout(data, amount);
+                } else {
+                    showNotification(data.message || 'Failed to create payment order', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Payment error:', error);
+                showNotification('Payment initialization failed. Please try again.', 'error');
+            });
+        };
+    }
+
+    // Open Razorpay checkout
+    function openRazorpayCheckout(orderData, amount) {
+        const options = {
+            key: window.razorpayKey,
+            amount: orderData.amount,
+            currency: orderData.currency,
+            name: 'Kshitiz Jaiswal',
+            description: `Support - ₹${amount}`,
+            order_id: orderData.order_id,
+            handler: function(response) {
+                // Payment successful
+                showNotification('Payment successful! Thank you for your support!', 'success');
+                
+                // Optional: Send payment details to server for verification
+                console.log('Payment successful:', response);
+            },
+            prefill: {
+                name: '',
+                email: '',
+                contact: ''
+            },
+            notes: {
+                address: 'Support for Kshitiz Jaiswal'
+            },
+            theme: {
+                color: '#6366f1'
+            },
+            modal: {
+                ondismiss: function() {
+                    showNotification('Payment cancelled', 'info');
+                }
+            }
+        };
+
+        try {
+            const rzp = new Razorpay(options);
+            rzp.open();
+        } catch (error) {
+            console.error('Razorpay initialization error:', error);
+            showNotification('Payment system error. Please try again later.', 'error');
+        }
+    }
 
     // Console log for debugging
     console.log('Kshitiz Jaiswal Website - Main JS Loaded Successfully');
