@@ -220,20 +220,59 @@
     
     <!-- Auto-hide flash messages -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Auto-hide flash messages after 5 seconds
+        // Ensure Bootstrap is loaded before trying to use it
+        function autoHideFlashMessages() {
             const flashAlerts = document.querySelectorAll('.alert.alert-dismissible');
-            flashAlerts.forEach(function(alert) {
-                // Add a fade out animation after 5 seconds
+            console.log('Found flash alerts:', flashAlerts.length);
+            
+            flashAlerts.forEach(function(alert, index) {
+                console.log(`Processing alert ${index}:`, alert);
+                
+                // Add visual countdown indicator
+                let timeLeft = 5;
+                const countdownInterval = setInterval(function() {
+                    timeLeft--;
+                    if (timeLeft <= 0) {
+                        clearInterval(countdownInterval);
+                    }
+                }, 1000);
+                
+                // Auto-hide after 5 seconds
                 setTimeout(function() {
                     if (alert && alert.parentNode) {
-                        // Use Bootstrap's built-in close method
-                        const alertInstance = new bootstrap.Alert(alert);
-                        alertInstance.close();
+                        try {
+                            // Try Bootstrap method first
+                            if (typeof bootstrap !== 'undefined' && bootstrap.Alert) {
+                                const alertInstance = new bootstrap.Alert(alert);
+                                alertInstance.close();
+                            } else {
+                                // Fallback: manual removal with fade effect
+                                alert.style.transition = 'opacity 0.5s ease-out';
+                                alert.style.opacity = '0';
+                                setTimeout(function() {
+                                    if (alert.parentNode) {
+                                        alert.parentNode.removeChild(alert);
+                                    }
+                                }, 500);
+                            }
+                        } catch (error) {
+                            console.log('Error hiding alert, using fallback:', error);
+                            // Final fallback: just remove it
+                            if (alert.parentNode) {
+                                alert.parentNode.removeChild(alert);
+                            }
+                        }
                     }
                 }, 5000);
             });
-        });
+        }
+
+        // Try multiple times to ensure it works
+        document.addEventListener('DOMContentLoaded', autoHideFlashMessages);
+        
+        // Also try after a short delay in case of timing issues
+        setTimeout(autoHideFlashMessages, 100);
+        setTimeout(autoHideFlashMessages, 500);
     </script>
     
     {% block scripts %}{% endblock %}
