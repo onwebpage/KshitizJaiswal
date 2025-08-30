@@ -164,4 +164,18 @@
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-hide flash messages after 5 seconds
+        const flashAlerts = document.querySelectorAll('.alert.alert-dismissible');
+        flashAlerts.forEach(function(alert) {
+            setTimeout(function() {
+                if (alert && alert.parentNode) {
+                    const alertInstance = new bootstrap.Alert(alert);
+                    alertInstance.close();
+                }
+            }, 5000);
+        });
+    });
+</script>
 {% endblock %}
