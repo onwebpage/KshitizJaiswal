@@ -176,7 +176,7 @@
                                             <td>{{ reel.title }}</td>
                                             <td>
                                                 {% if reel.thumbnail %}
-                                                <img src="{{ reel.thumbnail }}" alt="Thumbnail" class="admin-thumbnail">
+                                                <img src="{{ url_for('static', filename=reel.thumbnail) if reel.thumbnail and not reel.thumbnail.startswith('http') else reel.thumbnail }}" alt="Thumbnail" class="admin-thumbnail">
                                                 {% else %}
                                                 <span class="text-muted">No thumbnail</span>
                                                 {% endif %}
