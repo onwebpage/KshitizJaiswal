@@ -210,6 +210,11 @@
 
     // Initialize disclaimer popup
     function initDisclaimerPopup() {
+        // Don't show disclaimer popup on admin pages
+        if (window.location.pathname.startsWith('/admin')) {
+            return;
+        }
+        
         // Check if already shown and accepted
         if (localStorage.getItem('disclaimerAccepted') === 'true') {
             disclaimerShown = true;
@@ -238,6 +243,11 @@
 
     // Initialize exit intent popup
     function initExitIntentPopup() {
+        // Don't show exit intent popup on admin pages
+        if (window.location.pathname.startsWith('/admin')) {
+            return;
+        }
+        
         let mouseY = 0;
         
         document.addEventListener('mousemove', function(e) {
