@@ -218,6 +218,24 @@
     <!-- Custom JS -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     
+    <!-- Auto-hide flash messages -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-hide flash messages after 5 seconds
+            const flashAlerts = document.querySelectorAll('.alert.alert-dismissible');
+            flashAlerts.forEach(function(alert) {
+                // Add a fade out animation after 5 seconds
+                setTimeout(function() {
+                    if (alert && alert.parentNode) {
+                        // Use Bootstrap's built-in close method
+                        const alertInstance = new bootstrap.Alert(alert);
+                        alertInstance.close();
+                    }
+                }, 5000);
+            });
+        });
+    </script>
+    
     {% block scripts %}{% endblock %}
 </body>
 </html>
