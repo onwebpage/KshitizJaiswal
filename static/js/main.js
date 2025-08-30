@@ -6,7 +6,6 @@
 
     // Global variables
     let disclaimerShown = false;
-    let exitIntentShown = false;
     let isExiting = false;
 
     // DOM Content Loaded
@@ -22,7 +21,6 @@
         initNewsletterForm();
         initScrollAnimations();
         initDisclaimerPopup();
-        initExitIntentPopup();
         initShareButtons();
         initNavbarEffects();
         initFormValidations();
@@ -241,41 +239,6 @@
         }
     }
 
-    // Initialize exit intent popup
-    function initExitIntentPopup() {
-        // Don't show exit intent popup on admin pages
-        if (window.location.pathname.startsWith('/admin')) {
-            return;
-        }
-        
-        let mouseY = 0;
-        
-        document.addEventListener('mousemove', function(e) {
-            mouseY = e.clientY;
-        });
-
-        document.addEventListener('mouseleave', function(e) {
-            if (mouseY < 100 && !exitIntentShown && !disclaimerShown) {
-                const exitModal = new bootstrap.Modal(document.getElementById('exitSupportModal'));
-                exitModal.show();
-                exitIntentShown = true;
-            }
-        });
-
-        // Also trigger on scroll up near top
-        let lastScrollY = window.scrollY;
-        window.addEventListener('scroll', function() {
-            if (window.scrollY < 100 && window.scrollY < lastScrollY && !exitIntentShown) {
-                // User scrolled up near top - potential exit intent
-                if (Math.random() < 0.3) { // 30% chance to avoid being annoying
-                    const exitModal = new bootstrap.Modal(document.getElementById('exitSupportModal'));
-                    exitModal.show();
-                    exitIntentShown = true;
-                }
-            }
-            lastScrollY = window.scrollY;
-        });
-    }
 
     // Initialize share buttons
     function initShareButtons() {
@@ -405,76 +368,6 @@
         field.parentNode.appendChild(feedback);
     }
 
-    // Razorpay payment initialization
-    window.initiatePayment = function(amount) {
-        const loadingBtn = event.target;
-        const originalText = loadingBtn.innerHTML;
-        
-        loadingBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-        loadingBtn.disabled = true;
-
-        // Create payment order (exception for specialized payment processing)
-        fetch('/create_payment', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ amount: amount })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                const options = {
-                    key: window.razorpayKey,
-                    amount: data.amount,
-                    currency: data.currency,
-                    order_id: data.order_id,
-                    name: 'Kshitiz Jaiswal',
-                    description: `Weekly Support - ₹${amount}`,
-                    image: '/static/images/logo.png', // Add logo if available
-                    handler: function(response) {
-                        showNotification('Payment successful! Thank you for your support.', 'success');
-                        
-                        // Close modal
-                        const modal = bootstrap.Modal.getInstance(document.getElementById('exitSupportModal'));
-                        if (modal) modal.hide();
-                        
-                        // Redirect to thank you page or reload
-                        setTimeout(() => {
-                            window.location.reload();
-                        }, 2000);
-                    },
-                    prefill: {
-                        name: '',
-                        email: '',
-                        contact: ''
-                    },
-                    theme: {
-                        color: '#6366f1'
-                    },
-                    modal: {
-                        ondismiss: function() {
-                            loadingBtn.innerHTML = originalText;
-                            loadingBtn.disabled = false;
-                        }
-                    }
-                };
-
-                const razorpay = new Razorpay(options);
-                razorpay.open();
-            } else {
-                showNotification(data.message || 'Payment initialization failed', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showNotification('Network error. Please try again.', 'error');
-        })
-        .finally(() => {
-            loadingBtn.innerHTML = originalText;
-            loadingBtn.disabled = false;
-        });
-    };
 
     // Show notification
     function showNotification(message, type = 'info') {
