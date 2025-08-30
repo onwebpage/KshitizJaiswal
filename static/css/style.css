@@ -1309,11 +1309,12 @@ h1, h2, h3, h4, h5, h6 {
   min-height: 100vh;
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
   position: relative;
+  display: flex;
 }
 
 .admin-section::before {
   content: '';
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
   right: 0;
@@ -1330,13 +1331,13 @@ h1, h2, h3, h4, h5, h6 {
   padding: 2rem;
   border-right: 1px solid var(--gray-200);
   box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
-  position: fixed;
-  top: 76px;
-  left: 0;
-  width: 300px;
-  z-index: 100;
+  width: 280px;
+  z-index: 10;
   border-radius: 0 20px 20px 0;
   overflow-y: auto;
+  flex-shrink: 0;
+  position: sticky;
+  top: 76px;
 }
 
 .admin-header {
@@ -1405,10 +1406,11 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .admin-content {
+  flex: 1;
   padding: 2rem;
   position: relative;
   z-index: 5;
-  margin-left: 300px;
+  min-width: 0;
 }
 
 .admin-tab {
@@ -1832,17 +1834,18 @@ h1, h2, h3, h4, h5, h6 {
     grid-template-columns: 1fr;
   }
   
+  .admin-section {
+    flex-direction: column;
+  }
+  
   .admin-sidebar {
     position: relative;
     height: auto;
     width: 100%;
     border-right: none;
     border-bottom: 1px solid var(--gray-200);
-    margin-left: 0;
-  }
-  
-  .admin-content {
-    margin-left: 0;
+    border-radius: 0;
+    top: auto;
   }
   
   .admin-nav {
