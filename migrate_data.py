@@ -26,11 +26,15 @@ def migrate_json_to_database():
             print(f"  - Reels: {existing_reels}")
             print(f"  - Opinions: {existing_opinions}")  
             print(f"  - Subscribers: {existing_subscribers}")
+            print("Clearing existing data and migrating from JSON files...")
             
-            response = input("Do you want to continue and potentially add duplicate data? (y/N): ")
-            if response.lower() != 'y':
-                print("Migration cancelled.")
-                return
+            # Clear existing data
+            Reel.query.delete()
+            Opinion.query.delete()
+            Subscriber.query.delete()
+            SiteContent.query.delete()
+            db.session.commit()
+            print("Existing data cleared.")
         
         # Migrate content.json
         if os.path.exists('data/content.json'):
