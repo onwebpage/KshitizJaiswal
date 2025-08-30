@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, TextAreaField, IntegerField, SelectField, PasswordField, FileField
+from wtforms import StringField, TextAreaField, IntegerField, SelectField, PasswordField, FileField, SubmitField
 from wtforms.validators import DataRequired, Email, NumberRange, Length
 from flask_wtf.file import FileAllowed
 
@@ -56,3 +56,20 @@ class SubscriptionTierForm(FlaskForm):
     benefit4 = StringField('Benefit 4', validators=[Length(max=100)])
     is_popular = SelectField('Mark as Popular?', choices=[('0', 'No'), ('1', 'Yes')], default='0')
     sort_order = IntegerField('Sort Order', validators=[NumberRange(min=0)], default=0)
+    submit = SubmitField('Save Tier')
+
+class ResourceForm(FlaskForm):
+    title = StringField('Resource Title', validators=[DataRequired(), Length(max=200)])
+    description = TextAreaField('Description', validators=[DataRequired(), Length(max=500)])
+    price = StringField('Price', validators=[Length(max=50)], default='Free')
+    link = StringField('Link/URL', validators=[DataRequired(), Length(max=500)])
+    image = StringField('Image URL', validators=[Length(max=500)])
+    submit = SubmitField('Save Resource')
+
+class ShowForm(FlaskForm):
+    title = StringField('Show Title', validators=[DataRequired(), Length(max=200)])
+    description = TextAreaField('Description', validators=[DataRequired(), Length(max=500)])
+    image = StringField('Image URL', validators=[Length(max=500)])
+    coming_soon = SelectField('Status', choices=[('1', 'Coming Soon'), ('0', 'Available Now')], default='1')
+    notify_link = StringField('Notification/Registration Link', validators=[Length(max=500)])
+    submit = SubmitField('Save Show')

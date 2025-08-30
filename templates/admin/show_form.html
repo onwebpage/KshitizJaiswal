@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Admin{% endblock %}
+
+{% block content %}
+<div class="admin-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="admin-card">
+                    <div class="admin-header">
+                        <h2>{{ title }}</h2>
+                        <a href="{{ url_for('admin_shows') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Back to Shows
+                        </a>
+                    </div>
+                    
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row g-4">
+                            <div class="col-12">
+                                <label for="{{ form.title.id }}" class="form-label">
+                                    <i class="fas fa-heading me-1"></i>{{ form.title.label.text }}
+                                </label>
+                                {{ form.title(class="form-control", placeholder="Enter show title") }}
+                                {% if form.title.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.title.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-12">
+                                <label for="{{ form.description.id }}" class="form-label">
+                                    <i class="fas fa-align-left me-1"></i>{{ form.description.label.text }}
+                                </label>
+                                {{ form.description(class="form-control", rows="4", placeholder="Describe what this show is about...") }}
+                                {% if form.description.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.description.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="{{ form.coming_soon.id }}" class="form-label">
+                                    <i class="fas fa-clock me-1"></i>{{ form.coming_soon.label.text }}
+                                </label>
+                                {{ form.coming_soon(class="form-control") }}
+                                {% if form.coming_soon.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.coming_soon.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <small class="form-text text-muted">Is this show available now or coming soon?</small>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="{{ form.notify_link.id }}" class="form-label">
+                                    <i class="fas fa-bell me-1"></i>{{ form.notify_link.label.text }}
+                                </label>
+                                {{ form.notify_link(class="form-control", placeholder="https://example.com/notify") }}
+                                {% if form.notify_link.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.notify_link.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <small class="form-text text-muted">Optional: Link for users to get notified or register</small>
+                            </div>
+                            
+                            <div class="col-12">
+                                <label for="{{ form.image.id }}" class="form-label">
+                                    <i class="fas fa-image me-1"></i>{{ form.image.label.text }}
+                                </label>
+                                {{ form.image(class="form-control", placeholder="https://example.com/image.jpg") }}
+                                {% if form.image.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.image.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <small class="form-text text-muted">Optional: URL to a preview image for this show</small>
+                            </div>
+                            
+                            {% if show %}
+                            <div class="col-12">
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Current Preview:</strong> Users will see this show in the Upcoming Shows section.
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-1"></i>{{ form.submit.label.text }}
+                                </button>
+                                <a href="{{ url_for('admin_shows') }}" class="btn btn-outline-secondary ms-2">Cancel</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Auto-hide flash messages after 5 seconds
+        const flashAlerts = document.querySelectorAll('.alert.alert-dismissible');
+        flashAlerts.forEach(function(alert) {
+            setTimeout(function() {
+                if (alert && alert.parentNode) {
+                    const alertInstance = new bootstrap.Alert(alert);
+                    alertInstance.close();
+                }
+            }, 5000);
+        });
+    });
+</script>
+{% endblock %}

@@ -648,6 +648,262 @@ def admin_toggle_subscription_tier(tier_id):
     flash(f'Subscription tier "{tier.name}" {status} successfully!', 'success')
     return redirect(url_for('admin_subscription_tiers'))
 
+@app.route('/admin/resources')
+def admin_resources():
+    """Manage Learning Resources"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    from database import SiteContent
+    import json
+    
+    resources_content = SiteContent.query.filter_by(content_key='resources').first()
+    resources = json.loads(resources_content.content_data) if resources_content else []
+    
+    return render_template('admin/resources.html', resources=resources)
+
+@app.route('/admin/resource/add', methods=['GET', 'POST'])
+def admin_add_resource():
+    """Add new learning resource"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    from forms import ResourceForm
+    from database import SiteContent
+    import json
+    
+    form = ResourceForm()
+    
+    if form.validate_on_submit():
+        # Get current resources
+        resources_content = SiteContent.query.filter_by(content_key='resources').first()
+        resources = json.loads(resources_content.content_data) if resources_content else []
+        
+        # Add new resource
+        new_resource = {
+            'title': form.title.data,
+            'description': form.description.data,
+            'price': form.price.data,
+            'link': form.link.data,
+            'image': form.image.data or 'https://pixabay.com/get/g1607648249e3d2cc886480cc481c2224cb52f7fd6b06e51d63e7c2ee7d304d71973191ec7388dc286501651899d7fd130bc378c50e5ab80727d452f099c3f672_1280.jpg'
+        }
+        resources.append(new_resource)
+        
+        # Save to database
+        if resources_content:
+            resources_content.content_data = json.dumps(resources)
+        else:
+            resources_content = SiteContent(content_key='resources', content_data=json.dumps(resources))
+            db.session.add(resources_content)
+        
+        db.session.commit()
+        flash('Learning resource added successfully!', 'success')
+        return redirect(url_for('admin_resources'))
+    
+    return render_template('admin/resource_form.html', form=form, title='Add Learning Resource')
+
+@app.route('/admin/resource/edit/<int:resource_index>', methods=['GET', 'POST'])
+def admin_edit_resource(resource_index):
+    """Edit learning resource"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    from forms import ResourceForm
+    from database import SiteContent
+    import json
+    
+    # Get current resources
+    resources_content = SiteContent.query.filter_by(content_key='resources').first()
+    resources = json.loads(resources_content.content_data) if resources_content else []
+    
+    if resource_index >= len(resources):
+        flash('Resource not found!', 'error')
+        return redirect(url_for('admin_resources'))
+    
+    resource = resources[resource_index]
+    form = ResourceForm()
+    
+    if form.validate_on_submit():
+        # Update resource
+        resources[resource_index] = {
+            'title': form.title.data,
+            'description': form.description.data,
+            'price': form.price.data,
+            'link': form.link.data,
+            'image': form.image.data or resource.get('image', '')
+        }
+        
+        # Save to database
+        resources_content.content_data = json.dumps(resources)
+        db.session.commit()
+        
+        flash('Learning resource updated successfully!', 'success')
+        return redirect(url_for('admin_resources'))
+    
+    # Populate form with current data
+    form.title.data = resource.get('title', '')
+    form.description.data = resource.get('description', '')
+    form.price.data = resource.get('price', '')
+    form.link.data = resource.get('link', '')
+    form.image.data = resource.get('image', '')
+    
+    return render_template('admin/resource_form.html', form=form, title='Edit Learning Resource', resource=resource)
+
+@app.route('/admin/resource/delete/<int:resource_index>')
+def admin_delete_resource(resource_index):
+    """Delete learning resource"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    from database import SiteContent
+    import json
+    
+    # Get current resources
+    resources_content = SiteContent.query.filter_by(content_key='resources').first()
+    resources = json.loads(resources_content.content_data) if resources_content else []
+    
+    if resource_index < len(resources):
+        resource_title = resources[resource_index].get('title', 'Resource')
+        del resources[resource_index]
+        
+        # Save to database
+        resources_content.content_data = json.dumps(resources)
+        db.session.commit()
+        
+        flash(f'Learning resource "{resource_title}" deleted successfully!', 'success')
+    else:
+        flash('Resource not found!', 'error')
+    
+    return redirect(url_for('admin_resources'))
+
+@app.route('/admin/shows')
+def admin_shows():
+    """Manage Upcoming Shows"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    from database import SiteContent
+    import json
+    
+    shows_content = SiteContent.query.filter_by(content_key='upcoming_shows').first()
+    shows = json.loads(shows_content.content_data) if shows_content else []
+    
+    return render_template('admin/shows.html', shows=shows)
+
+@app.route('/admin/show/add', methods=['GET', 'POST'])
+def admin_add_show():
+    """Add new upcoming show"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    from forms import ShowForm
+    from database import SiteContent
+    import json
+    
+    form = ShowForm()
+    
+    if form.validate_on_submit():
+        # Get current shows
+        shows_content = SiteContent.query.filter_by(content_key='upcoming_shows').first()
+        shows = json.loads(shows_content.content_data) if shows_content else []
+        
+        # Add new show
+        new_show = {
+            'title': form.title.data,
+            'description': form.description.data,
+            'image': form.image.data or 'https://pixabay.com/get/g51d3a9b60f5b304d6d9a2109588df26fa955fdad29b549ed6f2d44cdb714ef5b54d4b04df2f46da1bd05dede83422e909ae5403a8c87771e7130a78714c2e5df_1280.jpg',
+            'coming_soon': bool(int(form.coming_soon.data)),
+            'notify_link': form.notify_link.data
+        }
+        shows.append(new_show)
+        
+        # Save to database
+        if shows_content:
+            shows_content.content_data = json.dumps(shows)
+        else:
+            shows_content = SiteContent(content_key='upcoming_shows', content_data=json.dumps(shows))
+            db.session.add(shows_content)
+        
+        db.session.commit()
+        flash('Upcoming show added successfully!', 'success')
+        return redirect(url_for('admin_shows'))
+    
+    return render_template('admin/show_form.html', form=form, title='Add Upcoming Show')
+
+@app.route('/admin/show/edit/<int:show_index>', methods=['GET', 'POST'])
+def admin_edit_show(show_index):
+    """Edit upcoming show"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    from forms import ShowForm
+    from database import SiteContent
+    import json
+    
+    # Get current shows
+    shows_content = SiteContent.query.filter_by(content_key='upcoming_shows').first()
+    shows = json.loads(shows_content.content_data) if shows_content else []
+    
+    if show_index >= len(shows):
+        flash('Show not found!', 'error')
+        return redirect(url_for('admin_shows'))
+    
+    show = shows[show_index]
+    form = ShowForm()
+    
+    if form.validate_on_submit():
+        # Update show
+        shows[show_index] = {
+            'title': form.title.data,
+            'description': form.description.data,
+            'image': form.image.data or show.get('image', ''),
+            'coming_soon': bool(int(form.coming_soon.data)),
+            'notify_link': form.notify_link.data
+        }
+        
+        # Save to database
+        shows_content.content_data = json.dumps(shows)
+        db.session.commit()
+        
+        flash('Upcoming show updated successfully!', 'success')
+        return redirect(url_for('admin_shows'))
+    
+    # Populate form with current data
+    form.title.data = show.get('title', '')
+    form.description.data = show.get('description', '')
+    form.image.data = show.get('image', '')
+    form.coming_soon.data = '1' if show.get('coming_soon', True) else '0'
+    form.notify_link.data = show.get('notify_link', '')
+    
+    return render_template('admin/show_form.html', form=form, title='Edit Upcoming Show', show=show)
+
+@app.route('/admin/show/delete/<int:show_index>')
+def admin_delete_show(show_index):
+    """Delete upcoming show"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    from database import SiteContent
+    import json
+    
+    # Get current shows
+    shows_content = SiteContent.query.filter_by(content_key='upcoming_shows').first()
+    shows = json.loads(shows_content.content_data) if shows_content else []
+    
+    if show_index < len(shows):
+        show_title = shows[show_index].get('title', 'Show')
+        del shows[show_index]
+        
+        # Save to database
+        shows_content.content_data = json.dumps(shows)
+        db.session.commit()
+        
+        flash(f'Upcoming show "{show_title}" deleted successfully!', 'success')
+    else:
+        flash('Show not found!', 'error')
+    
+    return redirect(url_for('admin_shows'))
+
 @app.errorhandler(404)
 def not_found_error(error):
     return render_template('404.html'), 404
