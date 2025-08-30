@@ -500,10 +500,25 @@
         const opinionCards = document.querySelectorAll('#opinions .admin-card');
         
         opinionCards.forEach(card => {
-            // Show poll results by default (no toggle button needed)
+            // Add expand/collapse for poll results
             const pollResults = card.querySelector('.poll-results');
             if (pollResults) {
-                pollResults.style.display = 'block';
+                const toggleBtn = document.createElement('button');
+                toggleBtn.className = 'btn btn-sm btn-outline-info mt-2';
+                toggleBtn.innerHTML = '<i class="fas fa-chart-bar me-1"></i>View Results';
+                
+                toggleBtn.addEventListener('click', function() {
+                    if (pollResults.style.display === 'none') {
+                        pollResults.style.display = 'block';
+                        this.innerHTML = '<i class="fas fa-eye-slash me-1"></i>Hide Results';
+                    } else {
+                        pollResults.style.display = 'none';
+                        this.innerHTML = '<i class="fas fa-chart-bar me-1"></i>View Results';
+                    }
+                });
+                
+                card.appendChild(toggleBtn);
+                pollResults.style.display = 'none';
             }
         });
     }
