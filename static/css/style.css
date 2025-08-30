@@ -489,7 +489,14 @@ h1, h2, h3, h4, h5, h6 {
 
 .newsletter-section .section-title,
 .newsletter-section .section-subtitle {
-  color: var(--white);
+  color: var(--white) !important;
+}
+
+.newsletter-section .section-title {
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  -webkit-text-fill-color: var(--white) !important;
+  background-clip: unset !important;
 }
 
 .newsletter-form .form-control {
