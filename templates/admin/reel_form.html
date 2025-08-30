@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Admin Panel - Kshitiz Jaiswal{% endblock %}
+
+{% block content %}
+<div class="admin-section">
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-md-10">
+                <div class="admin-card">
+                    <div class="admin-header">
+                        <h2>{{ title }}</h2>
+                        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                        </a>
+                    </div>
+                    
+                    <form method="POST" enctype="multipart/form-data">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row g-4">
+                            <div class="col-12">
+                                <label class="form-label">{{ form.title.label.text }}</label>
+                                {{ form.title(class="form-control", placeholder="Enter reel title") }}
+                                {% if form.title.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.title.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.thumbnail.label.text }}</label>
+                                {{ form.thumbnail(class="form-control") }}
+                                {% if form.thumbnail.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.thumbnail.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <small class="form-text text-muted">Supported formats: JPG, JPEG, PNG, GIF</small>
+                                {% if reel and reel.thumbnail %}
+                                    <div class="mt-2">
+                                        <small class="text-muted">Current thumbnail:</small><br>
+                                        <img src="{{ reel.thumbnail }}" alt="Current thumbnail" class="admin-thumbnail">
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">{{ form.video_url.label.text }}</label>
+                                {{ form.video_url(class="form-control", placeholder="https://youtube.com/watch?v=...") }}
+                                {% if form.video_url.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.video_url.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <small class="form-text text-muted">Optional: Link to the actual video</small>
+                            </div>
+                            
+                            <div class="col-12">
+                                <label class="form-label">{{ form.behind_thought.label.text }}</label>
+                                {{ form.behind_thought(class="form-control", rows="6", placeholder="Explain the thought process behind this reel...") }}
+                                {% if form.behind_thought.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.behind_thought.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-12">
+                                <label class="form-label">{{ form.sources.label.text }}</label>
+                                {{ form.sources(class="form-control", rows="4", placeholder="Enter sources (one per line):
+https://source1.com
+https://source2.com") }}
+                                {% if form.sources.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.sources.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <small class="form-text text-muted">Add one source per line</small>
+                            </div>
+                            
+                            <div class="col-12">
+                                <label class="form-label">{{ form.extra_context.label.text }}</label>
+                                {{ form.extra_context(class="form-control", rows="4", placeholder="Any additional context or information...") }}
+                                {% if form.extra_context.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.extra_context.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-12">
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-1"></i>Save Reel
+                                    </button>
+                                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">
+                                        <i class="fas fa-times me-1"></i>Cancel
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+{% endblock %}
