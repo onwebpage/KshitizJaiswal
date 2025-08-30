@@ -1,7 +1,7 @@
 from flask import render_template, request, jsonify, redirect, url_for, flash, session
 from app import app
 from models import DataManager, AdminUser
-from forms import NewsletterForm, PollVoteForm, AdminLoginForm, ReelForm, OpinionForm, HeroContentForm, PaymentSettingsForm
+from forms import NewsletterForm, PollVoteForm, AdminLoginForm, ReelForm, OpinionForm, HeroContentForm, PaymentSettingsForm, SubscriptionTierForm
 from utils import save_uploaded_file, calculate_poll_percentages, get_youtube_embed_url
 import razorpay
 import os
@@ -24,6 +24,10 @@ def index():
         opinion['percentages'] = calculate_poll_percentages(opinion['votes'])
         opinion['total_votes'] = sum(opinion['votes'])
     
+    # Get subscription tiers from database
+    AdminUser.create_default_tiers()  # Create default tiers if none exist
+    subscription_tiers = AdminUser.get_subscription_tiers()
+    
     # Get Razorpay settings from database
     from database import SiteContent
     import json
@@ -37,6 +41,7 @@ def index():
                          content=content, 
                          newsletter_form=newsletter_form,
                          poll_form=poll_form,
+                         subscription_tiers=subscription_tiers,
                          razorpay_key=razorpay_key)
 
 @app.route('/reel/<int:reel_id>')
@@ -503,6 +508,145 @@ def admin_payment_settings():
         # Don't pre-populate secret for security
     
     return render_template('admin/payment_form.html', form=form, title='Payment Settings')
+
+@app.route('/admin/subscription-tiers')
+def admin_subscription_tiers():
+    """Manage subscription tiers"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    from database import SubscriptionTier
+    # Create default tiers if none exist
+    AdminUser.create_default_tiers()
+    
+    tiers = SubscriptionTier.query.order_by(SubscriptionTier.sort_order, SubscriptionTier.price).all()
+    return render_template('admin/subscription_tiers.html', tiers=tiers)
+
+@app.route('/admin/subscription-tier/add', methods=['GET', 'POST'])
+def admin_add_subscription_tier():
+    """Add new subscription tier"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    form = SubscriptionTierForm()
+    
+    if form.validate_on_submit():
+        from database import SubscriptionTier, db
+        import json
+        
+        # Collect benefits
+        benefits = []
+        if form.benefit1.data: benefits.append(form.benefit1.data)
+        if form.benefit2.data: benefits.append(form.benefit2.data)
+        if form.benefit3.data: benefits.append(form.benefit3.data)
+        if form.benefit4.data: benefits.append(form.benefit4.data)
+        
+        # Clear other popular tiers if this one is marked as popular
+        if form.is_popular.data == '1':
+            SubscriptionTier.query.update({'is_popular': False})
+        
+        new_tier = SubscriptionTier(
+            name=form.name.data,
+            price=form.price.data,
+            period=form.period.data,
+            description=form.description.data,
+            icon=form.icon.data or 'fas fa-heart',
+            benefits=json.dumps(benefits),
+            is_popular=(form.is_popular.data == '1'),
+            sort_order=form.sort_order.data
+        )
+        
+        db.session.add(new_tier)
+        db.session.commit()
+        
+        flash('Subscription tier added successfully!', 'success')
+        return redirect(url_for('admin_subscription_tiers'))
+    
+    return render_template('admin/subscription_tier_form.html', form=form, title='Add Subscription Tier')
+
+@app.route('/admin/subscription-tier/<int:tier_id>/edit', methods=['GET', 'POST'])
+def admin_edit_subscription_tier(tier_id):
+    """Edit subscription tier"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    from database import SubscriptionTier, db
+    import json
+    
+    tier = SubscriptionTier.query.get_or_404(tier_id)
+    form = SubscriptionTierForm(obj=tier)
+    
+    if form.validate_on_submit():
+        # Collect benefits
+        benefits = []
+        if form.benefit1.data: benefits.append(form.benefit1.data)
+        if form.benefit2.data: benefits.append(form.benefit2.data)
+        if form.benefit3.data: benefits.append(form.benefit3.data)
+        if form.benefit4.data: benefits.append(form.benefit4.data)
+        
+        # Clear other popular tiers if this one is marked as popular
+        if form.is_popular.data == '1' and not tier.is_popular:
+            SubscriptionTier.query.filter(SubscriptionTier.id != tier_id).update({'is_popular': False})
+        
+        # Update tier
+        tier.name = form.name.data
+        tier.price = form.price.data
+        tier.period = form.period.data
+        tier.description = form.description.data
+        tier.icon = form.icon.data or 'fas fa-heart'
+        tier.benefits = json.dumps(benefits)
+        tier.is_popular = (form.is_popular.data == '1')
+        tier.sort_order = form.sort_order.data
+        
+        db.session.commit()
+        
+        flash('Subscription tier updated successfully!', 'success')
+        return redirect(url_for('admin_subscription_tiers'))
+    
+    # Pre-populate form
+    if request.method == 'GET':
+        benefits = json.loads(tier.benefits) if tier.benefits else []
+        form.benefit1.data = benefits[0] if len(benefits) > 0 else ''
+        form.benefit2.data = benefits[1] if len(benefits) > 1 else ''
+        form.benefit3.data = benefits[2] if len(benefits) > 2 else ''
+        form.benefit4.data = benefits[3] if len(benefits) > 3 else ''
+        form.is_popular.data = '1' if tier.is_popular else '0'
+    
+    return render_template('admin/subscription_tier_form.html', form=form, title='Edit Subscription Tier', tier=tier)
+
+@app.route('/admin/subscription-tier/<int:tier_id>/delete', methods=['POST'])
+def admin_delete_subscription_tier(tier_id):
+    """Delete subscription tier"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    from database import SubscriptionTier, db
+    
+    tier = SubscriptionTier.query.get_or_404(tier_id)
+    tier_name = tier.name
+    
+    db.session.delete(tier)
+    db.session.commit()
+    
+    flash(f'Subscription tier "{tier_name}" deleted successfully!', 'success')
+    return redirect(url_for('admin_subscription_tiers'))
+
+@app.route('/admin/subscription-tier/<int:tier_id>/toggle', methods=['POST'])
+def admin_toggle_subscription_tier(tier_id):
+    """Toggle subscription tier active status"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    from database import SubscriptionTier, db
+    
+    tier = SubscriptionTier.query.get_or_404(tier_id)
+    tier.is_active = not tier.is_active
+    
+    db.session.commit()
+    
+    status = "activated" if tier.is_active else "deactivated"
+    flash(f'Subscription tier "{tier.name}" {status} successfully!', 'success')
+    return redirect(url_for('admin_subscription_tiers'))
 
 @app.errorhandler(404)
 def not_found_error(error):

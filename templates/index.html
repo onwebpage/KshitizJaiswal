@@ -235,74 +235,40 @@
             <div class="col-lg-10">
                 <div class="support-tiers-container">
                     <div class="row g-4 justify-content-center">
+                        {% for tier in subscription_tiers %}
                         <div class="col-lg-4 col-md-6">
-                            <div class="support-tier-card">
-                                <div class="tier-icon">
-                                    <i class="fas fa-coffee"></i>
-                                </div>
-                                <h4 class="tier-title">Chai Buddy</h4>
-                                <div class="tier-price-container">
-                                    <span class="tier-currency">₹</span>
-                                    <span class="tier-amount">10</span>
-                                    <span class="tier-period">/week</span>
-                                </div>
-                                <p class="tier-description">Support with a weekly chai and keep the conversations flowing</p>
-                                <ul class="tier-benefits">
-                                    <li><i class="fas fa-check"></i> Weekly newsletter access</li>
-                                    <li><i class="fas fa-check"></i> Community member status</li>
-                                </ul>
-                                <button class="btn tier-btn btn-outline-primary" onclick="initiatePayment(10)">
-                                    Choose Plan
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div class="col-lg-4 col-md-6">
-                            <div class="support-tier-card popular-tier">
+                            <div class="support-tier-card {% if tier.is_popular %}popular-tier{% endif %}">
+                                {% if tier.is_popular %}
                                 <div class="popular-badge">Most Popular</div>
+                                {% endif %}
                                 <div class="tier-icon">
-                                    <i class="fas fa-heart"></i>
+                                    <i class="{{ tier.icon }}"></i>
                                 </div>
-                                <h4 class="tier-title">True Friend</h4>
+                                <h4 class="tier-title">{{ tier.name }}</h4>
                                 <div class="tier-price-container">
                                     <span class="tier-currency">₹</span>
-                                    <span class="tier-amount">20</span>
-                                    <span class="tier-period">/week</span>
+                                    <span class="tier-amount">{{ tier.price }}</span>
+                                    <span class="tier-period">/{{ tier.period }}</span>
                                 </div>
-                                <p class="tier-description">Show genuine support and be part of the inner circle</p>
+                                <p class="tier-description">{{ tier.description }}</p>
                                 <ul class="tier-benefits">
-                                    <li><i class="fas fa-check"></i> Everything in Chai Buddy</li>
-                                    <li><i class="fas fa-check"></i> Early access to content</li>
-                                    <li><i class="fas fa-check"></i> Behind-the-scenes updates</li>
+                                    {% for benefit in tier.benefits %}
+                                    <li><i class="fas fa-check"></i> {{ benefit }}</li>
+                                    {% endfor %}
                                 </ul>
-                                <button class="btn tier-btn btn-primary" onclick="initiatePayment(20)">
+                                <button class="btn tier-btn {% if tier.is_popular %}btn-primary{% else %}btn-outline-primary{% endif %}" onclick="initiatePayment({{ tier.price }})">
                                     Choose Plan
                                 </button>
                             </div>
                         </div>
+                        {% endfor %}
                         
-                        <div class="col-lg-4 col-md-6">
-                            <div class="support-tier-card">
-                                <div class="tier-icon">
-                                    <i class="fas fa-star"></i>
-                                </div>
-                                <h4 class="tier-title">Super Supporter</h4>
-                                <div class="tier-price-container">
-                                    <span class="tier-currency">₹</span>
-                                    <span class="tier-amount">50</span>
-                                    <span class="tier-period">/week</span>
-                                </div>
-                                <p class="tier-description">Maximum support for the cause of unfiltered truth</p>
-                                <ul class="tier-benefits">
-                                    <li><i class="fas fa-check"></i> Everything in True Friend</li>
-                                    <li><i class="fas fa-check"></i> Monthly video calls</li>
-                                    <li><i class="fas fa-check"></i> Special mention in content</li>
-                                </ul>
-                                <button class="btn tier-btn btn-outline-primary" onclick="initiatePayment(50)">
-                                    Choose Plan
-                                </button>
-                            </div>
+                        {% if not subscription_tiers %}
+                        <!-- Fallback content if no tiers are available -->
+                        <div class="col-12 text-center">
+                            <p class="text-muted">Subscription tiers are being updated. Please check back soon!</p>
                         </div>
+                        {% endif %}
                     </div>
                 </div>
                 

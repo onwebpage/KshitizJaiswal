@@ -71,3 +71,30 @@ class SiteContent(db.Model):
     content_key = db.Column(db.String(50), unique=True, nullable=False)
     content_data = db.Column(db.Text)  # JSON string
     updated_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class SubscriptionTier(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    price = db.Column(db.Integer, nullable=False)  # Price in rupees
+    period = db.Column(db.String(20), default='week')  # week, month, year
+    description = db.Column(db.Text)
+    icon = db.Column(db.String(50), default='fas fa-heart')  # Font Awesome icon class
+    benefits = db.Column(db.Text)  # JSON string of benefits array
+    is_popular = db.Column(db.Boolean, default=False)
+    is_active = db.Column(db.Boolean, default=True)
+    sort_order = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'price': self.price,
+            'period': self.period,
+            'description': self.description or '',
+            'icon': self.icon or 'fas fa-heart',
+            'benefits': json.loads(self.benefits) if self.benefits else [],
+            'is_popular': self.is_popular,
+            'is_active': self.is_active,
+            'sort_order': self.sort_order
+        }

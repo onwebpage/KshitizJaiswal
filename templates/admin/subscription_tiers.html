@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Subscription Tiers - Admin{% endblock %}
+
+{% block content %}
+<div class="admin-section">
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-lg-3 col-md-4">
+                <div class="admin-sidebar">
+                    <div class="admin-header">
+                        <h4><i class="fas fa-cog me-2"></i>Admin Panel</h4>
+                        <a href="{{ url_for('admin_logout') }}" class="btn btn-sm btn-outline-danger">
+                            <i class="fas fa-sign-out-alt me-1"></i>Logout
+                        </a>
+                    </div>
+                    
+                    <div class="admin-nav">
+                        <a href="{{ url_for('admin_dashboard') }}" class="admin-nav-item">
+                            <i class="fas fa-home me-2"></i>Dashboard
+                        </a>
+                        <a href="#" class="admin-nav-item" onclick="history.back()">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                        </a>
+                        <a href="{{ url_for('admin_subscription_tiers') }}" class="admin-nav-item active">
+                            <i class="fas fa-crown me-2"></i>Subscription Tiers
+                        </a>
+                        <a href="{{ url_for('admin_payment_settings') }}" class="admin-nav-item">
+                            <i class="fas fa-credit-card me-2"></i>Payment Settings
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="col-lg-9 col-md-8">
+                <div class="admin-content">
+                    <div class="admin-header">
+                        <h2><i class="fas fa-crown me-2"></i>Manage Subscription Tiers</h2>
+                        <a href="{{ url_for('admin_add_subscription_tier') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-1"></i>Add New Tier
+                        </a>
+                    </div>
+                    
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    
+                    <div class="admin-card">
+                        {% if tiers %}
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Order</th>
+                                        <th>Name</th>
+                                        <th>Price</th>
+                                        <th>Period</th>
+                                        <th>Icon</th>
+                                        <th>Popular</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for tier in tiers %}
+                                    <tr>
+                                        <td>
+                                            <span class="badge bg-secondary">{{ tier.sort_order }}</span>
+                                        </td>
+                                        <td>
+                                            <strong>{{ tier.name }}</strong>
+                                            <br>
+                                            <small class="text-muted">{{ tier.description }}</small>
+                                        </td>
+                                        <td>
+                                            <span class="fw-bold text-success">₹{{ tier.price }}</span>
+                                        </td>
+                                        <td>{{ tier.period }}</td>
+                                        <td>
+                                            <i class="{{ tier.icon }}" style="font-size: 1.5em; color: #dc3545;"></i>
+                                        </td>
+                                        <td>
+                                            {% if tier.is_popular %}
+                                                <span class="badge bg-warning text-dark">Popular</span>
+                                            {% else %}
+                                                <span class="badge bg-light text-dark">No</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if tier.is_active %}
+                                                <span class="badge bg-success">Active</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Inactive</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <a href="{{ url_for('admin_edit_subscription_tier', tier_id=tier.id) }}" 
+                                                   class="btn btn-sm btn-outline-primary" title="Edit">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                
+                                                <form method="POST" action="{{ url_for('admin_toggle_subscription_tier', tier_id=tier.id) }}" 
+                                                      style="display: inline-block;">
+                                                    <button type="submit" 
+                                                            class="btn btn-sm btn-outline-{{ 'warning' if tier.is_active else 'success' }}" 
+                                                            title="{{ 'Deactivate' if tier.is_active else 'Activate' }}">
+                                                        <i class="fas fa-{{ 'pause' if tier.is_active else 'play' }}"></i>
+                                                    </button>
+                                                </form>
+                                                
+                                                <form method="POST" action="{{ url_for('admin_delete_subscription_tier', tier_id=tier.id) }}" 
+                                                      style="display: inline-block;" 
+                                                      onsubmit="return confirm('Are you sure you want to delete this subscription tier?')">
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-crown fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No subscription tiers found</h5>
+                            <p class="text-muted">Create your first subscription tier to get started.</p>
+                            <a href="{{ url_for('admin_add_subscription_tier') }}" class="btn btn-primary">
+                                <i class="fas fa-plus me-1"></i>Add First Tier
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    {% if tiers %}
+                    <div class="admin-card mt-4">
+                        <h5><i class="fas fa-info-circle me-2"></i>Tier Management Tips</h5>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check text-success me-2"></i>Use sort order to control the display sequence on the website</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Only one tier can be marked as "Popular" at a time</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Inactive tiers won't be displayed on the frontend</li>
+                            <li><i class="fas fa-check text-success me-2"></i>Use Font Awesome classes for icons (e.g., fas fa-coffee, fas fa-heart)</li>
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+{% endblock %}

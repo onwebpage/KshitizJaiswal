@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Admin{% endblock %}
+
+{% block content %}
+<div class="admin-section">
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-lg-3 col-md-4">
+                <div class="admin-sidebar">
+                    <div class="admin-header">
+                        <h4><i class="fas fa-cog me-2"></i>Admin Panel</h4>
+                        <a href="{{ url_for('admin_logout') }}" class="btn btn-sm btn-outline-danger">
+                            <i class="fas fa-sign-out-alt me-1"></i>Logout
+                        </a>
+                    </div>
+                    
+                    <div class="admin-nav">
+                        <a href="{{ url_for('admin_dashboard') }}" class="admin-nav-item">
+                            <i class="fas fa-home me-2"></i>Dashboard
+                        </a>
+                        <a href="{{ url_for('admin_subscription_tiers') }}" class="admin-nav-item">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Tiers
+                        </a>
+                        <a href="{{ url_for('admin_subscription_tiers') }}" class="admin-nav-item">
+                            <i class="fas fa-crown me-2"></i>Subscription Tiers
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="col-lg-9 col-md-8">
+                <div class="admin-content">
+                    <div class="admin-header">
+                        <h2><i class="fas fa-crown me-2"></i>{{ title }}</h2>
+                    </div>
+                    
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show">
+                                    {{ message }}
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    
+                    <div class="admin-card">
+                        <form method="POST" enctype="multipart/form-data">
+                            {{ form.hidden_tag() }}
+                            
+                            <div class="row g-4">
+                                <!-- Basic Information -->
+                                <div class="col-12">
+                                    <h5 class="border-bottom pb-2 mb-3">Basic Information</h5>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    {{ form.name.label(class="form-label") }}
+                                    {{ form.name(class="form-control") }}
+                                    {% if form.name.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.name.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="col-md-3">
+                                    {{ form.price.label(class="form-label") }}
+                                    {{ form.price(class="form-control") }}
+                                    {% if form.price.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.price.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="col-md-3">
+                                    {{ form.period.label(class="form-label") }}
+                                    {{ form.period(class="form-control") }}
+                                    {% if form.period.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.period.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="col-12">
+                                    {{ form.description.label(class="form-label") }}
+                                    {{ form.description(class="form-control", rows="3") }}
+                                    {% if form.description.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.description.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Appearance Settings -->
+                                <div class="col-12 mt-5">
+                                    <h5 class="border-bottom pb-2 mb-3">Appearance Settings</h5>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    {{ form.icon.label(class="form-label") }}
+                                    {{ form.icon(class="form-control") }}
+                                    <small class="form-text text-muted">Use Font Awesome classes like: fas fa-coffee, fas fa-heart, fas fa-star</small>
+                                    {% if form.icon.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.icon.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="col-md-3">
+                                    {{ form.is_popular.label(class="form-label") }}
+                                    {{ form.is_popular(class="form-select") }}
+                                    <small class="form-text text-muted">Only one tier can be popular</small>
+                                    {% if form.is_popular.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.is_popular.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="col-md-3">
+                                    {{ form.sort_order.label(class="form-label") }}
+                                    {{ form.sort_order(class="form-control") }}
+                                    <small class="form-text text-muted">Display order (0 = first)</small>
+                                    {% if form.sort_order.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.sort_order.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Benefits -->
+                                <div class="col-12 mt-5">
+                                    <h5 class="border-bottom pb-2 mb-3">Benefits (Features)</h5>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    {{ form.benefit1.label(class="form-label") }}
+                                    {{ form.benefit1(class="form-control") }}
+                                    {% if form.benefit1.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.benefit1.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    {{ form.benefit2.label(class="form-label") }}
+                                    {{ form.benefit2(class="form-control") }}
+                                    {% if form.benefit2.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.benefit2.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    {{ form.benefit3.label(class="form-label") }}
+                                    {{ form.benefit3(class="form-control") }}
+                                    {% if form.benefit3.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.benefit3.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    {{ form.benefit4.label(class="form-label") }}
+                                    {{ form.benefit4(class="form-control") }}
+                                    {% if form.benefit4.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.benefit4.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Submit Button -->
+                                <div class="col-12 mt-5">
+                                    <hr>
+                                    <button type="submit" class="btn btn-primary btn-lg me-3">
+                                        <i class="fas fa-save me-2"></i>{{ 'Update Tier' if tier else 'Create Tier' }}
+                                    </button>
+                                    <a href="{{ url_for('admin_subscription_tiers') }}" class="btn btn-secondary btn-lg">
+                                        <i class="fas fa-times me-2"></i>Cancel
+                                    </a>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Preview Card -->
+                    <div class="admin-card mt-4">
+                        <h5><i class="fas fa-eye me-2"></i>Preview</h5>
+                        <div class="subscription-tier-preview">
+                            <div class="support-tier-card" style="max-width: 350px;">
+                                <div class="tier-icon">
+                                    <i class="fas fa-heart" id="preview-icon"></i>
+                                </div>
+                                <h4 class="tier-title" id="preview-name">Tier Name</h4>
+                                <div class="tier-price-container">
+                                    <span class="tier-currency">₹</span>
+                                    <span class="tier-amount" id="preview-price">0</span>
+                                    <span class="tier-period">/<span id="preview-period">week</span></span>
+                                </div>
+                                <p class="tier-description" id="preview-description">Tier description</p>
+                                <ul class="tier-benefits" id="preview-benefits">
+                                    <li><i class="fas fa-check"></i> Benefit 1</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Live preview functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const nameField = document.getElementById('name');
+    const priceField = document.getElementById('price');
+    const periodField = document.getElementById('period');
+    const descriptionField = document.getElementById('description');
+    const iconField = document.getElementById('icon');
+    const benefit1Field = document.getElementById('benefit1');
+    const benefit2Field = document.getElementById('benefit2');
+    const benefit3Field = document.getElementById('benefit3');
+    const benefit4Field = document.getElementById('benefit4');
+    
+    function updatePreview() {
+        // Update name
+        document.getElementById('preview-name').textContent = nameField.value || 'Tier Name';
+        
+        // Update price
+        document.getElementById('preview-price').textContent = priceField.value || '0';
+        
+        // Update period
+        document.getElementById('preview-period').textContent = periodField.value || 'week';
+        
+        // Update description
+        document.getElementById('preview-description').textContent = descriptionField.value || 'Tier description';
+        
+        // Update icon
+        const iconElement = document.getElementById('preview-icon');
+        iconElement.className = iconField.value || 'fas fa-heart';
+        
+        // Update benefits
+        const benefitsList = document.getElementById('preview-benefits');
+        const benefits = [benefit1Field.value, benefit2Field.value, benefit3Field.value, benefit4Field.value].filter(b => b.trim());
+        
+        benefitsList.innerHTML = '';
+        benefits.forEach(benefit => {
+            const li = document.createElement('li');
+            li.innerHTML = '<i class="fas fa-check"></i> ' + benefit;
+            benefitsList.appendChild(li);
+        });
+        
+        if (benefits.length === 0) {
+            benefitsList.innerHTML = '<li><i class="fas fa-check"></i> No benefits specified</li>';
+        }
+    }
+    
+    // Add event listeners
+    [nameField, priceField, periodField, descriptionField, iconField, benefit1Field, benefit2Field, benefit3Field, benefit4Field].forEach(field => {
+        if (field) {
+            field.addEventListener('input', updatePreview);
+            field.addEventListener('change', updatePreview);
+        }
+    });
+    
+    // Initial preview update
+    updatePreview();
+});
+</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+{% endblock %}

@@ -2,7 +2,7 @@ import json
 import os
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
-from database import db, Reel, Opinion, Subscriber, SiteContent
+from database import db, Reel, Opinion, Subscriber, SiteContent, SubscriptionTier
 
 class DataManager:
     """Simple JSON-based data management"""
@@ -175,3 +175,51 @@ class AdminUser:
         admin_password = os.environ.get('ADMIN_PASSWORD', 'kshitiz2025')
         
         return username == admin_username and password == admin_password
+    
+    @staticmethod
+    def get_subscription_tiers():
+        """Get all active subscription tiers"""
+        return [tier.to_dict() for tier in SubscriptionTier.query.filter_by(is_active=True).order_by(SubscriptionTier.sort_order, SubscriptionTier.price).all()]
+    
+    @staticmethod
+    def create_default_tiers():
+        """Create default subscription tiers if none exist"""
+        if SubscriptionTier.query.count() == 0:
+            # Create default tiers based on current hardcoded values
+            tier1 = SubscriptionTier(
+                name="Chai Buddy",
+                price=10,
+                period="week",
+                description="Support with a weekly chai and keep the conversations flowing",
+                icon="fas fa-coffee",
+                benefits=json.dumps(["Weekly newsletter access", "Community member status"]),
+                is_popular=False,
+                sort_order=1
+            )
+            
+            tier2 = SubscriptionTier(
+                name="True Friend",
+                price=20,
+                period="week",
+                description="Show genuine support and be part of the inner circle",
+                icon="fas fa-heart",
+                benefits=json.dumps(["Everything in Chai Buddy", "Early access to content", "Behind-the-scenes updates"]),
+                is_popular=True,
+                sort_order=2
+            )
+            
+            tier3 = SubscriptionTier(
+                name="Super Supporter",
+                price=50,
+                period="week",
+                description="Maximum support for the cause of unfiltered truth",
+                icon="fas fa-star",
+                benefits=json.dumps(["Everything in True Friend", "Monthly video calls", "Special mention in content"]),
+                is_popular=False,
+                sort_order=3
+            )
+            
+            db.session.add_all([tier1, tier2, tier3])
+            db.session.commit()
+            return True
+        return False

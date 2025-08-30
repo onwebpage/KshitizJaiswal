@@ -43,3 +43,16 @@ class HeroContentForm(FlaskForm):
 class PaymentSettingsForm(FlaskForm):
     razorpay_key_id = StringField('Razorpay Key ID', validators=[DataRequired(), Length(max=100)])
     razorpay_key_secret = StringField('Razorpay Key Secret', validators=[DataRequired(), Length(max=100)])
+
+class SubscriptionTierForm(FlaskForm):
+    name = StringField('Tier Name', validators=[DataRequired(), Length(max=100)])
+    price = IntegerField('Price (₹)', validators=[DataRequired(), NumberRange(min=1)])
+    period = SelectField('Period', choices=[('week', 'Week'), ('month', 'Month'), ('year', 'Year')], default='week')
+    description = TextAreaField('Description', validators=[DataRequired(), Length(max=500)])
+    icon = StringField('Icon Class (Font Awesome)', validators=[Length(max=50)], default='fas fa-heart')
+    benefit1 = StringField('Benefit 1', validators=[DataRequired(), Length(max=100)])
+    benefit2 = StringField('Benefit 2', validators=[Length(max=100)])
+    benefit3 = StringField('Benefit 3', validators=[Length(max=100)])
+    benefit4 = StringField('Benefit 4', validators=[Length(max=100)])
+    is_popular = SelectField('Mark as Popular?', choices=[('0', 'No'), ('1', 'Yes')], default='0')
+    sort_order = IntegerField('Sort Order', validators=[NumberRange(min=0)], default=0)
