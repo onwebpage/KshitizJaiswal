@@ -505,15 +505,15 @@
             if (pollResults) {
                 const toggleBtn = document.createElement('button');
                 toggleBtn.className = 'btn btn-sm btn-outline-info mt-2';
-                toggleBtn.innerHTML = '<i class="fas fa-chart-bar me-1"></i>View Results';
+                toggleBtn.innerHTML = '<i class="fas fa-eye me-1"></i>Show Preview';
                 
                 toggleBtn.addEventListener('click', function() {
                     if (pollResults.style.display === 'none') {
                         pollResults.style.display = 'block';
-                        this.innerHTML = '<i class="fas fa-eye-slash me-1"></i>Hide Results';
+                        this.innerHTML = '<i class="fas fa-eye-slash me-1"></i>Hide Preview';
                     } else {
                         pollResults.style.display = 'none';
-                        this.innerHTML = '<i class="fas fa-chart-bar me-1"></i>View Results';
+                        this.innerHTML = '<i class="fas fa-eye me-1"></i>Show Preview';
                     }
                 });
                 
