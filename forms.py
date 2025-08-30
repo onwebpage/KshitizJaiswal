@@ -33,3 +33,13 @@ class OpinionForm(FlaskForm):
     poll_option1 = StringField('Poll Option 1', validators=[DataRequired()])
     poll_option2 = StringField('Poll Option 2', validators=[DataRequired()])
     poll_option3 = StringField('Poll Option 3')
+
+class HeroContentForm(FlaskForm):
+    name = StringField('Hero Title', validators=[DataRequired(), Length(max=100)])
+    tagline = TextAreaField('Hero Tagline', validators=[DataRequired(), Length(max=500)])
+    banner_image = FileField('Hero Background Image', validators=[FileAllowed(['jpg', 'jpeg', 'png', 'gif'])])
+    banner_url = StringField('Or Banner URL', validators=[Length(max=500)])
+
+class PaymentSettingsForm(FlaskForm):
+    razorpay_key_id = StringField('Razorpay Key ID', validators=[DataRequired(), Length(max=100)])
+    razorpay_key_secret = StringField('Razorpay Key Secret', validators=[DataRequired(), Length(max=100)])

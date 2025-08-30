@@ -1,7 +1,7 @@
 from flask import render_template, request, jsonify, redirect, url_for, flash, session
 from app import app
 from models import DataManager, AdminUser
-from forms import NewsletterForm, PollVoteForm, AdminLoginForm, ReelForm, OpinionForm
+from forms import NewsletterForm, PollVoteForm, AdminLoginForm, ReelForm, OpinionForm, HeroContentForm, PaymentSettingsForm
 from utils import save_uploaded_file, calculate_poll_percentages, get_youtube_embed_url
 import razorpay
 import os
@@ -24,11 +24,20 @@ def index():
         opinion['percentages'] = calculate_poll_percentages(opinion['votes'])
         opinion['total_votes'] = sum(opinion['votes'])
     
+    # Get Razorpay settings from database
+    from database import SiteContent
+    import json
+    payment_content = SiteContent.query.filter_by(content_key='payment_settings').first()
+    razorpay_key = 'rzp_test_dummy_key'
+    if payment_content:
+        payment_settings = json.loads(payment_content.content_data)
+        razorpay_key = payment_settings.get('razorpay_key_id', 'rzp_test_dummy_key')
+    
     return render_template('index.html', 
                          content=content, 
                          newsletter_form=newsletter_form,
                          poll_form=poll_form,
-                         razorpay_key=os.environ.get('RAZORPAY_KEY_ID', 'rzp_test_dummy_key'))
+                         razorpay_key=razorpay_key)
 
 @app.route('/reel/<int:reel_id>')
 def reel_detail(reel_id):
@@ -101,6 +110,24 @@ def vote_poll():
 def create_payment():
     """Create Razorpay payment order"""
     try:
+        # Get Razorpay settings from database
+        from database import SiteContent
+        import json
+        payment_content = SiteContent.query.filter_by(content_key='payment_settings').first()
+        
+        if payment_content:
+            payment_settings = json.loads(payment_content.content_data)
+            razorpay_key_id = payment_settings.get('razorpay_key_id')
+            razorpay_key_secret = payment_settings.get('razorpay_key_secret')
+            
+            if razorpay_key_id and razorpay_key_secret:
+                # Create dynamic Razorpay client with database settings
+                dynamic_client = razorpay.Client(auth=(razorpay_key_id, razorpay_key_secret))
+            else:
+                dynamic_client = razorpay_client  # Fallback to default
+        else:
+            dynamic_client = razorpay_client  # Fallback to default
+        
         amount = int(request.json.get('amount', 10)) * 100  # Convert to paise
         
         order_data = {
@@ -110,7 +137,7 @@ def create_payment():
             'payment_capture': 1
         }
         
-        order = razorpay_client.order.create(data=order_data)
+        order = dynamic_client.order.create(data=order_data)
         return jsonify({
             'status': 'success',
             'order_id': order['id'],
@@ -380,6 +407,102 @@ def admin_opinion_results(opinion_id):
         })
     
     return render_template('admin/poll_results.html', opinion=opinion, results=results, total_votes=total_votes)
+
+@app.route('/admin/hero-content', methods=['GET', 'POST'])
+def admin_hero_content():
+    """Manage hero section content"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    from database import SiteContent, db
+    import json
+    
+    form = HeroContentForm()
+    
+    # Get current hero content
+    hero_content = SiteContent.query.filter_by(content_key='hero').first()
+    current_hero = json.loads(hero_content.content_data) if hero_content else {
+        "name": "Kshitiz Jaiswal",
+        "tagline": "Unfiltered Commentator. The content here is selective, but the truth is never biased.",
+        "banner_url": "https://pixabay.com/get/g533a6aa47eba4823795ce2e25fdfdbeab9c4946d039afcc8be299199aea4607bcead5e63e650f3598d32b8af6f69fa29cd392bcfe2db7bc9db577a352240b008_1280.jpg"
+    }
+    
+    if form.validate_on_submit():
+        # Handle banner image upload
+        banner_url = current_hero.get('banner_url', '')
+        if form.banner_image.data:
+            uploaded_path = save_uploaded_file(form.banner_image.data, 'hero')
+            if uploaded_path:
+                banner_url = uploaded_path
+        elif form.banner_url.data:
+            banner_url = form.banner_url.data
+        
+        # Update hero content
+        updated_hero = {
+            "name": form.name.data,
+            "tagline": form.tagline.data,
+            "banner_url": banner_url
+        }
+        
+        if hero_content:
+            hero_content.content_data = json.dumps(updated_hero)
+        else:
+            hero_content = SiteContent(content_key='hero', content_data=json.dumps(updated_hero))
+            db.session.add(hero_content)
+        
+        db.session.commit()
+        flash('Hero content updated successfully!', 'success')
+        return redirect(url_for('admin_dashboard'))
+    
+    # Pre-populate form with current data
+    if request.method == 'GET':
+        form.name.data = current_hero.get('name', '')
+        form.tagline.data = current_hero.get('tagline', '')
+        form.banner_url.data = current_hero.get('banner_url', '')
+    
+    return render_template('admin/hero_form.html', form=form, title='Hero Content', current_hero=current_hero)
+
+@app.route('/admin/payment-settings', methods=['GET', 'POST'])
+def admin_payment_settings():
+    """Manage Razorpay payment settings"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    from database import SiteContent, db
+    import json
+    
+    form = PaymentSettingsForm()
+    
+    # Get current payment settings
+    payment_content = SiteContent.query.filter_by(content_key='payment_settings').first()
+    current_settings = json.loads(payment_content.content_data) if payment_content else {
+        "razorpay_key_id": "",
+        "razorpay_key_secret": ""
+    }
+    
+    if form.validate_on_submit():
+        # Update payment settings
+        updated_settings = {
+            "razorpay_key_id": form.razorpay_key_id.data,
+            "razorpay_key_secret": form.razorpay_key_secret.data
+        }
+        
+        if payment_content:
+            payment_content.content_data = json.dumps(updated_settings)
+        else:
+            payment_content = SiteContent(content_key='payment_settings', content_data=json.dumps(updated_settings))
+            db.session.add(payment_content)
+        
+        db.session.commit()
+        flash('Payment settings updated successfully!', 'success')
+        return redirect(url_for('admin_dashboard'))
+    
+    # Pre-populate form with current data (hide secret for security)
+    if request.method == 'GET':
+        form.razorpay_key_id.data = current_settings.get('razorpay_key_id', '')
+        # Don't pre-populate secret for security
+    
+    return render_template('admin/payment_form.html', form=form, title='Payment Settings')
 
 @app.errorhandler(404)
 def not_found_error(error):
