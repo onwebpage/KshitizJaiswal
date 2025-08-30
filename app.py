@@ -11,6 +11,14 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "kshitiz-jaiswal-website-2025")
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
+# Configure database
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
+app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+    "pool_recycle": 300,
+    "pool_pre_ping": True,
+}
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
 # Configure upload folder
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
@@ -19,7 +27,15 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs('data', exist_ok=True)
 
-# Import routes after app creation
+# Import and initialize database
+from database import db
+db.init_app(app)
+
+with app.app_context():
+    # Create all database tables
+    db.create_all()
+
+# Import routes after app and db creation
 from routes import *
 
 if __name__ == '__main__':
