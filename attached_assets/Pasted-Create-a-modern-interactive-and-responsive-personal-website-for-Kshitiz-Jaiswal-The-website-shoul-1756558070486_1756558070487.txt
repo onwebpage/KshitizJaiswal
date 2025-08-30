@@ -1,0 +1,67 @@
+Create a modern, interactive, and responsive personal website for Kshitiz Jaiswal. The website should be optimized for all devices (desktop, tablet, mobile) with smooth animations, auto-scroll sections, and a clean UI/UX. Use the theme colors extracted from the uploaded banner/photo.
+
+Website Structure
+
+🔹 1. Hero Section (Top Banner)
+
+Background: uploaded photo/banner
+
+Name in bold: Kshitiz Jaiswal
+
+Tagline under name: “Unfiltered Commentator. The content here is selective, but the truth is never biased.”
+
+🔹 2. Beyond The Reel
+
+Tagline: “Reel to sirf ek hissa tha, kahani bahut badi hai.”
+
+Auto-scrolling carousel of Top 10 Reel thumbnails (left → right).
+
+On clicking a reel → open dedicated “Beyond the Reel” page with:
+
+Full playable video
+
+Section: “Behind the Thought, Sources, Extra Context”
+
+🔹 3. Learning & Resources (Courses + Affiliates)
+
+Tagline: “Socho, seekho aur sahi resources collect karte jao.”
+
+Section to showcase future courses, learning material, and affiliate links.
+
+🔹 4. Kshitiz Ki Rai (Opinion + Polls)
+
+Tagline: “Kshitiz ki Rai, Tumhara Faisla.”
+
+Each issue shows my stand/position.
+
+Add interactive polls for visitors to vote.
+
+🔹 5. Upcoming Shows
+
+Tagline: “Jo aane wala hai, sabse pehle yahin milega.”
+
+List of upcoming YouTube shows / Insta reels with a “Coming Soon” design.
+
+🔹 6. Weekly Newsletter
+
+Tagline: “Har hafte ka maal, seedha tumhare paas.”
+
+Subscribe form with fields: Name, Email, Place, Age.
+
+Store submissions in backend database for insights.
+
+🔹 7. Support Section (Auto-Pay)
+
+Tagline: “Friends of Kshitiz — Support Now (Weekly Basis).”
+
+Integrate Razorpay auto-pay (₹10 / ₹20 / ₹50 weekly tiers).
+
+Add exit popup: “Liked it? Become a Friend of Kshitiz — Support Weekly Now.”
+
+🔹 8. Footer + Disclaimer Popup
+
+Footer links: Privacy Policy | Terms | Contact
+
+Disclaimer auto-popup after 7 seconds with Accept button:
+
+“⚠ Disclaimer: This website and its content are for informational and entertainment purposes only. The views and opinions expressed here are personal and, at times, satirical. They are not intended to offend, defame, mislead, or target any group, religion, or individual. The content is selective by nature, but the truth is never biased. By browsing this site, you accept this disclaimer.”
