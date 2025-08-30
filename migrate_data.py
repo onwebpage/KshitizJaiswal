@@ -6,8 +6,8 @@ Run this once to migrate existing data
 
 import json
 import os
-from app import app
-from database import db, Reel, Opinion, Subscriber, SiteContent
+from app import app, db
+from models import Reel, Opinion, Subscriber, SiteContent
 from datetime import datetime
 
 def migrate_json_to_database():

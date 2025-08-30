@@ -1,10 +1,11 @@
 from flask import render_template, request, jsonify, redirect, url_for, flash, session
-from app import app
-from models import DataManager, AdminUser
+from app import app, db
+from models import DataManager, AdminUser, SiteContent, Reel, Opinion, Subscriber, SubscriptionTier
 from forms import NewsletterForm, PollVoteForm, AdminLoginForm, ReelForm, OpinionForm, HeroContentForm, PaymentSettingsForm, SubscriptionTierForm
 from utils import save_uploaded_file, calculate_poll_percentages, get_youtube_embed_url
 import razorpay
 import os
+import json
 
 # Initialize Razorpay client
 razorpay_client = razorpay.Client(auth=(
@@ -29,7 +30,7 @@ def index():
     subscription_tiers = AdminUser.get_subscription_tiers()
     
     # Get Razorpay settings from database
-    from database import SiteContent
+    # already imported - SiteContent
     import json
     payment_content = SiteContent.query.filter_by(content_key='payment_settings').first()
     razorpay_key = 'rzp_test_dummy_key'
@@ -116,7 +117,7 @@ def create_payment():
     """Create Razorpay payment order"""
     try:
         # Get Razorpay settings from database
-        from database import SiteContent
+        # already imported - SiteContent
         import json
         payment_content = SiteContent.query.filter_by(content_key='payment_settings').first()
         
@@ -159,7 +160,7 @@ def admin_dashboard():
     if 'admin_logged_in' not in session:
         return redirect(url_for('admin_login'))
     
-    from database import Subscriber
+    # already imported - Subscriber
     content = DataManager.get_content()
     subscribers = [s.to_dict() for s in Subscriber.query.all()]
     
@@ -198,7 +199,7 @@ def admin_add_reel():
     form = ReelForm()
     
     if form.validate_on_submit():
-        from database import Reel, db
+        # already imported - Reel, db
         import json
         
         # Handle thumbnail upload
@@ -235,7 +236,7 @@ def admin_add_opinion():
     form = OpinionForm()
     
     if form.validate_on_submit():
-        from database import Opinion, db
+        # already imported - Opinion, db
         import json
         
         poll_options = [form.poll_option1.data, form.poll_option2.data]
@@ -266,7 +267,7 @@ def admin_edit_reel(reel_id):
     if 'admin_logged_in' not in session:
         return redirect(url_for('admin_login'))
     
-    from database import Reel, db
+    # already imported - Reel, db
     import json
     
     reel = Reel.query.get_or_404(reel_id)
@@ -307,7 +308,7 @@ def admin_delete_reel(reel_id):
     if 'admin_logged_in' not in session:
         return redirect(url_for('admin_login'))
     
-    from database import Reel, db
+    # already imported - Reel, db
     
     reel = Reel.query.get_or_404(reel_id)
     db.session.delete(reel)
@@ -322,7 +323,7 @@ def admin_edit_opinion(opinion_id):
     if 'admin_logged_in' not in session:
         return redirect(url_for('admin_login'))
     
-    from database import Opinion, db
+    # already imported - Opinion, db
     import json
     
     opinion = Opinion.query.get_or_404(opinion_id)
@@ -378,7 +379,7 @@ def admin_delete_opinion(opinion_id):
     if 'admin_logged_in' not in session:
         return redirect(url_for('admin_login'))
     
-    from database import Opinion, db
+    # already imported - Opinion, db
     
     opinion = Opinion.query.get_or_404(opinion_id)
     db.session.delete(opinion)
@@ -393,7 +394,7 @@ def admin_opinion_results(opinion_id):
     if 'admin_logged_in' not in session:
         return redirect(url_for('admin_login'))
     
-    from database import Opinion
+    # already imported - Opinion
     import json
     
     opinion = Opinion.query.get_or_404(opinion_id)
@@ -419,7 +420,7 @@ def admin_hero_content():
     if 'admin_logged_in' not in session:
         return redirect(url_for('admin_login'))
     
-    from database import SiteContent, db
+    # already imported - SiteContent, db
     import json
     
     form = HeroContentForm()
@@ -473,7 +474,7 @@ def admin_payment_settings():
     if 'admin_logged_in' not in session:
         return redirect(url_for('admin_login'))
     
-    from database import SiteContent, db
+    # already imported - SiteContent, db
     import json
     
     form = PaymentSettingsForm()
@@ -515,7 +516,7 @@ def admin_subscription_tiers():
     if 'admin_logged_in' not in session:
         return redirect(url_for('admin_login'))
     
-    from database import SubscriptionTier
+    # already imported - SubscriptionTier
     # Create default tiers if none exist
     AdminUser.create_default_tiers()
     
@@ -531,7 +532,7 @@ def admin_add_subscription_tier():
     form = SubscriptionTierForm()
     
     if form.validate_on_submit():
-        from database import SubscriptionTier, db
+        # already imported - SubscriptionTier, db
         import json
         
         # Collect benefits
@@ -570,7 +571,7 @@ def admin_edit_subscription_tier(tier_id):
     if 'admin_logged_in' not in session:
         return redirect(url_for('admin_login'))
     
-    from database import SubscriptionTier, db
+    # already imported - SubscriptionTier, db
     import json
     
     tier = SubscriptionTier.query.get_or_404(tier_id)
@@ -620,7 +621,7 @@ def admin_delete_subscription_tier(tier_id):
     if 'admin_logged_in' not in session:
         return redirect(url_for('admin_login'))
     
-    from database import SubscriptionTier, db
+    # already imported - SubscriptionTier, db
     
     tier = SubscriptionTier.query.get_or_404(tier_id)
     tier_name = tier.name
@@ -637,7 +638,7 @@ def admin_toggle_subscription_tier(tier_id):
     if 'admin_logged_in' not in session:
         return redirect(url_for('admin_login'))
     
-    from database import SubscriptionTier, db
+    # already imported - SubscriptionTier, db
     
     tier = SubscriptionTier.query.get_or_404(tier_id)
     tier.is_active = not tier.is_active
@@ -654,7 +655,7 @@ def admin_resources():
     if 'admin_logged_in' not in session:
         return redirect(url_for('admin_login'))
     
-    from database import SiteContent
+    # already imported - SiteContent
     import json
     
     resources_content = SiteContent.query.filter_by(content_key='resources').first()
@@ -669,7 +670,7 @@ def admin_add_resource():
         return redirect(url_for('admin_login'))
     
     from forms import ResourceForm
-    from database import SiteContent
+    # already imported - SiteContent
     import json
     
     form = ResourceForm()
@@ -709,7 +710,7 @@ def admin_edit_resource(resource_index):
         return redirect(url_for('admin_login'))
     
     from forms import ResourceForm
-    from database import SiteContent
+    # already imported - SiteContent
     import json
     
     # Get current resources
@@ -755,7 +756,7 @@ def admin_delete_resource(resource_index):
     if 'admin_logged_in' not in session:
         return redirect(url_for('admin_login'))
     
-    from database import SiteContent
+    # already imported - SiteContent
     import json
     
     # Get current resources
@@ -782,7 +783,7 @@ def admin_shows():
     if 'admin_logged_in' not in session:
         return redirect(url_for('admin_login'))
     
-    from database import SiteContent
+    # already imported - SiteContent
     import json
     
     shows_content = SiteContent.query.filter_by(content_key='upcoming_shows').first()
@@ -797,7 +798,7 @@ def admin_add_show():
         return redirect(url_for('admin_login'))
     
     from forms import ShowForm
-    from database import SiteContent
+    # already imported - SiteContent
     import json
     
     form = ShowForm()
@@ -837,7 +838,7 @@ def admin_edit_show(show_index):
         return redirect(url_for('admin_login'))
     
     from forms import ShowForm
-    from database import SiteContent
+    # already imported - SiteContent
     import json
     
     # Get current shows
@@ -883,7 +884,7 @@ def admin_delete_show(show_index):
     if 'admin_logged_in' not in session:
         return redirect(url_for('admin_login'))
     
-    from database import SiteContent
+    # already imported - SiteContent
     import json
     
     # Get current shows
