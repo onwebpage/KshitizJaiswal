@@ -210,20 +210,29 @@
 
     // Initialize disclaimer popup
     function initDisclaimerPopup() {
+        // Check if already shown and accepted
+        if (localStorage.getItem('disclaimerAccepted') === 'true') {
+            disclaimerShown = true;
+            return;
+        }
+        
         if (disclaimerShown) return;
         
         setTimeout(() => {
             const disclaimerModal = new bootstrap.Modal(document.getElementById('disclaimerModal'));
             disclaimerModal.show();
             disclaimerShown = true;
-            
-            // Store in localStorage to avoid showing again in same session
-            localStorage.setItem('disclaimerShown', 'true');
         }, 7000);
 
-        // Check if already shown in this session
-        if (localStorage.getItem('disclaimerShown')) {
-            disclaimerShown = true;
+        // Add event listener for when user accepts disclaimer
+        const disclaimerModal = document.getElementById('disclaimerModal');
+        const acceptButton = disclaimerModal.querySelector('[data-bs-dismiss="modal"]');
+        
+        if (acceptButton) {
+            acceptButton.addEventListener('click', function() {
+                localStorage.setItem('disclaimerAccepted', 'true');
+                disclaimerShown = true;
+            });
         }
     }
 
