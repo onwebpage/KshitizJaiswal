@@ -224,53 +224,81 @@
 </section>
 
 <!-- Support Section -->
-<section id="support" class="section-padding bg-dark text-white">
+<section id="support" class="section-padding support-section-bg">
     <div class="container">
         <div class="text-center mb-5">
-            <h2 class="section-title">Support Section</h2>
-            <p class="section-subtitle">"Friends of Kshitiz — Support Now (Weekly Basis)."</p>
+            <h2 class="section-title text-white">Support Kshitiz</h2>
+            <p class="section-subtitle text-white">"Friends of Kshitiz — Support Now (Weekly Basis)."</p>
         </div>
         
         <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <div class="support-tiers">
-                    <div class="row g-4">
-                        <div class="col-md-4">
-                            <div class="support-tier">
-                                <div class="tier-header">
+            <div class="col-lg-10">
+                <div class="support-tiers-container">
+                    <div class="row g-4 justify-content-center">
+                        <div class="col-lg-4 col-md-6">
+                            <div class="support-tier-card">
+                                <div class="tier-icon">
                                     <i class="fas fa-coffee"></i>
-                                    <h4>Chai Buddy</h4>
-                                    <div class="tier-price">₹10<span>/week</span></div>
                                 </div>
-                                <p>Support with a weekly chai</p>
-                                <button class="btn btn-outline-light" onclick="initiatePayment(10)">
+                                <h4 class="tier-title">Chai Buddy</h4>
+                                <div class="tier-price-container">
+                                    <span class="tier-currency">₹</span>
+                                    <span class="tier-amount">10</span>
+                                    <span class="tier-period">/week</span>
+                                </div>
+                                <p class="tier-description">Support with a weekly chai and keep the conversations flowing</p>
+                                <ul class="tier-benefits">
+                                    <li><i class="fas fa-check"></i> Weekly newsletter access</li>
+                                    <li><i class="fas fa-check"></i> Community member status</li>
+                                </ul>
+                                <button class="btn tier-btn btn-outline-primary" onclick="initiatePayment(10)">
                                     Choose Plan
                                 </button>
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <div class="support-tier popular">
-                                <div class="tier-badge">Most Popular</div>
-                                <div class="tier-header">
+                        
+                        <div class="col-lg-4 col-md-6">
+                            <div class="support-tier-card popular-tier">
+                                <div class="popular-badge">Most Popular</div>
+                                <div class="tier-icon">
                                     <i class="fas fa-heart"></i>
-                                    <h4>True Friend</h4>
-                                    <div class="tier-price">₹20<span>/week</span></div>
                                 </div>
-                                <p>Show genuine support</p>
-                                <button class="btn btn-primary" onclick="initiatePayment(20)">
+                                <h4 class="tier-title">True Friend</h4>
+                                <div class="tier-price-container">
+                                    <span class="tier-currency">₹</span>
+                                    <span class="tier-amount">20</span>
+                                    <span class="tier-period">/week</span>
+                                </div>
+                                <p class="tier-description">Show genuine support and be part of the inner circle</p>
+                                <ul class="tier-benefits">
+                                    <li><i class="fas fa-check"></i> Everything in Chai Buddy</li>
+                                    <li><i class="fas fa-check"></i> Early access to content</li>
+                                    <li><i class="fas fa-check"></i> Behind-the-scenes updates</li>
+                                </ul>
+                                <button class="btn tier-btn btn-primary" onclick="initiatePayment(20)">
                                     Choose Plan
                                 </button>
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <div class="support-tier">
-                                <div class="tier-header">
+                        
+                        <div class="col-lg-4 col-md-6">
+                            <div class="support-tier-card">
+                                <div class="tier-icon">
                                     <i class="fas fa-star"></i>
-                                    <h4>Super Supporter</h4>
-                                    <div class="tier-price">₹50<span>/week</span></div>
                                 </div>
-                                <p>Maximum support for the cause</p>
-                                <button class="btn btn-outline-light" onclick="initiatePayment(50)">
+                                <h4 class="tier-title">Super Supporter</h4>
+                                <div class="tier-price-container">
+                                    <span class="tier-currency">₹</span>
+                                    <span class="tier-amount">50</span>
+                                    <span class="tier-period">/week</span>
+                                </div>
+                                <p class="tier-description">Maximum support for the cause of unfiltered truth</p>
+                                <ul class="tier-benefits">
+                                    <li><i class="fas fa-check"></i> Everything in True Friend</li>
+                                    <li><i class="fas fa-check"></i> Monthly video calls</li>
+                                    <li><i class="fas fa-check"></i> Special mention in content</li>
+                                </ul>
+                                <button class="btn tier-btn btn-outline-primary" onclick="initiatePayment(50)">
                                     Choose Plan
                                 </button>
                             </div>
@@ -278,11 +306,27 @@
                     </div>
                 </div>
                 
-                <div class="text-center mt-4">
-                    <p class="text-muted">
-                        <i class="fas fa-shield-alt me-2"></i>
-                        Secure payments powered by Razorpay
-                    </p>
+                <div class="support-footer">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <div class="payment-security">
+                                <i class="fas fa-shield-alt me-2"></i>
+                                <span>Secure payments powered by Razorpay</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6 text-md-end">
+                            <div class="support-stats">
+                                <span class="stat-item">
+                                    <i class="fas fa-users me-1"></i>
+                                    <span class="stat-number">127</span> supporters
+                                </span>
+                                <span class="stat-item ms-3">
+                                    <i class="fas fa-heart me-1"></i>
+                                    <span class="stat-number">₹2,340</span> raised this month
+                                </span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

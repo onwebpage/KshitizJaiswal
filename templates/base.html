@@ -85,40 +85,103 @@
     <!-- Footer -->
     <footer class="footer-section">
         <div class="container">
-            <div class="row">
-                <div class="col-lg-6">
-                    <h5 class="fw-bold mb-3">Kshitiz Jaiswal</h5>
-                    <p class="text-muted">Unfiltered Commentator. The content here is selective, but the truth is never biased.</p>
-                    <div class="social-links">
-                        <a href="#" class="social-link"><i class="fab fa-youtube"></i></a>
-                        <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
-                        <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
-                        <a href="#" class="social-link"><i class="fab fa-linkedin"></i></a>
+            <div class="row g-4">
+                <!-- Brand Section -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="footer-brand">
+                        <h4 class="footer-brand-title">
+                            <i class="fas fa-microphone-alt me-2"></i>
+                            Kshitiz Jaiswal
+                        </h4>
+                        <p class="footer-description">Unfiltered Commentator. The content here is selective, but the truth is never biased.</p>
+                        
+                        <div class="footer-social">
+                            <a href="#" class="footer-social-link youtube" title="YouTube">
+                                <i class="fab fa-youtube"></i>
+                            </a>
+                            <a href="#" class="footer-social-link instagram" title="Instagram">
+                                <i class="fab fa-instagram"></i>
+                            </a>
+                            <a href="#" class="footer-social-link twitter" title="Twitter">
+                                <i class="fab fa-twitter"></i>
+                            </a>
+                            <a href="#" class="footer-social-link linkedin" title="LinkedIn">
+                                <i class="fab fa-linkedin"></i>
+                            </a>
+                        </div>
                     </div>
                 </div>
-                <div class="col-lg-6">
-                    <h6 class="fw-bold mb-3">Quick Links</h6>
-                    <div class="row">
-                        <div class="col-6">
-                            <ul class="footer-links">
-                                <li><a href="#privacy">Privacy Policy</a></li>
-                                <li><a href="#terms">Terms of Service</a></li>
-                                <li><a href="{{ url_for('contact') }}">Contact</a></li>
-                            </ul>
-                        </div>
-                        <div class="col-6">
-                            <ul class="footer-links">
-                                <li><a href="#disclaimer">Disclaimer</a></li>
-                                <li><a href="{{ url_for('admin_login') }}">Admin</a></li>
-                                <li><a href="#support">Support</a></li>
-                            </ul>
-                        </div>
+                
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6">
+                    <div class="footer-column">
+                        <h6 class="footer-column-title">Content</h6>
+                        <ul class="footer-links">
+                            <li><a href="{{ url_for('index') }}#beyond-reel">Beyond The Reel</a></li>
+                            <li><a href="{{ url_for('index') }}#opinions">Kshitiz Ki Rai</a></li>
+                            <li><a href="{{ url_for('index') }}#resources">Resources</a></li>
+                            <li><a href="{{ url_for('index') }}#upcoming-shows">Shows</a></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Support Links -->
+                <div class="col-lg-2 col-md-6">
+                    <div class="footer-column">
+                        <h6 class="footer-column-title">Support</h6>
+                        <ul class="footer-links">
+                            <li><a href="{{ url_for('index') }}#support">Support Now</a></li>
+                            <li><a href="{{ url_for('index') }}#newsletter">Newsletter</a></li>
+                            <li><a href="{{ url_for('contact') }}">Contact</a></li>
+                            <li><a href="{{ url_for('contact') }}">Collaborate</a></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Legal Links -->
+                <div class="col-lg-2 col-md-6">
+                    <div class="footer-column">
+                        <h6 class="footer-column-title">Legal</h6>
+                        <ul class="footer-links">
+                            <li><a href="#privacy" data-bs-toggle="modal" data-bs-target="#privacyModal">Privacy Policy</a></li>
+                            <li><a href="#terms" data-bs-toggle="modal" data-bs-target="#termsModal">Terms of Service</a></li>
+                            <li><a href="#disclaimer" data-bs-toggle="modal" data-bs-target="#disclaimerModal">Disclaimer</a></li>
+                            <li><a href="{{ url_for('admin_login') }}">Admin</a></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Newsletter Signup -->
+                <div class="col-lg-2 col-md-6">
+                    <div class="footer-column">
+                        <h6 class="footer-column-title">Stay Updated</h6>
+                        <p class="footer-newsletter-text">Get weekly updates directly to your inbox</p>
+                        <a href="{{ url_for('index') }}#newsletter" class="btn btn-outline-light btn-sm footer-cta">
+                            <i class="fas fa-envelope me-1"></i>Subscribe
+                        </a>
                     </div>
                 </div>
             </div>
-            <hr class="my-4">
-            <div class="text-center text-muted">
-                <p>&copy; 2025 Kshitiz Jaiswal. All rights reserved.</p>
+            
+            <!-- Footer Bottom -->
+            <div class="footer-bottom">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <p class="footer-copyright">&copy; 2025 Kshitiz Jaiswal. All rights reserved.</p>
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <div class="footer-stats">
+                            <span class="footer-stat-item">
+                                <i class="fas fa-eye me-1"></i>
+                                <span>1.2M+ views</span>
+                            </span>
+                            <span class="footer-stat-item ms-3">
+                                <i class="fas fa-users me-1"></i>
+                                <span>50K+ followers</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </footer>
