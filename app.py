@@ -12,11 +12,20 @@ app.secret_key = os.environ.get("SESSION_SECRET", "kshitiz-jaiswal-website-2025"
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 # Configure database
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL")
-app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-    "pool_recycle": 300,
-    "pool_pre_ping": True,
-}
+database_url = os.environ.get("DATABASE_URL")
+if not database_url or database_url.strip() == "":
+    # Use a default SQLite database for development if DATABASE_URL is empty
+    database_url = "sqlite:///./data/app.db"
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {}
+    # Ensure data directory exists
+    os.makedirs("data", exist_ok=True)
+else:
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+        "pool_recycle": 300,
+        "pool_pre_ping": True,
+    }
+
+app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 # Configure upload folder
