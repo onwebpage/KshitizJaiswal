@@ -45,3 +45,26 @@ def calculate_poll_percentages(votes):
     if total == 0:
         return [0] * len(votes)
     return [round((vote / total) * 100, 1) for vote in votes]
+
+def get_youtube_embed_url(url):
+    """Convert YouTube URL to embeddable format"""
+    if not url:
+        return None
+    
+    import re
+    
+    # Handle different YouTube URL formats
+    patterns = [
+        r'(?:https?://)?(?:www\.)?youtube\.com/watch\?v=([a-zA-Z0-9_-]+)',
+        r'(?:https?://)?(?:www\.)?youtube\.com/shorts/([a-zA-Z0-9_-]+)',
+        r'(?:https?://)?youtu\.be/([a-zA-Z0-9_-]+)',
+        r'(?:https?://)?(?:www\.)?youtube\.com/embed/([a-zA-Z0-9_-]+)'
+    ]
+    
+    for pattern in patterns:
+        match = re.search(pattern, url)
+        if match:
+            video_id = match.group(1)
+            return f"https://www.youtube.com/embed/{video_id}"
+    
+    return None

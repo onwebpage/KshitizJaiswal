@@ -37,7 +37,7 @@
                 <div class="reel-item">
                     <a href="{{ url_for('reel_detail', reel_id=reel.id) }}" class="reel-link">
                         <div class="reel-thumbnail">
-                            <img src="{{ reel.thumbnail }}" alt="{{ reel.title }}" class="img-fluid">
+                            <img src="{{ url_for('static', filename=reel.thumbnail) if reel.thumbnail and not reel.thumbnail.startswith('http') else reel.thumbnail }}" alt="{{ reel.title }}" class="img-fluid">
                             <div class="reel-overlay">
                                 <i class="fas fa-play-circle"></i>
                                 <h6>{{ reel.title }}</h6>
@@ -52,7 +52,7 @@
                 <div class="reel-item">
                     <a href="{{ url_for('reel_detail', reel_id=reel.id) }}" class="reel-link">
                         <div class="reel-thumbnail">
-                            <img src="{{ reel.thumbnail }}" alt="{{ reel.title }}" class="img-fluid">
+                            <img src="{{ url_for('static', filename=reel.thumbnail) if reel.thumbnail and not reel.thumbnail.startswith('http') else reel.thumbnail }}" alt="{{ reel.title }}" class="img-fluid">
                             <div class="reel-overlay">
                                 <i class="fas fa-play-circle"></i>
                                 <h6>{{ reel.title }}</h6>

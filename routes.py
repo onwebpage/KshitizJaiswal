@@ -2,7 +2,7 @@ from flask import render_template, request, jsonify, redirect, url_for, flash, s
 from app import app
 from models import DataManager, AdminUser
 from forms import NewsletterForm, PollVoteForm, AdminLoginForm, ReelForm, OpinionForm
-from utils import save_uploaded_file, calculate_poll_percentages
+from utils import save_uploaded_file, calculate_poll_percentages, get_youtube_embed_url
 import razorpay
 import os
 
@@ -44,6 +44,10 @@ def reel_detail(reel_id):
     if not reel:
         flash('Reel not found!', 'error')
         return redirect(url_for('index'))
+    
+    # Process YouTube URL for embedding
+    if reel.get('video_url'):
+        reel['embed_url'] = get_youtube_embed_url(reel['video_url'])
     
     return render_template('reel_detail.html', reel=reel)
 
