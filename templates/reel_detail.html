@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}{{ reel.title }} - Kshitiz Jaiswal{% endblock %}
+
+{% block content %}
+<section class="reel-detail-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <!-- Back Button -->
+                <div class="mb-4">
+                    <a href="{{ url_for('index') }}#beyond-reel" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Reels
+                    </a>
+                </div>
+                
+                <!-- Reel Header -->
+                <div class="reel-header mb-5">
+                    <h1 class="reel-title">{{ reel.title }}</h1>
+                    <div class="reel-meta">
+                        <span class="badge bg-primary me-2">
+                            <i class="fas fa-video me-1"></i>Behind The Reel
+                        </span>
+                        <span class="text-muted">
+                            <i class="fas fa-clock me-1"></i>Deep Dive Analysis
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- Video Section -->
+                <div class="video-section mb-5">
+                    {% if reel.video_url %}
+                        <div class="video-container">
+                            <iframe src="{{ reel.video_url }}" frameborder="0" allowfullscreen></iframe>
+                        </div>
+                    {% else %}
+                        <div class="video-placeholder">
+                            <img src="{{ reel.thumbnail }}" alt="{{ reel.title }}" class="img-fluid rounded">
+                            <div class="video-overlay">
+                                <i class="fas fa-play-circle"></i>
+                                <p class="mt-2">Full video coming soon</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Behind The Thought Section -->
+                <div class="row g-5">
+                    <div class="col-lg-8">
+                        <div class="content-section">
+                            <h3 class="content-title">
+                                <i class="fas fa-lightbulb me-2"></i>Behind The Thought
+                            </h3>
+                            <div class="content-body">
+                                <p>{{ reel.behind_thought }}</p>
+                                
+                                {% if reel.extra_context %}
+                                <div class="extra-context mt-4">
+                                    <h5>Extra Context</h5>
+                                    <p class="text-muted">{{ reel.extra_context }}</p>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-4">
+                        <!-- Sources Section -->
+                        <div class="sidebar-section">
+                            <h4 class="sidebar-title">
+                                <i class="fas fa-book me-2"></i>Sources
+                            </h4>
+                            {% if reel.sources %}
+                            <ul class="sources-list">
+                                {% for source in reel.sources %}
+                                <li>
+                                    <i class="fas fa-external-link-alt me-2"></i>
+                                    {{ source }}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% else %}
+                            <p class="text-muted">Sources will be updated soon</p>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Share Section -->
+                        <div class="sidebar-section">
+                            <h4 class="sidebar-title">
+                                <i class="fas fa-share me-2"></i>Share This
+                            </h4>
+                            <div class="share-buttons">
+                                <a href="#" class="share-btn twitter" title="Share on Twitter">
+                                    <i class="fab fa-twitter"></i>
+                                </a>
+                                <a href="#" class="share-btn facebook" title="Share on Facebook">
+                                    <i class="fab fa-facebook"></i>
+                                </a>
+                                <a href="#" class="share-btn linkedin" title="Share on LinkedIn">
+                                    <i class="fab fa-linkedin"></i>
+                                </a>
+                                <a href="#" class="share-btn whatsapp" title="Share on WhatsApp">
+                                    <i class="fab fa-whatsapp"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Related Reels -->
+                <div class="related-section mt-5">
+                    <h3 class="section-title">More From Beyond The Reel</h3>
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <div class="related-reel">
+                                <img src="https://pixabay.com/get/gd79945a894ea9eaa91ec7751a93f4d5d3083ea4e19c048c775d81daf6ded93d8fbc71b0d74cd0b9868aadb93cbd4a378748100bf3aadb55df0626253cba093c8_1280.jpg" alt="Related Reel" class="img-fluid rounded">
+                                <div class="related-overlay">
+                                    <h6>Coming Soon</h6>
+                                    <p class="mb-0">Next deep dive</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="related-reel">
+                                <img src="https://pixabay.com/get/g108c9a703f78c79ca7c3391bda07c5dcbaa32b70b48e606f99b16c6de80ec6e21c6ce46b0677d8eb42dfe0a73d3f3d24cc192b752282a0801e71e82050a16a21_1280.jpg" alt="Related Reel" class="img-fluid rounded">
+                                <div class="related-overlay">
+                                    <h6>Coming Soon</h6>
+                                    <p class="mb-0">Another perspective</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="related-reel">
+                                <img src="https://pixabay.com/get/ged9bba4dac3bff554e7402fc610a4e628a1809afaa22baf6c547fc7292cbdaa46706a24e5ec9f3003a3b675542fa58c2993953d1bb237770b938674ebe3b1cea_1280.jpg" alt="Related Reel" class="img-fluid rounded">
+                                <div class="related-overlay">
+                                    <h6>Coming Soon</h6>
+                                    <p class="mb-0">Truth unveiled</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

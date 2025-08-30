@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Contact - Kshitiz Jaiswal{% endblock %}
+
+{% block content %}
+<section class="contact-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <!-- Header -->
+                <div class="text-center mb-5">
+                    <h1 class="page-title">Contact Kshitiz</h1>
+                    <p class="page-subtitle">"Man me kuch hai? toh pouch loh…"</p>
+                </div>
+                
+                <!-- Contact Options -->
+                <div class="contact-grid">
+                    <div class="row g-4">
+                        <div class="col-lg-6">
+                            <div class="contact-card">
+                                <div class="contact-icon">
+                                    <i class="fas fa-question-circle"></i>
+                                </div>
+                                <div class="contact-content">
+                                    <h4>General Questions</h4>
+                                    <p class="text-muted mb-3">Man me kuch hai? toh pouch loh…</p>
+                                    <a href="mailto:{{ emails.general }}" class="contact-email">
+                                        <i class="fas fa-envelope me-2"></i>{{ emails.general }}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-lg-6">
+                            <div class="contact-card">
+                                <div class="contact-icon">
+                                    <i class="fas fa-search"></i>
+                                </div>
+                                <div class="contact-content">
+                                    <h4>Sources & Research</h4>
+                                    <p class="text-muted mb-3">Tumeh doubt hai meri reel ke sources peh?</p>
+                                    <a href="mailto:{{ emails.sources }}" class="contact-email">
+                                        <i class="fas fa-envelope me-2"></i>{{ emails.sources }}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-lg-6">
+                            <div class="contact-card">
+                                <div class="contact-icon">
+                                    <i class="fas fa-handshake"></i>
+                                </div>
+                                <div class="contact-content">
+                                    <h4>Collaboration</h4>
+                                    <p class="text-muted mb-3">Kernah collaborate Ya Chatteh ho aau mei?</p>
+                                    <a href="mailto:{{ emails.collaborate }}" class="contact-email">
+                                        <i class="fas fa-envelope me-2"></i>{{ emails.collaborate }}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-lg-6">
+                            <div class="contact-card">
+                                <div class="contact-icon">
+                                    <i class="fas fa-comment-alt"></i>
+                                </div>
+                                <div class="contact-content">
+                                    <h4>Feedback & Tips</h4>
+                                    <p class="text-muted mb-3">Chahteh ho keru suddhar? ya dena hai raaz?</p>
+                                    <a href="mailto:{{ emails.feedback }}" class="contact-email">
+                                        <i class="fas fa-envelope me-2"></i>{{ emails.feedback }}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Social Media -->
+                <div class="social-section">
+                    <div class="text-center mb-4">
+                        <h3>Follow The Journey</h3>
+                        <p class="text-muted">Stay updated with latest content</p>
+                    </div>
+                    
+                    <div class="social-links-large">
+                        <a href="#" class="social-link-large youtube">
+                            <i class="fab fa-youtube"></i>
+                            <div>
+                                <h5>YouTube</h5>
+                                <small>Weekly Shows</small>
+                            </div>
+                        </a>
+                        
+                        <a href="#" class="social-link-large instagram">
+                            <i class="fab fa-instagram"></i>
+                            <div>
+                                <h5>Instagram</h5>
+                                <small>Daily Reels</small>
+                            </div>
+                        </a>
+                        
+                        <a href="#" class="social-link-large twitter">
+                            <i class="fab fa-twitter"></i>
+                            <div>
+                                <h5>Twitter</h5>
+                                <small>Quick Takes</small>
+                            </div>
+                        </a>
+                        
+                        <a href="#" class="social-link-large linkedin">
+                            <i class="fab fa-linkedin"></i>
+                            <div>
+                                <h5>LinkedIn</h5>
+                                <small>Professional</small>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Response Time -->
+                <div class="response-info">
+                    <div class="row">
+                        <div class="col-md-4 text-center">
+                            <div class="response-stat">
+                                <i class="fas fa-clock text-primary"></i>
+                                <h4>24-48 Hours</h4>
+                                <p class="text-muted">Average Response Time</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <div class="response-stat">
+                                <i class="fas fa-shield-alt text-success"></i>
+                                <h4>Confidential</h4>
+                                <p class="text-muted">Your Privacy Matters</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <div class="response-stat">
+                                <i class="fas fa-heart text-danger"></i>
+                                <h4>Genuine</h4>
+                                <p class="text-muted">Real Conversations</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
