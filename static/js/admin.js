@@ -33,12 +33,12 @@
 
         navItems.forEach(item => {
             item.addEventListener('click', function(e) {
-                e.preventDefault();
-                
                 const targetTab = this.getAttribute('data-tab');
                 if (targetTab) {
+                    e.preventDefault();
                     switchTab(targetTab);
                 }
+                // If no data-tab attribute, allow default navigation
             });
         });
 
