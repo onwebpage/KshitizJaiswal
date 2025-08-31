@@ -37,8 +37,13 @@ class OpinionForm(FlaskForm):
 class HeroContentForm(FlaskForm):
     name = StringField('Hero Title', validators=[DataRequired(), Length(max=100)])
     tagline = TextAreaField('Hero Tagline', validators=[DataRequired(), Length(max=500)])
-    banner_image = FileField('Hero Background Image', validators=[FileAllowed(['jpg', 'jpeg', 'png', 'gif'])])
-    banner_url = StringField('Or Banner URL', validators=[Length(max=500)])
+    desktop_image = FileField('Desktop Hero Image', validators=[FileAllowed(['jpg', 'jpeg', 'png', 'gif'])])
+    mobile_image = FileField('Mobile Hero Image', validators=[FileAllowed(['jpg', 'jpeg', 'png', 'gif'])])
+    desktop_url = StringField('Or Desktop Image URL', validators=[Length(max=500)])
+    mobile_url = StringField('Or Mobile Image URL', validators=[Length(max=500)])
+    # Keep for backward compatibility
+    banner_image = FileField('Hero Background Image (Legacy)', validators=[FileAllowed(['jpg', 'jpeg', 'png', 'gif'])])
+    banner_url = StringField('Or Banner URL (Legacy)', validators=[Length(max=500)])
 
 class PaymentSettingsForm(FlaskForm):
     razorpay_key_id = StringField('Razorpay Key ID', validators=[DataRequired(), Length(max=100)])

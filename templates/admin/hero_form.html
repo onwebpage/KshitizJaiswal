@@ -34,7 +34,7 @@
                         {{ form.hidden_tag() }}
                         
                         <div class="row g-4">
-                            <div class="col-md-6">
+                            <div class="col-12">
                                 <label for="{{ form.name.id }}" class="form-label">{{ form.name.label.text }}</label>
                                 {{ form.name(class="form-control") }}
                                 {% if form.name.errors %}
@@ -44,19 +44,6 @@
                                         {% endfor %}
                                     </div>
                                 {% endif %}
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <label for="{{ form.banner_image.id }}" class="form-label">{{ form.banner_image.label.text }}</label>
-                                {{ form.banner_image(class="form-control") }}
-                                {% if form.banner_image.errors %}
-                                    <div class="text-danger">
-                                        {% for error in form.banner_image.errors %}
-                                            <small>{{ error }}</small>
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
-                                <small class="form-text text-muted">Upload a custom background image (JPG, PNG, GIF). Recommended size: 1920x1080</small>
                             </div>
                             
                             <div class="col-12">
@@ -71,17 +58,99 @@
                                 {% endif %}
                             </div>
                             
+                            <!-- Desktop Image Section -->
                             <div class="col-12">
-                                <label for="{{ form.banner_url.id }}" class="form-label">{{ form.banner_url.label.text }}</label>
-                                {{ form.banner_url(class="form-control", placeholder="https://example.com/image.jpg") }}
-                                {% if form.banner_url.errors %}
-                                    <div class="text-danger">
-                                        {% for error in form.banner_url.errors %}
-                                            <small>{{ error }}</small>
-                                        {% endfor %}
+                                <h6><i class="fas fa-desktop me-2"></i>Desktop Hero Image</h6>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label for="{{ form.desktop_image.id }}" class="form-label">{{ form.desktop_image.label.text }}</label>
+                                        {{ form.desktop_image(class="form-control") }}
+                                        {% if form.desktop_image.errors %}
+                                            <div class="text-danger">
+                                                {% for error in form.desktop_image.errors %}
+                                                    <small>{{ error }}</small>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                        <small class="form-text text-muted">Upload desktop image (JPG, PNG, GIF). Recommended size: 1920x1080</small>
                                     </div>
-                                {% endif %}
-                                <small class="form-text text-muted">Alternative: Enter a URL for the background image (leave blank if uploading file above)</small>
+                                    <div class="col-md-6">
+                                        <label for="{{ form.desktop_url.id }}" class="form-label">{{ form.desktop_url.label.text }}</label>
+                                        {{ form.desktop_url(class="form-control", placeholder="https://example.com/desktop-image.jpg") }}
+                                        {% if form.desktop_url.errors %}
+                                            <div class="text-danger">
+                                                {% for error in form.desktop_url.errors %}
+                                                    <small>{{ error }}</small>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                        <small class="form-text text-muted">Or enter a URL for desktop image</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Mobile Image Section -->
+                            <div class="col-12">
+                                <h6><i class="fas fa-mobile-alt me-2"></i>Mobile Hero Image</h6>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label for="{{ form.mobile_image.id }}" class="form-label">{{ form.mobile_image.label.text }}</label>
+                                        {{ form.mobile_image(class="form-control") }}
+                                        {% if form.mobile_image.errors %}
+                                            <div class="text-danger">
+                                                {% for error in form.mobile_image.errors %}
+                                                    <small>{{ error }}</small>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                        <small class="form-text text-muted">Upload mobile image (JPG, PNG, GIF). Recommended size: 768x1024</small>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="{{ form.mobile_url.id }}" class="form-label">{{ form.mobile_url.label.text }}</label>
+                                        {{ form.mobile_url(class="form-control", placeholder="https://example.com/mobile-image.jpg") }}
+                                        {% if form.mobile_url.errors %}
+                                            <div class="text-danger">
+                                                {% for error in form.mobile_url.errors %}
+                                                    <small>{{ error }}</small>
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                        <small class="form-text text-muted">Or enter a URL for mobile image</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Legacy Section -->
+                            <div class="col-12">
+                                <details>
+                                    <summary><h6 class="text-muted"><i class="fas fa-history me-2"></i>Legacy Options (Optional)</h6></summary>
+                                    <div class="row g-3 mt-2">
+                                        <div class="col-md-6">
+                                            <label for="{{ form.banner_image.id }}" class="form-label">{{ form.banner_image.label.text }}</label>
+                                            {{ form.banner_image(class="form-control") }}
+                                            {% if form.banner_image.errors %}
+                                                <div class="text-danger">
+                                                    {% for error in form.banner_image.errors %}
+                                                        <small>{{ error }}</small>
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
+                                            <small class="form-text text-muted">Will be used for both desktop and mobile if specific images not set</small>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="{{ form.banner_url.id }}" class="form-label">{{ form.banner_url.label.text }}</label>
+                                            {{ form.banner_url(class="form-control", placeholder="https://example.com/image.jpg") }}
+                                            {% if form.banner_url.errors %}
+                                                <div class="text-danger">
+                                                    {% for error in form.banner_url.errors %}
+                                                        <small>{{ error }}</small>
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
+                                            <small class="form-text text-muted">Will be used for both desktop and mobile if specific URLs not set</small>
+                                        </div>
+                                    </div>
+                                </details>
                             </div>
                             
                             <div class="col-12">

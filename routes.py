@@ -434,20 +434,50 @@ def admin_hero_content():
     }
     
     if form.validate_on_submit():
-        # Handle banner image upload
+        # Handle desktop image upload
+        desktop_url = current_hero.get('desktop_url', current_hero.get('banner_url', ''))
+        if form.desktop_image.data:
+            uploaded_path = save_uploaded_file(form.desktop_image.data, 'hero')
+            if uploaded_path:
+                desktop_url = uploaded_path
+        elif form.desktop_url.data:
+            desktop_url = form.desktop_url.data
+        
+        # Handle mobile image upload
+        mobile_url = current_hero.get('mobile_url', current_hero.get('banner_url', ''))
+        if form.mobile_image.data:
+            uploaded_path = save_uploaded_file(form.mobile_image.data, 'hero')
+            if uploaded_path:
+                mobile_url = uploaded_path
+        elif form.mobile_url.data:
+            mobile_url = form.mobile_url.data
+        
+        # Handle legacy banner image upload for backward compatibility
         banner_url = current_hero.get('banner_url', '')
         if form.banner_image.data:
             uploaded_path = save_uploaded_file(form.banner_image.data, 'hero')
             if uploaded_path:
                 banner_url = uploaded_path
+                # If no desktop/mobile specified, use banner for both
+                if not desktop_url:
+                    desktop_url = uploaded_path
+                if not mobile_url:
+                    mobile_url = uploaded_path
         elif form.banner_url.data:
             banner_url = form.banner_url.data
+            # If no desktop/mobile specified, use banner for both
+            if not desktop_url:
+                desktop_url = form.banner_url.data
+            if not mobile_url:
+                mobile_url = form.banner_url.data
         
         # Update hero content
         updated_hero = {
             "name": form.name.data,
             "tagline": form.tagline.data,
-            "banner_url": banner_url
+            "banner_url": banner_url,  # Keep for backward compatibility
+            "desktop_url": desktop_url,
+            "mobile_url": mobile_url
         }
         
         if hero_content:
@@ -465,6 +495,8 @@ def admin_hero_content():
         form.name.data = current_hero.get('name', '')
         form.tagline.data = current_hero.get('tagline', '')
         form.banner_url.data = current_hero.get('banner_url', '')
+        form.desktop_url.data = current_hero.get('desktop_url', '')
+        form.mobile_url.data = current_hero.get('mobile_url', '')
     
     return render_template('admin/hero_form.html', form=form, title='Hero Content', current_hero=current_hero)
 

@@ -200,6 +200,104 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: var(--shadow-lg);
 }
 
+/* Responsive Hero Section */
+.responsive-hero {
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 1;
+}
+
+.hero-bg-desktop {
+  background-attachment: fixed;
+}
+
+.hero-bg-mobile {
+  background-attachment: scroll;
+  background-position: center center;
+}
+
+.responsive-hero .hero-overlay {
+  z-index: 2;
+}
+
+/* Mobile optimizations for hero images */
+@media (max-width: 767.98px) {
+  .hero-bg-mobile {
+    background-size: cover;
+    background-position: center top;
+    min-height: 100vh;
+  }
+  
+  .hero-section {
+    min-height: 100vh;
+    background-attachment: scroll !important;
+  }
+  
+  .hero-title {
+    font-size: 2.5rem;
+  }
+  
+  .hero-tagline {
+    font-size: 1.2rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .hero-cta .btn {
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    display: block;
+    width: 100%;
+    max-width: 300px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  .hero-cta .btn.me-3 {
+    margin-right: auto !important;
+    margin-bottom: 1rem;
+  }
+}
+
+/* Desktop optimizations */
+@media (min-width: 768px) {
+  .hero-bg-desktop {
+    background-attachment: fixed;
+    background-size: cover;
+    background-position: center center;
+  }
+}
+
+/* Tablet optimizations */
+@media (min-width: 768px) and (max-width: 1199.98px) {
+  .hero-title {
+    font-size: 3.5rem;
+  }
+  
+  .hero-tagline {
+    font-size: 1.3rem;
+  }
+}
+
+/* Large screen optimizations */
+@media (min-width: 1200px) {
+  .hero-bg-desktop {
+    background-size: cover;
+    background-position: center center;
+  }
+}
+
 /* Reel Carousel */
 .reel-carousel-container {
   overflow: hidden;
