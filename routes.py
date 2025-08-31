@@ -1,4 +1,4 @@
-from flask import render_template, request, jsonify, redirect, url_for, flash, session
+from flask import render_template, request, jsonify, redirect, url_for, flash, session, abort
 from app import app, db
 from models import DataManager, AdminUser, SiteContent, Reel, Opinion, Subscriber, SubscriptionTier
 from forms import NewsletterForm, PollVoteForm, AdminLoginForm, ReelForm, OpinionForm, HeroContentForm, PaymentSettingsForm, SubscriptionTierForm
@@ -88,6 +88,28 @@ def resources():
     resources = json.loads(resources_content.content_data) if resources_content else []
     
     return render_template('resources.html', resources=resources)
+
+@app.route('/resource/<slug>')
+def resource_detail(slug):
+    """Individual resource detail page"""
+    import json
+    
+    # Get resources from database
+    resources_content = SiteContent.query.filter_by(content_key='resources').first()
+    resources = json.loads(resources_content.content_data) if resources_content else []
+    
+    # Find resource by slug
+    resource = None
+    for r in resources:
+        resource_slug = r['link'].split('/')[-1] if r['link'] else ''
+        if resource_slug == slug:
+            resource = r
+            break
+    
+    if not resource:
+        abort(404)
+    
+    return render_template('resource_detail.html', resource=resource)
 
 @app.route('/newsletter', methods=['POST'])
 def newsletter_subscribe():

@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}{{ resource.title }} - Kshitiz Jaiswal{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="hero-bg" style="background-image: url('{{ resource.image }}')"></div>
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8 text-center">
+                    <h1 class="hero-title">{{ resource.title }}</h1>
+                    <p class="hero-subtitle">{{ resource.description }}</p>
+                    <div class="hero-price">
+                        <span class="price-tag">{{ resource.price }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="section-padding">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="resource-content">
+                    <div class="resource-header mb-5">
+                        <h2>About This Resource</h2>
+                        <p class="lead">{{ resource.description }}</p>
+                    </div>
+
+                    <div class="resource-details">
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="feature-card">
+                                    <i class="fas fa-graduation-cap text-primary mb-3"></i>
+                                    <h5>Comprehensive Learning</h5>
+                                    <p>In-depth coverage of all essential concepts and practical applications.</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="feature-card">
+                                    <i class="fas fa-users text-primary mb-3"></i>
+                                    <h5>Expert Guidance</h5>
+                                    <p>Learn from experienced professionals with proven track records.</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="feature-card">
+                                    <i class="fas fa-certificate text-primary mb-3"></i>
+                                    <h5>Certification</h5>
+                                    <p>Receive a certificate of completion upon finishing the course.</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="feature-card">
+                                    <i class="fas fa-clock text-primary mb-3"></i>
+                                    <h5>Flexible Schedule</h5>
+                                    <p>Learn at your own pace with lifetime access to materials.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="resource-cta mt-5 text-center">
+                        <h3>Ready to Start Learning?</h3>
+                        <p>Join thousands of students who have transformed their thinking.</p>
+                        <div class="cta-buttons">
+                            <button class="btn btn-primary btn-lg me-3" onclick="initiatePayment({{ resource.price.replace('₹', '').replace(',', '') }})">
+                                <i class="fas fa-shopping-cart me-2"></i>
+                                Enroll Now - {{ resource.price }}
+                            </button>
+                            <a href="{{ url_for('contact') }}" class="btn btn-outline-primary btn-lg">
+                                <i class="fas fa-envelope me-2"></i>
+                                Ask Questions
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+.feature-card {
+    padding: 2rem;
+    border-radius: 15px;
+    background: white;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    text-align: center;
+    height: 100%;
+    transition: transform 0.3s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+}
+
+.feature-card i {
+    font-size: 2.5rem;
+}
+
+.resource-cta {
+    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    padding: 3rem 2rem;
+    border-radius: 20px;
+    color: white;
+}
+
+.price-tag {
+    background: rgba(255,255,255,0.2);
+    padding: 0.5rem 1.5rem;
+    border-radius: 50px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    backdrop-filter: blur(10px);
+}
+
+.cta-buttons .btn {
+    margin: 0.5rem;
+}
+</style>
+{% endblock %}
