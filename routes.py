@@ -447,25 +447,27 @@ def admin_hero_content():
     
     if form.validate_on_submit():
         # Handle desktop image upload
-        desktop_url = current_hero.get('desktop_url', current_hero.get('banner_url', ''))
+        desktop_url = ''
         if form.desktop_image.data:
             uploaded_path = save_uploaded_file(form.desktop_image.data, 'hero')
             if uploaded_path:
                 desktop_url = uploaded_path
-        elif form.desktop_url.data:
-            desktop_url = form.desktop_url.data
+        else:
+            # Use whatever is in the form field (empty if cleared, URL if provided)
+            desktop_url = form.desktop_url.data or ''
         
         # Handle mobile image upload
-        mobile_url = current_hero.get('mobile_url', current_hero.get('banner_url', ''))
+        mobile_url = ''
         if form.mobile_image.data:
             uploaded_path = save_uploaded_file(form.mobile_image.data, 'hero')
             if uploaded_path:
                 mobile_url = uploaded_path
-        elif form.mobile_url.data:
-            mobile_url = form.mobile_url.data
+        else:
+            # Use whatever is in the form field (empty if cleared, URL if provided)
+            mobile_url = form.mobile_url.data or ''
         
         # Handle legacy banner image upload for backward compatibility
-        banner_url = current_hero.get('banner_url', '')
+        banner_url = ''
         if form.banner_image.data:
             uploaded_path = save_uploaded_file(form.banner_image.data, 'hero')
             if uploaded_path:
@@ -475,13 +477,14 @@ def admin_hero_content():
                     desktop_url = uploaded_path
                 if not mobile_url:
                     mobile_url = uploaded_path
-        elif form.banner_url.data:
-            banner_url = form.banner_url.data
+        else:
+            # Use whatever is in the form field (empty if cleared, URL if provided)
+            banner_url = form.banner_url.data or ''
             # If no desktop/mobile specified, use banner for both
-            if not desktop_url:
-                desktop_url = form.banner_url.data
-            if not mobile_url:
-                mobile_url = form.banner_url.data
+            if not desktop_url and banner_url:
+                desktop_url = banner_url
+            if not mobile_url and banner_url:
+                mobile_url = banner_url
         
         # Update hero content
         updated_hero = {
