@@ -77,6 +77,18 @@ def contact():
     }
     return render_template('contact.html', emails=contact_emails)
 
+@app.route('/resources')
+def resources():
+    """Learning & Resources page"""
+    # already imported - SiteContent
+    import json
+    
+    # Get resources from database
+    resources_content = SiteContent.query.filter_by(content_key='resources').first()
+    resources = json.loads(resources_content.content_data) if resources_content else []
+    
+    return render_template('resources.html', resources=resources)
+
 @app.route('/newsletter', methods=['POST'])
 def newsletter_subscribe():
     """Newsletter subscription"""

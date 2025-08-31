@@ -298,6 +298,63 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+/* Resources Page Styles */
+.resources-hero {
+  background: var(--gradient-primary);
+  padding: 120px 0 80px;
+  text-align: center;
+  color: var(--white);
+  position: relative;
+  overflow: hidden;
+}
+
+.resources-hero::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(26, 0, 0, 0.8) 0%, rgba(204, 0, 0, 0.7) 100%);
+  z-index: 1;
+}
+
+.resources-hero .container {
+  position: relative;
+  z-index: 2;
+}
+
+.resources-hero-title {
+  font-size: 3.5rem;
+  font-weight: 800;
+  color: var(--white);
+  margin-bottom: 1rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.resources-hero-subtitle {
+  font-size: 1.3rem;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 0;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (max-width: 767.98px) {
+  .resources-hero {
+    padding: 100px 0 60px;
+  }
+  
+  .resources-hero-title {
+    font-size: 2.5rem;
+  }
+  
+  .resources-hero-subtitle {
+    font-size: 1.1rem;
+  }
+}
+
 /* Reel Carousel */
 .reel-carousel-container {
   overflow: hidden;
