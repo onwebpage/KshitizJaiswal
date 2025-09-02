@@ -115,6 +115,50 @@ h1, h2, h3, h4, h5, h6 {
   padding: 1rem 0;
 }
 
+/* Mobile Capsule Navbar */
+@media (max-width: 768px) {
+  .custom-navbar {
+    background: linear-gradient(to right, rgba(26, 0, 0, 0.95), rgba(139, 0, 0, 0.95), rgba(204, 0, 0, 0.95)) !important;
+    margin: 10px 15px;
+    border-radius: 50px;
+    padding: 0.8rem 0;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: auto;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+  
+  .custom-navbar .container {
+    padding: 0 1.5rem;
+  }
+  
+  .navbar-brand {
+    font-size: 1.2rem;
+  }
+  
+  .navbar-toggler {
+    border: none;
+    padding: 0.25rem 0.5rem;
+  }
+  
+  .navbar-toggler:focus {
+    box-shadow: none;
+  }
+  
+  /* Adjust main content spacing for capsule navbar on mobile */
+  main {
+    padding-top: 90px;
+  }
+  
+  /* Adjust flash messages for capsule navbar */
+  .alert {
+    margin-top: 90px !important;
+  }
+}
+
 .navbar-brand {
   font-family: var(--font-primary);
   font-size: 1.5rem;
