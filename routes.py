@@ -974,6 +974,22 @@ def admin_delete_show(show_index):
     
     return redirect(url_for('admin_shows'))
 
+# Static pages routes
+@app.route('/privacy-policy')
+def privacy_policy():
+    """Privacy Policy page"""
+    return render_template('privacy_policy.html')
+
+@app.route('/terms-of-service')
+def terms_of_service():
+    """Terms of Service page"""
+    return render_template('terms_of_service.html')
+
+@app.route('/disclaimer')
+def disclaimer():
+    """Disclaimer page"""
+    return render_template('disclaimer.html')
+
 @app.errorhandler(404)
 def not_found_error(error):
     return render_template('404.html'), 404
