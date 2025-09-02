@@ -119,12 +119,12 @@ h1, h2, h3, h4, h5, h6 {
 @media (max-width: 768px) {
   .custom-navbar {
     background: linear-gradient(to right, rgba(26, 0, 0, 0.95), rgba(139, 0, 0, 0.95), rgba(204, 0, 0, 0.95)) !important;
-    margin: 10px 15px 0 15px;
+    margin: 0 15px;
     border-radius: 50px;
     padding: 0.6rem 0;
     border: 2px solid rgba(255, 255, 255, 0.1);
     position: fixed;
-    top: 0;
+    top: 10px;
     left: 0;
     right: 0;
     width: auto;
