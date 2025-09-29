@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}{{ opinion.title }} - Kshitiz Ki Rai{% endblock %}
+
+{% block content %}
+<!-- Poll Detail Hero Section -->
+<section class="poll-detail-hero">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="poll-detail-header">
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+                            <li class="breadcrumb-item"><a href="{{ url_for('polls_archive') }}">Kshitiz Ki Rai</a></li>
+                            <li class="breadcrumb-item active" aria-current="page">{{ opinion.title }}</li>
+                        </ol>
+                    </nav>
+                    <h1 class="poll-detail-title">{{ opinion.title }}</h1>
+                    <div class="poll-detail-meta">
+                        <span class="poll-date">
+                            <i class="fas fa-calendar me-1"></i>{{ opinion.formatted_date }}
+                        </span>
+                        <span class="poll-votes ms-3">
+                            <i class="fas fa-users me-1"></i>{{ opinion.total_votes }} votes
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Poll Detail Content -->
+<section class="section-padding">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="poll-detail-card">
+                    <!-- Kshitiz's Position -->
+                    {% if opinion.position %}
+                    <div class="opinion-position-section mb-4">
+                        <h3 class="position-title">
+                            <i class="fas fa-quote-left me-2"></i>Kshitiz's Position
+                        </h3>
+                        <div class="position-content">
+                            <p class="position-text">{{ opinion.position }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Description -->
+                    {% if opinion.description %}
+                    <div class="opinion-description-section mb-4">
+                        <h4>Context & Background</h4>
+                        <p class="description-text">{{ opinion.description }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Poll Section -->
+                    <div class="poll-voting-section">
+                        <h4 class="poll-question-title">
+                            <i class="fas fa-poll me-2"></i>{{ opinion.poll_question }}
+                        </h4>
+                        
+                        <div class="poll-options-container">
+                            {% for option in opinion.poll_options %}
+                            <div class="poll-option" data-opinion-id="{{ opinion.id }}" data-option-index="{{ loop.index0 }}">
+                                <div class="poll-option-content">
+                                    <span class="poll-option-text">{{ option }}</span>
+                                    <span class="poll-percentage">{{ opinion.percentages[loop.index0] }}%</span>
+                                </div>
+                                <div class="poll-progress">
+                                    <div class="poll-progress-bar" style="width: {{ opinion.percentages[loop.index0] }}%;"></div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="poll-stats-section">
+                            <div class="poll-total-votes">
+                                <i class="fas fa-users me-1"></i>
+                                <strong>{{ opinion.total_votes }}</strong> people have voted
+                            </div>
+                            <small class="text-muted">Click on any option above to cast your vote</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Related Polls Section -->
+<section class="section-padding bg-light">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="related-polls-section">
+                    <h4 class="mb-4">More from Kshitiz Ki Rai</h4>
+                    <div class="d-flex justify-content-center gap-3 flex-wrap">
+                        <a href="{{ url_for('polls_archive') }}" class="btn btn-primary">
+                            <i class="fas fa-list me-2"></i>View All Polls
+                        </a>
+                        <a href="{{ url_for('index') }}#beyond-reel" class="btn btn-outline-primary">
+                            <i class="fas fa-play me-2"></i>Watch Reels
+                        </a>
+                        <a href="{{ url_for('resources') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-graduation-cap me-2"></i>Learning and Resources
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Hidden form for voting -->
+<form id="poll-vote-form" style="display: none;" method="POST" action="{{ url_for('vote_poll') }}">
+    {{ poll_form.hidden_tag() }}
+    {{ poll_form.opinion_id(value=opinion.id) }}
+    {{ poll_form.option_index() }}
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% endblock %}

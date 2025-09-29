@@ -146,6 +146,40 @@ def vote_poll():
     
     return jsonify({'status': 'error', 'message': 'Invalid request'})
 
+@app.route('/polls')
+def polls_archive():
+    """Poll Archive Page - All Kshitiz Ki Rai polls"""
+    opinions = Opinion.query.order_by(Opinion.created_at.desc()).all()
+    
+    # Format opinions for display
+    formatted_opinions = []
+    for opinion in opinions:
+        formatted_opinion = opinion.to_dict()
+        # Add formatted date
+        formatted_opinion['formatted_date'] = opinion.created_at.strftime("%B %d, %Y")
+        # Add short description
+        formatted_opinion['short_description'] = (opinion.description[:100] + '...' 
+                                                 if opinion.description and len(opinion.description) > 100 
+                                                 else opinion.description or '')
+        formatted_opinions.append(formatted_opinion)
+    
+    return render_template('polls_archive.html', opinions=formatted_opinions)
+
+@app.route('/poll/<int:poll_id>')
+def poll_detail(poll_id):
+    """Individual Poll Detail Page"""
+    opinion = Opinion.query.get_or_404(poll_id)
+    poll_form = PollVoteForm()
+    
+    # Convert to dict and calculate percentages
+    formatted_opinion = opinion.to_dict()
+    from utils import calculate_poll_percentages
+    formatted_opinion['percentages'] = calculate_poll_percentages(formatted_opinion['votes'])
+    formatted_opinion['total_votes'] = sum(formatted_opinion['votes'])
+    formatted_opinion['formatted_date'] = opinion.created_at.strftime("%B %d, %Y")
+    
+    return render_template('poll_detail.html', opinion=formatted_opinion, poll_form=poll_form)
+
 @app.route('/create_payment', methods=['POST'])
 def create_payment():
     """Create Razorpay payment order"""

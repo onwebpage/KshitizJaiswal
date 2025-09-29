@@ -113,47 +113,64 @@
             <p class="section-subtitle">"Kshitiz ki Rai, Tumhara Faisla."</p>
         </div>
         
-        <div class="row g-4">
-            {% for opinion in content.opinions %}
-            <div class="col-lg-6">
+        {% if content.opinions %}
+        <div class="row justify-content-center">
+            {% set latest_opinion = content.opinions[0] %}
+            <div class="col-lg-8">
                 <div class="opinion-card">
                     <div class="opinion-header">
-                        <h4>{{ opinion.title }}</h4>
+                        <h4>{{ latest_opinion.title }}</h4>
                         <div class="opinion-position">
                             <i class="fas fa-quote-left me-2"></i>
-                            {{ opinion.position }}
+                            {{ latest_opinion.position }}
                         </div>
                     </div>
                     
-                    {% if opinion.description %}
-                    <p class="opinion-description">{{ opinion.description }}</p>
+                    {% if latest_opinion.description %}
+                    <p class="opinion-description">{{ latest_opinion.description }}</p>
                     {% endif %}
                     
                     <div class="poll-section">
-                        <h6 class="poll-question">{{ opinion.poll_question }}</h6>
+                        <h6 class="poll-question">{{ latest_opinion.poll_question }}</h6>
                         <div class="poll-options">
-                            {% for option in opinion.poll_options %}
-                            <div class="poll-option" data-opinion-id="{{ opinion.id }}" data-option-index="{{ loop.index0 }}">
+                            {% for option in latest_opinion.poll_options %}
+                            <div class="poll-option" data-opinion-id="{{ latest_opinion.id }}" data-option-index="{{ loop.index0 }}">
                                 <div class="poll-option-content">
                                     <span class="poll-option-text">{{ option }}</span>
-                                    <span class="poll-percentage">{{ opinion.percentages[loop.index0] }}%</span>
+                                    <span class="poll-percentage">{{ latest_opinion.percentages[loop.index0] }}%</span>
                                 </div>
                                 <div class="poll-progress">
-                                    <div class="poll-progress-bar" style="width: {{ opinion.percentages[loop.index0] }}%;"></div>
+                                    <div class="poll-progress-bar" style="width: {{ latest_opinion.percentages[loop.index0] }}%;"></div>
                                 </div>
                             </div>
                             {% endfor %}
                         </div>
                         <div class="poll-stats">
                             <small class="text-muted">
-                                <i class="fas fa-users me-1"></i>{{ opinion.total_votes }} votes
+                                <i class="fas fa-users me-1"></i>{{ latest_opinion.total_votes }} votes
                             </small>
                         </div>
                     </div>
+                    
+                    <!-- View All Polls Button -->
+                    <div class="text-center mt-4">
+                        <a href="{{ url_for('polls_archive') }}" class="btn btn-outline-primary btn-lg">
+                            <i class="fas fa-list me-2"></i>View All Polls Archive
+                        </a>
+                        <p class="text-muted mt-2 mb-0">Explore all of Kshitiz's opinions and cast your votes</p>
+                    </div>
                 </div>
             </div>
-            {% endfor %}
         </div>
+        {% else %}
+        <div class="text-center">
+            <div class="opinion-card">
+                <i class="fas fa-poll fa-3x text-muted mb-3"></i>
+                <h4 class="text-muted">No Polls Available</h4>
+                <p class="text-muted">Check back soon for Kshitiz's latest opinions!</p>
+            </div>
+        </div>
+        {% endif %}
     </div>
 </section>
 
