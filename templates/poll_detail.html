@@ -63,16 +63,42 @@
                             <i class="fas fa-poll me-2"></i>{{ opinion.poll_question }}
                         </h4>
                         
+                        <!-- Chart Toggle Buttons -->
+                        <div class="chart-controls mb-4">
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-outline-primary active" id="barChartBtn">
+                                    <i class="fas fa-chart-bar me-1"></i>Bar Chart
+                                </button>
+                                <button type="button" class="btn btn-outline-primary" id="pieChartBtn">
+                                    <i class="fas fa-chart-pie me-1"></i>Pie Chart
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Charts Container -->
+                        <div class="charts-container mb-4">
+                            <div class="chart-wrapper" id="barChartWrapper">
+                                <canvas id="barChart" width="400" height="200"></canvas>
+                            </div>
+                            <div class="chart-wrapper" id="pieChartWrapper" style="display: none;">
+                                <canvas id="pieChart" width="400" height="200"></canvas>
+                            </div>
+                        </div>
+                        
+                        <!-- Interactive Voting Options -->
                         <div class="poll-options-container">
+                            <h5 class="voting-title">
+                                <i class="fas fa-vote-yea me-2"></i>Cast Your Vote
+                            </h5>
                             {% for option in opinion.poll_options %}
-                            <div class="poll-option" data-opinion-id="{{ opinion.id }}" data-option-index="{{ loop.index0 }}">
-                                <div class="poll-option-content">
-                                    <span class="poll-option-text">{{ option }}</span>
-                                    <span class="poll-percentage">{{ opinion.percentages[loop.index0] }}%</span>
+                            <div class="poll-option-vote" data-opinion-id="{{ opinion.id }}" data-option-index="{{ loop.index0 }}">
+                                <div class="vote-option-content">
+                                    <span class="vote-option-text">{{ option }}</span>
+                                    <span class="vote-count">({{ opinion.votes[loop.index0] }} votes)</span>
                                 </div>
-                                <div class="poll-progress">
-                                    <div class="poll-progress-bar" style="width: {{ opinion.percentages[loop.index0] }}%;"></div>
-                                </div>
+                                <button class="vote-btn" type="button">
+                                    <i class="fas fa-hand-paper me-1"></i>Vote
+                                </button>
                             </div>
                             {% endfor %}
                         </div>
@@ -82,7 +108,7 @@
                                 <i class="fas fa-users me-1"></i>
                                 <strong>{{ opinion.total_votes }}</strong> people have voted
                             </div>
-                            <small class="text-muted">Click on any option above to cast your vote</small>
+                            <small class="text-muted">Click "Vote" button above to cast your vote for any option</small>
                         </div>
                     </div>
                 </div>
@@ -124,5 +150,233 @@
 {% endblock %}
 
 {% block scripts %}
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Poll data from template
+    const pollData = {
+        labels: {{ opinion.poll_options | tojson }},
+        votes: {{ opinion.votes | tojson }},
+        percentages: {{ opinion.percentages | tojson }},
+        total: {{ opinion.total_votes }}
+    };
+    
+    // Color scheme for charts
+    const colors = [
+        'rgba(139, 0, 0, 0.8)',    // Dark red
+        'rgba(204, 0, 0, 0.8)',    // Red
+        'rgba(255, 102, 102, 0.8)', // Light red
+        'rgba(255, 153, 153, 0.8)', // Lighter red
+        'rgba(255, 204, 204, 0.8)'  // Very light red
+    ];
+    
+    const borderColors = [
+        'rgba(139, 0, 0, 1)',
+        'rgba(204, 0, 0, 1)',
+        'rgba(255, 102, 102, 1)',
+        'rgba(255, 153, 153, 1)',
+        'rgba(255, 204, 204, 1)'
+    ];
+    
+    // Chart configuration
+    const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    padding: 20,
+                    usePointStyle: true,
+                    font: {
+                        size: 12
+                    }
+                }
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        const votes = pollData.votes[context.dataIndex];
+                        const percentage = pollData.percentages[context.dataIndex];
+                        return `${context.label}: ${votes} votes (${percentage}%)`;
+                    }
+                }
+            }
+        }
+    };
+    
+    // Bar Chart
+    const barCtx = document.getElementById('barChart').getContext('2d');
+    const barChart = new Chart(barCtx, {
+        type: 'bar',
+        data: {
+            labels: pollData.labels,
+            datasets: [{
+                label: 'Votes',
+                data: pollData.votes,
+                backgroundColor: colors.slice(0, pollData.labels.length),
+                borderColor: borderColors.slice(0, pollData.labels.length),
+                borderWidth: 2,
+                borderRadius: 5,
+                borderSkipped: false
+            }]
+        },
+        options: {
+            ...commonOptions,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.1)'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            },
+            plugins: {
+                ...commonOptions.plugins,
+                title: {
+                    display: true,
+                    text: 'Poll Results - Votes Distribution',
+                    font: {
+                        size: 16,
+                        weight: 'bold'
+                    },
+                    padding: 20
+                }
+            }
+        }
+    });
+    
+    // Pie Chart
+    const pieCtx = document.getElementById('pieChart').getContext('2d');
+    const pieChart = new Chart(pieCtx, {
+        type: 'doughnut',
+        data: {
+            labels: pollData.labels,
+            datasets: [{
+                data: pollData.votes,
+                backgroundColor: colors.slice(0, pollData.labels.length),
+                borderColor: borderColors.slice(0, pollData.labels.length),
+                borderWidth: 2,
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            ...commonOptions,
+            cutout: '50%',
+            plugins: {
+                ...commonOptions.plugins,
+                title: {
+                    display: true,
+                    text: 'Poll Results - Percentage Distribution',
+                    font: {
+                        size: 16,
+                        weight: 'bold'
+                    },
+                    padding: 20
+                }
+            }
+        }
+    });
+    
+    // Chart toggle functionality
+    const barChartBtn = document.getElementById('barChartBtn');
+    const pieChartBtn = document.getElementById('pieChartBtn');
+    const barChartWrapper = document.getElementById('barChartWrapper');
+    const pieChartWrapper = document.getElementById('pieChartWrapper');
+    
+    barChartBtn.addEventListener('click', function() {
+        barChartBtn.classList.add('active');
+        pieChartBtn.classList.remove('active');
+        barChartWrapper.style.display = 'block';
+        pieChartWrapper.style.display = 'none';
+        barChart.resize();
+    });
+    
+    pieChartBtn.addEventListener('click', function() {
+        pieChartBtn.classList.add('active');
+        barChartBtn.classList.remove('active');
+        barChartWrapper.style.display = 'none';
+        pieChartWrapper.style.display = 'block';
+        pieChart.resize();
+    });
+    
+    // Voting functionality
+    const voteButtons = document.querySelectorAll('.vote-btn');
+    const pollForm = document.getElementById('poll-vote-form');
+    const opinionIdField = pollForm.querySelector('input[name="opinion_id"]');
+    const optionIndexField = pollForm.querySelector('input[name="option_index"]');
+    
+    voteButtons.forEach(function(button) {
+        button.addEventListener('click', function() {
+            const voteOption = this.closest('.poll-option-vote');
+            const opinionId = voteOption.getAttribute('data-opinion-id');
+            const optionIndex = voteOption.getAttribute('data-option-index');
+            
+            // Set form values
+            opinionIdField.value = opinionId;
+            optionIndexField.value = optionIndex;
+            
+            // Submit vote via AJAX
+            const formData = new FormData(pollForm);
+            
+            fetch('{{ url_for("vote_poll") }}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Show success message
+                    showVoteMessage('Vote recorded successfully!', 'success');
+                    // Refresh page to show updated results
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    showVoteMessage(data.message || 'Error recording vote', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showVoteMessage('Error recording vote', 'error');
+            });
+        });
+    });
+    
+    function showVoteMessage(message, type) {
+        // Create alert element
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show vote-alert`;
+        alert.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        // Insert at top of poll section
+        const pollSection = document.querySelector('.poll-voting-section');
+        pollSection.insertBefore(alert, pollSection.firstChild);
+        
+        // Auto-hide after 3 seconds
+        setTimeout(() => {
+            if (alert.parentNode) {
+                alert.remove();
+            }
+        }, 3000);
+    }
+});
+</script>
 {% endblock %}
