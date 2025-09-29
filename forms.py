@@ -29,6 +29,8 @@ class OpinionForm(FlaskForm):
     title = StringField('Title', validators=[DataRequired(), Length(max=100)])
     position = StringField('Position', validators=[DataRequired(), Length(max=200)])
     description = TextAreaField('Description')
+    topic_tag = StringField('Topic Tag', validators=[Length(max=100)], 
+                           render_kw={"placeholder": "e.g., Politics, Social Issues, Economics"})
     poll_question = StringField('Poll Question', validators=[DataRequired()])
     poll_option1 = StringField('Poll Option 1', validators=[DataRequired()])
     poll_option2 = StringField('Poll Option 2', validators=[DataRequired()])

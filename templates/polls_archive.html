@@ -37,9 +37,16 @@
                                             {{ opinion.title }}
                                         </a>
                                     </h4>
-                                    <p class="poll-date">
-                                        <i class="fas fa-calendar me-1"></i>{{ opinion.formatted_date }}
-                                    </p>
+                                    <div class="poll-meta-header mb-2">
+                                        <span class="poll-date">
+                                            <i class="fas fa-calendar me-1"></i>{{ opinion.formatted_date }}
+                                        </span>
+                                        {% if opinion.topic_tag %}
+                                        <span class="topic-tag">
+                                            <i class="fas fa-tag me-1"></i>{{ opinion.topic_tag }}
+                                        </span>
+                                        {% endif %}
+                                    </div>
                                     {% if opinion.short_description %}
                                     <p class="poll-description">{{ opinion.short_description }}</p>
                                     {% endif %}

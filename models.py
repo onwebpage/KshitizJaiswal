@@ -34,6 +34,7 @@ class Opinion(db.Model):
     poll_question = db.Column(db.String(500))
     poll_options = db.Column(db.Text)  # JSON string of options list
     votes = db.Column(db.Text)  # JSON string of votes list
+    topic_tag = db.Column(db.String(100))  # Topic tag for grouping/playlist
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def to_dict(self):
@@ -44,7 +45,8 @@ class Opinion(db.Model):
             'description': self.description or '',
             'poll_question': self.poll_question or '',
             'poll_options': json.loads(self.poll_options) if self.poll_options else [],
-            'votes': json.loads(self.votes) if self.votes else []
+            'votes': json.loads(self.votes) if self.votes else [],
+            'topic_tag': self.topic_tag or ''
         }
 
 class Subscriber(db.Model):

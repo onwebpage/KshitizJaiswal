@@ -21,6 +21,11 @@
                         <span class="poll-date">
                             <i class="fas fa-calendar me-1"></i>{{ opinion.formatted_date }}
                         </span>
+                        {% if opinion.topic_tag %}
+                        <span class="poll-topic-tag ms-3">
+                            <i class="fas fa-tag me-1"></i>{{ opinion.topic_tag }}
+                        </span>
+                        {% endif %}
                         <span class="poll-votes ms-3">
                             <i class="fas fa-users me-1"></i>{{ opinion.total_votes }} votes
                         </span>

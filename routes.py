@@ -315,6 +315,7 @@ def admin_add_opinion():
             title=form.title.data,
             position=form.position.data,
             description=form.description.data or '',
+            topic_tag=form.topic_tag.data or '',
             poll_question=form.poll_question.data,
             poll_options=json.dumps(poll_options),
             votes=json.dumps([0] * len(poll_options))
@@ -415,6 +416,7 @@ def admin_edit_opinion(opinion_id):
         opinion.title = form.title.data
         opinion.position = form.position.data
         opinion.description = form.description.data or ''
+        opinion.topic_tag = form.topic_tag.data or ''
         opinion.poll_question = form.poll_question.data
         opinion.poll_options = json.dumps(poll_options)
         opinion.votes = json.dumps(new_votes)
@@ -429,6 +431,7 @@ def admin_edit_opinion(opinion_id):
         form.title.data = opinion.title
         form.position.data = opinion.position
         form.description.data = opinion.description
+        form.topic_tag.data = opinion.topic_tag
         form.poll_question.data = opinion.poll_question
         
         poll_options = json.loads(opinion.poll_options) if opinion.poll_options else []

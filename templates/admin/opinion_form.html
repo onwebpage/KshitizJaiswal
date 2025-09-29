@@ -56,6 +56,21 @@
                             </div>
                             
                             <div class="col-12">
+                                <label class="form-label">{{ form.topic_tag.label.text }} <small class="text-muted">(Optional)</small></label>
+                                {{ form.topic_tag(class="form-control") }}
+                                {% if form.topic_tag.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {% for error in form.topic_tag.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <small class="form-text text-muted">
+                                    <i class="fas fa-tag me-1"></i>Add a topic tag to group related polls together (e.g., Politics, Social Issues, Economics)
+                                </small>
+                            </div>
+                            
+                            <div class="col-12">
                                 <h5 class="mb-3">
                                     <i class="fas fa-poll me-2"></i>Poll Configuration
                                 </h5>
