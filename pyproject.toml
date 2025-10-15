@@ -15,4 +15,7 @@ dependencies = [
     "wtforms>=3.2.1",
     "razorpay>=1.4.2",
     "flask-login>=0.6.3",
+    "clerk-backend-api>=3.3.1",
+    "httpx>=0.28.1",
+    "sqlalchemy>=2.0.43",
 ]
