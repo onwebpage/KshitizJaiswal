@@ -35,8 +35,49 @@
     <meta property="og:title" content="Kshitiz Jaiswal - Unfiltered Commentator">
     <meta property="og:description" content="The content here is selective, but the truth is never biased.">
     <meta property="og:type" content="website">
+    
+    <!-- Google Tag Manager -->
+    <script>
+        (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+        })(window,document,'script','dataLayer','GTM-XXXXXXX');
+        // Replace GTM-XXXXXXX with your actual GTM ID
+    </script>
+    
+    <!-- Microsoft Clarity -->
+    <script type="text/javascript">
+        (function(c,l,a,r,i,t,y){
+            c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+            t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+            y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+        })(window, document, "clarity", "script", "YOUR_CLARITY_ID");
+    </script>
+    
+    <!-- Meta Pixel Code -->
+    <script>
+        !function(f,b,e,v,n,t,s)
+        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+        n.queue=[];t=b.createElement(e);t.async=!0;
+        t.src=v;s=b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t,s)}(window, document,'script',
+        'https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init', 'YOUR_PIXEL_ID');
+        fbq('track', 'PageView');
+    </script>
+    <noscript><img height="1" width="1" style="display:none"
+        src="https://www.facebook.com/tr?id=YOUR_PIXEL_ID&ev=PageView&noscript=1"
+    /></noscript>
 </head>
 <body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-XXXXXXX"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
+    
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top custom-navbar">
         <div class="container">
@@ -135,7 +176,7 @@
                             <li><a href="{{ url_for('index') }}#beyond-reel">Beyond The Reel</a></li>
                             <li><a href="{{ url_for('polls_archive') }}">Kshitiz Ki Rai</a></li>
                             <li><a href="{{ url_for('resources') }}">Learning and Resources</a></li>
-                            <li><a href="{{ url_for('index') }}#upcoming-shows">Shows</a></li>
+                            <li><a href="{{ url_for('index') }}#upcoming-shows">Upcoming Shows</a></li>
                         </ul>
                     </div>
                 </div>
@@ -143,12 +184,12 @@
                 <!-- Support Links -->
                 <div class="col-lg-2 col-md-6">
                     <div class="footer-column">
-                        <h6 class="footer-column-title">Support</h6>
+                        <h6 class="footer-column-title">The Circle</h6>
                         <ul class="footer-links">
                             <li><a href="{{ url_for('index') }}#support">Support Now</a></li>
                             <li><a href="{{ url_for('index') }}#newsletter">Newsletter</a></li>
                             <li><a href="{{ url_for('contact') }}">Contact</a></li>
-                            <li><a href="{{ url_for('contact') }}">Collaborate</a></li>
+                            <li><a href="{{ url_for('contact') }}">Join The Circle</a></li>
                         </ul>
                     </div>
                 </div>
@@ -161,6 +202,7 @@
                             <li><a href="{{ url_for('privacy_policy') }}">Privacy Policy</a></li>
                             <li><a href="{{ url_for('terms_of_service') }}">Terms of Service</a></li>
                             <li><a href="{{ url_for('disclaimer') }}">Disclaimer</a></li>
+                            <li><a href="{{ url_for('cookies_policy') }}">Cookies</a></li>
                         </ul>
                     </div>
                 </div>
@@ -218,6 +260,46 @@
                     <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
                         <i class="fas fa-check me-1"></i>I Accept
                     </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Newsletter Modal -->
+    <div class="modal fade" id="newsletterModal" tabindex="-1" aria-labelledby="newsletterModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content newsletter-modal-content">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title" id="newsletterModalLabel">
+                        <i class="fas fa-envelope text-primary me-2"></i>Stay Updated with Kshitiz
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted mb-4">Get weekly insights, exclusive content, and updates directly in your inbox.</p>
+                    <p class="text-center">
+                        <a href="{{ url_for('index') }}#newsletter" class="btn btn-primary btn-lg">
+                            <i class="fas fa-envelope me-2"></i>Subscribe to Newsletter
+                        </a>
+                    </p>
+                    <p class="text-muted text-center"><small>Click to go to the subscription form</small></p>
+                    <!--<form method="POST" action="{{ url_for('newsletter_subscribe') }}" id="newsletterPopupForm">
+                        <div class="mb-3">
+                            <input type="text" name="name" class="form-control" placeholder="Your Name" required>
+                        </div>
+                        <div class="mb-3">
+                            <input type="email" name="email" class="form-control" placeholder="Your Email" required>
+                        </div>
+                        <div class="mb-3">
+                            <input type="text" name="place" class="form-control" placeholder="Your City" required>
+                        </div>
+                        <div class="mb-3">
+                            <input type="number" name="age" class="form-control" placeholder="Your Age" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-paper-plane me-2"></i>Subscribe Now
+                        </button>
+                    </form>-->
                 </div>
             </div>
         </div>

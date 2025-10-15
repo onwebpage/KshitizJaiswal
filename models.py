@@ -13,6 +13,7 @@ class Reel(db.Model):
     behind_thought = db.Column(db.Text)
     sources = db.Column(db.Text)  # JSON string of sources list
     extra_context = db.Column(db.Text)
+    category_tag = db.Column(db.String(50))  # trending, new, must_watch
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def to_dict(self):
@@ -23,7 +24,8 @@ class Reel(db.Model):
             'video_url': self.video_url or '',
             'behind_thought': self.behind_thought or '',
             'sources': json.loads(self.sources) if self.sources else [],
-            'extra_context': self.extra_context or ''
+            'extra_context': self.extra_context or '',
+            'category_tag': self.category_tag or ''
         }
 
 class Opinion(db.Model):

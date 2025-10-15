@@ -15,14 +15,6 @@
                 <div class="col-lg-8">
                     <h1 class="hero-title">{{ content.hero.name }}</h1>
                     <p class="hero-tagline">{{ content.hero.tagline }}</p>
-                    <div class="hero-cta">
-                        <a href="#beyond-reel" class="btn btn-primary btn-lg me-3">
-                            <i class="fas fa-play me-2"></i>Watch Reels
-                        </a>
-                        <a href="#support" class="btn btn-outline-light btn-lg">
-                            <i class="fas fa-heart me-2"></i>Support Now
-                        </a>
-                    </div>
                 </div>
             </div>
         </div>
@@ -43,6 +35,17 @@
                 <div class="reel-item">
                     <a href="{{ url_for('reel_detail', reel_id=reel.id) }}" class="reel-link">
                         <div class="reel-thumbnail">
+                            {% if reel.category_tag %}
+                            <div class="reel-category-tag {{ reel.category_tag }}">
+                                {% if reel.category_tag == 'trending' %}
+                                    🔥 Trending
+                                {% elif reel.category_tag == 'new' %}
+                                    🆕 New
+                                {% elif reel.category_tag == 'must_watch' %}
+                                    ⭐ Must Watch
+                                {% endif %}
+                            </div>
+                            {% endif %}
                             <img src="{{ url_for('static', filename=reel.thumbnail) if reel.thumbnail and not reel.thumbnail.startswith('http') else reel.thumbnail }}" alt="{{ reel.title }}" class="img-fluid">
                             <div class="reel-overlay">
                                 <i class="fas fa-play-circle"></i>
@@ -58,6 +61,17 @@
                 <div class="reel-item">
                     <a href="{{ url_for('reel_detail', reel_id=reel.id) }}" class="reel-link">
                         <div class="reel-thumbnail">
+                            {% if reel.category_tag %}
+                            <div class="reel-category-tag {{ reel.category_tag }}">
+                                {% if reel.category_tag == 'trending' %}
+                                    🔥 Trending
+                                {% elif reel.category_tag == 'new' %}
+                                    🆕 New
+                                {% elif reel.category_tag == 'must_watch' %}
+                                    ⭐ Must Watch
+                                {% endif %}
+                            </div>
+                            {% endif %}
                             <img src="{{ url_for('static', filename=reel.thumbnail) if reel.thumbnail and not reel.thumbnail.startswith('http') else reel.thumbnail }}" alt="{{ reel.title }}" class="img-fluid">
                             <div class="reel-overlay">
                                 <i class="fas fa-play-circle"></i>
@@ -250,8 +264,8 @@
 <section id="support" class="section-padding support-section-bg">
     <div class="container">
         <div class="text-center mb-5">
-            <h2 class="section-title text-white">Support Kshitiz</h2>
-            <p class="section-subtitle text-white">"Friends of Kshitiz — Support Now (Weekly Basis)."</p>
+            <h2 class="section-title text-white">Friends of Kshitiz</h2>
+            <p class="section-subtitle text-white">— Support Now</p>
         </div>
         
         <div class="row justify-content-center">
@@ -292,6 +306,20 @@
                             <p class="text-muted">Subscription tiers are being updated. Please check back soon!</p>
                         </div>
                         {% endif %}
+                    </div>
+                    
+                    <!-- Custom Amount Support -->
+                    <div class="custom-support-section mt-5">
+                        <div class="custom-support-card text-center">
+                            <h5 class="text-white mb-3">Aapki marzi, aapka support. Jitna chaho, utna.</h5>
+                            <div class="custom-amount-input-group">
+                                <span class="currency-symbol">₹</span>
+                                <input type="number" id="customAmount" class="custom-amount-input" placeholder="Enter amount" min="10" value="100">
+                                <button class="btn btn-custom-support" onclick="initiatePayment(document.getElementById('customAmount').value)">
+                                    <i class="fas fa-heart me-2"></i>Support Now
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 

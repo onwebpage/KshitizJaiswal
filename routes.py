@@ -285,7 +285,8 @@ def admin_add_reel():
             video_url=form.video_url.data or '',
             behind_thought=form.behind_thought.data,
             sources=json.dumps(sources),
-            extra_context=form.extra_context.data or ''
+            extra_context=form.extra_context.data or '',
+            category_tag=form.category_tag.data or ''
         )
         
         db.session.add(new_reel)
@@ -356,6 +357,7 @@ def admin_edit_reel(reel_id):
         reel.behind_thought = form.behind_thought.data
         reel.sources = json.dumps(sources)
         reel.extra_context = form.extra_context.data or ''
+        reel.category_tag = form.category_tag.data or ''
         
         db.session.commit()
         
@@ -369,6 +371,7 @@ def admin_edit_reel(reel_id):
         form.behind_thought.data = reel.behind_thought
         form.sources.data = '\n'.join(json.loads(reel.sources) if reel.sources else [])
         form.extra_context.data = reel.extra_context
+        form.category_tag.data = reel.category_tag or ''
     
     return render_template('admin/reel_form.html', form=form, title='Edit Reel', reel=reel)
 
@@ -1027,6 +1030,11 @@ def terms_of_service():
 def disclaimer():
     """Disclaimer page"""
     return render_template('disclaimer.html')
+
+@app.route('/cookies-policy')
+def cookies_policy():
+    """Cookies Policy page"""
+    return render_template('cookies_policy.html')
 
 # Clerk authentication routes
 @app.route('/login')

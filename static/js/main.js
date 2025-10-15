@@ -6,6 +6,7 @@
 
     // Global variables
     let disclaimerShown = false;
+    let newsletterShown = false;
     let isExiting = false;
 
     // DOM Content Loaded
@@ -21,6 +22,7 @@
         initNewsletterForm();
         initScrollAnimations();
         initDisclaimerPopup();
+        initNewsletterPopup();
         initShareButtons();
         initNavbarEffects();
         initFormValidations();
@@ -226,6 +228,13 @@
             const disclaimerModal = new bootstrap.Modal(document.getElementById('disclaimerModal'));
             disclaimerModal.show();
             disclaimerShown = true;
+            
+            // Track disclaimer view with GTM
+            if (window.dataLayer) {
+                window.dataLayer.push({
+                    'event': 'disclaimer_shown'
+                });
+            }
         }, 7000);
 
         // Add event listener for when user accepts disclaimer
@@ -236,6 +245,96 @@
             acceptButton.addEventListener('click', function() {
                 localStorage.setItem('disclaimerAccepted', 'true');
                 disclaimerShown = true;
+                
+                // Track disclaimer acceptance with GTM
+                if (window.dataLayer) {
+                    window.dataLayer.push({
+                        'event': 'disclaimer_accepted'
+                    });
+                }
+            });
+        }
+    }
+
+    // Initialize newsletter popup
+    function initNewsletterPopup() {
+        // Don't show newsletter popup on admin pages
+        if (window.location.pathname.startsWith('/admin')) {
+            return;
+        }
+        
+        // Check if already subscribed or dismissed
+        if (localStorage.getItem('newsletterSubscribed') === 'true' || 
+            localStorage.getItem('newsletterDismissed') === 'true') {
+            newsletterShown = true;
+            return;
+        }
+        
+        if (newsletterShown) return;
+        
+        setTimeout(() => {
+            const newsletterModal = new bootstrap.Modal(document.getElementById('newsletterModal'));
+            newsletterModal.show();
+            newsletterShown = true;
+            
+            // Track newsletter popup view with GTM
+            if (window.dataLayer) {
+                window.dataLayer.push({
+                    'event': 'newsletter_popup_shown'
+                });
+            }
+            
+            // Track with Microsoft Clarity
+            if (window.clarity) {
+                window.clarity('event', 'newsletter_popup_shown');
+            }
+            
+            // Track with Meta Pixel
+            if (window.fbq) {
+                window.fbq('trackCustom', 'NewsletterPopupShown');
+            }
+        }, 40000);
+
+        // Add event listener for when modal is dismissed
+        const newsletterModalEl = document.getElementById('newsletterModal');
+        if (newsletterModalEl) {
+            newsletterModalEl.addEventListener('hidden.bs.modal', function () {
+                if (!localStorage.getItem('newsletterSubscribed')) {
+                    localStorage.setItem('newsletterDismissed', 'true');
+                    
+                    // Track dismissal with GTM
+                    if (window.dataLayer) {
+                        window.dataLayer.push({
+                            'event': 'newsletter_popup_dismissed'
+                        });
+                    }
+                }
+            });
+        }
+
+        // Add event listener for successful subscription
+        const newsletterForm = document.getElementById('newsletterPopupForm');
+        if (newsletterForm) {
+            newsletterForm.addEventListener('submit', function() {
+                localStorage.setItem('newsletterSubscribed', 'true');
+                
+                // Track subscription with GTM
+                if (window.dataLayer) {
+                    window.dataLayer.push({
+                        'event': 'newsletter_subscribed',
+                        'subscription_source': 'popup'
+                    });
+                }
+                
+                // Track with Microsoft Clarity
+                if (window.clarity) {
+                    window.clarity('event', 'newsletter_subscribed');
+                }
+                
+                // Track with Meta Pixel
+                if (window.fbq) {
+                    window.fbq('track', 'Lead');
+                }
             });
         }
     }

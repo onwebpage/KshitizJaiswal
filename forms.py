@@ -24,6 +24,12 @@ class ReelForm(FlaskForm):
     behind_thought = TextAreaField('Behind the Thought', validators=[DataRequired()])
     sources = TextAreaField('Sources (one per line)')
     extra_context = TextAreaField('Extra Context')
+    category_tag = SelectField('Category Tag', choices=[
+        ('', 'No Tag'),
+        ('trending', '🔥 Trending'),
+        ('new', '🆕 New'),
+        ('must_watch', '⭐ Must Watch')
+    ])
 
 class OpinionForm(FlaskForm):
     title = StringField('Title', validators=[DataRequired(), Length(max=100)])
