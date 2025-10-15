@@ -1036,6 +1036,21 @@ def cookies_policy():
     """Cookies Policy page"""
     return render_template('cookies_policy.html')
 
+@app.route('/refund-policy')
+def refund_policy():
+    """Refund and Cancellation Policy page"""
+    return render_template('refund_policy.html')
+
+@app.route('/return-policy')
+def return_policy():
+    """Return Policy page"""
+    return render_template('return_policy.html')
+
+@app.route('/shipping-policy')
+def shipping_policy():
+    """Shipping Policy page"""
+    return render_template('shipping_policy.html')
+
 # Clerk authentication routes
 @app.route('/login')
 def clerk_login():

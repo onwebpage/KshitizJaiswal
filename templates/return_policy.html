@@ -1,0 +1,466 @@
+{% extends "base.html" %}
+
+{% block title %}Return Policy - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="return-hero">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10 text-center">
+                <div class="hero-icon mb-4">
+                    <i class="fas fa-box"></i>
+                </div>
+                <h1 class="return-hero-title">Return Policy</h1>
+                <p class="return-hero-subtitle">Information about product returns and exchanges</p>
+                <p class="text-white-50 mb-0"><i class="far fa-calendar-alt me-2"></i>Last updated: October 15, 2025</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container" style="padding: 60px 15px;">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            
+            <!-- Return Window -->
+            <div class="return-section fade-in">
+                <div class="return-icon-box">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="return-content">
+                    <h3 class="return-section-title">Return Window</h3>
+                    <p class="return-text">We offer refund/exchange within first <strong>3 days from the date of your purchase</strong>. If 3 days have passed since your purchase, you will not be offered a return, exchange or refund of any kind.</p>
+                </div>
+            </div>
+            
+            <!-- Eligibility -->
+            <div class="return-section fade-in">
+                <div class="return-icon-box">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="return-content">
+                    <h3 class="return-section-title">Eligibility Criteria</h3>
+                    <p class="return-text mb-3">In order to become eligible for a return or an exchange, the following conditions must be met:</p>
+                    
+                    <div class="criteria-list">
+                        <div class="criteria-item">
+                            <div class="criteria-icon">
+                                <i class="fas fa-tags"></i>
+                            </div>
+                            <div>
+                                <h5>Unused Condition</h5>
+                                <p>The purchased item should be unused and in the same condition as you received it</p>
+                            </div>
+                        </div>
+                        
+                        <div class="criteria-item">
+                            <div class="criteria-icon">
+                                <i class="fas fa-box-open"></i>
+                            </div>
+                            <div>
+                                <h5>Original Packaging</h5>
+                                <p>The item must have original packaging intact</p>
+                            </div>
+                        </div>
+                        
+                        <div class="criteria-item">
+                            <div class="criteria-icon">
+                                <i class="fas fa-ban"></i>
+                            </div>
+                            <div>
+                                <h5>Sale Items</h5>
+                                <p>If the item was purchased on a sale, then it may not be eligible for a return/exchange</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Replacement -->
+            <div class="return-section fade-in">
+                <div class="return-icon-box">
+                    <i class="fas fa-exchange-alt"></i>
+                </div>
+                <div class="return-content">
+                    <h3 class="return-section-title">Replacements</h3>
+                    <div class="alert-box info">
+                        <i class="fas fa-info-circle"></i>
+                        <p>Only such items are replaced by us (based on an exchange request), if such items are found defective or damaged.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Exempted Categories -->
+            <div class="return-section fade-in">
+                <div class="return-icon-box">
+                    <i class="fas fa-times-circle"></i>
+                </div>
+                <div class="return-content">
+                    <h3 class="return-section-title">Exempted Categories</h3>
+                    <p class="return-text">You agree that there may be certain categories of products/items that are exempted from returns or refunds. Such categories of products would be identified to you at the time of purchase.</p>
+                </div>
+            </div>
+            
+            <!-- Process -->
+            <div class="return-section fade-in">
+                <div class="return-icon-box">
+                    <i class="fas fa-list-ol"></i>
+                </div>
+                <div class="return-content">
+                    <h3 class="return-section-title">Return Process</h3>
+                    <p class="return-text mb-3">For exchange/return accepted request(s) (as applicable):</p>
+                    
+                    <div class="process-timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-marker">1</div>
+                            <div class="timeline-content">
+                                <h5>Submit Request</h5>
+                                <p>Submit your return/exchange request through our customer service</p>
+                            </div>
+                        </div>
+                        
+                        <div class="timeline-item">
+                            <div class="timeline-marker">2</div>
+                            <div class="timeline-content">
+                                <h5>Ship the Product</h5>
+                                <p>Once your returned product/item is received and inspected by us</p>
+                            </div>
+                        </div>
+                        
+                        <div class="timeline-item">
+                            <div class="timeline-marker">3</div>
+                            <div class="timeline-content">
+                                <h5>Email Notification</h5>
+                                <p>We will send you an email to notify you about receipt of the returned/exchanged product</p>
+                            </div>
+                        </div>
+                        
+                        <div class="timeline-item">
+                            <div class="timeline-marker">4</div>
+                            <div class="timeline-content">
+                                <h5>Quality Check</h5>
+                                <p>If approved after the quality check at our end, your request will be processed in accordance with our policies</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Contact -->
+            <div class="return-section fade-in">
+                <div class="return-icon-box">
+                    <i class="fas fa-envelope"></i>
+                </div>
+                <div class="return-content">
+                    <h3 class="return-section-title">Need Help?</h3>
+                    <p class="return-text mb-3">If you have any questions about our return policy, please don't hesitate to contact us.</p>
+                    <a href="{{ url_for('contact') }}" class="return-cta-btn">
+                        <i class="fas fa-paper-plane me-2"></i>Contact Us
+                    </a>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<style>
+/* Return Hero Section */
+.return-hero {
+    background: var(--gradient-primary);
+    padding: 140px 0 80px;
+    position: relative;
+    overflow: hidden;
+}
+
+.return-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><g fill="%23ffffff" fill-opacity="0.05"><path d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/></g></g></svg>') repeat;
+    opacity: 0.3;
+}
+
+.return-hero .container {
+    position: relative;
+    z-index: 2;
+}
+
+.return-hero-title {
+    font-size: 3.5rem;
+    font-weight: 800;
+    color: var(--white);
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.return-hero-subtitle {
+    font-size: 1.3rem;
+    color: rgba(255, 255, 255, 0.95);
+    margin-bottom: 1.5rem;
+}
+
+@media (max-width: 767.98px) {
+    .return-hero {
+        padding: 120px 0 60px;
+    }
+    
+    .return-hero-title {
+        font-size: 2.5rem;
+    }
+    
+    .return-hero-subtitle {
+        font-size: 1.1rem;
+    }
+}
+
+/* Return Sections */
+.return-section {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 3rem;
+    background: var(--white);
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--gray-200);
+    transition: var(--transition);
+}
+
+.return-section:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-xl);
+}
+
+.return-icon-box {
+    flex-shrink: 0;
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--gradient-primary);
+    border-radius: 20px;
+    color: var(--white);
+    font-size: 2rem;
+    box-shadow: 0 8px 20px rgba(204, 0, 0, 0.3);
+}
+
+.return-content {
+    flex: 1;
+}
+
+.return-section-title {
+    color: var(--gray-800);
+    margin-bottom: 1rem;
+    font-weight: 700;
+    font-size: 1.75rem;
+}
+
+.return-text {
+    color: var(--gray-600);
+    line-height: 1.8;
+    margin-bottom: 1rem;
+}
+
+/* Criteria List */
+.criteria-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.criteria-item {
+    display: flex;
+    gap: 1.5rem;
+    align-items: start;
+    padding: 1.25rem;
+    background: var(--gray-100);
+    border-radius: 15px;
+    transition: var(--transition);
+}
+
+.criteria-item:hover {
+    background: var(--white);
+    box-shadow: var(--shadow-md);
+}
+
+.criteria-icon {
+    flex-shrink: 0;
+    width: 50px;
+    height: 50px;
+    background: var(--gradient-primary);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white);
+    font-size: 1.5rem;
+}
+
+.criteria-item h5 {
+    color: var(--gray-800);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.criteria-item p {
+    color: var(--gray-600);
+    margin: 0;
+    line-height: 1.6;
+}
+
+/* Process Timeline */
+.process-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.timeline-item {
+    display: flex;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+.timeline-marker {
+    flex-shrink: 0;
+    width: 50px;
+    height: 50px;
+    background: var(--gradient-primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white);
+    font-weight: 700;
+    font-size: 1.25rem;
+    box-shadow: 0 4px 15px rgba(204, 0, 0, 0.3);
+}
+
+.timeline-content {
+    flex: 1;
+    padding: 1rem 1.5rem;
+    background: var(--gray-100);
+    border-radius: 12px;
+    transition: var(--transition);
+}
+
+.timeline-content:hover {
+    background: var(--white);
+    box-shadow: var(--shadow-sm);
+}
+
+.timeline-content h5 {
+    color: var(--gray-800);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.timeline-content p {
+    color: var(--gray-600);
+    margin: 0;
+    line-height: 1.6;
+}
+
+/* Alert Box */
+.alert-box {
+    display: flex;
+    align-items: start;
+    gap: 1rem;
+    padding: 1.25rem;
+    border-radius: 12px;
+}
+
+.alert-box.info {
+    background: rgba(6, 182, 212, 0.1);
+    border: 2px solid var(--info-color);
+}
+
+.alert-box i {
+    color: var(--info-color);
+    font-size: 1.5rem;
+    margin-top: 0.25rem;
+}
+
+.alert-box p {
+    color: var(--gray-700);
+    margin-bottom: 0;
+    flex: 1;
+}
+
+/* CTA Button */
+.return-cta-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.875rem 2rem;
+    background: var(--gradient-primary);
+    color: var(--white);
+    text-decoration: none;
+    border-radius: 30px;
+    font-weight: 600;
+    transition: var(--transition);
+    box-shadow: 0 4px 15px rgba(204, 0, 0, 0.3);
+}
+
+.return-cta-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(204, 0, 0, 0.4);
+    color: var(--white);
+}
+
+/* Mobile Responsive */
+@media (max-width: 767.98px) {
+    .return-section {
+        flex-direction: column;
+        gap: 1.5rem;
+        padding: 1.5rem;
+    }
+    
+    .return-icon-box {
+        width: 60px;
+        height: 60px;
+        font-size: 1.5rem;
+    }
+    
+    .return-section-title {
+        font-size: 1.5rem;
+    }
+    
+    .criteria-item {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+</style>
+
+<script>
+// Fade-in animation on scroll
+document.addEventListener('DOMContentLoaded', function() {
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, observerOptions);
+
+    document.querySelectorAll('.fade-in').forEach(element => {
+        element.style.opacity = '0';
+        element.style.transform = 'translateY(30px)';
+        element.style.transition = 'all 0.6s ease';
+        observer.observe(element);
+    });
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,493 @@
+{% extends "base.html" %}
+
+{% block title %}Shipping Policy - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="shipping-hero">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10 text-center">
+                <div class="hero-icon mb-4">
+                    <i class="fas fa-shipping-fast"></i>
+                </div>
+                <h1 class="shipping-hero-title">Shipping Policy</h1>
+                <p class="shipping-hero-subtitle">Everything you need to know about our shipping process</p>
+                <p class="text-white-50 mb-0"><i class="far fa-calendar-alt me-2"></i>Last updated: October 15, 2025</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container" style="padding: 60px 15px;">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            
+            <!-- Shipping Method -->
+            <div class="shipping-section fade-in">
+                <div class="shipping-icon-box">
+                    <i class="fas fa-truck"></i>
+                </div>
+                <div class="shipping-content">
+                    <h3 class="shipping-section-title">Shipping Method</h3>
+                    <p class="shipping-text">The orders for the user are shipped through <strong>registered domestic courier companies and/or speed post only</strong>.</p>
+                </div>
+            </div>
+            
+            <!-- Processing Time -->
+            <div class="shipping-section fade-in">
+                <div class="shipping-icon-box">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="shipping-content">
+                    <h3 class="shipping-section-title">Processing & Delivery Time</h3>
+                    <p class="shipping-text">Orders are shipped within <strong>1 day from the date of the order and/or payment</strong> or as per the delivery date agreed at the time of order confirmation.</p>
+                    
+                    <div class="timeline-cards">
+                        <div class="timeline-card">
+                            <div class="card-icon order">
+                                <i class="fas fa-shopping-cart"></i>
+                            </div>
+                            <h5>Order Placed</h5>
+                            <p>Your order is confirmed</p>
+                        </div>
+                        
+                        <div class="timeline-arrow">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                        
+                        <div class="timeline-card">
+                            <div class="card-icon process">
+                                <i class="fas fa-box"></i>
+                            </div>
+                            <h5>Processing</h5>
+                            <p>Within 1 day</p>
+                        </div>
+                        
+                        <div class="timeline-arrow">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                        
+                        <div class="timeline-card">
+                            <div class="card-icon ship">
+                                <i class="fas fa-shipping-fast"></i>
+                            </div>
+                            <h5>Shipped</h5>
+                            <p>Courier/Post office</p>
+                        </div>
+                        
+                        <div class="timeline-arrow">
+                            <i class="fas fa-arrow-right"></i>
+                        </div>
+                        
+                        <div class="timeline-card">
+                            <div class="card-icon deliver">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <h5>Delivered</h5>
+                            <p>To your address</p>
+                        </div>
+                    </div>
+                    
+                    <div class="alert-box info">
+                        <i class="fas fa-info-circle"></i>
+                        <p>Delivery of the shipment is subject to courier company/post office norms. Platform Owner shall not be liable for any delay in delivery by the courier company/postal authority.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Delivery Address -->
+            <div class="shipping-section fade-in">
+                <div class="shipping-icon-box">
+                    <i class="fas fa-map-marker-alt"></i>
+                </div>
+                <div class="shipping-content">
+                    <h3 class="shipping-section-title">Delivery Address</h3>
+                    <p class="shipping-text">Delivery of all orders will be made to the <strong>address provided by the buyer at the time of purchase</strong>.</p>
+                    <p class="shipping-text">Delivery of our services will be confirmed on your email ID as specified at the time of registration.</p>
+                    
+                    <div class="info-box">
+                        <i class="fas fa-lightbulb"></i>
+                        <div>
+                            <h6>Important Note</h6>
+                            <p>Please ensure that the delivery address provided is accurate and complete to avoid any delivery issues.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Shipping Costs -->
+            <div class="shipping-section fade-in">
+                <div class="shipping-icon-box">
+                    <i class="fas fa-rupee-sign"></i>
+                </div>
+                <div class="shipping-content">
+                    <h3 class="shipping-section-title">Shipping Costs</h3>
+                    <p class="shipping-text">If there are any shipping cost(s) levied by the seller or the Platform Owner (as the case be), <strong>the same is not refundable</strong>.</p>
+                    
+                    <div class="cost-info-grid">
+                        <div class="cost-info-item">
+                            <i class="fas fa-times-circle"></i>
+                            <span>Shipping costs are non-refundable</span>
+                        </div>
+                        <div class="cost-info-item">
+                            <i class="fas fa-info-circle"></i>
+                            <span>Costs displayed at checkout</span>
+                        </div>
+                        <div class="cost-info-item">
+                            <i class="fas fa-calculator"></i>
+                            <span>Calculated based on location & weight</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Contact -->
+            <div class="shipping-section fade-in">
+                <div class="shipping-icon-box">
+                    <i class="fas fa-envelope"></i>
+                </div>
+                <div class="shipping-content">
+                    <h3 class="shipping-section-title">Questions About Shipping?</h3>
+                    <p class="shipping-text mb-3">If you have any questions about our shipping policy, please don't hesitate to contact us.</p>
+                    <a href="{{ url_for('contact') }}" class="shipping-cta-btn">
+                        <i class="fas fa-paper-plane me-2"></i>Contact Us
+                    </a>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<style>
+/* Shipping Hero Section */
+.shipping-hero {
+    background: var(--gradient-primary);
+    padding: 140px 0 80px;
+    position: relative;
+    overflow: hidden;
+}
+
+.shipping-hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><g fill="%23ffffff" fill-opacity="0.05"><path d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/></g></g></svg>') repeat;
+    opacity: 0.3;
+}
+
+.shipping-hero .container {
+    position: relative;
+    z-index: 2;
+}
+
+.shipping-hero-title {
+    font-size: 3.5rem;
+    font-weight: 800;
+    color: var(--white);
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.shipping-hero-subtitle {
+    font-size: 1.3rem;
+    color: rgba(255, 255, 255, 0.95);
+    margin-bottom: 1.5rem;
+}
+
+@media (max-width: 767.98px) {
+    .shipping-hero {
+        padding: 120px 0 60px;
+    }
+    
+    .shipping-hero-title {
+        font-size: 2.5rem;
+    }
+    
+    .shipping-hero-subtitle {
+        font-size: 1.1rem;
+    }
+}
+
+/* Shipping Sections */
+.shipping-section {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 3rem;
+    background: var(--white);
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--gray-200);
+    transition: var(--transition);
+}
+
+.shipping-section:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-xl);
+}
+
+.shipping-icon-box {
+    flex-shrink: 0;
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--gradient-primary);
+    border-radius: 20px;
+    color: var(--white);
+    font-size: 2rem;
+    box-shadow: 0 8px 20px rgba(204, 0, 0, 0.3);
+}
+
+.shipping-content {
+    flex: 1;
+}
+
+.shipping-section-title {
+    color: var(--gray-800);
+    margin-bottom: 1rem;
+    font-weight: 700;
+    font-size: 1.75rem;
+}
+
+.shipping-text {
+    color: var(--gray-600);
+    line-height: 1.8;
+    margin-bottom: 1rem;
+}
+
+/* Timeline Cards */
+.timeline-cards {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin: 2rem 0;
+    flex-wrap: wrap;
+}
+
+.timeline-card {
+    flex: 1;
+    min-width: 140px;
+    text-align: center;
+    padding: 1.5rem 1rem;
+    background: var(--gray-100);
+    border-radius: 15px;
+    transition: var(--transition);
+}
+
+.timeline-card:hover {
+    background: var(--white);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-5px);
+}
+
+.card-icon {
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white);
+    font-size: 1.5rem;
+    margin: 0 auto 1rem;
+}
+
+.card-icon.order {
+    background: linear-gradient(135deg, #06b6d4, #0891b2);
+}
+
+.card-icon.process {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.card-icon.ship {
+    background: var(--gradient-primary);
+}
+
+.card-icon.deliver {
+    background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.timeline-card h5 {
+    color: var(--gray-800);
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.timeline-card p {
+    color: var(--gray-600);
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+.timeline-arrow {
+    color: var(--primary-color);
+    font-size: 1.25rem;
+}
+
+@media (max-width: 767.98px) {
+    .timeline-arrow {
+        transform: rotate(90deg);
+    }
+}
+
+/* Info Box */
+.info-box {
+    display: flex;
+    gap: 1rem;
+    padding: 1.25rem;
+    background: var(--gray-100);
+    border-radius: 12px;
+    margin-top: 1.5rem;
+}
+
+.info-box i {
+    color: var(--warning-color);
+    font-size: 1.5rem;
+}
+
+.info-box h6 {
+    color: var(--gray-800);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.info-box p {
+    color: var(--gray-600);
+    margin: 0;
+    line-height: 1.6;
+}
+
+/* Cost Info Grid */
+.cost-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.cost-info-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: var(--gray-100);
+    border-radius: 10px;
+    color: var(--gray-700);
+}
+
+.cost-info-item i {
+    color: var(--primary-color);
+    font-size: 1.25rem;
+}
+
+/* Alert Box */
+.alert-box {
+    display: flex;
+    align-items: start;
+    gap: 1rem;
+    padding: 1.25rem;
+    border-radius: 12px;
+    margin-top: 1.5rem;
+}
+
+.alert-box.info {
+    background: rgba(6, 182, 212, 0.1);
+    border: 2px solid var(--info-color);
+}
+
+.alert-box i {
+    color: var(--info-color);
+    font-size: 1.5rem;
+    margin-top: 0.25rem;
+}
+
+.alert-box p {
+    color: var(--gray-700);
+    margin-bottom: 0;
+    flex: 1;
+}
+
+/* CTA Button */
+.shipping-cta-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.875rem 2rem;
+    background: var(--gradient-primary);
+    color: var(--white);
+    text-decoration: none;
+    border-radius: 30px;
+    font-weight: 600;
+    transition: var(--transition);
+    box-shadow: 0 4px 15px rgba(204, 0, 0, 0.3);
+}
+
+.shipping-cta-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(204, 0, 0, 0.4);
+    color: var(--white);
+}
+
+/* Mobile Responsive */
+@media (max-width: 767.98px) {
+    .shipping-section {
+        flex-direction: column;
+        gap: 1.5rem;
+        padding: 1.5rem;
+    }
+    
+    .shipping-icon-box {
+        width: 60px;
+        height: 60px;
+        font-size: 1.5rem;
+    }
+    
+    .shipping-section-title {
+        font-size: 1.5rem;
+    }
+    
+    .timeline-cards {
+        flex-direction: column;
+    }
+    
+    .cost-info-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+// Fade-in animation on scroll
+document.addEventListener('DOMContentLoaded', function() {
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, observerOptions);
+
+    document.querySelectorAll('.fade-in').forEach(element => {
+        element.style.opacity = '0';
+        element.style.transform = 'translateY(30px)';
+        element.style.transition = 'all 0.6s ease';
+        observer.observe(element);
+    });
+});
+</script>
+
+{% endblock %}
