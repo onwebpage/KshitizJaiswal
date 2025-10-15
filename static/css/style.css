@@ -1505,6 +1505,7 @@ h1, h2, h3, h4, h5, h6 {
   transition: var(--transition);
   font-size: 0.95rem;
   position: relative;
+  display: inline-block;
 }
 
 .footer-links a:hover {
@@ -1526,6 +1527,21 @@ h1, h2, h3, h4, h5, h6 {
 
 .footer-links a:hover::before {
   width: 6px;
+}
+
+.footer-links a::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--primary-color);
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.footer-links a:hover::after {
+  width: 100%;
 }
 
 .footer-newsletter-text {
