@@ -1032,13 +1032,22 @@ def disclaimer():
 @app.route('/login')
 def clerk_login():
     """Clerk login page"""
-    next_url = session.get('next_url', url_for('index'))
+    from urllib.parse import urljoin
+    
+    # Get next URL and ensure it's absolute
+    next_url = session.pop('next_url', None)
+    if not next_url:
+        next_url = url_for('index', _external=True)
+    elif not next_url.startswith('http'):
+        # If it's a relative URL, convert to absolute using current host
+        next_url = urljoin(request.host_url, next_url)
     return render_template('clerk_login.html', next_url=next_url)
 
 @app.route('/signup')
 def clerk_signup():
     """Clerk signup page"""
-    return render_template('clerk_signup.html')
+    after_signup_url = url_for('index', _external=True)
+    return render_template('clerk_signup.html', after_signup_url=after_signup_url)
 
 @app.route('/clerk/callback')
 def clerk_callback():

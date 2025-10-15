@@ -39,8 +39,11 @@
             
             const signInDiv = document.getElementById('clerk-signin-container');
             if (signInDiv) {
+                const afterSignInUrl = '{{ next_url }}';
+                
                 Clerk.mountSignIn(signInDiv, {
-                    afterSignInUrl: '{{ next_url or url_for("index") }}',
+                    redirectUrl: afterSignInUrl,
+                    afterSignInUrl: afterSignInUrl,
                     appearance: {
                         elements: {
                             formButtonPrimary: 'btn btn-primary w-100',

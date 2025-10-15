@@ -39,8 +39,11 @@
             
             const signUpDiv = document.getElementById('clerk-signup-container');
             if (signUpDiv) {
+                const afterSignUpUrl = '{{ after_signup_url }}';
+                
                 Clerk.mountSignUp(signUpDiv, {
-                    afterSignUpUrl: '{{ url_for("index") }}',
+                    redirectUrl: afterSignUpUrl,
+                    afterSignUpUrl: afterSignUpUrl,
                     appearance: {
                         elements: {
                             formButtonPrimary: 'btn btn-primary w-100',

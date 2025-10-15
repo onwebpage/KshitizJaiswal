@@ -31,10 +31,35 @@ Preferred communication style: Simple, everyday language.
 - **Content Types**: Support for reels (with video analysis), opinions (with polls), and newsletter content
 
 ## Authentication & Security
+- **Clerk Authentication**: Modern authentication system with login/signup using Clerk's hosted UI
+  - **Frontend SDK**: Clerk JavaScript SDK integrated in base template for client-side auth
+  - **Backend Verification**: Python clerk-backend-api for token verification and user management
+  - **Protected Routes**: Custom decorator `@clerk_auth_required` for securing Flask routes
+  - **User Management**: Clerk handles user profiles, sessions, and multi-factor authentication
 - **Session-based Admin Auth**: Simple session management for admin access with secure password hashing
 - **CSRF Protection**: Flask-WTF CSRF tokens on all forms
 - **File Upload Security**: Secure filename handling and file type validation
 - **Environment Variables**: Sensitive configuration stored in environment variables
+
+## Clerk Dashboard Configuration (Important!)
+
+To complete the Clerk authentication setup, you must configure your Clerk dashboard:
+
+1. **Go to Clerk Dashboard**: https://dashboard.clerk.com
+2. **Navigate to**: Your Application → Paths (in sidebar)
+3. **Add Allowed Redirect URLs**:
+   - Add your Replit app URL (e.g., `https://your-repl.replit.app`)
+   - Add `http://localhost:5000` for local testing
+   - Format: Include the full origin (protocol + domain)
+   
+4. **Configure Sign-in/Sign-up URLs** (Optional):
+   - Sign-in URL: `/login`
+   - Sign-up URL: `/signup`
+   - After sign-in URL: `/`
+   
+5. **Save Changes** and test the authentication flow
+
+**Note**: Without adding your app URL to allowed redirects, users will see a "cannot redirect" error after authentication.
 
 ## Key Features
 - **Auto-scrolling Carousel**: Infinite scroll reel display with smooth animations
