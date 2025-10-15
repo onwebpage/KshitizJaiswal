@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Kshitiz Jaiswal{% endblock %}
+
+{% block content %}
+<section class="auth-section" style="min-height: 100vh; padding-top: 100px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="card shadow-lg" style="border: none; border-radius: 15px;">
+                    <div class="card-body p-5">
+                        <div class="text-center mb-4">
+                            <h2 class="mb-3">Welcome Back</h2>
+                            <p class="text-muted">Sign in to your account</p>
+                        </div>
+                        
+                        <!-- Clerk Sign-In Component will be mounted here -->
+                        <div id="clerk-signin-container"></div>
+                        
+                        <div class="text-center mt-4">
+                            <p class="text-muted">
+                                Don't have an account? 
+                                <a href="{{ url_for('clerk_signup') }}" class="text-primary fw-bold">Sign up</a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    window.addEventListener('load', async function () {
+        if (window.Clerk) {
+            await Clerk.load();
+            
+            const signInDiv = document.getElementById('clerk-signin-container');
+            if (signInDiv) {
+                Clerk.mountSignIn(signInDiv, {
+                    afterSignInUrl: '{{ next_url or url_for("index") }}',
+                    appearance: {
+                        elements: {
+                            formButtonPrimary: 'btn btn-primary w-100',
+                            card: 'border-0'
+                        }
+                    }
+                });
+            }
+        }
+    });
+</script>
+{% endblock %}

@@ -3,6 +3,7 @@ from app import app, db
 from models import DataManager, AdminUser, SiteContent, Reel, Opinion, Subscriber, SubscriptionTier
 from forms import NewsletterForm, PollVoteForm, AdminLoginForm, ReelForm, OpinionForm, HeroContentForm, PaymentSettingsForm, SubscriptionTierForm
 from utils import save_uploaded_file, calculate_poll_percentages, get_youtube_embed_url
+from clerk_auth import clerk_auth_required, get_clerk_user, get_clerk_user_id
 import razorpay
 import os
 import json
@@ -1026,6 +1027,24 @@ def terms_of_service():
 def disclaimer():
     """Disclaimer page"""
     return render_template('disclaimer.html')
+
+# Clerk authentication routes
+@app.route('/login')
+def clerk_login():
+    """Clerk login page"""
+    next_url = session.get('next_url', url_for('index'))
+    return render_template('clerk_login.html', next_url=next_url)
+
+@app.route('/signup')
+def clerk_signup():
+    """Clerk signup page"""
+    return render_template('clerk_signup.html')
+
+@app.route('/clerk/callback')
+def clerk_callback():
+    """Callback route after Clerk authentication"""
+    next_url = session.pop('next_url', url_for('index'))
+    return redirect(next_url)
 
 @app.errorhandler(404)
 def not_found_error(error):

@@ -46,5 +46,13 @@ with app.app_context():
     import models  # noqa: F401
     db.create_all()
 
+# Add context processor for Clerk publishable key
+@app.context_processor
+def inject_clerk_key():
+    return {
+        'clerk_publishable_key': os.environ.get('CLERK_PUBLISHABLE_KEY', ''),
+        'clerk_domain': 'your-domain.com'  # Will be extracted from publishable key if needed
+    }
+
 # Import routes after app and db creation
 from routes import *
