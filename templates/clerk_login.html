@@ -3,27 +3,45 @@
 {% block title %}Login - Kshitiz Jaiswal{% endblock %}
 
 {% block content %}
+<style>
+    /* Fix Clerk UI centering and styling */
+    #clerk-signin-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+    }
+    
+    /* Hide the Clerk branding badge that overlaps */
+    #clerk-signin-container .cl-internal-b3fm6y {
+        display: none !important;
+    }
+    
+    /* Ensure Clerk card is centered */
+    #clerk-signin-container > div {
+        width: 100%;
+        max-width: 400px;
+        margin: 0 auto;
+    }
+</style>
+
 <section class="auth-section" style="min-height: 100vh; padding-top: 100px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
     <div class="container">
         <div class="row justify-content-center">
-            <div class="col-md-6 col-lg-5">
-                <div class="card shadow-lg" style="border: none; border-radius: 15px;">
-                    <div class="card-body p-5">
-                        <div class="text-center mb-4">
-                            <h2 class="mb-3">Welcome Back</h2>
-                            <p class="text-muted">Sign in to your account</p>
-                        </div>
-                        
-                        <!-- Clerk Sign-In Component will be mounted here -->
-                        <div id="clerk-signin-container"></div>
-                        
-                        <div class="text-center mt-4">
-                            <p class="text-muted">
-                                Don't have an account? 
-                                <a href="{{ url_for('clerk_signup') }}" class="text-primary fw-bold">Sign up</a>
-                            </p>
-                        </div>
-                    </div>
+            <div class="col-md-8 col-lg-6">
+                <div class="text-center mb-4 text-white">
+                    <h2 class="mb-3">Welcome Back</h2>
+                    <p>Sign in to your account</p>
+                </div>
+                
+                <!-- Clerk Sign-In Component will be mounted here -->
+                <div id="clerk-signin-container"></div>
+                
+                <div class="text-center mt-4 text-white">
+                    <p>
+                        Don't have an account? 
+                        <a href="{{ url_for('clerk_signup') }}" class="text-white fw-bold text-decoration-underline">Sign up</a>
+                    </p>
                 </div>
             </div>
         </div>
