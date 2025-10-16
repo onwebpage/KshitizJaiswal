@@ -690,10 +690,28 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: var(--shadow-md);
   transition: var(--transition);
   border: 1px solid var(--gray-200);
+  animation: fadeInUp 0.6s ease-out;
+  position: relative;
+}
+
+.resource-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: var(--gradient-primary);
+  transform: scaleX(0);
+  transition: transform 0.4s ease;
+}
+
+.resource-card:hover::after {
+  transform: scaleX(1);
 }
 
 .resource-card:hover {
-  transform: translateY(-5px);
+  transform: translateY(-10px) scale(1.02);
   box-shadow: var(--shadow-xl);
 }
 
@@ -707,11 +725,11 @@ h1, h2, h3, h4, h5, h6 {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: var(--transition);
+  transition: var(--transition-slow);
 }
 
 .resource-card:hover .resource-image img {
-  transform: scale(1.05);
+  transform: scale(1.1) rotate(2deg);
 }
 
 .coming-soon-badge {
@@ -745,11 +763,30 @@ h1, h2, h3, h4, h5, h6 {
   border: 1px solid var(--gray-200);
   transition: var(--transition);
   height: 100%;
+  animation: scaleIn 0.5s ease-out;
+  position: relative;
+  overflow: hidden;
+}
+
+.opinion-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.6s;
+}
+
+.opinion-card:hover::before {
+  left: 100%;
 }
 
 .opinion-card:hover {
-  box-shadow: var(--shadow-lg);
-  transform: translateY(-2px);
+  box-shadow: var(--shadow-xl);
+  transform: translateY(-5px) scale(1.02);
+  border-color: var(--primary-color);
 }
 
 .opinion-header h4 {
