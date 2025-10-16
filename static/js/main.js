@@ -189,22 +189,40 @@
     // Initialize scroll animations
     function initScrollAnimations() {
         const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
+            threshold: 0.15,
+            rootMargin: '0px 0px -100px 0px'
         };
 
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
-                    entry.target.classList.add('visible');
+                    entry.target.classList.add('is-visible');
                 }
             });
         }, observerOptions);
 
-        // Observe elements for animation
-        const animatedElements = document.querySelectorAll('.reel-item, .resource-card, .opinion-card, .show-card, .contact-card');
-        animatedElements.forEach(el => {
-            el.classList.add('fade-in');
+        // Observe elements for fade-in animation
+        const fadeElements = document.querySelectorAll('.fade-in-section, section, .hero-section');
+        fadeElements.forEach(el => {
+            if (!el.classList.contains('fade-in-section')) {
+                el.classList.add('fade-in-section');
+            }
+            observer.observe(el);
+        });
+
+        // Observe elements for slide animations
+        const slideLeftElements = document.querySelectorAll('.slide-in-left');
+        slideLeftElements.forEach(el => observer.observe(el));
+
+        const slideRightElements = document.querySelectorAll('.slide-in-right');
+        slideRightElements.forEach(el => observer.observe(el));
+
+        // Observe elements for scale animation
+        const scaleElements = document.querySelectorAll('.scale-in, .reel-item, .resource-card, .opinion-card, .show-card, .contact-card');
+        scaleElements.forEach(el => {
+            if (!el.classList.contains('scale-in')) {
+                el.classList.add('scale-in');
+            }
             observer.observe(el);
         });
     }
@@ -372,16 +390,15 @@
     // Initialize navbar effects
     function initNavbarEffects() {
         const navbar = document.querySelector('.custom-navbar');
+        if (!navbar) return;
         
-        window.addEventListener('scroll', function() {
+        window.addEventListener('scroll', throttle(function() {
             if (window.scrollY > 50) {
-                navbar.style.background = 'rgba(15, 23, 42, 0.98)';
-                navbar.style.backdropFilter = 'blur(15px)';
+                navbar.classList.add('scrolled');
             } else {
-                navbar.style.background = 'rgba(15, 23, 42, 0.95)';
-                navbar.style.backdropFilter = 'blur(10px)';
+                navbar.classList.remove('scrolled');
             }
-        });
+        }, 100));
     }
 
     // Initialize form validations
