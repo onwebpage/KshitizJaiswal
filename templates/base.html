@@ -112,8 +112,8 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <div id="clerk-user-button"></div>
-                        <a id="clerk-login-btn" class="nav-link" href="{{ url_for('clerk_login') }}" style="display: none;">
+                        <div id="clerk-user-button" style="display: none;"></div>
+                        <a id="clerk-login-btn" class="nav-link" href="{{ url_for('clerk_login') }}">
                             <i class="fas fa-sign-in-alt me-1"></i>Login
                         </a>
                     </li>
@@ -321,29 +321,51 @@
     <!-- Clerk Authentication Script -->
     <script>
         window.addEventListener('load', async function () {
+            console.log('Checking Clerk availability...');
+            
             if (window.Clerk) {
-                await Clerk.load();
-                
-                const userButton = document.getElementById('clerk-user-button');
-                const loginBtn = document.getElementById('clerk-login-btn');
-                
-                if (Clerk.user) {
-                    // User is signed in - show user button
-                    if (userButton) {
-                        Clerk.mountUserButton(userButton);
-                        userButton.style.display = 'block';
+                try {
+                    console.log('Clerk found, loading...');
+                    await Clerk.load();
+                    console.log('Clerk loaded successfully');
+                    
+                    const userButton = document.getElementById('clerk-user-button');
+                    const loginBtn = document.getElementById('clerk-login-btn');
+                    
+                    if (Clerk.user) {
+                        // User is signed in - show user button
+                        console.log('User is signed in');
+                        if (userButton) {
+                            Clerk.mountUserButton(userButton);
+                            userButton.style.display = 'block';
+                        }
+                        if (loginBtn) {
+                            loginBtn.style.display = 'none';
+                        }
+                    } else {
+                        // User is not signed in - show login button
+                        console.log('User is not signed in');
+                        if (userButton) {
+                            userButton.style.display = 'none';
+                        }
+                        if (loginBtn) {
+                            loginBtn.style.display = 'block';
+                        }
                     }
-                    if (loginBtn) {
-                        loginBtn.style.display = 'none';
-                    }
-                } else {
-                    // User is not signed in - show login button
-                    if (userButton) {
-                        userButton.style.display = 'none';
-                    }
+                } catch (error) {
+                    console.error('Error loading Clerk:', error);
+                    // Show login button on error
+                    const loginBtn = document.getElementById('clerk-login-btn');
                     if (loginBtn) {
                         loginBtn.style.display = 'block';
                     }
+                }
+            } else {
+                console.warn('Clerk not available - showing login button');
+                // Clerk not loaded, keep login button visible
+                const loginBtn = document.getElementById('clerk-login-btn');
+                if (loginBtn) {
+                    loginBtn.style.display = 'block';
                 }
             }
         });
