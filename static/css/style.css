@@ -3051,3 +3051,40 @@ h1, h2, h3, h4, h5, h6 {
     padding: 0.25rem 0.6rem;
   }
 }
+
+/* Modal Backdrop Blur Effect */
+.modal-backdrop {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.modal-backdrop.show {
+  opacity: 0.7;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Enhanced modal styling */
+#disclaimerModal .modal-content,
+#newsletterModal .modal-content {
+  border: none;
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+#disclaimerModal .modal-header,
+#newsletterModal .modal-header {
+  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
+  color: var(--white);
+  border-radius: 20px 20px 0 0;
+}
+
+#disclaimerModal .modal-title,
+#newsletterModal .modal-title {
+  color: var(--white);
+}
+
+#disclaimerModal .btn-close,
+#newsletterModal .btn-close {
+  filter: brightness(0) invert(1);
+}
