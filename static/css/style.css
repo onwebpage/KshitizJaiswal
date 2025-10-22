@@ -612,16 +612,41 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
-/* Reel Carousel */
+/* Reel Carousel - Enhanced UI */
+#beyond-reel {
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+#beyond-reel::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(204, 0, 0, 0.03) 0%, transparent 70%);
+  animation: rotate 30s linear infinite;
+}
+
+@keyframes rotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 .reel-carousel-container {
   overflow: hidden;
   margin: 2rem 0;
+  padding: 1rem 0;
+  position: relative;
 }
 
 .reel-carousel {
   display: flex;
-  animation: scrollLeft 30s linear infinite;
-  gap: 1.5rem;
+  animation: scrollLeft 40s linear infinite;
+  gap: 2rem;
+  padding: 0.5rem 0;
 }
 
 .reel-carousel:hover {
@@ -639,60 +664,102 @@ h1, h2, h3, h4, h5, h6 {
 
 .reel-item {
   flex-shrink: 0;
-  width: 300px;
+  width: 320px;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.reel-item:hover {
+  transform: scale(1.05);
+  z-index: 10;
 }
 
 .reel-link {
   text-decoration: none;
   color: inherit;
+  display: block;
 }
 
 .reel-thumbnail {
   position: relative;
-  border-radius: 15px;
+  border-radius: 20px;
   overflow: hidden;
-  box-shadow: var(--shadow-lg);
-  transition: var(--transition);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  background: var(--white);
+  border: 3px solid transparent;
+}
+
+.reel-thumbnail::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(204, 0, 0, 0.1), rgba(139, 0, 0, 0.1));
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: 1;
 }
 
 .reel-thumbnail:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-xl);
-  filter: drop-shadow(0 0 10px rgba(204, 0, 0, 0.5));
+  transform: translateY(-10px);
+  box-shadow: 0 20px 60px rgba(204, 0, 0, 0.3);
+  border-color: var(--primary-color);
+}
+
+.reel-thumbnail:hover::before {
+  opacity: 1;
 }
 
 .reel-category-tag {
   position: absolute;
-  top: 10px;
-  left: 10px;
+  top: 15px;
+  left: 15px;
   z-index: 10;
-  padding: 5px 12px;
-  border-radius: 20px;
+  padding: 8px 16px;
+  border-radius: 25px;
   font-size: 0.75rem;
-  font-weight: 600;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  font-weight: 700;
+  backdrop-filter: blur(15px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
 }
 
 .reel-category-tag.trending {
-  background: rgba(255, 87, 34, 0.9);
+  background: linear-gradient(135deg, #ff5722, #ff3d00);
   color: white;
+  box-shadow: 0 4px 15px rgba(255, 87, 34, 0.4);
 }
 
 .reel-category-tag.new {
-  background: rgba(76, 175, 80, 0.9);
+  background: linear-gradient(135deg, #4caf50, #66bb6a);
   color: white;
+  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
 }
 
 .reel-category-tag.must_watch {
-  background: rgba(255, 193, 7, 0.9);
+  background: linear-gradient(135deg, #ffc107, #ffb300);
   color: #1a0000;
+  box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
 }
 
 .reel-thumbnail img {
   width: 100%;
-  height: 200px;
+  height: 220px;
   object-fit: cover;
+  transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.reel-thumbnail:hover img {
+  transform: scale(1.1);
 }
 
 .reel-overlay {
@@ -701,30 +768,46 @@ h1, h2, h3, h4, h5, h6 {
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(45deg, rgba(139, 0, 0, 0.9), rgba(204, 0, 0, 0.9));
+  background: linear-gradient(
+    135deg,
+    rgba(139, 0, 0, 0.95) 0%,
+    rgba(204, 0, 0, 0.95) 100%
+  );
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   opacity: 0;
-  transition: var(--transition);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   color: var(--white);
   text-align: center;
-  padding: 1rem;
+  padding: 1.5rem;
+  z-index: 5;
 }
 
 .reel-thumbnail:hover .reel-overlay {
   opacity: 1;
+  backdrop-filter: blur(10px);
 }
 
 .reel-overlay i {
-  font-size: 3rem;
-  margin-bottom: 0.5rem;
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  animation: playIconBounce 1.5s ease-in-out infinite;
+}
+
+@keyframes playIconBounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
 }
 
 .reel-overlay h6 {
   color: var(--white);
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 1.1rem;
+  line-height: 1.4;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  margin: 0;
 }
 
 /* Resource Cards */
