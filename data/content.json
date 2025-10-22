@@ -2,13 +2,15 @@
   "hero": {
     "name": "Kshitiz Jaiswal",
     "tagline": "Unfiltered Commentator. The content here is selective, but the truth is never biased.",
-    "banner_url": "https://pixabay.com/get/g533a6aa47eba4823795ce2e25fdfdbeab9c4946d039afcc8be299199aea4607bcead5e63e650f3598d32b8af6f69fa29cd392bcfe2db7bc9db577a352240b008_1280.jpg"
+    "banner_url": "uploads/hero/banner.jpg",
+    "desktop_url": "uploads/hero/banner.jpg",
+    "mobile_url": "uploads/hero/banner.jpg"
   },
   "reels": [
     {
       "id": 1,
       "title": "Political Truth Unveiled",
-      "thumbnail": "https://pixabay.com/get/g416b51f98122f2039f5011acd9ab0634dad0d9388d5e5136fdbb12b908571c7f30ddd4b7caec430021aa833d16610f9a40b70e217d2491c5babdacc30b1bf885_1280.jpg",
+      "thumbnail": "uploads/reels/political_truth.jpg",
       "video_url": "",
       "behind_thought": "This reel exposed the hidden agendas behind political narratives. The research took weeks, but the truth needed to come out.",
       "sources": [
@@ -21,7 +23,7 @@
     {
       "id": 2,
       "title": "Social Media Reality Check",
-      "thumbnail": "https://pixabay.com/get/g744ad2f390fdc8ef676303ed990164beb2f42bd75e30c9376504557dd369681741e6caa14455f04e04495e627f9d70c4d63f6650267b54b0d1361e3783a94813_1280.jpg",
+      "thumbnail": "uploads/reels/social_media.jpg",
       "video_url": "",
       "behind_thought": "Behind every viral trend lies a carefully crafted strategy. This reel breaks down the psychology of social media manipulation.",
       "sources": [
@@ -64,19 +66,19 @@
     {
       "title": "Weekly Truth Bombs",
       "description": "Unfiltered takes on current events every Sunday",
-      "image": "https://pixabay.com/get/g51d3a9b60f5b304d6d9a2109588df26fa955fdad29b549ed6f2d44cdb714ef5b54d4b04df2f46da1bd05dede83422e909ae5403a8c87771e7130a78714c2e5df_1280.jpg",
+      "image": "uploads/shows/weekly_truth.jpg",
       "coming_soon": true
     },
     {
       "title": "Deep Dive Discussions",
       "description": "In-depth analysis of complex topics",
-      "image": "https://pixabay.com/get/gc14afbbf52acd5037565e98fe912c3abdabeb6bd6c397489c816f314fc968153bd32ed28ad3c3b94be86a6097efa1b2958ad2ef4d9e6c4d1b3741f703a5a042e_1280.jpg",
+      "image": "uploads/shows/deep_dive.jpg",
       "coming_soon": true
     },
     {
       "title": "Q&A Sessions",
       "description": "Direct answers to your burning questions",
-      "image": "https://pixabay.com/get/g5ba4c5cf7628d2987742d0fd7917f08839463314908ba3fdd09e50599fa00ef3bd0982fc3c8c89d7f83c9db6ee523ce9d5378cfa7dc2022ad8641c353703bc56_1280.jpg",
+      "image": "uploads/shows/qa_sessions.jpg",
       "coming_soon": true
     }
   ],
@@ -84,7 +86,7 @@
     {
       "title": "Critical Thinking Masterclass",
       "description": "Learn to analyze information objectively and make informed decisions",
-      "image": "https://pixabay.com/get/g1607648249e3d2cc886480cc481c2224cb52f7fd6b06e51d63e7c2ee7d304d71973191ec7388dc286501651899d7fd130bc378c50e5ab80727d452f099c3f672_1280.jpg",
+      "image": "uploads/resources/critical_thinking.jpg",
       "link": "#",
       "price": "₹1,999",
       "coming_soon": true
@@ -92,7 +94,7 @@
     {
       "title": "Media Literacy Guide",
       "description": "Navigate the information age with confidence",
-      "image": "https://pixabay.com/get/gd8a0f7bf6a60b0cdb631f872c879ce520de6980128c6416356ab21d14b12fa54040980d49a1a72caa0680de581b599d598438cd018de82ae0288902e0aeda999_1280.jpg",
+      "image": "uploads/resources/media_literacy.jpg",
       "link": "#",
       "price": "₹999",
       "coming_soon": true
@@ -100,7 +102,7 @@
     {
       "title": "Research Methodology Course",
       "description": "Master the art of finding and verifying information",
-      "image": "https://pixabay.com/get/g3595ce5e53b7513f3eb18f891447e8fdb9c6d460e51b393656cfd866e73eb206c349d4085d6753e4ecf5ebe59391e0b1394789a75849753c3226a3a82ee8d0f3_1280.jpg",
+      "image": "uploads/resources/research_methodology.jpg",
       "link": "#",
       "price": "₹1,499",
       "coming_soon": true
@@ -108,7 +110,7 @@
     {
       "title": "Digital Detox Program",
       "description": "Reclaim your attention and mental clarity",
-      "image": "https://pixabay.com/get/g6779a942cae20451cce7b25396c8fb4659d3d38492051cb1826092ac665798e1184d21c89b15b5da0479bc235367ef10d188399c7a66f801549d88c9b317d651_1280.jpg",
+      "image": "uploads/resources/digital_detox.jpg",
       "link": "#",
       "price": "₹799",
       "coming_soon": true
