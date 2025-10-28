@@ -88,7 +88,7 @@
             <div class="col-lg-3 col-md-6">
                 <div class="resource-card h-100">
                     <div class="resource-image">
-                        <img src="{{ resource.image }}" alt="{{ resource.title }}" class="img-fluid">
+                        <img src="{{ url_for('static', filename=resource.image) if resource.image and not resource.image.startswith('http') else resource.image }}" alt="{{ resource.title }}" class="img-fluid">
                         {% if resource.get('coming_soon') %}
                         <div class="coming-soon-badge">Coming Soon</div>
                         {% endif %}
@@ -190,7 +190,7 @@
             <div class="col-lg-4 col-md-6">
                 <div class="show-card">
                     <div class="show-image">
-                        <img src="{{ show.image }}" alt="{{ show.title }}" class="img-fluid">
+                        <img src="{{ url_for('static', filename=show.image) if show.image and not show.image.startswith('http') else show.image }}" alt="{{ show.title }}" class="img-fluid">
                         <div class="coming-soon-overlay">
                             <i class="fas fa-clock"></i>
                             <span>Coming Soon</span>
