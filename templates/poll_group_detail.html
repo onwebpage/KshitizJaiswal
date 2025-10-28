@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}{{ topic }} - Poll Group{% endblock %}
+
+{% block content %}
+<!-- Group Header -->
+<section class="poll-group-hero">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+                        <li class="breadcrumb-item"><a href="{{ url_for('polls_archive') }}">Polls</a></li>
+                        <li class="breadcrumb-item"><a href="{{ url_for('poll_groups') }}">Groups</a></li>
+                        <li class="breadcrumb-item active">{{ topic }}</li>
+                    </ol>
+                </nav>
+                <h1 class="group-detail-title">
+                    <i class="fas fa-layer-group me-3"></i>{{ topic }}
+                </h1>
+                <p class="group-detail-subtitle">A collection of polls on this topic</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Group Analytics -->
+<section class="section-padding bg-light">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="group-analytics-card">
+                    <h4 class="mb-4">
+                        <i class="fas fa-chart-line me-2"></i>Group Analytics
+                    </h4>
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <div class="analytics-stat">
+                                <i class="fas fa-poll"></i>
+                                <div>
+                                    <h5>{{ analytics.total_polls }}</h5>
+                                    <p>Total Polls</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="analytics-stat">
+                                <i class="fas fa-users"></i>
+                                <div>
+                                    <h5>{{ analytics.total_votes }}</h5>
+                                    <p>Total Votes</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="analytics-stat">
+                                <i class="fas fa-chart-bar"></i>
+                                <div>
+                                    <h5>{{ analytics.avg_votes_per_poll }}</h5>
+                                    <p>Avg Votes/Poll</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="analytics-stat">
+                                <i class="fas fa-calendar-alt"></i>
+                                <div>
+                                    <h5 class="small-text">{{ analytics.date_range }}</h5>
+                                    <p>Date Range</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Timeline of Polls -->
+<section class="section-padding">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <h3 class="mb-4">
+                    <i class="fas fa-timeline me-2"></i>Poll Timeline
+                </h3>
+                
+                <div class="poll-timeline">
+                    {% for poll in polls %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <div class="timeline-date">{{ poll.formatted_date }}</div>
+                            <h4 class="timeline-title">
+                                <a href="{{ url_for('poll_detail', poll_id=poll.id) }}">{{ poll.title }}</a>
+                            </h4>
+                            <p class="timeline-description">{{ poll.description[:150] }}...</p>
+                            <div class="timeline-meta">
+                                <span class="timeline-question">
+                                    <i class="fas fa-poll me-1"></i>{{ poll.poll_question }}
+                                </span>
+                                <span class="timeline-votes">
+                                    <i class="fas fa-users me-1"></i>{{ poll.total_votes }} votes
+                                </span>
+                            </div>
+                            <a href="{{ url_for('poll_detail', poll_id=poll.id) }}" class="btn btn-primary btn-sm mt-2">
+                                <i class="fas fa-vote-yea me-1"></i>View & Vote
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Back Navigation -->
+<section class="section-padding bg-light">
+    <div class="container text-center">
+        <a href="{{ url_for('poll_groups') }}" class="btn btn-outline-primary me-2">
+            <i class="fas fa-arrow-left me-2"></i>Back to Groups
+        </a>
+        <a href="{{ url_for('polls_archive') }}" class="btn btn-outline-primary">
+            <i class="fas fa-list me-2"></i>View All Polls
+        </a>
+    </div>
+</section>
+{% endblock %}

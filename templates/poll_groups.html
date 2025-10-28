@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Poll Groups - Kshitiz Ki Rai{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="polls-archive-hero">
+    <div class="container">
+        <div class="row justify-content-center text-center">
+            <div class="col-lg-8">
+                <h1 class="polls-hero-title">Poll Groups</h1>
+                <p class="polls-hero-subtitle">"Explore polls organized by topics"</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Groups Library -->
+<section class="section-padding">
+    <div class="container">
+        <div class="groups-header mb-5">
+            <h2>All Poll Groups</h2>
+            <p class="text-muted">Browse polls grouped by topics and themes</p>
+            <a href="{{ url_for('polls_archive') }}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-2"></i>Back to All Polls
+            </a>
+        </div>
+        
+        {% if groups %}
+        <div class="row g-4">
+            {% for group in groups %}
+            <div class="col-lg-4 col-md-6">
+                <a href="{{ url_for('poll_group_detail', topic=group.topic) }}" class="group-card-link">
+                    <div class="group-card">
+                        <div class="group-icon">
+                            <i class="fas fa-layer-group"></i>
+                        </div>
+                        <h4 class="group-title">{{ group.topic }}</h4>
+                        <p class="group-latest-poll">{{ group.latest_poll_title }}</p>
+                        <div class="group-stats">
+                            <span class="group-stat">
+                                <i class="fas fa-poll"></i>
+                                {{ group.poll_count }} polls
+                            </span>
+                            <span class="group-stat">
+                                <i class="fas fa-users"></i>
+                                {{ group.total_votes }} votes
+                            </span>
+                        </div>
+                        <div class="group-date">
+                            <i class="fas fa-calendar"></i>
+                            Last updated: {{ group.latest_poll_date }}
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-folder-open fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted">No Poll Groups Yet</h4>
+            <p class="text-muted">Groups will appear when polls are tagged with topics</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

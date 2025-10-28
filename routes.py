@@ -219,26 +219,118 @@ def vote_poll():
 
 @app.route('/polls')
 def polls_archive():
-    """Poll Archive Page - All Kshitiz Ki Rai polls"""
-    opinions = Opinion.query.order_by(Opinion.created_at.desc()).all()
+    """Poll Archive Page with Search and Filters"""
+    # Get filter parameters
+    search = request.args.get('search', '')
+    sort_by = request.args.get('sort', 'latest')
+    topic = request.args.get('topic', '')
+    date_from = request.args.get('date_from', '')
+    date_to = request.args.get('date_to', '')
+    page = request.args.get('page', 1, type=int)
+    per_page = 12
     
-    # Format opinions for display
-    formatted_opinions = []
-    for opinion in opinions:
-        formatted_opinion = opinion.to_dict()
-        # Add formatted date
-        formatted_opinion['formatted_date'] = opinion.created_at.strftime("%B %d, %Y")
-        # Add short description
-        formatted_opinion['short_description'] = (opinion.description[:100] + '...' 
-                                                 if opinion.description and len(opinion.description) > 100 
-                                                 else opinion.description or '')
-        formatted_opinions.append(formatted_opinion)
+    # Base query
+    query = Opinion.query
     
-    return render_template('polls_archive.html', opinions=formatted_opinions)
+    # Apply search filter
+    if search:
+        query = query.filter(
+            db.or_(
+                Opinion.title.ilike(f'%{search}%'),
+                Opinion.description.ilike(f'%{search}%'),
+                Opinion.poll_question.ilike(f'%{search}%')
+            )
+        )
+    
+    # Apply topic filter
+    if topic:
+        query = query.filter_by(topic_tag=topic)
+    
+    # Apply date range filter
+    if date_from:
+        from datetime import datetime
+        date_from_obj = datetime.strptime(date_from, '%Y-%m-%d')
+        query = query.filter(Opinion.created_at >= date_from_obj)
+    
+    if date_to:
+        from datetime import datetime
+        date_to_obj = datetime.strptime(date_to, '%Y-%m-%d')
+        query = query.filter(Opinion.created_at <= date_to_obj)
+    
+    # Apply sorting
+    if sort_by == 'oldest':
+        query = query.order_by(Opinion.created_at.asc())
+    elif sort_by == 'popular':
+        # Sort by total votes (calculate from votes JSON)
+        opinions_list = query.all()
+        opinions_list.sort(key=lambda x: sum(json.loads(x.votes) if x.votes else []), reverse=True)
+        # Handle pagination manually for popular sort
+        total = len(opinions_list)
+        start = (page - 1) * per_page
+        end = start + per_page
+        opinions = opinions_list[start:end]
+        
+        # Format opinions
+        formatted_opinions = []
+        for opinion in opinions:
+            formatted_opinion = opinion.to_dict()
+            formatted_opinion['formatted_date'] = opinion.created_at.strftime("%B %d, %Y")
+            formatted_opinion['short_description'] = (opinion.description[:100] + '...' 
+                                                     if opinion.description and len(opinion.description) > 100 
+                                                     else opinion.description or '')
+            formatted_opinions.append(formatted_opinion)
+        
+        # Get topics for filter
+        topics = db.session.query(Opinion.topic_tag).filter(Opinion.topic_tag != None, Opinion.topic_tag != '').distinct().all()
+        topic_list = [t[0] for t in topics]
+        
+        return render_template('polls_archive.html',
+                             opinions=formatted_opinions,
+                             current_search=search,
+                             current_sort=sort_by,
+                             current_topic=topic,
+                             current_date_from=date_from,
+                             current_date_to=date_to,
+                             topics=topic_list,
+                             page=page,
+                             total_pages=(total + per_page - 1) // per_page)
+    else:  # latest
+        query = query.order_by(Opinion.created_at.desc())
+    
+    # Paginate if not already handled
+    if sort_by != 'popular':
+        pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+        opinions = pagination.items
+        total_pages = pagination.pages
+        
+        # Format opinions
+        formatted_opinions = []
+        for opinion in opinions:
+            formatted_opinion = opinion.to_dict()
+            formatted_opinion['formatted_date'] = opinion.created_at.strftime("%B %d, %Y")
+            formatted_opinion['short_description'] = (opinion.description[:100] + '...' 
+                                                     if opinion.description and len(opinion.description) > 100 
+                                                     else opinion.description or '')
+            formatted_opinions.append(formatted_opinion)
+    
+    # Get topics for filter
+    topics = db.session.query(Opinion.topic_tag).filter(Opinion.topic_tag != None, Opinion.topic_tag != '').distinct().all()
+    topic_list = [t[0] for t in topics]
+    
+    return render_template('polls_archive.html',
+                         opinions=formatted_opinions,
+                         current_search=search,
+                         current_sort=sort_by,
+                         current_topic=topic,
+                         current_date_from=date_from,
+                         current_date_to=date_to,
+                         topics=topic_list,
+                         page=page,
+                         total_pages=total_pages if sort_by != 'popular' else (len(opinions_list) + per_page - 1) // per_page)
 
 @app.route('/poll/<int:poll_id>')
 def poll_detail(poll_id):
-    """Individual Poll Detail Page"""
+    """Individual Poll Detail Page with Related Polls"""
     opinion = Opinion.query.get_or_404(poll_id)
     poll_form = PollVoteForm()
     
@@ -249,7 +341,21 @@ def poll_detail(poll_id):
     formatted_opinion['total_votes'] = sum(formatted_opinion['votes'])
     formatted_opinion['formatted_date'] = opinion.created_at.strftime("%B %d, %Y")
     
-    return render_template('poll_detail.html', opinion=formatted_opinion, poll_form=poll_form)
+    # Get related polls from same topic
+    related_polls = []
+    if opinion.topic_tag:
+        related_polls_query = Opinion.query.filter(
+            Opinion.topic_tag == opinion.topic_tag,
+            Opinion.id != poll_id
+        ).order_by(Opinion.created_at.desc()).limit(6).all()
+        
+        for related in related_polls_query:
+            related_dict = related.to_dict()
+            related_dict['formatted_date'] = related.created_at.strftime("%B %d, %Y")
+            related_dict['total_votes'] = sum(json.loads(related.votes) if related.votes else [])
+            related_polls.append(related_dict)
+    
+    return render_template('poll_detail.html', opinion=formatted_opinion, poll_form=poll_form, related_polls=related_polls)
 
 @app.route('/create_payment', methods=['POST'])
 def create_payment():
@@ -1162,3 +1268,75 @@ def not_found_error(error):
 @app.errorhandler(500)
 def internal_error(error):
     return render_template('500.html'), 500
+
+@app.route('/poll-groups')
+def poll_groups():
+    """Poll Groups/Playlists Library Page"""
+    # Get all topics with polls grouped
+    topics_query = db.session.query(
+        Opinion.topic_tag,
+        db.func.count(Opinion.id).label('poll_count'),
+        db.func.sum(db.func.length(Opinion.votes)).label('total_engagement'),
+        db.func.max(Opinion.created_at).label('latest_poll_date')
+    ).filter(
+        Opinion.topic_tag != None,
+        Opinion.topic_tag != ''
+    ).group_by(Opinion.topic_tag).all()
+    
+    # Format groups data
+    groups = []
+    for topic in topics_query:
+        # Get latest poll from this group
+        latest_poll = Opinion.query.filter_by(topic_tag=topic.topic_tag).order_by(Opinion.created_at.desc()).first()
+        
+        # Calculate total votes for this group
+        group_polls = Opinion.query.filter_by(topic_tag=topic.topic_tag).all()
+        total_votes = sum([sum(json.loads(poll.votes) if poll.votes else []) for poll in group_polls])
+        
+        groups.append({
+            'topic': topic.topic_tag,
+            'poll_count': topic.poll_count,
+            'total_votes': total_votes,
+            'latest_poll_date': topic.latest_poll_date.strftime("%B %d, %Y") if topic.latest_poll_date else '',
+            'latest_poll_title': latest_poll.title if latest_poll else ''
+        })
+    
+    # Sort by latest activity
+    groups.sort(key=lambda x: x['latest_poll_date'], reverse=True)
+    
+    return render_template('poll_groups.html', groups=groups)
+
+@app.route('/poll-group/<string:topic>')
+def poll_group_detail(topic):
+    """Poll Group Detail Page - Timeline of polls in a topic"""
+    # Get all polls in this topic
+    polls = Opinion.query.filter_by(topic_tag=topic).order_by(Opinion.created_at.desc()).all()
+    
+    if not polls:
+        abort(404)
+    
+    # Format polls for display
+    formatted_polls = []
+    total_group_votes = 0
+    
+    for poll in polls:
+        poll_dict = poll.to_dict()
+        poll_dict['formatted_date'] = poll.created_at.strftime("%B %d, %Y")
+        poll_votes = sum(json.loads(poll.votes) if poll.votes else [])
+        poll_dict['total_votes'] = poll_votes
+        total_group_votes += poll_votes
+        poll_dict['percentages'] = calculate_poll_percentages(json.loads(poll.votes) if poll.votes else [])
+        formatted_polls.append(poll_dict)
+    
+    # Group analytics
+    analytics = {
+        'total_polls': len(polls),
+        'total_votes': total_group_votes,
+        'avg_votes_per_poll': total_group_votes // len(polls) if len(polls) > 0 else 0,
+        'date_range': f"{polls[-1].created_at.strftime('%B %Y')} - {polls[0].created_at.strftime('%B %Y')}" if len(polls) > 1 else polls[0].created_at.strftime('%B %Y')
+    }
+    
+    return render_template('poll_group_detail.html', 
+                         topic=topic, 
+                         polls=formatted_polls, 
+                         analytics=analytics)
