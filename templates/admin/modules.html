@@ -1,0 +1,55 @@
+{% extends "admin/dashboard.html" %}
+
+{% block admin_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Manage Modules</h2>
+    <a href="{{ url_for('admin_add_module') }}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Add New Module
+    </a>
+</div>
+
+{% if modules %}
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Course</th>
+                <th>Title</th>
+                <th>Lessons</th>
+                <th>Sort Order</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for module in modules %}
+            <tr>
+                <td>{{ module.id }}</td>
+                <td>{{ module.course.title }}</td>
+                <td>
+                    <strong>{{ module.title }}</strong><br>
+                    <small class="text-muted">{{ module.description|truncate(50) if module.description else 'No description' }}</small>
+                </td>
+                <td>{{ module.lessons|length }}</td>
+                <td>{{ module.sort_order }}</td>
+                <td>
+                    <a href="{{ url_for('admin_edit_module', module_id=module.id) }}" class="btn btn-sm btn-warning">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <form action="{{ url_for('admin_delete_module', module_id=module.id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this module? This will also delete all lessons in it.');">
+                        <button type="submit" class="btn btn-sm btn-danger">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">
+    <i class="fas fa-info-circle"></i> No modules yet. <a href="{{ url_for('admin_add_module') }}">Add your first module</a>
+</div>
+{% endif %}
+{% endblock %}

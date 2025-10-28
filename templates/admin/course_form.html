@@ -1,0 +1,58 @@
+{% extends "admin/dashboard.html" %}
+
+{% block admin_content %}
+<h2>{{ title }}</h2>
+
+<form method="POST" enctype="multipart/form-data">
+    {{ form.hidden_tag() }}
+    
+    <div class="mb-3">
+        {{ form.title.label(class="form-label") }}
+        {{ form.title(class="form-control") }}
+    </div>
+    
+    <div class="mb-3">
+        {{ form.description.label(class="form-label") }}
+        {{ form.description(class="form-control", rows=4) }}
+    </div>
+    
+    <div class="mb-3">
+        {{ form.thumbnail.label(class="form-label") }}
+        {{ form.thumbnail(class="form-control") }}
+        {% if course and course.thumbnail %}
+        <div class="mt-2">
+            <small class="text-muted">Current thumbnail:</small><br>
+            <img src="{{ url_for('static', filename=course.thumbnail) if not course.thumbnail.startswith('http') else course.thumbnail }}" 
+                 alt="Current thumbnail" style="max-width: 200px; max-height: 200px; object-fit: cover; border-radius: 8px;">
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="mb-3">
+        {{ form.thumbnail_url.label(class="form-label") }}
+        {{ form.thumbnail_url(class="form-control", placeholder="https://example.com/image.jpg") }}
+        <small class="form-text text-muted">Or provide a URL instead of uploading a file</small>
+    </div>
+    
+    <div class="mb-3">
+        {{ form.price.label(class="form-label") }}
+        {{ form.price(class="form-control") }}
+    </div>
+    
+    <div class="mb-3">
+        {{ form.is_active.label(class="form-label") }}
+        {{ form.is_active(class="form-select") }}
+    </div>
+    
+    <div class="mb-3">
+        {{ form.sort_order.label(class="form-label") }}
+        {{ form.sort_order(class="form-control") }}
+        <small class="form-text text-muted">Lower numbers appear first</small>
+    </div>
+    
+    <div class="d-flex gap-2">
+        {{ form.submit(class="btn btn-primary") }}
+        <a href="{{ url_for('admin_courses') }}" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>
+{% endblock %}

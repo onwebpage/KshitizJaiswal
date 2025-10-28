@@ -1,0 +1,57 @@
+{% extends "admin/dashboard.html" %}
+
+{% block admin_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Manage Lessons</h2>
+    <a href="{{ url_for('admin_add_lesson') }}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Add New Lesson
+    </a>
+</div>
+
+{% if lessons %}
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Course</th>
+                <th>Module</th>
+                <th>Title</th>
+                <th>Duration</th>
+                <th>Sort Order</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for lesson in lessons %}
+            <tr>
+                <td>{{ lesson.id }}</td>
+                <td>{{ lesson.module.course.title }}</td>
+                <td>{{ lesson.module.title }}</td>
+                <td>
+                    <strong>{{ lesson.title }}</strong><br>
+                    <small class="text-muted">{{ lesson.description|truncate(50) if lesson.description else 'No description' }}</small>
+                </td>
+                <td>{{ lesson.duration or '-' }}</td>
+                <td>{{ lesson.sort_order }}</td>
+                <td>
+                    <a href="{{ url_for('admin_edit_lesson', lesson_id=lesson.id) }}" class="btn btn-sm btn-warning">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <form action="{{ url_for('admin_delete_lesson', lesson_id=lesson.id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this lesson?');">
+                        <button type="submit" class="btn btn-sm btn-danger">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">
+    <i class="fas fa-info-circle"></i> No lessons yet. <a href="{{ url_for('admin_add_lesson') }}">Add your first lesson</a>
+</div>
+{% endif %}
+{% endblock %}
