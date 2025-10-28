@@ -8,17 +8,6 @@
     
     <!-- Mobile Background -->
     <div class="hero-bg hero-bg-mobile d-md-none" style="background-image: url('{% if content.hero.mobile_url %}{% if content.hero.mobile_url.startswith('http') %}{{ content.hero.mobile_url }}{% else %}{{ url_for('static', filename=content.hero.mobile_url) }}{% endif %}{% elif content.hero.banner_url %}{% if content.hero.banner_url.startswith('http') %}{{ content.hero.banner_url }}{% else %}{{ url_for('static', filename=content.hero.banner_url) }}{% endif %}{% endif %}');"></div>
-    
-    <div class="hero-overlay">
-        <div class="container">
-            <div class="row justify-content-center text-center">
-                <div class="col-lg-8">
-                    <h1 class="hero-title">{{ content.hero.name }}</h1>
-                    <p class="hero-tagline">{{ content.hero.tagline }}</p>
-                </div>
-            </div>
-        </div>
-    </div>
 </section>
 
 <!-- Beyond The Reel Section -->
