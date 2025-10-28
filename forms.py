@@ -28,8 +28,14 @@ class ReelForm(FlaskForm):
         ('', 'No Tag'),
         ('trending', '🔥 Trending'),
         ('new', '🆕 New'),
-        ('must_watch', '⭐ Must Watch')
+        ('fan_favourite', '❤ Fan Favourite'),
+        ('exclusive', '⭐ Exclusive'),
+        ('must_watch', '👀 Must Watch'),
+        ('behind_scenes', '🎬 Behind the Scenes')
     ])
+    topic_tag = StringField('Topic Tag', validators=[Length(max=100)], 
+                           render_kw={"placeholder": "e.g., Vote Chori Issue, Education Reform"})
+    is_featured = SelectField('Show on Homepage?', choices=[('0', 'No'), ('1', 'Yes')], default='0')
 
 class OpinionForm(FlaskForm):
     title = StringField('Title', validators=[DataRequired(), Length(max=100)])

@@ -13,7 +13,10 @@ class Reel(db.Model):
     behind_thought = db.Column(db.Text)
     sources = db.Column(db.Text)  # JSON string of sources list
     extra_context = db.Column(db.Text)
-    category_tag = db.Column(db.String(50))  # trending, new, must_watch
+    category_tag = db.Column(db.String(50))  # trending, new, must_watch, fan_favourite, exclusive, behind_scenes
+    topic_tag = db.Column(db.String(100))  # Topic for grouping/playlist (e.g., "Vote Chori Issue")
+    view_count = db.Column(db.Integer, default=0)  # For popularity tracking
+    is_featured = db.Column(db.Boolean, default=False)  # For homepage featured reels
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def to_dict(self):
@@ -25,7 +28,11 @@ class Reel(db.Model):
             'behind_thought': self.behind_thought or '',
             'sources': json.loads(self.sources) if self.sources else [],
             'extra_context': self.extra_context or '',
-            'category_tag': self.category_tag or ''
+            'category_tag': self.category_tag or '',
+            'topic_tag': self.topic_tag or '',
+            'view_count': self.view_count or 0,
+            'is_featured': self.is_featured or False,
+            'created_at': self.created_at.isoformat() if self.created_at else ''
         }
 
 class Opinion(db.Model):

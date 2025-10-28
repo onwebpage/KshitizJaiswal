@@ -21,6 +21,14 @@ def index():
     newsletter_form = NewsletterForm()
     poll_form = PollVoteForm()
     
+    # Show only top 10 latest/featured reels on homepage
+    featured_reels = Reel.query.filter_by(is_featured=True).order_by(Reel.created_at.desc()).limit(10).all()
+    if not featured_reels:
+        # If no featured reels, show latest 10
+        featured_reels = Reel.query.order_by(Reel.created_at.desc()).limit(10).all()
+    
+    content['reels'] = [reel.to_dict() for reel in featured_reels]
+    
     # Calculate poll percentages
     for opinion in content['opinions']:
         opinion['percentages'] = calculate_poll_percentages(opinion['votes'])
@@ -46,26 +54,88 @@ def index():
                          subscription_tiers=subscription_tiers,
                          razorpay_key=razorpay_key)
 
+@app.route('/reels')
+def reels_library():
+    """Full library view with search and filters"""
+    # Get filter parameters
+    search = request.args.get('search', '')
+    sort_by = request.args.get('sort', 'latest')  # latest, oldest, popular
+    category = request.args.get('category', '')
+    topic = request.args.get('topic', '')
+    page = request.args.get('page', 1, type=int)
+    per_page = 24  # Show 24 reels per page (grid layout)
+    
+    # Base query
+    query = Reel.query
+    
+    # Apply search filter
+    if search:
+        query = query.filter(Reel.title.ilike(f'%{search}%'))
+    
+    # Apply category filter
+    if category:
+        query = query.filter_by(category_tag=category)
+    
+    # Apply topic filter
+    if topic:
+        query = query.filter_by(topic_tag=topic)
+    
+    # Apply sorting
+    if sort_by == 'oldest':
+        query = query.order_by(Reel.created_at.asc())
+    elif sort_by == 'popular':
+        query = query.order_by(Reel.view_count.desc())
+    else:  # latest
+        query = query.order_by(Reel.created_at.desc())
+    
+    # Paginate results
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    reels = [reel.to_dict() for reel in pagination.items]
+    
+    # Get all topics for filter dropdown
+    topics = db.session.query(Reel.topic_tag).filter(Reel.topic_tag != None, Reel.topic_tag != '').distinct().all()
+    topic_list = [t[0] for t in topics]
+    
+    # Get all categories for filter
+    categories = db.session.query(Reel.category_tag).filter(Reel.category_tag != None, Reel.category_tag != '').distinct().all()
+    category_list = [c[0] for c in categories]
+    
+    return render_template('reels_library.html',
+                         reels=reels,
+                         pagination=pagination,
+                         topics=topic_list,
+                         categories=category_list,
+                         current_search=search,
+                         current_sort=sort_by,
+                         current_category=category,
+                         current_topic=topic)
+
 @app.route('/reel/<int:reel_id>')
 def reel_detail(reel_id):
     """Reel detail page"""
-    content = DataManager.get_content()
-    reel = None
+    reel = Reel.query.get_or_404(reel_id)
     
-    for r in content['reels']:
-        if r['id'] == reel_id:
-            reel = r
-            break
+    # Increment view count
+    reel.view_count += 1
+    db.session.commit()
     
-    if not reel:
-        flash('Reel not found!', 'error')
-        return redirect(url_for('index'))
+    # Get reel data
+    reel_data = reel.to_dict()
     
     # Process YouTube URL for embedding
-    if reel.get('video_url'):
-        reel['embed_url'] = get_youtube_embed_url(reel['video_url'])
+    if reel_data.get('video_url'):
+        reel_data['embed_url'] = get_youtube_embed_url(reel_data['video_url'])
     
-    return render_template('reel_detail.html', reel=reel)
+    # Get related reels from same topic
+    related_reels = []
+    if reel.topic_tag:
+        related_reels = Reel.query.filter(
+            Reel.topic_tag == reel.topic_tag,
+            Reel.id != reel_id
+        ).order_by(Reel.created_at.desc()).limit(6).all()
+        related_reels = [r.to_dict() for r in related_reels]
+    
+    return render_template('reel_detail.html', reel=reel_data, related_reels=related_reels)
 
 @app.route('/contact')
 def contact():
@@ -286,7 +356,10 @@ def admin_add_reel():
             behind_thought=form.behind_thought.data,
             sources=json.dumps(sources),
             extra_context=form.extra_context.data or '',
-            category_tag=form.category_tag.data or ''
+            category_tag=form.category_tag.data or '',
+            topic_tag=form.topic_tag.data or '',
+            is_featured=bool(int(form.is_featured.data)),
+            view_count=0
         )
         
         db.session.add(new_reel)
@@ -358,6 +431,8 @@ def admin_edit_reel(reel_id):
         reel.sources = json.dumps(sources)
         reel.extra_context = form.extra_context.data or ''
         reel.category_tag = form.category_tag.data or ''
+        reel.topic_tag = form.topic_tag.data or ''
+        reel.is_featured = bool(int(form.is_featured.data))
         
         db.session.commit()
         
@@ -372,6 +447,8 @@ def admin_edit_reel(reel_id):
         form.sources.data = '\n'.join(json.loads(reel.sources) if reel.sources else [])
         form.extra_context.data = reel.extra_context
         form.category_tag.data = reel.category_tag or ''
+        form.topic_tag.data = reel.topic_tag or ''
+        form.is_featured.data = '1' if reel.is_featured else '0'
     
     return render_template('admin/reel_form.html', form=form, title='Edit Reel', reel=reel)
 

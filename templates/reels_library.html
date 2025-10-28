@@ -1,0 +1,325 @@
+{% extends "base.html" %}
+
+{% block title %}Beyond The Reel - Full Library - Kshitiz Jaiswal{% endblock %}
+
+{% block content %}
+<section class="reels-library-section section-padding">
+    <div class="container-fluid" style="max-width: 1400px;">
+        <!-- Header -->
+        <div class="library-header text-center mb-5">
+            <h1 class="section-title">Beyond The Reel</h1>
+            <p class="section-subtitle">"Reel to sirf ek hissa tha, kahani bahut badi hai."</p>
+        </div>
+
+        <!-- Search and Filter Bar -->
+        <div class="search-filter-bar mb-5">
+            <form method="GET" action="{{ url_for('reels_library') }}" class="row g-3">
+                <!-- Search Input -->
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" class="form-control" name="search" placeholder="Search reels..." value="{{ current_search }}">
+                    </div>
+                </div>
+
+                <!-- Sort Dropdown -->
+                <div class="col-md-2">
+                    <select name="sort" class="form-select">
+                        <option value="latest" {% if current_sort == 'latest' %}selected{% endif %}>Latest</option>
+                        <option value="oldest" {% if current_sort == 'oldest' %}selected{% endif %}>Oldest</option>
+                        <option value="popular" {% if current_sort == 'popular' %}selected{% endif %}>Most Popular</option>
+                    </select>
+                </div>
+
+                <!-- Category Filter -->
+                <div class="col-md-2">
+                    <select name="category" class="form-select">
+                        <option value="">All Tags</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat }}" {% if current_category == cat %}selected{% endif %}>
+                            {% if cat == 'trending' %}🔥 Trending
+                            {% elif cat == 'new' %}🆕 New
+                            {% elif cat == 'fan_favourite' %}❤ Fan Favourite
+                            {% elif cat == 'exclusive' %}⭐ Exclusive
+                            {% elif cat == 'must_watch' %}👀 Must Watch
+                            {% elif cat == 'behind_scenes' %}🎬 Behind the Scenes
+                            {% else %}{{ cat }}{% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Topic Filter -->
+                <div class="col-md-2">
+                    <select name="topic" class="form-select">
+                        <option value="">All Topics</option>
+                        {% for topic in topics %}
+                        <option value="{{ topic }}" {% if current_topic == topic %}selected{% endif %}>{{ topic }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Search Button -->
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-filter me-1"></i>Filter
+                    </button>
+                </div>
+            </form>
+
+            <!-- Active Filters Display -->
+            {% if current_search or current_category or current_topic %}
+            <div class="active-filters mt-3">
+                <span class="me-2"><strong>Active filters:</strong></span>
+                {% if current_search %}
+                <span class="badge bg-primary me-2">Search: {{ current_search }}</span>
+                {% endif %}
+                {% if current_category %}
+                <span class="badge bg-success me-2">Tag: {{ current_category }}</span>
+                {% endif %}
+                {% if current_topic %}
+                <span class="badge bg-info me-2">Topic: {{ current_topic }}</span>
+                {% endif %}
+                <a href="{{ url_for('reels_library') }}" class="btn btn-sm btn-outline-secondary">Clear All</a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Results Count -->
+        <div class="results-info mb-4">
+            <p class="text-muted">
+                Showing {{ reels|length }} of {{ pagination.total }} reels
+                {% if pagination.page > 1 %} (Page {{ pagination.page }} of {{ pagination.pages }}){% endif %}
+            </p>
+        </div>
+
+        <!-- Reels Grid -->
+        {% if reels %}
+        <div class="reels-grid">
+            {% for reel in reels %}
+            <div class="reel-grid-item">
+                <a href="{{ url_for('reel_detail', reel_id=reel.id) }}" class="reel-link">
+                    <div class="reel-thumbnail-wrapper">
+                        {% if reel.category_tag %}
+                        <div class="reel-category-tag {{ reel.category_tag }}">
+                            {% if reel.category_tag == 'trending' %}
+                                🔥 Trending
+                            {% elif reel.category_tag == 'new' %}
+                                🆕 New
+                            {% elif reel.category_tag == 'fan_favourite' %}
+                                ❤ Fan Favourite
+                            {% elif reel.category_tag == 'exclusive' %}
+                                ⭐ Exclusive
+                            {% elif reel.category_tag == 'must_watch' %}
+                                👀 Must Watch
+                            {% elif reel.category_tag == 'behind_scenes' %}
+                                🎬 BTS
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        <img src="{{ url_for('static', filename=reel.thumbnail) if reel.thumbnail and not reel.thumbnail.startswith('http') else reel.thumbnail }}" 
+                             alt="{{ reel.title }}" class="reel-thumbnail">
+                        <div class="reel-overlay">
+                            <i class="fas fa-play-circle fa-3x"></i>
+                        </div>
+                    </div>
+                    <div class="reel-info">
+                        <h6 class="reel-grid-title">{{ reel.title }}</h6>
+                        <div class="reel-meta-info">
+                            {% if reel.topic_tag %}
+                            <span class="badge bg-secondary me-2">{{ reel.topic_tag }}</span>
+                            {% endif %}
+                            <span class="text-muted"><i class="fas fa-eye me-1"></i>{{ reel.view_count }}</span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if pagination.pages > 1 %}
+        <nav aria-label="Reels pagination" class="mt-5">
+            <ul class="pagination justify-content-center">
+                {% if pagination.has_prev %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('reels_library', page=pagination.prev_num, search=current_search, sort=current_sort, category=current_category, topic=current_topic) }}">
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </a>
+                </li>
+                {% endif %}
+
+                {% for page_num in pagination.iter_pages(left_edge=2, right_edge=2, left_current=2, right_current=2) %}
+                    {% if page_num %}
+                        <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                            <a class="page-link" href="{{ url_for('reels_library', page=page_num, search=current_search, sort=current_sort, category=current_category, topic=current_topic) }}">{{ page_num }}</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if pagination.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('reels_library', page=pagination.next_num, search=current_search, sort=current_sort, category=current_category, topic=current_topic) }}">
+                        Next <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
+        {% else %}
+        <div class="no-results text-center py-5">
+            <i class="fas fa-search fa-3x text-muted mb-3"></i>
+            <h4>No Reels Found</h4>
+            <p class="text-muted">Try adjusting your search or filters</p>
+            <a href="{{ url_for('reels_library') }}" class="btn btn-primary mt-3">Clear Filters</a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<style>
+.reels-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.reel-grid-item {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.reel-grid-item:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+
+.reel-thumbnail-wrapper {
+    position: relative;
+    aspect-ratio: 16/9;
+    overflow: hidden;
+}
+
+.reel-thumbnail {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.reel-grid-item:hover .reel-thumbnail {
+    transform: scale(1.1);
+}
+
+.reel-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.reel-grid-item:hover .reel-overlay {
+    opacity: 1;
+}
+
+.reel-overlay i {
+    color: #fff;
+}
+
+.reel-info {
+    padding: 1rem;
+}
+
+.reel-grid-title {
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+
+.reel-meta-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+}
+
+.reel-category-tag {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    z-index: 10;
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.reel-category-tag.trending {
+    background: linear-gradient(135deg, #ff6b6b, #ff5252);
+    color: #fff;
+}
+
+.reel-category-tag.new {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: #fff;
+}
+
+.reel-category-tag.fan_favourite {
+    background: linear-gradient(135deg, #e91e63, #c2185b);
+    color: #fff;
+}
+
+.reel-category-tag.exclusive {
+    background: linear-gradient(135deg, #ffd700, #ffb300);
+    color: #000;
+}
+
+.reel-category-tag.must_watch {
+    background: linear-gradient(135deg, #9c27b0, #7b1fa2);
+    color: #fff;
+}
+
+.reel-category-tag.behind_scenes {
+    background: linear-gradient(135deg, #607d8b, #455a64);
+    color: #fff;
+}
+
+.search-filter-bar {
+    background: #f8f9fa;
+    padding: 2rem;
+    border-radius: 12px;
+}
+
+.active-filters {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.no-results {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 4rem 2rem;
+}
+</style>
+{% endblock %}
