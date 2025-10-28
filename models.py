@@ -268,6 +268,121 @@ class DataManager:
                 return True
         return False
 
+class Course(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    thumbnail = db.Column(db.String(500))
+    price = db.Column(db.Integer, nullable=False)  # Price in rupees
+    is_active = db.Column(db.Boolean, default=True)
+    sort_order = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    modules = db.relationship('Module', backref='course', lazy=True, cascade='all, delete-orphan', order_by='Module.sort_order')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'title': self.title,
+            'description': self.description or '',
+            'thumbnail': self.thumbnail or '',
+            'price': self.price,
+            'is_active': self.is_active,
+            'sort_order': self.sort_order,
+            'modules': [module.to_dict() for module in self.modules]
+        }
+
+class Module(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    course_id = db.Column(db.Integer, db.ForeignKey('course.id'), nullable=False)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    sort_order = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    lessons = db.relationship('Lesson', backref='module', lazy=True, cascade='all, delete-orphan', order_by='Lesson.sort_order')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'course_id': self.course_id,
+            'title': self.title,
+            'description': self.description or '',
+            'sort_order': self.sort_order,
+            'lessons': [lesson.to_dict() for lesson in self.lessons]
+        }
+
+class Lesson(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    module_id = db.Column(db.Integer, db.ForeignKey('module.id'), nullable=False)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    video_url = db.Column(db.String(500))  # YouTube unlisted/private URL
+    notes = db.Column(db.Text)  # Lesson notes/resources
+    duration = db.Column(db.String(20))  # e.g., "15:30"
+    sort_order = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'module_id': self.module_id,
+            'title': self.title,
+            'description': self.description or '',
+            'video_url': self.video_url or '',
+            'notes': self.notes or '',
+            'duration': self.duration or '',
+            'sort_order': self.sort_order
+        }
+
+class UserCourseAccess(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    clerk_user_id = db.Column(db.String(100), nullable=False)  # Clerk user ID
+    course_id = db.Column(db.Integer, db.ForeignKey('course.id'), nullable=False)
+    payment_id = db.Column(db.String(200))  # Razorpay payment ID
+    amount_paid = db.Column(db.Integer)  # Amount paid in rupees
+    granted_at = db.Column(db.DateTime, default=datetime.utcnow)
+    expires_at = db.Column(db.DateTime)  # Optional expiration date
+    
+    course = db.relationship('Course', backref='user_accesses')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'clerk_user_id': self.clerk_user_id,
+            'course_id': self.course_id,
+            'payment_id': self.payment_id or '',
+            'amount_paid': self.amount_paid,
+            'granted_at': self.granted_at.isoformat() if self.granted_at else '',
+            'expires_at': self.expires_at.isoformat() if self.expires_at else None
+        }
+    
+    @staticmethod
+    def has_access(clerk_user_id, course_id):
+        """Check if a user has access to a course"""
+        if not clerk_user_id:
+            return False
+        access = UserCourseAccess.query.filter_by(
+            clerk_user_id=clerk_user_id,
+            course_id=course_id
+        ).first()
+        if access:
+            if access.expires_at is None or access.expires_at > datetime.utcnow():
+                return True
+        return False
+    
+    @staticmethod
+    def get_user_courses(clerk_user_id):
+        """Get all courses a user has access to"""
+        if not clerk_user_id:
+            return []
+        accesses = UserCourseAccess.query.filter_by(clerk_user_id=clerk_user_id).all()
+        valid_accesses = []
+        for access in accesses:
+            if access.expires_at is None or access.expires_at > datetime.utcnow():
+                valid_accesses.append(access)
+        return valid_accesses
+
 class AdminUser:
     """Simple admin authentication"""
     
