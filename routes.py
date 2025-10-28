@@ -1,6 +1,6 @@
 from flask import render_template, request, jsonify, redirect, url_for, flash, session, abort
 from app import app, db
-from models import DataManager, AdminUser, SiteContent, Reel, Opinion, Subscriber, SubscriptionTier
+from models import DataManager, AdminUser, SiteContent, Reel, Opinion, Subscriber, SubscriptionTier, Course, Module, Lesson, UserCourseAccess
 from forms import NewsletterForm, PollVoteForm, AdminLoginForm, ReelForm, OpinionForm, HeroContentForm, PaymentSettingsForm, SubscriptionTierForm
 from utils import save_uploaded_file, calculate_poll_percentages, get_youtube_embed_url
 from clerk_auth import clerk_auth_required, get_clerk_user, get_clerk_user_id
@@ -1340,3 +1340,186 @@ def poll_group_detail(topic):
                          topic=topic, 
                          polls=formatted_polls, 
                          analytics=analytics)
+
+@app.route('/courses')
+def courses():
+    """Courses listing page"""
+    all_courses = Course.query.filter_by(is_active=True).order_by(Course.sort_order, Course.id).all()
+    
+    clerk_user_id = get_clerk_user_id()
+    user_course_ids = []
+    if clerk_user_id:
+        user_accesses = UserCourseAccess.get_user_courses(clerk_user_id)
+        user_course_ids = [access.course_id for access in user_accesses]
+    
+    courses_data = []
+    for course in all_courses:
+        course_dict = course.to_dict()
+        course_dict['has_access'] = course.id in user_course_ids
+        course_dict['module_count'] = len(course.modules)
+        course_dict['lesson_count'] = sum([len(module.lessons) for module in course.modules])
+        courses_data.append(course_dict)
+    
+    payment_content = SiteContent.query.filter_by(content_key='payment_settings').first()
+    razorpay_key = 'rzp_test_dummy_key'
+    if payment_content:
+        payment_settings = json.loads(payment_content.content_data)
+        razorpay_key = payment_settings.get('razorpay_key_id', 'rzp_test_dummy_key')
+    
+    return render_template('courses.html', courses=courses_data, razorpay_key=razorpay_key)
+
+@app.route('/course/<int:course_id>')
+def course_detail(course_id):
+    """Course detail page with modules and lessons"""
+    course = Course.query.get_or_404(course_id)
+    
+    if not course.is_active:
+        abort(404)
+    
+    clerk_user_id = get_clerk_user_id()
+    has_access = UserCourseAccess.has_access(clerk_user_id, course_id) if clerk_user_id else False
+    
+    course_data = course.to_dict()
+    course_data['has_access'] = has_access
+    
+    payment_content = SiteContent.query.filter_by(content_key='payment_settings').first()
+    razorpay_key = 'rzp_test_dummy_key'
+    if payment_content:
+        payment_settings = json.loads(payment_content.content_data)
+        razorpay_key = payment_settings.get('razorpay_key_id', 'rzp_test_dummy_key')
+    
+    return render_template('course_detail.html', course=course_data, razorpay_key=razorpay_key)
+
+@app.route('/course/<int:course_id>/lesson/<int:lesson_id>')
+def lesson_view(course_id, lesson_id):
+    """Lesson viewing page with embedded video"""
+    course = Course.query.get_or_404(course_id)
+    lesson = Lesson.query.get_or_404(lesson_id)
+    
+    if not course.is_active:
+        abort(404)
+    
+    clerk_user_id = get_clerk_user_id()
+    
+    if not clerk_user_id:
+        flash('Please sign in to access this course.', 'warning')
+        return redirect(url_for('clerk_login', next=request.url))
+    
+    has_access = UserCourseAccess.has_access(clerk_user_id, course_id)
+    
+    if not has_access:
+        flash('You need to purchase this course to access lessons.', 'warning')
+        return redirect(url_for('course_detail', course_id=course_id))
+    
+    lesson_data = lesson.to_dict()
+    lesson_data['embed_url'] = get_youtube_embed_url(lesson.video_url) if lesson.video_url else None
+    
+    module = Module.query.get(lesson.module_id)
+    course_data = course.to_dict()
+    
+    current_lesson_index = None
+    prev_lesson = None
+    next_lesson = None
+    
+    all_lessons = []
+    for mod in course.modules:
+        for les in mod.lessons:
+            all_lessons.append(les)
+    
+    for idx, les in enumerate(all_lessons):
+        if les.id == lesson_id:
+            current_lesson_index = idx
+            if idx > 0:
+                prev_lesson = all_lessons[idx - 1]
+            if idx < len(all_lessons) - 1:
+                next_lesson = all_lessons[idx + 1]
+            break
+    
+    return render_template('lesson_view.html', 
+                         course=course_data,
+                         module=module.to_dict(),
+                         lesson=lesson_data,
+                         prev_lesson=prev_lesson.to_dict() if prev_lesson else None,
+                         next_lesson=next_lesson.to_dict() if next_lesson else None)
+
+@app.route('/course/<int:course_id>/purchase', methods=['POST'])
+def purchase_course(course_id):
+    """Initiate course purchase"""
+    course = Course.query.get_or_404(course_id)
+    
+    clerk_user_id = get_clerk_user_id()
+    
+    if not clerk_user_id:
+        return jsonify({'success': False, 'message': 'Please sign in first'}), 401
+    
+    has_access = UserCourseAccess.has_access(clerk_user_id, course_id)
+    if has_access:
+        return jsonify({'success': False, 'message': 'You already have access to this course'}), 400
+    
+    try:
+        amount = course.price * 100
+        
+        order = razorpay_client.order.create({
+            'amount': amount,
+            'currency': 'INR',
+            'payment_capture': 1
+        })
+        
+        return jsonify({
+            'success': True,
+            'order_id': order['id'],
+            'amount': amount,
+            'course_id': course_id
+        })
+    
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/course/payment/verify', methods=['POST'])
+def verify_course_payment():
+    """Verify course payment and grant access"""
+    data = request.get_json()
+    
+    payment_id = data.get('razorpay_payment_id')
+    order_id = data.get('razorpay_order_id')
+    signature = data.get('razorpay_signature')
+    course_id = data.get('course_id')
+    
+    clerk_user_id = get_clerk_user_id()
+    
+    if not clerk_user_id:
+        return jsonify({'success': False, 'message': 'User not authenticated'}), 401
+    
+    try:
+        params_dict = {
+            'razorpay_order_id': order_id,
+            'razorpay_payment_id': payment_id,
+            'razorpay_signature': signature
+        }
+        
+        razorpay_client.utility.verify_payment_signature(params_dict)
+        
+        course = Course.query.get(course_id)
+        if not course:
+            return jsonify({'success': False, 'message': 'Course not found'}), 404
+        
+        access = UserCourseAccess(
+            clerk_user_id=clerk_user_id,
+            course_id=course_id,
+            payment_id=payment_id,
+            amount_paid=course.price
+        )
+        db.session.add(access)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Payment verified! You now have access to the course.',
+            'redirect_url': url_for('course_detail', course_id=course_id)
+        })
+    
+    except razorpay.errors.SignatureVerificationError:
+        return jsonify({'success': False, 'message': 'Payment verification failed'}), 400
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
