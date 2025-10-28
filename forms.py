@@ -92,3 +92,30 @@ class ShowForm(FlaskForm):
     coming_soon = SelectField('Status', choices=[('1', 'Coming Soon'), ('0', 'Available Now')], default='1')
     notify_link = StringField('Notification/Registration Link', validators=[Length(max=500)])
     submit = SubmitField('Save Show')
+
+class CourseForm(FlaskForm):
+    title = StringField('Course Title', validators=[DataRequired(), Length(max=200)])
+    description = TextAreaField('Course Description', validators=[DataRequired()])
+    thumbnail = FileField('Course Thumbnail', validators=[FileAllowed(['jpg', 'jpeg', 'png', 'gif'])])
+    thumbnail_url = StringField('Or Thumbnail URL', validators=[Length(max=500)])
+    price = IntegerField('Price (₹)', validators=[DataRequired(), NumberRange(min=0)])
+    is_active = SelectField('Active', choices=[('1', 'Yes'), ('0', 'No')], default='1')
+    sort_order = IntegerField('Sort Order', validators=[NumberRange(min=0)], default=0)
+    submit = SubmitField('Save Course')
+
+class ModuleForm(FlaskForm):
+    title = StringField('Module Title', validators=[DataRequired(), Length(max=200)])
+    description = TextAreaField('Module Description')
+    course_id = SelectField('Course', coerce=int, validators=[DataRequired()])
+    sort_order = IntegerField('Sort Order', validators=[NumberRange(min=0)], default=0)
+    submit = SubmitField('Save Module')
+
+class LessonForm(FlaskForm):
+    title = StringField('Lesson Title', validators=[DataRequired(), Length(max=200)])
+    description = TextAreaField('Lesson Description')
+    module_id = SelectField('Module', coerce=int, validators=[DataRequired()])
+    video_url = StringField('YouTube Video URL', validators=[DataRequired(), Length(max=500)])
+    notes = TextAreaField('Lesson Notes/Resources')
+    duration = StringField('Duration (e.g., 15:30)', validators=[Length(max=20)])
+    sort_order = IntegerField('Sort Order', validators=[NumberRange(min=0)], default=0)
+    submit = SubmitField('Save Lesson')

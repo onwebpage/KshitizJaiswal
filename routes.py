@@ -1,7 +1,7 @@
 from flask import render_template, request, jsonify, redirect, url_for, flash, session, abort
 from app import app, db
 from models import DataManager, AdminUser, SiteContent, Reel, Opinion, Subscriber, SubscriptionTier, Course, Module, Lesson, UserCourseAccess
-from forms import NewsletterForm, PollVoteForm, AdminLoginForm, ReelForm, OpinionForm, HeroContentForm, PaymentSettingsForm, SubscriptionTierForm
+from forms import NewsletterForm, PollVoteForm, AdminLoginForm, ReelForm, OpinionForm, HeroContentForm, PaymentSettingsForm, SubscriptionTierForm, CourseForm, ModuleForm, LessonForm
 from utils import save_uploaded_file, calculate_poll_percentages, get_youtube_embed_url
 from clerk_auth import clerk_auth_required, get_clerk_user, get_clerk_user_id
 import razorpay
@@ -1197,6 +1197,254 @@ def admin_delete_show(show_index):
         flash('Show not found!', 'error')
     
     return redirect(url_for('admin_shows'))
+
+# Admin Course Management Routes
+@app.route('/admin/courses')
+def admin_courses():
+    """Admin courses listing"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    courses = Course.query.order_by(Course.sort_order, Course.id).all()
+    return render_template('admin/courses.html', courses=courses)
+
+@app.route('/admin/course/add', methods=['GET', 'POST'])
+def admin_add_course():
+    """Add new course"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    form = CourseForm()
+    
+    if form.validate_on_submit():
+        thumbnail_path = ''
+        if form.thumbnail.data:
+            thumbnail_path = save_uploaded_file(form.thumbnail.data, 'courses')
+        elif form.thumbnail_url.data:
+            thumbnail_path = form.thumbnail_url.data
+        
+        course = Course(
+            title=form.title.data,
+            description=form.description.data,
+            thumbnail=thumbnail_path,
+            price=form.price.data,
+            is_active=bool(int(form.is_active.data)),
+            sort_order=form.sort_order.data
+        )
+        db.session.add(course)
+        db.session.commit()
+        
+        flash(f'Course "{course.title}" added successfully!', 'success')
+        return redirect(url_for('admin_courses'))
+    
+    return render_template('admin/course_form.html', form=form, title='Add New Course')
+
+@app.route('/admin/course/<int:course_id>/edit', methods=['GET', 'POST'])
+def admin_edit_course(course_id):
+    """Edit course"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    course = Course.query.get_or_404(course_id)
+    form = CourseForm()
+    
+    if form.validate_on_submit():
+        if form.thumbnail.data:
+            course.thumbnail = save_uploaded_file(form.thumbnail.data, 'courses')
+        elif form.thumbnail_url.data:
+            course.thumbnail = form.thumbnail_url.data
+        
+        course.title = form.title.data
+        course.description = form.description.data
+        course.price = form.price.data
+        course.is_active = bool(int(form.is_active.data))
+        course.sort_order = form.sort_order.data
+        
+        db.session.commit()
+        flash(f'Course "{course.title}" updated successfully!', 'success')
+        return redirect(url_for('admin_courses'))
+    
+    form.title.data = course.title
+    form.description.data = course.description
+    form.price.data = course.price
+    form.is_active.data = '1' if course.is_active else '0'
+    form.sort_order.data = course.sort_order
+    
+    return render_template('admin/course_form.html', form=form, course=course, title='Edit Course')
+
+@app.route('/admin/course/<int:course_id>/delete', methods=['POST'])
+def admin_delete_course(course_id):
+    """Delete course"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    course = Course.query.get_or_404(course_id)
+    course_title = course.title
+    
+    db.session.delete(course)
+    db.session.commit()
+    
+    flash(f'Course "{course_title}" deleted successfully!', 'success')
+    return redirect(url_for('admin_courses'))
+
+@app.route('/admin/modules')
+def admin_modules():
+    """Admin modules listing"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    modules = Module.query.order_by(Module.course_id, Module.sort_order).all()
+    return render_template('admin/modules.html', modules=modules)
+
+@app.route('/admin/module/add', methods=['GET', 'POST'])
+def admin_add_module():
+    """Add new module"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    form = ModuleForm()
+    form.course_id.choices = [(c.id, c.title) for c in Course.query.order_by(Course.title).all()]
+    
+    if form.validate_on_submit():
+        module = Module(
+            title=form.title.data,
+            description=form.description.data,
+            course_id=form.course_id.data,
+            sort_order=form.sort_order.data
+        )
+        db.session.add(module)
+        db.session.commit()
+        
+        flash(f'Module "{module.title}" added successfully!', 'success')
+        return redirect(url_for('admin_modules'))
+    
+    return render_template('admin/module_form.html', form=form, title='Add New Module')
+
+@app.route('/admin/module/<int:module_id>/edit', methods=['GET', 'POST'])
+def admin_edit_module(module_id):
+    """Edit module"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    module = Module.query.get_or_404(module_id)
+    form = ModuleForm()
+    form.course_id.choices = [(c.id, c.title) for c in Course.query.order_by(Course.title).all()]
+    
+    if form.validate_on_submit():
+        module.title = form.title.data
+        module.description = form.description.data
+        module.course_id = form.course_id.data
+        module.sort_order = form.sort_order.data
+        
+        db.session.commit()
+        flash(f'Module "{module.title}" updated successfully!', 'success')
+        return redirect(url_for('admin_modules'))
+    
+    form.title.data = module.title
+    form.description.data = module.description
+    form.course_id.data = module.course_id
+    form.sort_order.data = module.sort_order
+    
+    return render_template('admin/module_form.html', form=form, module=module, title='Edit Module')
+
+@app.route('/admin/module/<int:module_id>/delete', methods=['POST'])
+def admin_delete_module(module_id):
+    """Delete module"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    module = Module.query.get_or_404(module_id)
+    module_title = module.title
+    
+    db.session.delete(module)
+    db.session.commit()
+    
+    flash(f'Module "{module_title}" deleted successfully!', 'success')
+    return redirect(url_for('admin_modules'))
+
+@app.route('/admin/lessons')
+def admin_lessons():
+    """Admin lessons listing"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    lessons = Lesson.query.join(Module).order_by(Module.course_id, Module.sort_order, Lesson.sort_order).all()
+    return render_template('admin/lessons.html', lessons=lessons)
+
+@app.route('/admin/lesson/add', methods=['GET', 'POST'])
+def admin_add_lesson():
+    """Add new lesson"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    form = LessonForm()
+    form.module_id.choices = [(m.id, f"{m.course.title} - {m.title}") for m in Module.query.join(Course).order_by(Course.title, Module.sort_order).all()]
+    
+    if form.validate_on_submit():
+        lesson = Lesson(
+            title=form.title.data,
+            description=form.description.data,
+            module_id=form.module_id.data,
+            video_url=form.video_url.data,
+            notes=form.notes.data,
+            duration=form.duration.data,
+            sort_order=form.sort_order.data
+        )
+        db.session.add(lesson)
+        db.session.commit()
+        
+        flash(f'Lesson "{lesson.title}" added successfully!', 'success')
+        return redirect(url_for('admin_lessons'))
+    
+    return render_template('admin/lesson_form.html', form=form, title='Add New Lesson')
+
+@app.route('/admin/lesson/<int:lesson_id>/edit', methods=['GET', 'POST'])
+def admin_edit_lesson(lesson_id):
+    """Edit lesson"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    lesson = Lesson.query.get_or_404(lesson_id)
+    form = LessonForm()
+    form.module_id.choices = [(m.id, f"{m.course.title} - {m.title}") for m in Module.query.join(Course).order_by(Course.title, Module.sort_order).all()]
+    
+    if form.validate_on_submit():
+        lesson.title = form.title.data
+        lesson.description = form.description.data
+        lesson.module_id = form.module_id.data
+        lesson.video_url = form.video_url.data
+        lesson.notes = form.notes.data
+        lesson.duration = form.duration.data
+        lesson.sort_order = form.sort_order.data
+        
+        db.session.commit()
+        flash(f'Lesson "{lesson.title}" updated successfully!', 'success')
+        return redirect(url_for('admin_lessons'))
+    
+    form.title.data = lesson.title
+    form.description.data = lesson.description
+    form.module_id.data = lesson.module_id
+    form.video_url.data = lesson.video_url
+    form.notes.data = lesson.notes
+    form.duration.data = lesson.duration
+    form.sort_order.data = lesson.sort_order
+    
+    return render_template('admin/lesson_form.html', form=form, lesson=lesson, title='Edit Lesson')
+
+@app.route('/admin/lesson/<int:lesson_id>/delete', methods=['POST'])
+def admin_delete_lesson(lesson_id):
+    """Delete lesson"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    lesson = Lesson.query.get_or_404(lesson_id)
+    lesson_title = lesson.title
+    
+    db.session.delete(lesson)
+    db.session.commit()
+    
+    flash(f'Lesson "{lesson_title}" deleted successfully!', 'success')
+    return redirect(url_for('admin_lessons'))
 
 # Static pages routes
 @app.route('/privacy-policy')
