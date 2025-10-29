@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Upcoming Shows - Kshitiz Jaiswal{% endblock %}
+
+{% block content %}
+<!-- Hero Section for Upcoming Shows -->
+<section class="resources-hero">
+    <div class="container">
+        <div class="row justify-content-center text-center">
+            <div class="col-lg-8">
+                <h1 class="resources-hero-title">Upcoming Shows</h1>
+                <p class="resources-hero-subtitle">"Jo aane wala hai, sabse pehle yahin milega."</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Shows Grid Section -->
+<section class="section-padding">
+    <div class="container">
+        <div class="row g-4">
+            {% for show in shows %}
+            <div class="col-lg-4 col-md-6">
+                <div class="show-card">
+                    <div class="show-image">
+                        <img src="{{ url_for('static', filename=show.image) if show.image and not show.image.startswith('http') else show.image }}" alt="{{ show.title }}" class="img-fluid">
+                        <div class="coming-soon-overlay">
+                            <i class="fas fa-clock"></i>
+                            <span>Coming Soon</span>
+                        </div>
+                    </div>
+                    <div class="show-content">
+                        <h5>{{ show.title }}</h5>
+                        <p class="text-muted">{{ show.description }}</p>
+                        {% if show.get('date') %}
+                        <p class="text-primary"><i class="fas fa-calendar-alt me-1"></i>{{ show.date }}</p>
+                        {% endif %}
+                        <button class="btn btn-outline-primary btn-sm" disabled>
+                            <i class="fas fa-bell me-1"></i>Notify Me
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            
+            {% if not shows %}
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="fas fa-tv fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">No Upcoming Shows</h4>
+                    <p class="text-muted">Check back soon for exciting new shows!</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- Newsletter Signup Section -->
+<section class="section-padding bg-light">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center">
+                <h3 class="mb-3">Get Notified About New Shows</h3>
+                <p class="text-muted mb-4">Subscribe to our newsletter and never miss an upcoming show.</p>
+                <a href="{{ url_for('index') }}#newsletter" class="btn btn-primary btn-lg">
+                    <i class="fas fa-envelope me-2"></i>Subscribe to Newsletter
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Back to Home Section -->
+<section class="section-padding">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center">
+                <h4 class="mb-3">Explore More Content</h4>
+                <div class="d-flex justify-content-center gap-3 flex-wrap">
+                    <a href="{{ url_for('reels_library') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-play me-2"></i>Watch Reels
+                    </a>
+                    <a href="{{ url_for('polls_archive') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-comments me-2"></i>Kshitiz Ki Rai
+                    </a>
+                    <a href="{{ url_for('contact') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-envelope me-2"></i>Contact
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

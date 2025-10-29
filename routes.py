@@ -182,6 +182,17 @@ def resource_detail(slug):
     
     return render_template('resource_detail.html', resource=resource)
 
+@app.route('/upcoming-shows')
+def upcoming_shows():
+    """Upcoming Shows page"""
+    import json
+    
+    # Get upcoming shows from database
+    shows_content = SiteContent.query.filter_by(content_key='upcoming_shows').first()
+    shows = json.loads(shows_content.content_data) if shows_content else []
+    
+    return render_template('upcoming_shows.html', shows=shows)
+
 @app.route('/newsletter', methods=['POST'])
 def newsletter_subscribe():
     """Newsletter subscription"""
