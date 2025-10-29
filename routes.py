@@ -1616,6 +1616,30 @@ def courses():
     
     return render_template('courses.html', courses=courses_data, razorpay_key=razorpay_key)
 
+@app.route('/my-courses')
+def my_courses():
+    """My Courses page - shows courses the user has purchased"""
+    clerk_user_id = get_clerk_user_id()
+    
+    if not clerk_user_id:
+        flash('Please sign in to view your courses.', 'warning')
+        return redirect(url_for('clerk_login', next=request.url))
+    
+    user_accesses = UserCourseAccess.get_user_courses(clerk_user_id)
+    
+    my_courses_data = []
+    for access in user_accesses:
+        course = Course.query.get(access.course_id)
+        if course and course.is_active:
+            course_dict = course.to_dict()
+            course_dict['has_access'] = True
+            course_dict['module_count'] = len(course.modules)
+            course_dict['lesson_count'] = sum([len(module.lessons) for module in course.modules])
+            course_dict['purchased_at'] = access.granted_at.strftime('%B %d, %Y') if access.granted_at else ''
+            my_courses_data.append(course_dict)
+    
+    return render_template('my_courses.html', courses=my_courses_data)
+
 @app.route('/course/<int:course_id>')
 def course_detail(course_id):
     """Course detail page with modules and lessons"""

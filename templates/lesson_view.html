@@ -16,8 +16,16 @@
                 <div class="card mb-4">
                     <div class="card-body p-0">
                         {% if lesson.embed_url %}
-                        <div class="ratio ratio-16x9">
-                            <iframe src="{{ lesson.embed_url }}" title="{{ lesson.title }}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        <div class="ratio ratio-16x9 video-container">
+                            <iframe 
+                                src="{{ lesson.embed_url }}" 
+                                title="{{ lesson.title }}" 
+                                frameborder="0" 
+                                allow="autoplay; encrypted-media" 
+                                sandbox="allow-scripts allow-same-origin"
+                                referrerpolicy="no-referrer"
+                                loading="lazy">
+                            </iframe>
                         </div>
                         {% else %}
                         <div class="ratio ratio-16x9 bg-dark d-flex align-items-center justify-content-center">
@@ -100,6 +108,29 @@
 </section>
 
 <style>
+.video-container {
+    position: relative;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+}
+
+.video-container iframe {
+    border: none;
+}
+
+.video-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: -1;
+}
+
 .lesson-notes {
     background: #f8f9fa;
     padding: 20px;
