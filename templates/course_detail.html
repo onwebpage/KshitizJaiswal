@@ -26,11 +26,12 @@
                         {% for module in course.modules %}
                         <div class="accordion-item">
                             <h2 class="accordion-header" id="heading{{ module.id }}">
-                                <button class="accordion-button {% if not loop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ module.id }}" aria-expanded="{% if loop.first %}true{% else %}false{% endif %}" aria-controls="collapse{{ module.id }}">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ module.id }}" aria-expanded="false" aria-controls="collapse{{ module.id }}">
                                     <strong>Module {{ loop.index }}: {{ module.title }}</strong>
+                                    <span class="badge bg-primary ms-2">{{ module.lessons|length }} lessons</span>
                                 </button>
                             </h2>
-                            <div id="collapse{{ module.id }}" class="accordion-collapse collapse {% if loop.first %}show{% endif %}" aria-labelledby="heading{{ module.id }}" data-bs-parent="#courseAccordion">
+                            <div id="collapse{{ module.id }}" class="accordion-collapse collapse" aria-labelledby="heading{{ module.id }}" data-bs-parent="#courseAccordion">
                                 <div class="accordion-body">
                                     {% if module.description %}
                                     <p class="text-muted">{{ module.description }}</p>
