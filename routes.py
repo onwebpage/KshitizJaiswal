@@ -2,7 +2,7 @@ from flask import render_template, request, jsonify, redirect, url_for, flash, s
 from app import app, db
 from models import DataManager, AdminUser, SiteContent, Reel, Opinion, Subscriber, SubscriptionTier, Course, Module, Lesson, UserCourseAccess
 from forms import NewsletterForm, PollVoteForm, AdminLoginForm, ReelForm, OpinionForm, HeroContentForm, PaymentSettingsForm, SubscriptionTierForm, CourseForm, ModuleForm, LessonForm
-from utils import save_uploaded_file, calculate_poll_percentages, get_youtube_embed_url
+from utils import save_uploaded_file, calculate_poll_percentages, get_youtube_embed_url, slugify
 from clerk_auth import clerk_auth_required, get_clerk_user, get_clerk_user_id
 import razorpay
 import os
@@ -1527,6 +1527,81 @@ def not_found_error(error):
 @app.errorhandler(500)
 def internal_error(error):
     return render_template('500.html'), 500
+
+@app.route('/archives')
+def archives():
+    """Archives page with all poll groups and search"""
+    search_query = request.args.get('search', '').strip()
+    
+    # Get all unique topic tags from opinions (polls)
+    topics_query = db.session.query(
+        Opinion.topic_tag,
+        db.func.count(Opinion.id).label('count'),
+        db.func.max(Opinion.created_at).label('latest_date')
+    ).filter(
+        Opinion.topic_tag.isnot(None),
+        Opinion.topic_tag != ''
+    ).group_by(Opinion.topic_tag)
+    
+    # Apply search filter if provided
+    if search_query:
+        topics_query = topics_query.filter(Opinion.topic_tag.ilike(f'%{search_query}%'))
+    
+    topics = topics_query.order_by(db.desc('latest_date')).all()
+    
+    # Format archives data
+    archives_list = []
+    for topic, count, latest_date in topics:
+        # Create SEO-friendly slug using proper slugify function
+        slug = slugify(topic)
+        year = latest_date.year if latest_date else ''
+        
+        archives_list.append({
+            'title': topic,
+            'slug': slug,
+            'year': year,
+            'count': count,
+            'latest_date': latest_date
+        })
+    
+    return render_template('archives.html', archives=archives_list, search_query=search_query)
+
+@app.route('/archives/<slug>')
+def archive_detail(slug):
+    """Individual archive group page with SEO-friendly URL"""
+    # Get all topics and match by slug
+    all_topics = db.session.query(Opinion.topic_tag).filter(
+        Opinion.topic_tag.isnot(None),
+        Opinion.topic_tag != ''
+    ).distinct().all()
+    
+    # Find the topic that matches this slug
+    actual_topic = None
+    for (topic,) in all_topics:
+        if slugify(topic) == slug:
+            actual_topic = topic
+            break
+    
+    if not actual_topic:
+        abort(404)
+    
+    # Get opinions for this exact topic
+    opinions = Opinion.query.filter(Opinion.topic_tag == actual_topic).order_by(Opinion.created_at.desc()).all()
+    
+    if not opinions:
+        abort(404)
+    
+    opinions_data = []
+    for opinion in opinions:
+        opinion_dict = opinion.to_dict()
+        opinion_dict['percentages'] = calculate_poll_percentages(opinion_dict['votes'])
+        opinion_dict['total_votes'] = sum(opinion_dict['votes'])
+        opinions_data.append(opinion_dict)
+    
+    return render_template('archive_detail.html', 
+                         topic=actual_topic, 
+                         slug=slug,
+                         opinions=opinions_data)
 
 @app.route('/poll-groups')
 def poll_groups():

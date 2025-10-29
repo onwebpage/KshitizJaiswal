@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+
+{% block title %}{{ topic }} - Archives - Kshitiz Jaiswal{% endblock %}
+
+{% block content %}
+<!-- Hero Section for Archive Topic -->
+<section class="resources-hero">
+    <div class="container">
+        <div class="row justify-content-center text-center">
+            <div class="col-lg-8">
+                <div class="mb-3">
+                    <a href="{{ url_for('archives') }}" class="btn btn-outline-light btn-sm">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Archives
+                    </a>
+                </div>
+                <h1 class="resources-hero-title">{{ topic }}</h1>
+                <p class="resources-hero-subtitle">{{ opinions|length }} poll{{ 's' if opinions|length != 1 else '' }} in this topic</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Polls Timeline Section -->
+<section class="section-padding">
+    <div class="container">
+        {% if opinions %}
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="timeline">
+                    {% for opinion in opinions %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <div class="opinion-card">
+                                <div class="opinion-header">
+                                    <h4>{{ opinion.title }}</h4>
+                                    <span class="opinion-date text-muted">
+                                        <i class="fas fa-calendar me-1"></i>
+                                        {{ opinion.get('created_at', '')[:10] if opinion.get('created_at') else 'N/A' }}
+                                    </span>
+                                </div>
+                                
+                                {% if opinion.position %}
+                                <div class="opinion-position">
+                                    <strong>Kshitiz's Stance:</strong>
+                                    <p>{{ opinion.position }}</p>
+                                </div>
+                                {% endif %}
+                                
+                                {% if opinion.poll_question %}
+                                <div class="poll-section">
+                                    <h6 class="poll-question">{{ opinion.poll_question }}</h6>
+                                    
+                                    <div class="poll-results">
+                                        {% for option in opinion.poll_options %}
+                                        <div class="poll-option-result">
+                                            <div class="poll-option-header">
+                                                <span class="poll-option-text">{{ option }}</span>
+                                                <span class="poll-percentage">{{ opinion.percentages[loop.index0] }}%</span>
+                                            </div>
+                                            <div class="poll-progress">
+                                                <div class="poll-progress-bar" style="width: {{ opinion.percentages[loop.index0] }}%"></div>
+                                            </div>
+                                            <div class="poll-votes-count">{{ opinion.votes[loop.index0] }} vote{{ 's' if opinion.votes[loop.index0] != 1 else '' }}</div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    
+                                    <div class="poll-total text-muted mt-3">
+                                        <i class="fas fa-users me-1"></i>Total votes: {{ opinion.total_votes }}
+                                    </div>
+                                    
+                                    <a href="{{ url_for('poll_detail', poll_id=opinion.id) }}" class="btn btn-primary btn-sm mt-3">
+                                        <i class="fas fa-arrow-right me-1"></i>View Full Poll
+                                    </a>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-poll fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted">No Polls Found</h4>
+            <p class="text-muted">There are no polls in this archive.</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Related Archives Section -->
+<section class="section-padding bg-light">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center">
+                <h4 class="mb-3">Explore More Archives</h4>
+                <div class="d-flex justify-content-center gap-3 flex-wrap">
+                    <a href="{{ url_for('archives') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-archive me-2"></i>All Archives
+                    </a>
+                    <a href="{{ url_for('polls_archive') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-poll me-2"></i>All Polls
+                    </a>
+                    <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-home me-2"></i>Home
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+.timeline {
+    position: relative;
+    padding: 20px 0;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 30px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--primary-color), var(--secondary-color));
+}
+
+.timeline-item {
+    position: relative;
+    padding-left: 70px;
+    margin-bottom: 40px;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: 20px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    border: 4px solid #fff;
+    box-shadow: 0 0 0 2px var(--primary-color);
+    z-index: 1;
+}
+
+.timeline-content {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    padding: 0;
+    overflow: hidden;
+}
+
+.opinion-card {
+    padding: 25px;
+}
+
+.opinion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.opinion-header h4 {
+    color: #2c3e50;
+    font-size: 1.5rem;
+    margin: 0;
+    flex: 1;
+}
+
+.opinion-date {
+    font-size: 0.9rem;
+}
+
+.opinion-position {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.opinion-position strong {
+    color: var(--primary-color);
+    display: block;
+    margin-bottom: 8px;
+}
+
+.poll-section {
+    border-top: 1px solid #e0e0e0;
+    padding-top: 20px;
+    margin-top: 20px;
+}
+
+.poll-question {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.poll-option-result {
+    margin-bottom: 15px;
+}
+
+.poll-option-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+}
+
+.poll-option-text {
+    font-weight: 500;
+    color: #2c3e50;
+}
+
+.poll-percentage {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.poll-progress {
+    height: 10px;
+    background: #e0e0e0;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.poll-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    transition: width 0.5s ease;
+}
+
+.poll-votes-count {
+    font-size: 0.85rem;
+    color: #7f8c8d;
+    margin-top: 3px;
+}
+
+.poll-total {
+    font-size: 0.9rem;
+}
+</style>
+{% endblock %}

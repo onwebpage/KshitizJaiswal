@@ -1,5 +1,7 @@
 import os
 import secrets
+import re
+import unicodedata
 from PIL import Image
 from flask import current_app
 from werkzeug.utils import secure_filename
@@ -45,6 +47,23 @@ def calculate_poll_percentages(votes):
     if total == 0:
         return [0] * len(votes)
     return [round((vote / total) * 100, 1) for vote in votes]
+
+def slugify(text):
+    """Convert text to URL-safe slug"""
+    if not text:
+        return ''
+    
+    # Normalize unicode characters
+    text = unicodedata.normalize('NFKD', text)
+    text = text.encode('ascii', 'ignore').decode('ascii')
+    
+    # Convert to lowercase and replace spaces/special chars with hyphens
+    text = text.lower()
+    text = re.sub(r'[^\w\s-]', '', text)
+    text = re.sub(r'[-\s]+', '-', text)
+    text = text.strip('-')
+    
+    return text
 
 def get_youtube_embed_url(url):
     """Convert YouTube URL to embeddable format with security parameters"""

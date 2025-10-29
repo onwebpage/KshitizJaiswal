@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}Archives - Kshitiz Jaiswal{% endblock %}
+
+{% block content %}
+<!-- Hero Section for Archives -->
+<section class="resources-hero">
+    <div class="container">
+        <div class="row justify-content-center text-center">
+            <div class="col-lg-8">
+                <h1 class="resources-hero-title">Archives</h1>
+                <p class="resources-hero-subtitle">"Purani baatein, naye sabak."</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Search Section -->
+<section class="section-padding bg-light">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <form method="GET" action="{{ url_for('archives') }}" class="search-form">
+                    <div class="input-group input-group-lg">
+                        <input type="text" 
+                               name="search" 
+                               class="form-control" 
+                               placeholder="Search archives by topic..." 
+                               value="{{ search_query }}">
+                        <button class="btn btn-primary" type="submit">
+                            <i class="fas fa-search me-1"></i>Search
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Archives List Section -->
+<section class="section-padding">
+    <div class="container">
+        {% if archives %}
+        <div class="row g-4">
+            {% for archive in archives %}
+            <div class="col-lg-6">
+                <a href="{{ url_for('archive_detail', slug=archive.slug) }}" class="archive-card-link text-decoration-none">
+                    <div class="archive-card">
+                        <div class="archive-header">
+                            <h4 class="archive-title">{{ archive.title }}</h4>
+                            <span class="archive-year badge bg-primary">{{ archive.year }}</span>
+                        </div>
+                        <div class="archive-meta">
+                            <span class="archive-count">
+                                <i class="fas fa-poll me-1"></i>{{ archive.count }} poll{{ 's' if archive.count != 1 else '' }}
+                            </span>
+                            <span class="archive-date">
+                                <i class="fas fa-calendar me-1"></i>{{ archive.latest_date.strftime('%B %Y') if archive.latest_date else 'N/A' }}
+                            </span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-archive fa-3x text-muted mb-3"></i>
+            <h4 class="text-muted">
+                {% if search_query %}
+                No archives found for "{{ search_query }}"
+                {% else %}
+                No Archives Available
+                {% endif %}
+            </h4>
+            <p class="text-muted">
+                {% if search_query %}
+                Try a different search term
+                {% else %}
+                Archives will appear here as content is organized by topics
+                {% endif %}
+            </p>
+            {% if search_query %}
+            <a href="{{ url_for('archives') }}" class="btn btn-primary mt-3">
+                <i class="fas fa-undo me-1"></i>Clear Search
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Back to Home Section -->
+<section class="section-padding bg-light">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center">
+                <h4 class="mb-3">Explore More Content</h4>
+                <div class="d-flex justify-content-center gap-3 flex-wrap">
+                    <a href="{{ url_for('reels_library') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-play me-2"></i>Watch Reels
+                    </a>
+                    <a href="{{ url_for('polls_archive') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-comments me-2"></i>All Polls
+                    </a>
+                    <a href="{{ url_for('contact') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-envelope me-2"></i>Contact
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+.archive-card-link {
+    display: block;
+    transition: transform 0.3s ease;
+}
+
+.archive-card-link:hover {
+    transform: translateY(-5px);
+}
+
+.archive-card {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+}
+
+.archive-card:hover {
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    border-color: var(--primary-color);
+}
+
+.archive-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 15px;
+}
+
+.archive-title {
+    color: #2c3e50;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+    flex: 1;
+}
+
+.archive-year {
+    font-size: 0.9rem;
+    padding: 5px 12px;
+}
+
+.archive-meta {
+    display: flex;
+    gap: 20px;
+    color: #7f8c8d;
+    font-size: 0.9rem;
+}
+
+.archive-count, .archive-date {
+    display: flex;
+    align-items: center;
+}
+</style>
+{% endblock %}

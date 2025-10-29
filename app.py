@@ -48,12 +48,36 @@ with app.app_context():
     import models  # noqa: F401
     db.create_all()
 
-# Add context processor for Clerk publishable key
+# Add context processor for Clerk publishable key and footer data
 @app.context_processor
-def inject_clerk_key():
+def inject_global_context():
+    from models import Opinion
+    from utils import slugify
+    
+    # Get top 5 archives for footer
+    footer_archives = []
+    try:
+        topics_query = db.session.query(
+            Opinion.topic_tag,
+            db.func.max(Opinion.created_at).label('latest_date')
+        ).filter(
+            Opinion.topic_tag.isnot(None),
+            Opinion.topic_tag != ''
+        ).group_by(Opinion.topic_tag).order_by(db.desc('latest_date')).limit(5).all()
+        
+        for topic, latest_date in topics_query:
+            footer_archives.append({
+                'title': topic,
+                'slug': slugify(topic),
+                'year': latest_date.year if latest_date else ''
+            })
+    except:
+        pass  # If DB not ready, just skip
+    
     return {
         'clerk_publishable_key': os.environ.get('CLERK_PUBLISHABLE_KEY', ''),
-        'clerk_domain': 'your-domain.com'  # Will be extracted from publishable key if needed
+        'clerk_domain': 'your-domain.com',
+        'footer_archives': footer_archives
     }
 
 # Import routes after app and db creation

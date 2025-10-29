@@ -151,7 +151,7 @@
         <div class="container">
             <div class="row g-4">
                 <!-- Brand Section -->
-                <div class="col-lg-4 col-md-6">
+                <div class="col-lg-3 col-md-6">
                     <div class="footer-brand">
                         <h4 class="footer-brand-title">
                             <i class="fas fa-microphone-alt me-2"></i>
@@ -181,15 +181,16 @@
                     <div class="footer-column">
                         <h6 class="footer-column-title">Content</h6>
                         <ul class="footer-links">
-                            <li><a href="{{ url_for('index') }}#beyond-reel">Beyond The Reel</a></li>
+                            <li><a href="{{ url_for('reels_library') }}">Beyond The Reel</a></li>
                             <li><a href="{{ url_for('polls_archive') }}">Kshitiz Ki Rai</a></li>
-                            <li><a href="{{ url_for('resources') }}">Learning and Resources</a></li>
-                            <li><a href="{{ url_for('index') }}#upcoming-shows">Upcoming Shows</a></li>
+                            <li><a href="{{ url_for('resources') }}">Learning & Resources</a></li>
+                            <li><a href="{{ url_for('upcoming_shows') }}">Upcoming Shows</a></li>
+                            <li><a href="{{ url_for('courses') }}">Courses</a></li>
                         </ul>
                     </div>
                 </div>
                 
-                <!-- Support Links -->
+                <!-- The Circle -->
                 <div class="col-lg-2 col-md-6">
                     <div class="footer-column">
                         <h6 class="footer-column-title">The Circle</h6>
@@ -197,35 +198,39 @@
                             <li><a href="{{ url_for('index') }}#support">Support Now</a></li>
                             <li><a href="{{ url_for('index') }}#newsletter">Newsletter</a></li>
                             <li><a href="{{ url_for('contact') }}">Contact</a></li>
-                            <li><a href="{{ url_for('contact') }}">Join The Circle</a></li>
+                            <li><a href="{{ url_for('my_courses') }}">My Courses</a></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Archives -->
+                <div class="col-lg-2 col-md-6">
+                    <div class="footer-column">
+                        <h6 class="footer-column-title">Archives</h6>
+                        <ul class="footer-links" id="footer-archives">
+                            {% if footer_archives %}
+                                {% for archive in footer_archives %}
+                                <li><a href="{{ url_for('archive_detail', slug=archive.slug) }}">{{ archive.title }} {{ archive.year }}</a></li>
+                                {% endfor %}
+                                <li><a href="{{ url_for('archives') }}" class="text-primary"><strong>View All →</strong></a></li>
+                            {% else %}
+                                <li><a href="{{ url_for('archives') }}">View All Archives</a></li>
+                            {% endif %}
                         </ul>
                     </div>
                 </div>
                 
                 <!-- Legal Links -->
-                <div class="col-lg-2 col-md-6">
+                <div class="col-lg-3 col-md-6">
                     <div class="footer-column">
                         <h6 class="footer-column-title">Legal</h6>
                         <ul class="footer-links">
                             <li><a href="{{ url_for('privacy_policy') }}">Privacy Policy</a></li>
                             <li><a href="{{ url_for('terms_of_service') }}">Terms of Service</a></li>
                             <li><a href="{{ url_for('disclaimer') }}">Disclaimer</a></li>
-                            <li><a href="{{ url_for('cookies_policy') }}">Cookies</a></li>
+                            <li><a href="{{ url_for('cookies_policy') }}">Cookies Policy</a></li>
                             <li><a href="{{ url_for('refund_policy') }}">Refund Policy</a></li>
-                            <li><a href="{{ url_for('return_policy') }}">Return Policy</a></li>
-                            <li><a href="{{ url_for('shipping_policy') }}">Shipping Policy</a></li>
                         </ul>
-                    </div>
-                </div>
-                
-                <!-- Newsletter Signup -->
-                <div class="col-lg-2 col-md-6">
-                    <div class="footer-column">
-                        <h6 class="footer-column-title">Stay Updated</h6>
-                        <p class="footer-newsletter-text">Get weekly updates directly to your inbox</p>
-                        <a href="{{ url_for('index') }}#newsletter" class="btn btn-outline-light btn-sm footer-cta">
-                            <i class="fas fa-envelope me-1"></i>Subscribe
-                        </a>
                     </div>
                 </div>
             </div>
