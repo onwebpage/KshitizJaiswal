@@ -1735,7 +1735,12 @@ def course_detail(course_id):
         abort(404)
     
     clerk_user_id = get_clerk_user_id()
-    has_access = UserCourseAccess.has_access(clerk_user_id, course_id) if clerk_user_id else False
+    
+    # Free courses (price = 0) are accessible to everyone without login
+    if course.price == 0:
+        has_access = True
+    else:
+        has_access = UserCourseAccess.has_access(clerk_user_id, course_id) if clerk_user_id else False
     
     course_data = course.to_dict()
     course_data['has_access'] = has_access
@@ -1759,15 +1764,19 @@ def lesson_view(course_id, lesson_id):
     
     clerk_user_id = get_clerk_user_id()
     
-    if not clerk_user_id:
-        flash('Please sign in to access this course.', 'warning')
-        return redirect(url_for('clerk_login', next=request.url))
-    
-    has_access = UserCourseAccess.has_access(clerk_user_id, course_id)
-    
-    if not has_access:
-        flash('You need to purchase this course to access lessons.', 'warning')
-        return redirect(url_for('course_detail', course_id=course_id))
+    # Free courses (price = 0) are accessible to everyone without login
+    if course.price == 0:
+        has_access = True
+    else:
+        if not clerk_user_id:
+            flash('Please sign in to access this course.', 'warning')
+            return redirect(url_for('clerk_login', next=request.url))
+        
+        has_access = UserCourseAccess.has_access(clerk_user_id, course_id)
+        
+        if not has_access:
+            flash('You need to purchase this course to access lessons.', 'warning')
+            return redirect(url_for('course_detail', course_id=course_id))
     
     lesson_data = lesson.to_dict()
     lesson_data['embed_url'] = get_youtube_embed_url(lesson.video_url) if lesson.video_url else None
