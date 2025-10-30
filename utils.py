@@ -84,15 +84,12 @@ def get_youtube_embed_url(url):
         match = re.search(pattern, url)
         if match:
             video_id = match.group(1)
-            # Add security parameters to prevent downloads and external navigation
-            # controls=0: Hide all player controls including YouTube logo/links
+            # Add parameters for better embedding
+            # controls=1: Show player controls for playback
             # rel=0: Don't show related videos from other channels
             # modestbranding=1: Use modest YouTube branding
-            # disablekb=1: Disable keyboard shortcuts that allow navigation to YouTube
-            # fs=0: Disable fullscreen button (prevents opening in YouTube)
             # iv_load_policy=3: Disable video annotations
             # playsinline=1: Play inline without full-screen on mobile
-            # showinfo=0: Hide video title and uploader (deprecated but kept for older browsers)
-            return f"https://www.youtube.com/embed/{video_id}?controls=0&rel=0&modestbranding=1&disablekb=1&fs=0&iv_load_policy=3&playsinline=1&showinfo=0"
+            return f"https://www.youtube.com/embed/{video_id}?controls=1&rel=0&modestbranding=1&iv_load_policy=3&playsinline=1"
     
     return None
