@@ -22,7 +22,9 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 database_url = os.environ.get("DATABASE_URL")
 if not database_url:
     logging.error("DATABASE_URL environment variable is not set!")
-    database_url = "sqlite:///./instance/app.db"  # Fallback to SQLite for development
+    sqlite_path = os.path.join(os.getcwd(), 'instance', 'app.db')
+    os.makedirs(os.path.dirname(sqlite_path), exist_ok=True)
+    database_url = f"sqlite:///{sqlite_path}"  # Fallback to SQLite for development
     logging.warning(f"Using fallback database: {database_url}")
 
 app.config["SQLALCHEMY_DATABASE_URI"] = database_url
