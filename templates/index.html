@@ -16,17 +16,9 @@
         <div class="text-center mb-4">
             <h2 class="section-title">Beyond The Reel</h2>
             <p class="section-subtitle">"Reel to sirf ek hissa tha, kahani bahut badi hai."</p>
-            <button class="btn btn-outline-primary btn-sm mt-2" data-bs-toggle="collapse" data-bs-target="#reelContent" aria-expanded="false">
-                <span class="expand-text">
-                    <i class="fas fa-chevron-down me-1"></i>View All Reels
-                </span>
-                <span class="collapse-text d-none">
-                    <i class="fas fa-chevron-up me-1"></i>Hide Reels
-                </span>
-            </button>
         </div>
         
-        <div class="collapse" id="reelContent">
+        <div id="reelContent">
         <div class="reel-carousel-container">
             <div class="reel-carousel" id="reelCarousel">
                 {% for reel in content.reels %}
@@ -91,17 +83,9 @@
         <div class="text-center mb-4">
             <h2 class="section-title text-white">Friends of Kshitiz — Support Now</h2>
             <p class="section-subtitle text-white">Your choice, your support. Give as much as you wish.</p>
-            <button class="btn btn-outline-light btn-sm mt-2" data-bs-toggle="collapse" data-bs-target="#supportContent" aria-expanded="false">
-                <span class="expand-text">
-                    <i class="fas fa-chevron-down me-1"></i>View Support Options
-                </span>
-                <span class="collapse-text d-none">
-                    <i class="fas fa-chevron-up me-1"></i>Hide Support Options
-                </span>
-            </button>
         </div>
         
-        <div class="collapse" id="supportContent">
+        <div id="supportContent">
         <div class="row justify-content-center">
             <div class="col-lg-10">
                 <div class="support-tiers-container">
