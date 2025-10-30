@@ -1,106 +1,149 @@
 {% extends "base.html" %}
 
 {% block content %}
-<section class="section-padding bg-light">
-    <div class="container">
-        <nav aria-label="breadcrumb" class="mb-4">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ url_for('courses') }}">Courses</a></li>
-                <li class="breadcrumb-item"><a href="{{ url_for('course_detail', course_id=course.id) }}">{{ course.title }}</a></li>
-                <li class="breadcrumb-item active" aria-current="page">{{ lesson.title }}</li>
-            </ol>
+<section class="lesson-viewer">
+    <div class="container-fluid">
+        <nav aria-label="breadcrumb" class="breadcrumb-nav py-3">
+            <div class="container-fluid px-4">
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="{{ url_for('courses') }}">Courses</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('course_detail', course_id=course.id) }}">{{ course.title }}</a></li>
+                    <li class="breadcrumb-item active">{{ lesson.title }}</li>
+                </ol>
+            </div>
         </nav>
 
-        <div class="row">
-            <div class="col-lg-8">
-                <div class="card mb-4">
-                    <div class="card-body p-0">
+        <div class="row g-0">
+            <div class="col-lg-9">
+                <div class="video-section">
+                    <div class="video-player-wrapper">
                         {% if lesson.embed_url %}
-                        <div class="ratio ratio-16x9 video-container">
+                        <div class="video-player">
                             <iframe 
                                 src="{{ lesson.embed_url }}" 
                                 title="{{ lesson.title }}" 
                                 frameborder="0" 
-                                allow="autoplay; encrypted-media" 
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                allowfullscreen
                                 sandbox="allow-scripts allow-same-origin"
                                 referrerpolicy="no-referrer"
                                 loading="lazy">
                             </iframe>
                         </div>
                         {% else %}
-                        <div class="ratio ratio-16x9 bg-dark d-flex align-items-center justify-content-center">
-                            <div class="text-center text-white">
-                                <i class="fas fa-video fa-5x mb-3 opacity-50"></i>
-                                <p class="mb-0">Video not available</p>
+                        <div class="video-placeholder">
+                            <div class="placeholder-content">
+                                <i class="fas fa-video fa-5x mb-4"></i>
+                                <h4>Video not available</h4>
+                                <p class="text-muted">This lesson video is being prepared</p>
                             </div>
                         </div>
                         {% endif %}
                     </div>
-                </div>
 
-                <div class="card">
-                    <div class="card-body">
-                        <h2 class="card-title mb-3">{{ lesson.title }}</h2>
-                        
+                    <div class="lesson-content p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-4">
+                            <div>
+                                <h2 class="lesson-title mb-2">{{ lesson.title }}</h2>
+                                <div class="lesson-meta">
+                                    <span class="meta-item">
+                                        <i class="fas fa-book-open me-2"></i>{{ module.title }}
+                                    </span>
+                                    {% if lesson.duration %}
+                                    <span class="meta-item">
+                                        <i class="far fa-clock me-2"></i>{{ lesson.duration }}
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
                         {% if lesson.description %}
-                        <p class="text-muted">{{ lesson.description }}</p>
+                        <div class="lesson-description mb-4">
+                            <h5 class="section-title mb-3">
+                                <i class="fas fa-info-circle me-2"></i>About this lesson
+                            </h5>
+                            <p class="description-text">{{ lesson.description }}</p>
+                        </div>
                         {% endif %}
 
                         {% if lesson.notes %}
-                        <div class="lesson-notes mt-4">
-                            <h4 class="mb-3">Lesson Notes & Resources</h4>
+                        <div class="lesson-notes">
+                            <h5 class="section-title mb-3">
+                                <i class="fas fa-file-alt me-2"></i>Lesson Notes & Resources
+                            </h5>
                             <div class="notes-content">
                                 {{ lesson.notes|safe }}
                             </div>
                         </div>
                         {% endif %}
+
+                        <div class="lesson-navigation mt-4">
+                            <div class="nav-buttons">
+                                {% if prev_lesson %}
+                                <a href="{{ url_for('lesson_view', course_id=course.id, lesson_id=prev_lesson.id) }}" class="btn-nav btn-prev">
+                                    <i class="fas fa-chevron-left me-2"></i>
+                                    <div class="nav-text">
+                                        <small>Previous</small>
+                                        <span>{{ prev_lesson.title|truncate(30) }}</span>
+                                    </div>
+                                </a>
+                                {% endif %}
+
+                                {% if next_lesson %}
+                                <a href="{{ url_for('lesson_view', course_id=course.id, lesson_id=next_lesson.id) }}" class="btn-nav btn-next">
+                                    <div class="nav-text">
+                                        <small>Next</small>
+                                        <span>{{ next_lesson.title|truncate(30) }}</span>
+                                    </div>
+                                    <i class="fas fa-chevron-right ms-2"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="col-lg-4">
-                <div class="card sticky-top" style="top: 100px;">
-                    <div class="card-header">
-                        <h5 class="mb-0">{{ module.title }}</h5>
+            <div class="col-lg-3 sidebar-col">
+                <div class="course-sidebar">
+                    <div class="sidebar-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list-ul me-2"></i>Course Content
+                        </h5>
                     </div>
-                    <div class="card-body p-0">
-                        <div class="list-group list-group-flush">
-                            {% for mod in course.modules %}
+                    
+                    <div class="sidebar-content">
+                        {% for mod in course.modules %}
+                        <div class="sidebar-module">
+                            <div class="module-header-sidebar">
+                                <div class="module-title-small">{{ mod.title }}</div>
+                                <div class="module-lessons-count">{{ mod.lessons|length }} lessons</div>
+                            </div>
+                            
+                            <div class="lessons-list-sidebar">
                                 {% for les in mod.lessons %}
                                 <a href="{{ url_for('lesson_view', course_id=course.id, lesson_id=les.id) }}" 
-                                   class="list-group-item list-group-item-action {% if les.id == lesson.id %}active{% endif %}">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <i class="fas fa-play-circle me-2"></i>
-                                            <small>{{ les.title }}</small>
-                                        </div>
+                                   class="lesson-item-sidebar {% if les.id == lesson.id %}active{% endif %}">
+                                    <div class="lesson-icon-sidebar">
+                                        {% if les.id == lesson.id %}
+                                        <i class="fas fa-play-circle"></i>
+                                        {% else %}
+                                        <i class="far fa-play-circle"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div class="lesson-info-sidebar">
+                                        <div class="lesson-name">{{ les.title }}</div>
                                         {% if les.duration %}
-                                        <small class="text-muted">{{ les.duration }}</small>
+                                        <div class="lesson-duration-small">{{ les.duration }}</div>
                                         {% endif %}
                                     </div>
                                 </a>
                                 {% endfor %}
-                            {% endfor %}
+                            </div>
                         </div>
+                        {% endfor %}
                     </div>
-                </div>
-
-                <div class="d-flex justify-content-between mt-3">
-                    {% if prev_lesson %}
-                    <a href="{{ url_for('lesson_view', course_id=course.id, lesson_id=prev_lesson.id) }}" class="btn btn-outline-primary">
-                        <i class="fas fa-chevron-left"></i> Previous
-                    </a>
-                    {% else %}
-                    <div></div>
-                    {% endif %}
-
-                    {% if next_lesson %}
-                    <a href="{{ url_for('lesson_view', course_id=course.id, lesson_id=next_lesson.id) }}" class="btn btn-primary">
-                        Next <i class="fas fa-chevron-right"></i>
-                    </a>
-                    {% else %}
-                    <div></div>
-                    {% endif %}
                 </div>
             </div>
         </div>
@@ -108,60 +151,388 @@
 </section>
 
 <style>
-.video-container {
+.lesson-viewer {
+    background: #f8fafc;
+    min-height: 100vh;
+}
+
+.breadcrumb-nav {
+    background: white;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.breadcrumb {
+    margin: 0;
+}
+
+.breadcrumb-item a {
+    color: #64748b;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.breadcrumb-item a:hover {
+    color: #667eea;
+}
+
+.breadcrumb-item.active {
+    color: #1e293b;
+}
+
+.video-section {
+    background: #0f172a;
+}
+
+.video-player-wrapper {
     position: relative;
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
+    background: black;
 }
 
-.video-container iframe {
-    border: none;
+.video-player {
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%;
+    height: 0;
 }
 
-.video-container::before {
-    content: '';
+.video-player iframe {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    pointer-events: none;
-    z-index: -1;
+    border: none;
+}
+
+.video-placeholder {
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%;
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+}
+
+.placeholder-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: white;
+}
+
+.placeholder-content i {
+    opacity: 0.3;
+}
+
+.lesson-content {
+    background: white;
+}
+
+.lesson-title {
+    color: #1e293b;
+    font-weight: 700;
+    font-size: 1.75rem;
+    line-height: 1.3;
+}
+
+.lesson-meta {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.meta-item {
+    color: #64748b;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+}
+
+.section-title {
+    color: #1e293b;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+}
+
+.section-title i {
+    color: #667eea;
+}
+
+.description-text {
+    color: #475569;
+    line-height: 1.8;
+    font-size: 1.05rem;
 }
 
 .lesson-notes {
-    background: #f8f9fa;
-    padding: 20px;
-    border-radius: 8px;
+    background: #f8fafc;
+    padding: 28px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
 }
 
 .notes-content {
+    color: #475569;
     line-height: 1.8;
 }
 
-.notes-content h1, .notes-content h2, .notes-content h3, .notes-content h4, .notes-content h5, .notes-content h6 {
+.notes-content h1, .notes-content h2, .notes-content h3, 
+.notes-content h4, .notes-content h5, .notes-content h6 {
     margin-top: 1.5rem;
     margin-bottom: 1rem;
+    color: #1e293b;
+    font-weight: 600;
 }
 
 .notes-content ul, .notes-content ol {
     padding-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.notes-content li {
+    margin-bottom: 0.5rem;
 }
 
 .notes-content code {
-    background: #e9ecef;
-    padding: 2px 6px;
-    border-radius: 3px;
-    font-family: 'Courier New', monospace;
+    background: #e2e8f0;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: 'Monaco', 'Courier New', monospace;
+    font-size: 0.9em;
+    color: #be123c;
 }
 
 .notes-content pre {
-    background: #e9ecef;
-    padding: 15px;
-    border-radius: 5px;
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 20px;
+    border-radius: 8px;
     overflow-x: auto;
+    margin: 1.5rem 0;
+}
+
+.notes-content pre code {
+    background: none;
+    padding: 0;
+    color: inherit;
+}
+
+.lesson-navigation {
+    border-top: 1px solid #e2e8f0;
+    padding-top: 24px;
+}
+
+.nav-buttons {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.btn-nav {
+    display: flex;
+    align-items: center;
+    padding: 16px 24px;
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    text-decoration: none;
+    color: #1e293b;
+    transition: all 0.3s ease;
+    flex: 1;
+    max-width: 300px;
+}
+
+.btn-nav:hover {
+    border-color: #667eea;
+    background: #f8fafc;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+    color: #667eea;
+}
+
+.btn-prev {
+    justify-content: flex-start;
+}
+
+.btn-next {
+    justify-content: flex-end;
+    margin-left: auto;
+}
+
+.nav-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.nav-text small {
+    color: #94a3b8;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.nav-text span {
+    font-weight: 600;
+}
+
+.sidebar-col {
+    background: white;
+    border-left: 1px solid #e2e8f0;
+    max-height: calc(100vh - 60px);
+    overflow-y: auto;
+}
+
+.course-sidebar {
+    position: sticky;
+    top: 0;
+}
+
+.sidebar-header {
+    padding: 20px;
+    border-bottom: 1px solid #e2e8f0;
+    background: #f8fafc;
+}
+
+.sidebar-header h5 {
+    color: #1e293b;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+}
+
+.sidebar-content {
+    padding: 12px;
+}
+
+.sidebar-module {
+    margin-bottom: 24px;
+}
+
+.module-header-sidebar {
+    padding: 12px;
+    background: #f8fafc;
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+.module-title-small {
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 0.95rem;
+    margin-bottom: 4px;
+}
+
+.module-lessons-count {
+    font-size: 0.8rem;
+    color: #64748b;
+}
+
+.lessons-list-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.lesson-item-sidebar {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #475569;
+    transition: all 0.2s ease;
+}
+
+.lesson-item-sidebar:hover {
+    background: #f1f5f9;
+    color: #667eea;
+}
+
+.lesson-item-sidebar.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.lesson-item-sidebar.active .lesson-duration-small {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.lesson-icon-sidebar {
+    margin-right: 12px;
+    font-size: 1.1rem;
+}
+
+.lesson-info-sidebar {
+    flex: 1;
+    min-width: 0;
+}
+
+.lesson-name {
+    font-size: 0.9rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.lesson-duration-small {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    margin-top: 2px;
+}
+
+@media (max-width: 991px) {
+    .sidebar-col {
+        max-height: none;
+        border-left: none;
+        border-top: 1px solid #e2e8f0;
+    }
+    
+    .lesson-title {
+        font-size: 1.5rem;
+    }
+    
+    .nav-buttons {
+        flex-direction: column;
+    }
+    
+    .btn-nav {
+        max-width: none;
+    }
+    
+    .btn-next {
+        margin-left: 0;
+    }
+}
+
+@media (max-width: 576px) {
+    .lesson-content {
+        padding: 20px !important;
+    }
+    
+    .lesson-title {
+        font-size: 1.25rem;
+    }
+}
+
+.sidebar-col::-webkit-scrollbar {
+    width: 8px;
+}
+
+.sidebar-col::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+.sidebar-col::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.sidebar-col::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
 }
 </style>
 {% endblock %}

@@ -1,46 +1,71 @@
 {% extends "base.html" %}
 
 {% block content %}
-<section class="section-padding bg-light">
+<section class="my-courses-hero py-5">
     <div class="container">
-        <div class="text-center mb-5">
-            <h1 class="section-title">My Courses</h1>
-            <p class="section-subtitle">Continue your learning journey</p>
+        <div class="text-center text-white">
+            <h1 class="display-5 fw-bold mb-3">My Learning Journey</h1>
+            <p class="lead mb-0">Continue your education and track your progress</p>
+        </div>
+    </div>
+</section>
+
+<section class="py-5 bg-light">
+    <div class="container">
+        {% if courses %}
+        <div class="mb-4">
+            <h4 class="section-heading">
+                <i class="fas fa-book-reader me-2"></i>Your Courses ({{ courses|length }})
+            </h4>
         </div>
         
-        {% if courses %}
         <div class="row g-4">
             {% for course in courses %}
             <div class="col-lg-4 col-md-6">
-                <div class="card h-100 shadow-sm hover-lift">
-                    {% if course.thumbnail %}
-                    <img src="{{ url_for('static', filename=course.thumbnail) if not course.thumbnail.startswith('http') else course.thumbnail }}" class="card-img-top" alt="{{ course.title }}">
-                    {% else %}
-                    <div class="card-img-top bg-secondary" style="height: 200px; display: flex; align-items: center; justify-content: center;">
-                        <i class="fas fa-graduation-cap fa-5x text-white opacity-50"></i>
+                <div class="my-course-card h-100">
+                    <div class="course-image-wrapper">
+                        {% if course.thumbnail %}
+                        <img src="{{ url_for('static', filename=course.thumbnail) if not course.thumbnail.startswith('http') else course.thumbnail }}" alt="{{ course.title }}">
+                        {% else %}
+                        <div class="placeholder-img">
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
+                        {% endif %}
+                        <div class="course-owned-tag">
+                            <i class="fas fa-check-circle"></i> Enrolled
+                        </div>
                     </div>
-                    {% endif %}
                     
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="card-title">{{ course.title }}</h5>
-                        <p class="card-text text-muted flex-grow-1">{{ course.description|truncate(100) }}</p>
+                    <div class="course-card-content">
+                        <h5 class="course-card-title">{{ course.title }}</h5>
+                        <p class="course-card-description">{{ course.description|truncate(100) }}</p>
                         
-                        <div class="mb-3">
-                            <small class="text-muted">
-                                <i class="fas fa-book me-1"></i> {{ course.module_count }} Modules
-                                <span class="mx-2">•</span>
-                                <i class="fas fa-video me-1"></i> {{ course.lesson_count }} Lessons
-                            </small>
+                        <div class="course-stats-grid mb-3">
+                            <div class="stat-box">
+                                <i class="fas fa-book-open"></i>
+                                <div class="stat-text">
+                                    <div class="stat-number">{{ course.module_count }}</div>
+                                    <div class="stat-label">Modules</div>
+                                </div>
+                            </div>
+                            <div class="stat-box">
+                                <i class="fas fa-play-circle"></i>
+                                <div class="stat-text">
+                                    <div class="stat-number">{{ course.lesson_count }}</div>
+                                    <div class="stat-label">Lessons</div>
+                                </div>
+                            </div>
                         </div>
                         
                         {% if course.purchased_at %}
-                        <small class="text-muted mb-3">
-                            <i class="fas fa-check-circle text-success me-1"></i> Purchased on {{ course.purchased_at }}
-                        </small>
+                        <div class="purchase-info mb-3">
+                            <i class="fas fa-calendar-check me-2"></i>
+                            <small>Enrolled on {{ course.purchased_at }}</small>
+                        </div>
                         {% endif %}
                         
-                        <a href="{{ url_for('course_detail', course_id=course.id) }}" class="btn btn-primary w-100">
-                            <i class="fas fa-play-circle me-2"></i>Continue Learning
+                        <a href="{{ url_for('course_detail', course_id=course.id) }}" class="btn-continue-learning w-100">
+                            <i class="fas fa-play me-2"></i>Continue Learning
                         </a>
                     </div>
                 </div>
@@ -48,11 +73,13 @@
             {% endfor %}
         </div>
         {% else %}
-        <div class="text-center py-5">
-            <i class="fas fa-graduation-cap fa-5x text-muted mb-4 opacity-50"></i>
-            <h3 class="mb-3">No courses yet</h3>
-            <p class="text-muted mb-4">Start your learning journey by purchasing a course!</p>
-            <a href="{{ url_for('courses') }}" class="btn btn-primary btn-lg">
+        <div class="empty-courses-state">
+            <div class="empty-icon">
+                <i class="fas fa-graduation-cap"></i>
+            </div>
+            <h3 class="mb-3">Start Your Learning Journey</h3>
+            <p class="text-muted mb-4">You haven't enrolled in any courses yet. Explore our course catalog and begin learning today!</p>
+            <a href="{{ url_for('courses') }}" class="btn-browse-courses">
                 <i class="fas fa-search me-2"></i>Browse Courses
             </a>
         </div>
@@ -61,18 +88,238 @@
 </section>
 
 <style>
-.hover-lift {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+.my-courses-hero {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    position: relative;
 }
 
-.hover-lift:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 1rem 3rem rgba(0,0,0,.175) !important;
+.section-heading {
+    color: #1e293b;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
 }
 
-.card-img-top {
+.section-heading i {
+    color: #667eea;
+}
+
+.my-course-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.my-course-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.course-image-wrapper {
+    position: relative;
     height: 200px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.course-image-wrapper img {
+    width: 100%;
+    height: 100%;
     object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.my-course-card:hover .course-image-wrapper img {
+    transform: scale(1.1);
+}
+
+.placeholder-img {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.course-owned-tag {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    backdrop-filter: blur(10px);
+}
+
+.course-card-content {
+    padding: 24px;
+}
+
+.course-card-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 12px;
+    line-height: 1.4;
+}
+
+.course-card-description {
+    color: #64748b;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+.course-stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding: 16px 0;
+    border-top: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.stat-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: #f8fafc;
+    border-radius: 10px;
+}
+
+.stat-box i {
+    font-size: 1.5rem;
+    color: #667eea;
+}
+
+.stat-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-number {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1e293b;
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.purchase-info {
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    background: #f8fafc;
+    border-radius: 8px;
+}
+
+.btn-continue-learning {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 14px 24px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.btn-continue-learning:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(102, 126, 234, 0.4);
+    color: white;
+}
+
+.empty-courses-state {
+    text-align: center;
+    padding: 80px 20px;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+}
+
+.empty-icon {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 32px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4rem;
+    color: white;
+}
+
+.empty-courses-state h3 {
+    color: #1e293b;
+    font-weight: 700;
+    font-size: 1.75rem;
+}
+
+.empty-courses-state p {
+    max-width: 500px;
+    margin: 0 auto 24px;
+    font-size: 1.05rem;
+}
+
+.btn-browse-courses {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 16px 40px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1.05rem;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.btn-browse-courses:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(102, 126, 234, 0.4);
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .course-image-wrapper {
+        height: 180px;
+    }
+    
+    .empty-icon {
+        width: 100px;
+        height: 100px;
+        font-size: 3rem;
+    }
+    
+    .empty-courses-state {
+        padding: 60px 20px;
+    }
 }
 </style>
 {% endblock %}

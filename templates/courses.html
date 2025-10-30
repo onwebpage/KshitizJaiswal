@@ -1,52 +1,83 @@
 {% extends "base.html" %}
 
 {% block content %}
-<section class="section-padding">
+<section class="courses-hero py-5 bg-gradient">
     <div class="container">
-        <div class="text-center mb-5">
-            <h1 class="section-title">Guides & Tutorials</h1>
-            <p class="section-subtitle">Unlock premium content and master new skills</p>
+        <div class="text-center text-white">
+            <h1 class="display-4 fw-bold mb-3">Guides & Tutorials</h1>
+            <p class="lead mb-4">Master new skills with premium courses designed for real-world impact</p>
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                <span class="badge bg-white text-primary px-3 py-2">
+                    <i class="fas fa-certificate me-2"></i>Expert-Led Content
+                </span>
+                <span class="badge bg-white text-primary px-3 py-2">
+                    <i class="fas fa-infinity me-2"></i>Lifetime Access
+                </span>
+                <span class="badge bg-white text-primary px-3 py-2">
+                    <i class="fas fa-mobile-alt me-2"></i>Learn Anywhere
+                </span>
+            </div>
         </div>
+    </div>
+</section>
 
+<section class="py-5">
+    <div class="container">
         {% if courses %}
         <div class="row g-4">
             {% for course in courses %}
             <div class="col-lg-4 col-md-6">
-                <div class="card course-card h-100 {% if course.has_access %}course-owned{% endif %}">
-                    {% if course.thumbnail %}
-                    <img src="{{ url_for('static', filename=course.thumbnail) if not course.thumbnail.startswith('http') else course.thumbnail }}" class="card-img-top" alt="{{ course.title }}">
-                    {% else %}
-                    <div class="card-img-top bg-secondary" style="height: 200px; display: flex; align-items: center; justify-content: center;">
-                        <i class="fas fa-graduation-cap fa-4x text-white opacity-50"></i>
-                    </div>
-                    {% endif %}
-                    
-                    {% if course.has_access %}
-                    <div class="course-owned-badge">
-                        <i class="fas fa-check-circle"></i> Owned
-                    </div>
-                    {% endif %}
-                    
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="card-title">{{ course.title }}</h5>
-                        <p class="card-text flex-grow-1">{{ course.description|truncate(120) }}</p>
+                <div class="course-card h-100">
+                    <div class="course-card-image">
+                        {% if course.thumbnail %}
+                        <img src="{{ url_for('static', filename=course.thumbnail) if not course.thumbnail.startswith('http') else course.thumbnail }}" alt="{{ course.title }}">
+                        {% else %}
+                        <div class="placeholder-image">
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
+                        {% endif %}
                         
-                        <div class="course-meta mb-3">
-                            <span class="badge bg-light text-dark me-2">
-                                <i class="fas fa-book"></i> {{ course.module_count }} Modules
-                            </span>
-                            <span class="badge bg-light text-dark">
-                                <i class="fas fa-video"></i> {{ course.lesson_count }} Lessons
-                            </span>
+                        {% if course.has_access %}
+                        <div class="course-status-badge owned">
+                            <i class="fas fa-check-circle"></i> Owned
+                        </div>
+                        {% else %}
+                        <div class="course-status-badge">
+                            <i class="fas fa-lock"></i> Premium
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="course-card-body">
+                        <h5 class="course-title">{{ course.title }}</h5>
+                        <p class="course-description">{{ course.description|truncate(120) }}</p>
+                        
+                        <div class="course-stats mb-3">
+                            <div class="stat-item">
+                                <i class="fas fa-book-open"></i>
+                                <span>{{ course.module_count }} Modules</span>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-play-circle"></i>
+                                <span>{{ course.lesson_count }} Lessons</span>
+                            </div>
                         </div>
                         
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="h4 mb-0 text-primary">₹{{ course.price }}</span>
-                            <a href="{{ url_for('course_detail', course_id=course.id) }}" class="btn btn-primary">
+                        <div class="course-footer">
+                            <div class="course-price">
+                                {% if course.price == 0 %}
+                                <span class="price-value text-success">FREE</span>
+                                {% else %}
+                                <span class="price-value">₹{{ course.price }}</span>
+                                {% endif %}
+                            </div>
+                            <a href="{{ url_for('course_detail', course_id=course.id) }}" class="btn-course-action">
                                 {% if course.has_access %}
-                                View Course
+                                Continue Learning
+                                <i class="fas fa-arrow-right ms-2"></i>
                                 {% else %}
                                 Learn More
+                                <i class="fas fa-arrow-right ms-2"></i>
                                 {% endif %}
                             </a>
                         </div>
@@ -56,9 +87,11 @@
             {% endfor %}
         </div>
         {% else %}
-        <div class="text-center py-5">
-            <i class="fas fa-graduation-cap fa-5x text-muted mb-4"></i>
-            <h3 class="text-muted">No Courses Available Yet</h3>
+        <div class="empty-state text-center py-5">
+            <div class="empty-state-icon">
+                <i class="fas fa-graduation-cap"></i>
+            </div>
+            <h3 class="mb-3">No Courses Available Yet</h3>
             <p class="text-muted">Check back soon for amazing learning content!</p>
         </div>
         {% endif %}
@@ -66,39 +99,189 @@
 </section>
 
 <style>
-.course-card {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    border: none;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+.courses-hero {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     position: relative;
     overflow: hidden;
 }
 
-.course-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
-}
-
-.course-card.course-owned {
-    border: 2px solid #28a745;
-}
-
-.course-owned-badge {
+.courses-hero::before {
+    content: '';
     position: absolute;
-    top: 10px;
-    right: 10px;
-    background: #28a745;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="rgba(255,255,255,0.1)" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,138.7C960,139,1056,117,1152,96C1248,75,1344,53,1392,42.7L1440,32L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>') bottom center no-repeat;
+    background-size: cover;
+}
+
+.course-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.course-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.course-card-image {
+    position: relative;
+    height: 220px;
+    overflow: hidden;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.course-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+.course-card:hover .course-card-image img {
+    transform: scale(1.1);
+}
+
+.placeholder-image {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.course-status-badge {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(10px);
     color: white;
-    padding: 5px 15px;
+    padding: 8px 16px;
     border-radius: 20px;
     font-size: 0.85rem;
     font-weight: 600;
-    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
-.course-meta .badge {
-    font-size: 0.85rem;
-    padding: 5px 10px;
+.course-status-badge.owned {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.course-card-body {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+}
+
+.course-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: #1e293b;
+    line-height: 1.4;
+}
+
+.course-description {
+    color: #64748b;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 16px;
+    flex-grow: 1;
+}
+
+.course-stats {
+    display: flex;
+    gap: 20px;
+    padding: 16px 0;
+    border-top: 1px solid #e2e8f0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #64748b;
+    font-size: 0.9rem;
+}
+
+.stat-item i {
+    color: #667eea;
+    font-size: 1rem;
+}
+
+.course-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.course-price {
+    font-weight: 700;
+}
+
+.price-value {
+    font-size: 1.75rem;
+    color: #667eea;
+}
+
+.btn-course-action {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    border: none;
+}
+
+.btn-course-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(102, 126, 234, 0.4);
+    color: white;
+}
+
+.empty-state-icon {
+    font-size: 5rem;
+    color: #e2e8f0;
+    margin-bottom: 24px;
+}
+
+.empty-state h3 {
+    color: #1e293b;
+    font-weight: 700;
+}
+
+@media (max-width: 768px) {
+    .course-card-image {
+        height: 180px;
+    }
+    
+    .course-footer {
+        flex-direction: column;
+        gap: 16px;
+    }
+    
+    .btn-course-action {
+        width: 100%;
+        justify-content: center;
+    }
 }
 </style>
 {% endblock %}
