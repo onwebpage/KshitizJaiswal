@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Site Settings - Admin Panel{% endblock %}
+
+{% block content %}
+<div class="admin-section">
+    <div class="container mt-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-cogs me-2"></i>Site Settings</h2>
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+
+        <form method="POST">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>General Settings</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="site_title" class="form-label">Site Title</label>
+                        <input type="text" class="form-control" id="site_title" name="site_title" 
+                               value="{{ settings.site_title or 'Kshitiz Jaiswal' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="site_tagline" class="form-label">Site Tagline</label>
+                        <input type="text" class="form-control" id="site_tagline" name="site_tagline" 
+                               value="{{ settings.site_tagline or 'Unfiltered Commentator' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="contact_email" class="form-label">Contact Email</label>
+                        <input type="email" class="form-control" id="contact_email" name="contact_email" 
+                               value="{{ settings.contact_email or '' }}">
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-share-alt me-2"></i>Social Media Links</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="social_facebook" class="form-label">Facebook URL</label>
+                        <input type="url" class="form-control" id="social_facebook" name="social_facebook" 
+                               value="{{ settings.social_facebook or '' }}" placeholder="https://facebook.com/...">
+                    </div>
+                    <div class="mb-3">
+                        <label for="social_twitter" class="form-label">Twitter/X URL</label>
+                        <input type="url" class="form-control" id="social_twitter" name="social_twitter" 
+                               value="{{ settings.social_twitter or '' }}" placeholder="https://twitter.com/...">
+                    </div>
+                    <div class="mb-3">
+                        <label for="social_instagram" class="form-label">Instagram URL</label>
+                        <input type="url" class="form-control" id="social_instagram" name="social_instagram" 
+                               value="{{ settings.social_instagram or '' }}" placeholder="https://instagram.com/...">
+                    </div>
+                    <div class="mb-3">
+                        <label for="social_youtube" class="form-label">YouTube URL</label>
+                        <input type="url" class="form-control" id="social_youtube" name="social_youtube" 
+                               value="{{ settings.social_youtube or '' }}" placeholder="https://youtube.com/...">
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-search me-2"></i>SEO Settings</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="meta_description" class="form-label">Meta Description</label>
+                        <textarea class="form-control" id="meta_description" name="meta_description" rows="3">{{ settings.meta_description or '' }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="meta_keywords" class="form-label">Meta Keywords (comma separated)</label>
+                        <input type="text" class="form-control" id="meta_keywords" name="meta_keywords" 
+                               value="{{ settings.meta_keywords or '' }}">
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Analytics & Tracking</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="google_analytics_id" class="form-label">Google Analytics ID</label>
+                        <input type="text" class="form-control" id="google_analytics_id" name="google_analytics_id" 
+                               value="{{ settings.google_analytics_id or '' }}" placeholder="GTM-XXXXXXX">
+                    </div>
+                    <div class="mb-3">
+                        <label for="facebook_pixel_id" class="form-label">Facebook Pixel ID</label>
+                        <input type="text" class="form-control" id="facebook_pixel_id" name="facebook_pixel_id" 
+                               value="{{ settings.facebook_pixel_id or '' }}">
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="fas fa-save me-2"></i>Save All Settings
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

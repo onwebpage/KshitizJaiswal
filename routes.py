@@ -1457,6 +1457,329 @@ def admin_delete_lesson(lesson_id):
     flash(f'Lesson "{lesson_title}" deleted successfully!', 'success')
     return redirect(url_for('admin_lessons'))
 
+# NEW ADMIN FEATURES
+
+@app.route('/admin/analytics')
+def admin_analytics():
+    """Analytics Dashboard"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    from sqlalchemy import func
+    from datetime import datetime, timedelta
+    
+    # Get statistics
+    total_reels = Reel.query.count()
+    total_opinions = Opinion.query.count()
+    total_subscribers = Subscriber.query.count()
+    total_courses = Course.query.count()
+    total_course_enrollments = UserCourseAccess.query.count()
+    
+    # Most viewed reels
+    top_reels = Reel.query.order_by(Reel.view_count.desc()).limit(10).all()
+    
+    # Recent subscribers (last 30 days)
+    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+    recent_subscribers = Subscriber.query.filter(Subscriber.subscribed_at >= thirty_days_ago).count()
+    
+    # Poll engagement
+    opinions_with_votes = Opinion.query.all()
+    total_votes = sum([sum(json.loads(op.votes) if op.votes else []) for op in opinions_with_votes])
+    
+    # Topic distribution
+    topic_distribution = db.session.query(
+        Opinion.topic_tag,
+        func.count(Opinion.id).label('count')
+    ).filter(Opinion.topic_tag.isnot(None), Opinion.topic_tag != '').group_by(Opinion.topic_tag).all()
+    
+    # Category distribution for reels
+    category_distribution = db.session.query(
+        Reel.category_tag,
+        func.count(Reel.id).label('count')
+    ).filter(Reel.category_tag.isnot(None), Reel.category_tag != '').group_by(Reel.category_tag).all()
+    
+    return render_template('admin/analytics.html',
+                         total_reels=total_reels,
+                         total_opinions=total_opinions,
+                         total_subscribers=total_subscribers,
+                         total_courses=total_courses,
+                         total_course_enrollments=total_course_enrollments,
+                         top_reels=[r.to_dict() for r in top_reels],
+                         recent_subscribers=recent_subscribers,
+                         total_votes=total_votes,
+                         topic_distribution=topic_distribution,
+                         category_distribution=category_distribution)
+
+@app.route('/admin/users')
+def admin_users():
+    """User Management - View course enrollments"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    enrollments = UserCourseAccess.query.join(Course).order_by(UserCourseAccess.granted_at.desc()).all()
+    
+    enrollment_data = []
+    for enrollment in enrollments:
+        enrollment_data.append({
+            'id': enrollment.id,
+            'clerk_user_id': enrollment.clerk_user_id,
+            'course_title': enrollment.course.title,
+            'amount_paid': enrollment.amount_paid,
+            'payment_id': enrollment.payment_id,
+            'granted_at': enrollment.granted_at.strftime('%Y-%m-%d %H:%M'),
+            'expires_at': enrollment.expires_at.strftime('%Y-%m-%d') if enrollment.expires_at else 'Never'
+        })
+    
+    return render_template('admin/users.html', enrollments=enrollment_data)
+
+@app.route('/admin/bulk-operations')
+def admin_bulk_operations():
+    """Bulk Operations Interface"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    reels = Reel.query.all()
+    opinions = Opinion.query.all()
+    
+    return render_template('admin/bulk_operations.html',
+                         reels=[r.to_dict() for r in reels],
+                         opinions=[o.to_dict() for o in opinions])
+
+@app.route('/admin/bulk-delete-reels', methods=['POST'])
+def admin_bulk_delete_reels():
+    """Bulk delete reels"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    reel_ids = request.form.getlist('reel_ids[]')
+    if reel_ids:
+        Reel.query.filter(Reel.id.in_(reel_ids)).delete(synchronize_session=False)
+        db.session.commit()
+        flash(f'{len(reel_ids)} reels deleted successfully!', 'success')
+    
+    return redirect(url_for('admin_bulk_operations'))
+
+@app.route('/admin/bulk-feature-reels', methods=['POST'])
+def admin_bulk_feature_reels():
+    """Bulk feature/unfeature reels"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    reel_ids = request.form.getlist('reel_ids[]')
+    action = request.form.get('action', 'feature')
+    
+    if reel_ids:
+        reels = Reel.query.filter(Reel.id.in_(reel_ids)).all()
+        for reel in reels:
+            reel.is_featured = (action == 'feature')
+        db.session.commit()
+        flash(f'{len(reel_ids)} reels updated successfully!', 'success')
+    
+    return redirect(url_for('admin_bulk_operations'))
+
+@app.route('/admin/site-settings', methods=['GET', 'POST'])
+def admin_site_settings():
+    """Site Settings"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    if request.method == 'POST':
+        settings = {
+            'site_title': request.form.get('site_title', 'Kshitiz Jaiswal'),
+            'site_tagline': request.form.get('site_tagline', 'Unfiltered Commentator'),
+            'contact_email': request.form.get('contact_email', ''),
+            'social_facebook': request.form.get('social_facebook', ''),
+            'social_twitter': request.form.get('social_twitter', ''),
+            'social_instagram': request.form.get('social_instagram', ''),
+            'social_youtube': request.form.get('social_youtube', ''),
+            'meta_description': request.form.get('meta_description', ''),
+            'meta_keywords': request.form.get('meta_keywords', ''),
+            'google_analytics_id': request.form.get('google_analytics_id', ''),
+            'facebook_pixel_id': request.form.get('facebook_pixel_id', '')
+        }
+        
+        settings_record = SiteContent.query.filter_by(content_key='site_settings').first()
+        if settings_record:
+            settings_record.content_data = json.dumps(settings)
+            settings_record.updated_at = datetime.utcnow()
+        else:
+            settings_record = SiteContent(content_key='site_settings', content_data=json.dumps(settings))
+            db.session.add(settings_record)
+        
+        db.session.commit()
+        flash('Site settings updated successfully!', 'success')
+        return redirect(url_for('admin_site_settings'))
+    
+    # Load current settings
+    settings_record = SiteContent.query.filter_by(content_key='site_settings').first()
+    if settings_record:
+        settings = json.loads(settings_record.content_data)
+    else:
+        settings = {}
+    
+    return render_template('admin/site_settings.html', settings=settings)
+
+@app.route('/admin/email-broadcast', methods=['GET', 'POST'])
+def admin_email_broadcast():
+    """Email Broadcast to Subscribers"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    if request.method == 'POST':
+        subject = request.form.get('subject')
+        message = request.form.get('message')
+        
+        subscribers = Subscriber.query.all()
+        subscriber_emails = [s.email for s in subscribers]
+        
+        # Note: This would require email service integration (SendGrid, etc.)
+        # For now, we'll just show the preview
+        flash(f'Email preview ready! Would send to {len(subscriber_emails)} subscribers. (Email service integration required)', 'info')
+        
+        return render_template('admin/email_broadcast.html',
+                             subject=subject,
+                             message=message,
+                             subscriber_count=len(subscriber_emails),
+                             preview_mode=True)
+    
+    subscriber_count = Subscriber.query.count()
+    return render_template('admin/email_broadcast.html', subscriber_count=subscriber_count)
+
+@app.route('/admin/activity-logs')
+def admin_activity_logs():
+    """Activity Logs - Track admin actions"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    # Get recent database changes
+    recent_reels = Reel.query.order_by(Reel.created_at.desc()).limit(10).all()
+    recent_opinions = Opinion.query.order_by(Opinion.created_at.desc()).limit(10).all()
+    recent_subscribers = Subscriber.query.order_by(Subscriber.subscribed_at.desc()).limit(10).all()
+    recent_courses = Course.query.order_by(Course.created_at.desc()).limit(10).all()
+    
+    activities = []
+    
+    for reel in recent_reels:
+        activities.append({
+            'type': 'reel',
+            'action': 'created',
+            'title': reel.title,
+            'timestamp': reel.created_at,
+            'icon': 'fa-video',
+            'color': 'primary'
+        })
+    
+    for opinion in recent_opinions:
+        activities.append({
+            'type': 'opinion',
+            'action': 'created',
+            'title': opinion.title,
+            'timestamp': opinion.created_at,
+            'icon': 'fa-poll',
+            'color': 'success'
+        })
+    
+    for subscriber in recent_subscribers:
+        activities.append({
+            'type': 'subscriber',
+            'action': 'joined',
+            'title': subscriber.name,
+            'timestamp': subscriber.subscribed_at,
+            'icon': 'fa-user-plus',
+            'color': 'info'
+        })
+    
+    for course in recent_courses:
+        activities.append({
+            'type': 'course',
+            'action': 'created',
+            'title': course.title,
+            'timestamp': course.created_at,
+            'icon': 'fa-book',
+            'color': 'warning'
+        })
+    
+    # Sort by timestamp
+    activities.sort(key=lambda x: x['timestamp'], reverse=True)
+    
+    return render_template('admin/activity_logs.html', activities=activities[:50])
+
+@app.route('/admin/database-export')
+def admin_database_export():
+    """Database Export Tools"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    return render_template('admin/database_export.html')
+
+@app.route('/admin/export-data/<data_type>')
+def admin_export_data(data_type):
+    """Export data as JSON"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    from flask import Response
+    
+    data = {}
+    filename = f'{data_type}_export.json'
+    
+    if data_type == 'reels':
+        data = {'reels': [r.to_dict() for r in Reel.query.all()]}
+    elif data_type == 'opinions':
+        data = {'opinions': [o.to_dict() for o in Opinion.query.all()]}
+    elif data_type == 'subscribers':
+        data = {'subscribers': [s.to_dict() for s in Subscriber.query.all()]}
+    elif data_type == 'courses':
+        courses = Course.query.all()
+        data = {'courses': [c.to_dict() for c in courses]}
+    elif data_type == 'all':
+        data = {
+            'reels': [r.to_dict() for r in Reel.query.all()],
+            'opinions': [o.to_dict() for o in Opinion.query.all()],
+            'subscribers': [s.to_dict() for s in Subscriber.query.all()],
+            'courses': [c.to_dict() for c in Course.query.all()],
+            'subscription_tiers': [t.to_dict() for t in SubscriptionTier.query.all()]
+        }
+        filename = 'full_database_export.json'
+    
+    return Response(
+        json.dumps(data, indent=2, ensure_ascii=False),
+        mimetype='application/json',
+        headers={'Content-Disposition': f'attachment;filename={filename}'}
+    )
+
+@app.route('/admin/media-library')
+def admin_media_library():
+    """Media Library - View all uploaded files"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    import os
+    
+    media_files = []
+    upload_folder = app.config['UPLOAD_FOLDER']
+    
+    # Scan upload directories
+    for root, dirs, files in os.walk(upload_folder):
+        for file in files:
+            if file.lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.webp', '.mp4', '.mov')):
+                file_path = os.path.join(root, file)
+                relative_path = os.path.relpath(file_path, 'static')
+                file_size = os.path.getsize(file_path)
+                
+                media_files.append({
+                    'name': file,
+                    'path': relative_path,
+                    'url': url_for('static', filename=relative_path),
+                    'size': round(file_size / 1024, 2),  # KB
+                    'type': 'image' if file.lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.webp')) else 'video'
+                })
+    
+    # Sort by name
+    media_files.sort(key=lambda x: x['name'])
+    
+    return render_template('admin/media_library.html', media_files=media_files)
+
 # Static pages routes
 @app.route('/privacy-policy')
 def privacy_policy():
