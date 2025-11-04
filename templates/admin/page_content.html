@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Admin{% endblock %}
+
+{% block content %}
+<div class="admin-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="admin-card">
+                    <div class="admin-header">
+                        <h2>{{ title }}</h2>
+                        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                        </a>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Edit Homepage Content:</strong> Update section titles, subtitles, button text, and statistics that appear on your website.
+                    </div>
+                    
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row g-4">
+                            <!-- Reels Section -->
+                            <div class="col-12">
+                                <h5 class="section-heading"><i class="fas fa-video me-2"></i>Reels Section</h5>
+                            </div>
+                            
+                            <div class="col-12">
+                                <label for="{{ form.reels_section_title.id }}" class="form-label">{{ form.reels_section_title.label.text }}</label>
+                                {{ form.reels_section_title(class="form-control") }}
+                                {% if form.reels_section_title.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.reels_section_title.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-12">
+                                <label for="{{ form.reels_section_subtitle.id }}" class="form-label">{{ form.reels_section_subtitle.label.text }}</label>
+                                {{ form.reels_section_subtitle(class="form-control") }}
+                                {% if form.reels_section_subtitle.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.reels_section_subtitle.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <small class="form-text text-muted">The subtitle that appears below the reels section title</small>
+                            </div>
+                            
+                            <hr class="my-4">
+                            
+                            <!-- Support Section -->
+                            <div class="col-12">
+                                <h5 class="section-heading"><i class="fas fa-heart me-2"></i>Support Section</h5>
+                            </div>
+                            
+                            <div class="col-12">
+                                <label for="{{ form.support_section_title.id }}" class="form-label">{{ form.support_section_title.label.text }}</label>
+                                {{ form.support_section_title(class="form-control") }}
+                                {% if form.support_section_title.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.support_section_title.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-12">
+                                <label for="{{ form.support_section_subtitle.id }}" class="form-label">{{ form.support_section_subtitle.label.text }}</label>
+                                {{ form.support_section_subtitle(class="form-control") }}
+                                {% if form.support_section_subtitle.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.support_section_subtitle.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <small class="form-text text-muted">The subtitle that appears below the support section title</small>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="{{ form.custom_support_button_text.id }}" class="form-label">{{ form.custom_support_button_text.label.text }}</label>
+                                {{ form.custom_support_button_text(class="form-control") }}
+                                {% if form.custom_support_button_text.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.custom_support_button_text.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <small class="form-text text-muted">Text for the custom amount support button</small>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="{{ form.custom_support_subtitle.id }}" class="form-label">{{ form.custom_support_subtitle.label.text }}</label>
+                                {{ form.custom_support_subtitle(class="form-control") }}
+                                {% if form.custom_support_subtitle.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.custom_support_subtitle.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <small class="form-text text-muted">Subtitle below custom support button</small>
+                            </div>
+                            
+                            <hr class="my-4">
+                            
+                            <!-- Support Statistics -->
+                            <div class="col-12">
+                                <h5 class="section-heading"><i class="fas fa-chart-bar me-2"></i>Support Statistics</h5>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="{{ form.support_stats_count.id }}" class="form-label">{{ form.support_stats_count.label.text }}</label>
+                                {{ form.support_stats_count(class="form-control", type="number", min="0") }}
+                                {% if form.support_stats_count.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.support_stats_count.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <small class="form-text text-muted">Number of supporters to display</small>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="{{ form.support_stats_amount.id }}" class="form-label">{{ form.support_stats_amount.label.text }}</label>
+                                {{ form.support_stats_amount(class="form-control", type="number", min="0") }}
+                                {% if form.support_stats_amount.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.support_stats_amount.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <small class="form-text text-muted">Amount raised this month (in rupees)</small>
+                            </div>
+                            
+                            <div class="col-12 mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-save me-2"></i>Save Page Content
+                                </button>
+                                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary btn-lg ms-2">Cancel</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

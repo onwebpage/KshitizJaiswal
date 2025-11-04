@@ -338,6 +338,56 @@ class DataManager:
         return True
     
     @staticmethod
+    def get_page_content():
+        """Get page content from database with defaults"""
+        # Default content to return if database fails
+        default_content = {
+            'reels_section_title': 'Beyond The Reel',
+            'reels_section_subtitle': '"Reel to sirf ek hissa tha, kahani bahut badi hai."',
+            'support_section_title': 'Friends of Kshitiz — Support Now',
+            'support_section_subtitle': 'Aapki marzi, aapka support. Jitna chaho, utna.',
+            'custom_support_button_text': 'Custom Supporter — Choose Your Amount',
+            'custom_support_subtitle': 'Aapki marzi, aapka support. Jitna chaho, utna.',
+            'support_stats_count': 127,
+            'support_stats_amount': 2340
+        }
+        
+        try:
+            page_content_record = SiteContent.query.filter_by(content_key='page_content').first()
+            
+            if page_content_record:
+                return json.loads(page_content_record.content_data)
+            else:
+                # Try to save default content to database
+                try:
+                    page_content_record = SiteContent(content_key='page_content', content_data=json.dumps(default_content))
+                    db.session.add(page_content_record)
+                    db.session.commit()
+                except:
+                    pass  # If save fails, just return defaults
+                return default_content
+        except:
+            # If database fails, return defaults
+            return default_content
+    
+    @staticmethod
+    def save_page_content(content_dict):
+        """Save page content to database"""
+        try:
+            page_content_record = SiteContent.query.filter_by(content_key='page_content').first()
+            
+            if page_content_record:
+                page_content_record.content_data = json.dumps(content_dict)
+                page_content_record.updated_at = datetime.utcnow()
+            else:
+                page_content_record = SiteContent(content_key='page_content', content_data=json.dumps(content_dict))
+                db.session.add(page_content_record)
+            
+            db.session.commit()
+        except Exception as e:
+            raise Exception(f"Failed to save page content: {str(e)}")
+    
+    @staticmethod
     def vote_poll(opinion_id, option_index):
         """Record poll vote in database"""
         opinion = Opinion.query.get(opinion_id)

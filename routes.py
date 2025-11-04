@@ -47,12 +47,16 @@ def index():
         payment_settings = json.loads(payment_content.content_data)
         razorpay_key = payment_settings.get('razorpay_key_id', 'rzp_test_dummy_key')
     
+    # Get page content
+    page_content = DataManager.get_page_content()
+    
     return render_template('index.html', 
                          content=content, 
                          newsletter_form=newsletter_form,
                          poll_form=poll_form,
                          subscription_tiers=subscription_tiers,
-                         razorpay_key=razorpay_key)
+                         razorpay_key=razorpay_key,
+                         page_content=page_content)
 
 @app.route('/reels')
 def reels_library():
@@ -1720,6 +1724,50 @@ def admin_site_settings():
         settings = {}
     
     return render_template('admin/site_settings.html', settings=settings)
+
+@app.route('/admin/page-content', methods=['GET', 'POST'])
+def admin_page_content():
+    """Manage page content sections"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    from forms import PageContentForm
+    
+    form = PageContentForm()
+    
+    if form.validate_on_submit():
+        content_data = {
+            'reels_section_title': form.reels_section_title.data,
+            'reels_section_subtitle': form.reels_section_subtitle.data,
+            'support_section_title': form.support_section_title.data,
+            'support_section_subtitle': form.support_section_subtitle.data,
+            'custom_support_button_text': form.custom_support_button_text.data,
+            'custom_support_subtitle': form.custom_support_subtitle.data,
+            'support_stats_count': form.support_stats_count.data,
+            'support_stats_amount': form.support_stats_amount.data
+        }
+        
+        try:
+            DataManager.save_page_content(content_data)
+            flash('Page content updated successfully!', 'success')
+        except Exception as e:
+            flash(f'Error saving page content: {str(e)}. Please check your database connection.', 'error')
+        
+        return redirect(url_for('admin_page_content'))
+    
+    # Pre-populate form with current data
+    if request.method == 'GET':
+        current_content = DataManager.get_page_content()
+        form.reels_section_title.data = current_content.get('reels_section_title', '')
+        form.reels_section_subtitle.data = current_content.get('reels_section_subtitle', '')
+        form.support_section_title.data = current_content.get('support_section_title', '')
+        form.support_section_subtitle.data = current_content.get('support_section_subtitle', '')
+        form.custom_support_button_text.data = current_content.get('custom_support_button_text', '')
+        form.custom_support_subtitle.data = current_content.get('custom_support_subtitle', '')
+        form.support_stats_count.data = current_content.get('support_stats_count', 0)
+        form.support_stats_amount.data = current_content.get('support_stats_amount', 0)
+    
+    return render_template('admin/page_content.html', form=form, title='Page Content')
 
 @app.route('/admin/column-visibility', methods=['GET', 'POST'])
 def admin_column_visibility():

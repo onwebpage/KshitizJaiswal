@@ -14,8 +14,8 @@
 <section id="beyond-reel" class="section-padding">
     <div class="container">
         <div class="text-center mb-4">
-            <h2 class="section-title">Beyond The Reel</h2>
-            <p class="section-subtitle">"Reel to sirf ek hissa tha, kahani bahut badi hai."</p>
+            <h2 class="section-title">{{ page_content.reels_section_title }}</h2>
+            <p class="section-subtitle">{{ page_content.reels_section_subtitle }}</p>
         </div>
         
         <div id="reelContent">
@@ -81,8 +81,8 @@
 <section id="support" class="section-padding support-section-bg">
     <div class="container">
         <div class="text-center mb-4">
-            <h2 class="section-title text-white">Friends of Kshitiz — Support Now</h2>
-            <p class="section-subtitle text-white">Aapki marzi, aapka support. Jitna chaho, utna.</p>
+            <h2 class="section-title text-white">{{ page_content.support_section_title }}</h2>
+            <p class="section-subtitle text-white">{{ page_content.support_section_subtitle }}</p>
         </div>
         
         <div id="supportContent">
@@ -133,10 +133,10 @@
                                 <span class="currency-symbol">₹</span>
                                 <input type="number" id="customAmount" class="custom-amount-input" placeholder="Enter amount" min="10" value="100">
                                 <button class="btn btn-custom-support" onclick="initiatePayment(document.getElementById('customAmount').value)">
-                                    <i class="fas fa-heart me-2"></i>Custom Supporter — Choose Your Amount
+                                    <i class="fas fa-heart me-2"></i>{{ page_content.custom_support_button_text }}
                                 </button>
                             </div>
-                            <p class="text-white mt-2 mb-0" style="font-size: 0.85rem;">Aapki marzi, aapka support. Jitna chaho, utna.</p>
+                            <p class="text-white mt-2 mb-0" style="font-size: 0.85rem;">{{ page_content.custom_support_subtitle }}</p>
                         </div>
                     </div>
                 </div>
@@ -153,11 +153,11 @@
                             <div class="support-stats">
                                 <span class="stat-item">
                                     <i class="fas fa-users me-1"></i>
-                                    <span class="stat-number">127</span> supporters
+                                    <span class="stat-number">{{ page_content.support_stats_count }}</span> supporters
                                 </span>
                                 <span class="stat-item ms-3">
                                     <i class="fas fa-heart me-1"></i>
-                                    <span class="stat-number">₹2,340</span> raised this month
+                                    <span class="stat-number">₹{{ "{:,}".format(page_content.support_stats_amount) }}</span> raised this month
                                 </span>
                             </div>
                         </div>

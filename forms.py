@@ -127,3 +127,14 @@ class SocialLinkForm(FlaskForm):
     is_active = SelectField('Active', choices=[('1', 'Yes'), ('0', 'No')], default='1')
     sort_order = IntegerField('Sort Order', validators=[NumberRange(min=0)], default=0)
     submit = SubmitField('Save Link')
+
+class PageContentForm(FlaskForm):
+    reels_section_title = StringField('Reels Section Title', validators=[DataRequired(), Length(max=200)])
+    reels_section_subtitle = StringField('Reels Section Subtitle', validators=[Length(max=500)])
+    support_section_title = StringField('Support Section Title', validators=[DataRequired(), Length(max=200)])
+    support_section_subtitle = StringField('Support Section Subtitle', validators=[Length(max=500)])
+    custom_support_button_text = StringField('Custom Support Button Text', validators=[Length(max=200)])
+    custom_support_subtitle = StringField('Custom Support Subtitle', validators=[Length(max=500)])
+    support_stats_count = IntegerField('Supporters Count', validators=[NumberRange(min=0)], default=0)
+    support_stats_amount = IntegerField('Amount Raised This Month (₹)', validators=[NumberRange(min=0)], default=0)
+    submit = SubmitField('Save Page Content')
