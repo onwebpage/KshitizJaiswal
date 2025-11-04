@@ -17,26 +17,15 @@
                         <a href="#dashboard" class="admin-nav-item active" data-tab="dashboard">
                             <i class="fas fa-home me-2"></i>Dashboard
                         </a>
-                        <a href="#reels" class="admin-nav-item" data-tab="reels">
-                            <i class="fas fa-video me-2"></i>Manage Reels
-                        </a>
-                        <a href="#opinions" class="admin-nav-item" data-tab="opinions">
-                            <i class="fas fa-poll me-2"></i>Manage Opinions
-                        </a>
-                        <a href="#subscribers" class="admin-nav-item" data-tab="subscribers">
-                            <i class="fas fa-users me-2"></i>Subscribers
-                        </a>
-                        <a href="#content" class="admin-nav-item" data-tab="content">
-                            <i class="fas fa-edit me-2"></i>Edit Content
+                        <hr class="my-2">
+                        <div class="admin-nav-section-title">
+                            <small class="text-muted">CONTENT MANAGEMENT</small>
+                        </div>
+                        <a href="{{ url_for('admin_page_content') }}" class="admin-nav-item">
+                            <i class="fas fa-file-alt me-2"></i>Page Content
                         </a>
                         <a href="{{ url_for('admin_hero_content') }}" class="admin-nav-item">
-                            <i class="fas fa-image me-2"></i>Hero Settings
-                        </a>
-                        <a href="{{ url_for('admin_payment_settings') }}" class="admin-nav-item">
-                            <i class="fas fa-credit-card me-2"></i>Payment Settings
-                        </a>
-                        <a href="{{ url_for('admin_subscription_tiers') }}" class="admin-nav-item">
-                            <i class="fas fa-crown me-2"></i>Subscription Tiers
+                            <i class="fas fa-image me-2"></i>Hero Section
                         </a>
                         <a href="{{ url_for('admin_resources') }}" class="admin-nav-item">
                             <i class="fas fa-graduation-cap me-2"></i>Learning Resources
@@ -44,34 +33,63 @@
                         <a href="{{ url_for('admin_shows') }}" class="admin-nav-item">
                             <i class="fas fa-calendar-alt me-2"></i>Upcoming Shows
                         </a>
-                        <hr class="my-2">
-                        <a href="{{ url_for('admin_courses') }}" class="admin-nav-item">
-                            <i class="fas fa-book me-2"></i>Manage Courses
+                        <a href="{{ url_for('admin_site_settings') }}" class="admin-nav-item">
+                            <i class="fas fa-cogs me-2"></i>Site Settings
                         </a>
-                        <a href="{{ url_for('admin_modules') }}" class="admin-nav-item">
-                            <i class="fas fa-folder me-2"></i>Manage Modules
-                        </a>
-                        <a href="{{ url_for('admin_lessons') }}" class="admin-nav-item">
-                            <i class="fas fa-play-circle me-2"></i>Manage Lessons
+                        <a href="{{ url_for('admin_social_links') }}" class="admin-nav-item">
+                            <i class="fas fa-share-alt me-2"></i>Social Links
                         </a>
                         <hr class="my-2">
                         <div class="admin-nav-section-title">
-                            <small class="text-muted">NEW FEATURES</small>
+                            <small class="text-muted">MEDIA & POSTS</small>
                         </div>
-                        <a href="{{ url_for('admin_analytics') }}" class="admin-nav-item">
-                            <i class="fas fa-chart-line me-2"></i>Analytics
+                        <a href="#reels" class="admin-nav-item" data-tab="reels">
+                            <i class="fas fa-video me-2"></i>Manage Reels
                         </a>
-                        <a href="{{ url_for('admin_users') }}" class="admin-nav-item">
-                            <i class="fas fa-user-shield me-2"></i>User Management
-                        </a>
-                        <a href="{{ url_for('admin_bulk_operations') }}" class="admin-nav-item">
-                            <i class="fas fa-tasks me-2"></i>Bulk Operations
+                        <a href="#opinions" class="admin-nav-item" data-tab="opinions">
+                            <i class="fas fa-poll me-2"></i>Manage Opinions
                         </a>
                         <a href="{{ url_for('admin_media_library') }}" class="admin-nav-item">
                             <i class="fas fa-images me-2"></i>Media Library
                         </a>
-                        <a href="{{ url_for('admin_site_settings') }}" class="admin-nav-item">
-                            <i class="fas fa-cogs me-2"></i>Site Settings
+                        <hr class="my-2">
+                        <div class="admin-nav-section-title">
+                            <small class="text-muted">REVENUE & COURSES</small>
+                        </div>
+                        <a href="{{ url_for('admin_subscription_tiers') }}" class="admin-nav-item">
+                            <i class="fas fa-crown me-2"></i>Subscription Tiers
+                        </a>
+                        <a href="{{ url_for('admin_payment_settings') }}" class="admin-nav-item">
+                            <i class="fas fa-credit-card me-2"></i>Payment Settings
+                        </a>
+                        <a href="{{ url_for('admin_courses') }}" class="admin-nav-item">
+                            <i class="fas fa-book me-2"></i>Courses
+                        </a>
+                        <a href="{{ url_for('admin_modules') }}" class="admin-nav-item">
+                            <i class="fas fa-folder me-2"></i>Modules
+                        </a>
+                        <a href="{{ url_for('admin_lessons') }}" class="admin-nav-item">
+                            <i class="fas fa-play-circle me-2"></i>Lessons
+                        </a>
+                        <hr class="my-2">
+                        <div class="admin-nav-section-title">
+                            <small class="text-muted">USERS & ANALYTICS</small>
+                        </div>
+                        <a href="#subscribers" class="admin-nav-item" data-tab="subscribers">
+                            <i class="fas fa-users me-2"></i>Subscribers
+                        </a>
+                        <a href="{{ url_for('admin_users') }}" class="admin-nav-item">
+                            <i class="fas fa-user-shield me-2"></i>User Management
+                        </a>
+                        <a href="{{ url_for('admin_analytics') }}" class="admin-nav-item">
+                            <i class="fas fa-chart-line me-2"></i>Analytics
+                        </a>
+                        <hr class="my-2">
+                        <div class="admin-nav-section-title">
+                            <small class="text-muted">ADVANCED TOOLS</small>
+                        </div>
+                        <a href="{{ url_for('admin_bulk_operations') }}" class="admin-nav-item">
+                            <i class="fas fa-tasks me-2"></i>Bulk Operations
                         </a>
                         <a href="{{ url_for('admin_column_visibility') }}" class="admin-nav-item">
                             <i class="fas fa-columns me-2"></i>Column Visibility
@@ -182,6 +200,14 @@
                                 <div class="admin-card">
                                     <h4>Quick Actions</h4>
                                     <div class="quick-actions">
+                                        <a href="{{ url_for('admin_page_content') }}" class="quick-action-btn">
+                                            <i class="fas fa-file-alt"></i>
+                                            Edit Page Content
+                                        </a>
+                                        <a href="{{ url_for('admin_hero_content') }}" class="quick-action-btn">
+                                            <i class="fas fa-image"></i>
+                                            Edit Hero Section
+                                        </a>
                                         <a href="{{ url_for('admin_add_reel') }}" class="quick-action-btn">
                                             <i class="fas fa-plus"></i>
                                             Add New Reel
@@ -190,18 +216,6 @@
                                             <i class="fas fa-poll"></i>
                                             Create Poll
                                         </a>
-                                        <a href="{{ url_for('admin_hero_content') }}" class="quick-action-btn">
-                                            <i class="fas fa-image"></i>
-                                            Edit Hero Section
-                                        </a>
-                                        <a href="{{ url_for('admin_payment_settings') }}" class="quick-action-btn">
-                                            <i class="fas fa-credit-card"></i>
-                                            Payment Settings
-                                        </a>
-                                        <a href="{{ url_for('admin_subscription_tiers') }}" class="quick-action-btn">
-                                            <i class="fas fa-crown"></i>
-                                            Subscription Tiers
-                                        </a>
                                         <a href="{{ url_for('admin_resources') }}" class="quick-action-btn">
                                             <i class="fas fa-graduation-cap"></i>
                                             Learning Resources
@@ -209,6 +223,14 @@
                                         <a href="{{ url_for('admin_shows') }}" class="quick-action-btn">
                                             <i class="fas fa-calendar-alt"></i>
                                             Upcoming Shows
+                                        </a>
+                                        <a href="{{ url_for('admin_site_settings') }}" class="quick-action-btn">
+                                            <i class="fas fa-cogs"></i>
+                                            Site Settings
+                                        </a>
+                                        <a href="{{ url_for('admin_subscription_tiers') }}" class="quick-action-btn">
+                                            <i class="fas fa-crown"></i>
+                                            Subscription Tiers
                                         </a>
                                     </div>
                                 </div>
