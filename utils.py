@@ -93,3 +93,22 @@ def get_youtube_embed_url(url):
             return f"https://www.youtube.com/embed/{video_id}?controls=1&rel=0&modestbranding=1&iv_load_policy=3&playsinline=1"
     
     return None
+
+def is_column_visible(table_name, column_name):
+    """Check if a column should be visible in the admin panel"""
+    from models import ColumnVisibility
+    return ColumnVisibility.is_column_visible(table_name, column_name)
+
+def get_table_columns(table_name):
+    """Get all available columns for a table"""
+    table_columns = {
+        'subscribers': ['ID', 'Name', 'Email', 'Place', 'Age', 'Subscribed At'],
+        'reels': ['ID', 'Title', 'Thumbnail', 'Video URL', 'Category', 'Topic', 'Views', 'Featured', 'Created At'],
+        'opinions': ['ID', 'Title', 'Position', 'Description', 'Topic', 'Poll Question', 'Total Votes', 'Created At'],
+        'courses': ['ID', 'Title', 'Description', 'Price', 'Thumbnail', 'Is Published', 'Created At'],
+        'modules': ['ID', 'Course', 'Title', 'Description', 'Order', 'Created At'],
+        'lessons': ['ID', 'Module', 'Title', 'Content Type', 'Order', 'Created At'],
+        'enrollments': ['ID', 'User Email', 'Course', 'Granted At', 'Expires At'],
+        'subscription_tiers': ['ID', 'Name', 'Price', 'Period', 'Is Popular', 'Is Active', 'Sort Order']
+    }
+    return table_columns.get(table_name, [])
