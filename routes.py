@@ -147,6 +147,8 @@ def reel_detail(reel_id):
     )
     
     # Increment view count
+    if reel.view_count is None:
+        reel.view_count = 0
     reel.view_count += 1
     db.session.commit()
     
