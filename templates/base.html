@@ -155,18 +155,26 @@
                         <p class="footer-description">Unfiltered Commentator. The content here is selective, but the truth is never biased.</p>
                         
                         <div class="footer-social">
-                            <a href="#" class="footer-social-link youtube" title="YouTube">
-                                <i class="fab fa-youtube"></i>
-                            </a>
-                            <a href="#" class="footer-social-link instagram" title="Instagram">
-                                <i class="fab fa-instagram"></i>
-                            </a>
-                            <a href="#" class="footer-social-link twitter" title="Twitter">
-                                <i class="fab fa-twitter"></i>
-                            </a>
-                            <a href="#" class="footer-social-link linkedin" title="LinkedIn">
-                                <i class="fab fa-linkedin"></i>
-                            </a>
+                            {% if social_links %}
+                                {% for link in social_links %}
+                                <a href="{{ link.url }}" class="footer-social-link {{ link.platform|lower }}" title="{{ link.platform }}" {% if link.url and link.url != '#' %}target="_blank" rel="noopener noreferrer"{% endif %}>
+                                    <i class="{{ link.icon_class }}"></i>
+                                </a>
+                                {% endfor %}
+                            {% else %}
+                                <a href="#" class="footer-social-link youtube" title="YouTube">
+                                    <i class="fab fa-youtube"></i>
+                                </a>
+                                <a href="#" class="footer-social-link instagram" title="Instagram">
+                                    <i class="fab fa-instagram"></i>
+                                </a>
+                                <a href="#" class="footer-social-link twitter" title="Twitter">
+                                    <i class="fab fa-twitter"></i>
+                                </a>
+                                <a href="#" class="footer-social-link linkedin" title="LinkedIn">
+                                    <i class="fab fa-linkedin"></i>
+                                </a>
+                            {% endif %}
                         </div>
                     </div>
                 </div>

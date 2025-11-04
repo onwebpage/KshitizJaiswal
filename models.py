@@ -442,3 +442,43 @@ class AdminUser:
             db.session.commit()
             return True
         return False
+
+class SocialLink(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    platform = db.Column(db.String(50), nullable=False)
+    url = db.Column(db.String(500))
+    icon_class = db.Column(db.String(100))
+    is_active = db.Column(db.Boolean, default=True)
+    sort_order = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'platform': self.platform,
+            'url': self.url or '#',
+            'icon_class': self.icon_class or 'fab fa-link',
+            'is_active': self.is_active,
+            'sort_order': self.sort_order
+        }
+    
+    @staticmethod
+    def get_active_links():
+        """Get all active social links ordered by sort_order"""
+        return SocialLink.query.filter_by(is_active=True).order_by(SocialLink.sort_order).all()
+    
+    @staticmethod
+    def create_default_links():
+        """Create default social media links if none exist"""
+        if SocialLink.query.count() == 0:
+            links = [
+                SocialLink(platform='YouTube', url='', icon_class='fab fa-youtube', sort_order=1),
+                SocialLink(platform='Instagram', url='', icon_class='fab fa-instagram', sort_order=2),
+                SocialLink(platform='Twitter', url='', icon_class='fab fa-twitter', sort_order=3),
+                SocialLink(platform='LinkedIn', url='', icon_class='fab fa-linkedin', sort_order=4),
+                SocialLink(platform='Facebook', url='', icon_class='fab fa-facebook', sort_order=5),
+            ]
+            db.session.add_all(links)
+            db.session.commit()
+            return True
+        return False

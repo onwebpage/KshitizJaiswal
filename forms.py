@@ -119,3 +119,11 @@ class LessonForm(FlaskForm):
     duration = StringField('Duration (e.g., 15:30)', validators=[Length(max=20)])
     sort_order = IntegerField('Sort Order', validators=[NumberRange(min=0)], default=0)
     submit = SubmitField('Save Lesson')
+
+class SocialLinkForm(FlaskForm):
+    platform = StringField('Platform Name', validators=[DataRequired(), Length(max=50)])
+    url = StringField('URL', validators=[Length(max=500)])
+    icon_class = StringField('Icon Class (Font Awesome)', validators=[Length(max=100)], default='fab fa-link')
+    is_active = SelectField('Active', choices=[('1', 'Yes'), ('0', 'No')], default='1')
+    sort_order = IntegerField('Sort Order', validators=[NumberRange(min=0)], default=0)
+    submit = SubmitField('Save Link')

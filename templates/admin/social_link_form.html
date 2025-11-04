@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Admin{% endblock %}
+
+{% block content %}
+<div class="admin-section">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-3 col-md-4">
+                <div class="admin-sidebar">
+                    <div class="admin-header">
+                        <h4><i class="fas fa-cog me-2"></i>Admin Panel</h4>
+                        <a href="{{ url_for('admin_logout') }}" class="btn btn-sm btn-outline-danger">
+                            <i class="fas fa-sign-out-alt me-1"></i>Logout
+                        </a>
+                    </div>
+                    
+                    <div class="admin-nav">
+                        <a href="{{ url_for('admin_dashboard') }}" class="admin-nav-item">
+                            <i class="fas fa-home me-2"></i>Dashboard
+                        </a>
+                        <a href="{{ url_for('admin_social_links') }}" class="admin-nav-item">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Social Links
+                        </a>
+                        <a href="{{ url_for('admin_social_links') }}" class="admin-nav-item active">
+                            <i class="fas fa-share-alt me-2"></i>Social Links
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-9 col-md-8">
+                <div class="admin-content">
+                    <div class="admin-header">
+                        <h2><i class="fas fa-share-alt me-2"></i>{{ title }}</h2>
+                    </div>
+                    
+                    <div class="admin-card">
+                        <form method="POST" class="admin-form">
+                            {{ form.hidden_tag() }}
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">{{ form.platform.label }}</label>
+                                    {{ form.platform(class="form-control", placeholder="e.g., YouTube, Instagram, Twitter") }}
+                                    <small class="form-text text-muted">Display name for this social media platform</small>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">{{ form.icon_class.label }}</label>
+                                    {{ form.icon_class(class="form-control", placeholder="e.g., fab fa-youtube") }}
+                                    <small class="form-text text-muted">
+                                        Font Awesome icon class. 
+                                        <a href="https://fontawesome.com/icons" target="_blank">Browse icons</a>
+                                    </small>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">{{ form.url.label }}</label>
+                                {{ form.url(class="form-control", placeholder="https://youtube.com/@yourhandle") }}
+                                <small class="form-text text-muted">Full URL to your social media profile (leave empty if not ready)</small>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">{{ form.sort_order.label }}</label>
+                                    {{ form.sort_order(class="form-control") }}
+                                    <small class="form-text text-muted">Lower numbers appear first</small>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">{{ form.is_active.label }}</label>
+                                    {{ form.is_active(class="form-select") }}
+                                    <small class="form-text text-muted">Inactive links won't appear on the website</small>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-1"></i>{{ form.submit.label.text }}
+                                </button>
+                                <a href="{{ url_for('admin_social_links') }}" class="btn btn-secondary">
+                                    <i class="fas fa-times me-1"></i>Cancel
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <div class="alert alert-info">
+                            <h6><i class="fas fa-info-circle me-2"></i>Common Social Media Icons:</h6>
+                            <div class="row mt-3">
+                                <div class="col-md-4">
+                                    <strong>YouTube:</strong> <code>fab fa-youtube</code>
+                                </div>
+                                <div class="col-md-4">
+                                    <strong>Instagram:</strong> <code>fab fa-instagram</code>
+                                </div>
+                                <div class="col-md-4">
+                                    <strong>Twitter/X:</strong> <code>fab fa-twitter</code>
+                                </div>
+                                <div class="col-md-4 mt-2">
+                                    <strong>Facebook:</strong> <code>fab fa-facebook</code>
+                                </div>
+                                <div class="col-md-4 mt-2">
+                                    <strong>LinkedIn:</strong> <code>fab fa-linkedin</code>
+                                </div>
+                                <div class="col-md-4 mt-2">
+                                    <strong>TikTok:</strong> <code>fab fa-tiktok</code>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

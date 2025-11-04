@@ -1,7 +1,7 @@
 from flask import render_template, request, jsonify, redirect, url_for, flash, session, abort
 from app import app, db
-from models import DataManager, AdminUser, SiteContent, Reel, Opinion, Subscriber, SubscriptionTier, Course, Module, Lesson, UserCourseAccess
-from forms import NewsletterForm, PollVoteForm, AdminLoginForm, ReelForm, OpinionForm, HeroContentForm, PaymentSettingsForm, SubscriptionTierForm, CourseForm, ModuleForm, LessonForm
+from models import DataManager, AdminUser, SiteContent, Reel, Opinion, Subscriber, SubscriptionTier, Course, Module, Lesson, UserCourseAccess, SocialLink
+from forms import NewsletterForm, PollVoteForm, AdminLoginForm, ReelForm, OpinionForm, HeroContentForm, PaymentSettingsForm, SubscriptionTierForm, CourseForm, ModuleForm, LessonForm, SocialLinkForm
 from utils import save_uploaded_file, calculate_poll_percentages, get_youtube_embed_url, slugify
 from clerk_auth import clerk_auth_required, get_clerk_user, get_clerk_user_id
 import razorpay
@@ -952,6 +952,102 @@ def admin_toggle_subscription_tier(tier_id):
     status = "activated" if tier.is_active else "deactivated"
     flash(f'Subscription tier "{tier.name}" {status} successfully!', 'success')
     return redirect(url_for('admin_subscription_tiers'))
+
+@app.route('/admin/social-links')
+def admin_social_links():
+    """Manage social media links"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    SocialLink.create_default_links()
+    links = SocialLink.query.order_by(SocialLink.sort_order).all()
+    
+    return render_template('admin/social_links.html', links=links)
+
+@app.route('/admin/social-link/add', methods=['GET', 'POST'])
+def admin_add_social_link():
+    """Add new social link"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    form = SocialLinkForm()
+    
+    if form.validate_on_submit():
+        link = SocialLink(
+            platform=form.platform.data,
+            url=form.url.data,
+            icon_class=form.icon_class.data,
+            is_active=form.is_active.data == '1',
+            sort_order=form.sort_order.data
+        )
+        
+        db.session.add(link)
+        db.session.commit()
+        
+        flash(f'Social link "{link.platform}" added successfully!', 'success')
+        return redirect(url_for('admin_social_links'))
+    
+    return render_template('admin/social_link_form.html', form=form, title='Add Social Link')
+
+@app.route('/admin/social-link/<int:link_id>/edit', methods=['GET', 'POST'])
+def admin_edit_social_link(link_id):
+    """Edit social link"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    link = SocialLink.query.get_or_404(link_id)
+    form = SocialLinkForm()
+    
+    if form.validate_on_submit():
+        link.platform = form.platform.data
+        link.url = form.url.data
+        link.icon_class = form.icon_class.data
+        link.is_active = form.is_active.data == '1'
+        link.sort_order = form.sort_order.data
+        
+        db.session.commit()
+        
+        flash(f'Social link "{link.platform}" updated successfully!', 'success')
+        return redirect(url_for('admin_social_links'))
+    
+    if request.method == 'GET':
+        form.platform.data = link.platform
+        form.url.data = link.url
+        form.icon_class.data = link.icon_class
+        form.is_active.data = '1' if link.is_active else '0'
+        form.sort_order.data = link.sort_order
+    
+    return render_template('admin/social_link_form.html', form=form, title='Edit Social Link', link=link)
+
+@app.route('/admin/social-link/<int:link_id>/delete', methods=['POST'])
+def admin_delete_social_link(link_id):
+    """Delete social link"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    link = SocialLink.query.get_or_404(link_id)
+    platform = link.platform
+    
+    db.session.delete(link)
+    db.session.commit()
+    
+    flash(f'Social link "{platform}" deleted successfully!', 'success')
+    return redirect(url_for('admin_social_links'))
+
+@app.route('/admin/social-link/<int:link_id>/toggle', methods=['POST'])
+def admin_toggle_social_link(link_id):
+    """Toggle social link active status"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    link = SocialLink.query.get_or_404(link_id)
+    link.is_active = not link.is_active
+    
+    db.session.commit()
+    
+    status = "activated" if link.is_active else "deactivated"
+    flash(f'Social link "{link.platform}" {status} successfully!', 'success')
+    return redirect(url_for('admin_social_links'))
 
 @app.route('/admin/resources')
 def admin_resources():

@@ -53,7 +53,7 @@ with app.app_context():
 # Add context processor for Clerk publishable key and footer data
 @app.context_processor
 def inject_global_context():
-    from models import Opinion
+    from models import Opinion, SocialLink
     from utils import slugify
     
     # Get top 5 archives for footer
@@ -76,10 +76,18 @@ def inject_global_context():
     except:
         pass  # If DB not ready, just skip
     
+    # Get social links
+    social_links = []
+    try:
+        social_links = [link.to_dict() for link in SocialLink.get_active_links()]
+    except:
+        pass  # If DB not ready, just skip
+    
     return {
         'clerk_publishable_key': os.environ.get('CLERK_PUBLISHABLE_KEY', ''),
         'clerk_domain': 'your-domain.com',
-        'footer_archives': footer_archives
+        'footer_archives': footer_archives,
+        'social_links': social_links
     }
 
 # Import routes after app and db creation
