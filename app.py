@@ -57,7 +57,7 @@ with app.app_context():
 @app.context_processor
 def inject_global_context():
     from models import Opinion, SocialLink
-    from utils import slugify
+    from utils import slugify, is_column_visible
     
     # Get top 5 archives for footer
     footer_archives = []
@@ -90,7 +90,8 @@ def inject_global_context():
         'clerk_publishable_key': os.environ.get('CLERK_PUBLISHABLE_KEY', ''),
         'clerk_domain': 'your-domain.com',
         'footer_archives': footer_archives,
-        'social_links': social_links
+        'social_links': social_links,
+        'is_column_visible': is_column_visible
     }
 
 # Import routes after app and db creation

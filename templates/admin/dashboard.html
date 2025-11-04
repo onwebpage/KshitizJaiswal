@@ -335,21 +335,21 @@
                                 <table class="table">
                                     <thead>
                                         <tr>
-                                            <th>Name</th>
-                                            <th>Email</th>
-                                            <th>Place</th>
-                                            <th>Age</th>
-                                            <th>Subscribed At</th>
+                                            {% if is_column_visible('subscribers', 'Name') %}<th>Name</th>{% endif %}
+                                            {% if is_column_visible('subscribers', 'Email') %}<th>Email</th>{% endif %}
+                                            {% if is_column_visible('subscribers', 'Place') %}<th>Place</th>{% endif %}
+                                            {% if is_column_visible('subscribers', 'Age') %}<th>Age</th>{% endif %}
+                                            {% if is_column_visible('subscribers', 'Subscribed At') %}<th>Subscribed At</th>{% endif %}
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {% for subscriber in subscribers %}
                                         <tr>
-                                            <td>{{ subscriber.name }}</td>
-                                            <td>{{ subscriber.email }}</td>
-                                            <td>{{ subscriber.place }}</td>
-                                            <td>{{ subscriber.age }}</td>
-                                            <td>{{ subscriber.subscribed_at[:10] }}</td>
+                                            {% if is_column_visible('subscribers', 'Name') %}<td>{{ subscriber.name }}</td>{% endif %}
+                                            {% if is_column_visible('subscribers', 'Email') %}<td>{{ subscriber.email }}</td>{% endif %}
+                                            {% if is_column_visible('subscribers', 'Place') %}<td>{{ subscriber.place }}</td>{% endif %}
+                                            {% if is_column_visible('subscribers', 'Age') %}<td>{{ subscriber.age }}</td>{% endif %}
+                                            {% if is_column_visible('subscribers', 'Subscribed At') %}<td>{{ subscriber.subscribed_at[:10] }}</td>{% endif %}
                                         </tr>
                                         {% endfor %}
                                         {% if not subscribers %}
