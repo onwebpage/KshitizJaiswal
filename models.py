@@ -108,6 +108,50 @@ class SubscriptionTier(db.Model):
             'sort_order': self.sort_order
         }
 
+class ColumnVisibility(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    table_name = db.Column(db.String(100), unique=True, nullable=False)
+    hidden_columns = db.Column(db.Text)  # JSON string of hidden column names
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    @staticmethod
+    def get_hidden_columns(table_name):
+        """Get list of hidden columns for a table"""
+        visibility = ColumnVisibility.query.filter_by(table_name=table_name).first()
+        if visibility and visibility.hidden_columns:
+            return json.loads(visibility.hidden_columns)
+        return []
+    
+    @staticmethod
+    def is_column_visible(table_name, column_name):
+        """Check if a column should be visible"""
+        hidden_columns = ColumnVisibility.get_hidden_columns(table_name)
+        return column_name not in hidden_columns
+    
+    @staticmethod
+    def set_hidden_columns(table_name, columns):
+        """Set hidden columns for a table"""
+        visibility = ColumnVisibility.query.filter_by(table_name=table_name).first()
+        if visibility:
+            visibility.hidden_columns = json.dumps(columns)
+            visibility.updated_at = datetime.utcnow()
+        else:
+            visibility = ColumnVisibility(
+                table_name=table_name,
+                hidden_columns=json.dumps(columns)
+            )
+            db.session.add(visibility)
+        db.session.commit()
+    
+    @staticmethod
+    def get_all_table_settings():
+        """Get all table column visibility settings"""
+        settings = {}
+        all_visibility = ColumnVisibility.query.all()
+        for vis in all_visibility:
+            settings[vis.table_name] = json.loads(vis.hidden_columns) if vis.hidden_columns else []
+        return settings
+
 class DataManager:
     """Simple JSON-based data management"""
     
