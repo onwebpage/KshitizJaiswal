@@ -1715,6 +1715,51 @@ def admin_site_settings():
     
     return render_template('admin/site_settings.html', settings=settings)
 
+@app.route('/admin/column-visibility', methods=['GET', 'POST'])
+def admin_column_visibility():
+    """Column Visibility Settings"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    from models import ColumnVisibility
+    from utils import get_table_columns
+    
+    if request.method == 'POST':
+        table_name = request.form.get('table_name')
+        hidden_columns = request.form.getlist('hidden_columns')
+        
+        if table_name:
+            ColumnVisibility.set_hidden_columns(table_name, hidden_columns)
+            flash(f'Column visibility settings updated for {table_name}!', 'success')
+            return redirect(url_for('admin_column_visibility'))
+    
+    # Get all table settings
+    tables = {
+        'subscribers': 'Subscribers',
+        'reels': 'Reels',
+        'opinions': 'Opinions',
+        'courses': 'Courses',
+        'modules': 'Course Modules',
+        'lessons': 'Lessons',
+        'enrollments': 'Course Enrollments',
+        'subscription_tiers': 'Subscription Tiers'
+    }
+    
+    # Get current visibility settings for all tables
+    table_settings = {}
+    for table_key, table_label in tables.items():
+        all_columns = get_table_columns(table_key)
+        hidden_columns = ColumnVisibility.get_hidden_columns(table_key)
+        table_settings[table_key] = {
+            'label': table_label,
+            'all_columns': all_columns,
+            'hidden_columns': hidden_columns
+        }
+    
+    return render_template('admin/column_visibility.html', 
+                         tables=tables,
+                         table_settings=table_settings)
+
 @app.route('/admin/email-broadcast', methods=['GET', 'POST'])
 def admin_email_broadcast():
     """Email Broadcast to Subscribers"""
