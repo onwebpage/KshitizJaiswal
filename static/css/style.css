@@ -1255,8 +1255,8 @@ h1, h2, h3, h4, h5, h6 {
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(15px);
   border: 2px solid rgba(255, 255, 255, 0.2);
-  border-radius: 20px;
-  padding: 1.5rem;
+  border-radius: 15px;
+  padding: 1rem 1.5rem;
 }
 
 .custom-amount-input-group {
