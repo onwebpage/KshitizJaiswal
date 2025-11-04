@@ -155,9 +155,16 @@ def reel_detail(reel_id):
     # Get reel data
     reel_data = reel.to_dict()
     
-    # Process YouTube URL for embedding
+    # Process YouTube or Instagram URL for embedding
     if reel_data.get('video_url'):
         reel_data['embed_url'] = get_youtube_embed_url(reel_data['video_url'])
+        # Check if it's an Instagram URL
+        import re
+        instagram_pattern = r'(?:https?://)?(?:www\.)?instagram\.com/(?:p|reel)/([a-zA-Z0-9_-]+)'
+        if re.search(instagram_pattern, reel_data['video_url']):
+            reel_data['is_instagram'] = True
+        else:
+            reel_data['is_instagram'] = False
     
     # Get related reels from same topic
     related_reels = []
