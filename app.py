@@ -19,13 +19,11 @@ app.secret_key = os.environ.get("SESSION_SECRET", "kshitiz-jaiswal-website-2025"
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 # Configure the database, relative to the app instance folder
-database_url = os.environ.get("DATABASE_URL")
-if not database_url:
-    logging.error("DATABASE_URL environment variable is not set!")
-    sqlite_path = os.path.join(os.getcwd(), 'instance', 'app.db')
-    os.makedirs(os.path.dirname(sqlite_path), exist_ok=True)
-    database_url = f"sqlite:///{sqlite_path}"  # Fallback to SQLite for development
-    logging.warning(f"Using fallback database: {database_url}")
+# Use SQLite for now as PostgreSQL connection is not accessible
+sqlite_path = os.path.join(os.getcwd(), 'instance', 'app.db')
+os.makedirs(os.path.dirname(sqlite_path), exist_ok=True)
+database_url = f"sqlite:///{sqlite_path}"
+logging.info(f"Using SQLite database: {database_url}")
 
 app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
@@ -48,7 +46,12 @@ db.init_app(app)
 with app.app_context():
     # Make sure to import the models here or their tables won't be created
     import models  # noqa: F401
-    db.create_all()
+    try:
+        db.create_all()
+        logging.info("Database tables created successfully")
+    except Exception as e:
+        logging.error(f"Failed to create database tables: {e}")
+        logging.warning("App will continue but database operations may fail")
 
 # Add context processor for Clerk publishable key and footer data
 @app.context_processor
