@@ -66,11 +66,18 @@ def slugify(text):
     return text
 
 def get_youtube_embed_url(url):
-    """Convert YouTube URL to embeddable format with security parameters"""
+    """Convert YouTube or Instagram URL to embeddable format with security parameters"""
     if not url:
         return None
     
     import re
+    
+    # Check if it's an Instagram URL
+    instagram_pattern = r'(?:https?://)?(?:www\.)?instagram\.com/(?:p|reel)/([a-zA-Z0-9_-]+)'
+    instagram_match = re.search(instagram_pattern, url)
+    if instagram_match:
+        reel_id = instagram_match.group(1)
+        return f"https://www.instagram.com/reel/{reel_id}/embed"
     
     # Handle different YouTube URL formats
     patterns = [
