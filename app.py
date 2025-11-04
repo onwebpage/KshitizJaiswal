@@ -3,6 +3,7 @@ import logging
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy import func, desc
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 # Configure logging
@@ -61,11 +62,11 @@ def inject_global_context():
     try:
         topics_query = db.session.query(
             Opinion.topic_tag,
-            db.func.max(Opinion.created_at).label('latest_date')
+            func.max(Opinion.created_at).label('latest_date')
         ).filter(
             Opinion.topic_tag.isnot(None),
             Opinion.topic_tag != ''
-        ).group_by(Opinion.topic_tag).order_by(db.desc('latest_date')).limit(5).all()
+        ).group_by(Opinion.topic_tag).order_by(desc('latest_date')).limit(5).all()
         
         for topic, latest_date in topics_query:
             footer_archives.append({
