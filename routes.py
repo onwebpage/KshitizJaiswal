@@ -1312,8 +1312,10 @@ def admin_courses():
     if 'admin_logged_in' not in session:
         return redirect(url_for('admin_login'))
     
+    content = DataManager.get_content()
+    subscribers = [s.to_dict() for s in Subscriber.query.all()]
     courses = Course.query.order_by(Course.sort_order, Course.id).all()
-    return render_template('admin/courses.html', courses=courses)
+    return render_template('admin/courses.html', courses=courses, content=content, subscribers=subscribers)
 
 @app.route('/admin/course/add', methods=['GET', 'POST'])
 def admin_add_course():
@@ -1400,8 +1402,10 @@ def admin_modules():
     if 'admin_logged_in' not in session:
         return redirect(url_for('admin_login'))
     
+    content = DataManager.get_content()
+    subscribers = [s.to_dict() for s in Subscriber.query.all()]
     modules = Module.query.order_by(Module.course_id, Module.sort_order).all()
-    return render_template('admin/modules.html', modules=modules)
+    return render_template('admin/modules.html', modules=modules, content=content, subscribers=subscribers)
 
 @app.route('/admin/module/add', methods=['GET', 'POST'])
 def admin_add_module():
@@ -1475,8 +1479,10 @@ def admin_lessons():
     if 'admin_logged_in' not in session:
         return redirect(url_for('admin_login'))
     
+    content = DataManager.get_content()
+    subscribers = [s.to_dict() for s in Subscriber.query.all()]
     lessons = Lesson.query.join(Module).order_by(Module.course_id, Module.sort_order, Lesson.sort_order).all()
-    return render_template('admin/lessons.html', lessons=lessons)
+    return render_template('admin/lessons.html', lessons=lessons, content=content, subscribers=subscribers)
 
 @app.route('/admin/lesson/add', methods=['GET', 'POST'])
 def admin_add_lesson():
