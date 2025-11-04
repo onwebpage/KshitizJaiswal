@@ -19,11 +19,8 @@ app.secret_key = os.environ.get("SESSION_SECRET", "kshitiz-jaiswal-website-2025"
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 # Configure the database, relative to the app instance folder
-# Use SQLite for now as PostgreSQL connection is not accessible
-sqlite_path = os.path.join(os.getcwd(), 'instance', 'app.db')
-os.makedirs(os.path.dirname(sqlite_path), exist_ok=True)
-database_url = f"sqlite:///{sqlite_path}"
-logging.info(f"Using SQLite database: {database_url}")
+database_url = os.environ.get("DATABASE_URL")
+logging.info(f"Using PostgreSQL database")
 
 app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
