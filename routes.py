@@ -1,6 +1,6 @@
 from flask import render_template, request, jsonify, redirect, url_for, flash, session, abort
 from app import app, db
-from models import DataManager, AdminUser, SiteContent, Reel, Opinion, Subscriber, SubscriptionTier, Course, Module, Lesson, UserCourseAccess, SocialLink, ColumnVisibility
+from models import DataManager, AdminUser, SiteContent, Reel, Opinion, Subscriber, SubscriptionTier, Course, Module, Lesson, UserCourseAccess, SocialLink, ColumnVisibility, UserActivity
 from forms import NewsletterForm, PollVoteForm, AdminLoginForm, ReelForm, OpinionForm, HeroContentForm, PaymentSettingsForm, SubscriptionTierForm, CourseForm, ModuleForm, LessonForm, SocialLinkForm
 from utils import save_uploaded_file, calculate_poll_percentages, get_youtube_embed_url, slugify
 from clerk_auth import clerk_auth_required, get_clerk_user, get_clerk_user_id
@@ -17,6 +17,19 @@ razorpay_client = razorpay.Client(auth=(
 @app.route('/')
 def index():
     """Homepage"""
+    # Track page view
+    user_id = get_clerk_user_id()
+    user = get_clerk_user()
+    user_email = user.get('email_addresses', [{}])[0].get('email_address') if user else None
+    UserActivity.log_activity(
+        user_id=user_id,
+        user_email=user_email,
+        activity_type='page_view',
+        resource_type='homepage',
+        request_obj=request,
+        data_size=5000  # Estimated page size in bytes
+    )
+    
     content = DataManager.get_content()
     newsletter_form = NewsletterForm()
     poll_form = PollVoteForm()
@@ -118,6 +131,20 @@ def reels_library():
 def reel_detail(reel_id):
     """Reel detail page"""
     reel = Reel.query.get_or_404(reel_id)
+    
+    # Track reel view
+    user_id = get_clerk_user_id()
+    user = get_clerk_user()
+    user_email = user.get('email_addresses', [{}])[0].get('email_address') if user else None
+    UserActivity.log_activity(
+        user_id=user_id,
+        user_email=user_email,
+        activity_type='reel_view',
+        resource_type='reel',
+        resource_id=reel_id,
+        request_obj=request,
+        data_size=10000  # Estimated size for reel page
+    )
     
     # Increment view count
     reel.view_count += 1
@@ -224,6 +251,20 @@ def vote_poll():
     form = PollVoteForm()
     
     if form.validate_on_submit():
+        # Track poll vote
+        user_id = get_clerk_user_id()
+        user = get_clerk_user()
+        user_email = user.get('email_addresses', [{}])[0].get('email_address') if user else None
+        UserActivity.log_activity(
+            user_id=user_id,
+            user_email=user_email,
+            activity_type='poll_vote',
+            resource_type='opinion',
+            resource_id=form.opinion_id.data,
+            request_obj=request,
+            data_size=500  # Small data for vote
+        )
+        
         success = DataManager.vote_poll(form.opinion_id.data, form.option_index.data)
         if success:
             return jsonify({'status': 'success', 'message': 'Vote recorded!'})
@@ -1971,6 +2012,118 @@ def admin_media_library():
     media_files.sort(key=lambda x: x['name'])
     
     return render_template('admin/media_library.html', media_files=media_files)
+
+@app.route('/admin/user-data-usage')
+def admin_user_data_usage():
+    """View user data usage statistics"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    # Get time range from request
+    days = request.args.get('days', 30, type=int)
+    
+    # Get top users by activity
+    top_users = UserActivity.get_top_users(limit=50, days=days)
+    
+    # Get activity breakdown by type
+    activity_breakdown = UserActivity.get_activity_by_type(days=days)
+    
+    # Get overall stats
+    from datetime import timedelta
+    from sqlalchemy import func
+    cutoff_date = datetime.utcnow() - timedelta(days=days)
+    
+    total_activities = UserActivity.query.filter(UserActivity.created_at >= cutoff_date).count()
+    total_unique_users = db.session.query(func.count(func.distinct(UserActivity.user_id))).filter(
+        UserActivity.created_at >= cutoff_date,
+        UserActivity.user_id.isnot(None)
+    ).scalar() or 0
+    total_data_usage = db.session.query(func.sum(UserActivity.data_size)).filter(
+        UserActivity.created_at >= cutoff_date
+    ).scalar() or 0
+    total_time = db.session.query(func.sum(UserActivity.duration)).filter(
+        UserActivity.created_at >= cutoff_date
+    ).scalar() or 0
+    
+    # Format data size
+    def format_bytes(bytes):
+        for unit in ['B', 'KB', 'MB', 'GB']:
+            if bytes < 1024.0:
+                return f"{bytes:.2f} {unit}"
+            bytes /= 1024.0
+        return f"{bytes:.2f} TB"
+    
+    # Format time
+    def format_time(seconds):
+        if seconds < 60:
+            return f"{seconds}s"
+        elif seconds < 3600:
+            return f"{seconds // 60}m {seconds % 60}s"
+        else:
+            hours = seconds // 3600
+            minutes = (seconds % 3600) // 60
+            return f"{hours}h {minutes}m"
+    
+    stats = {
+        'total_activities': total_activities,
+        'total_unique_users': total_unique_users,
+        'total_data_usage': format_bytes(total_data_usage),
+        'total_time': format_time(total_time),
+        'days': days
+    }
+    
+    # Add formatted data to top users
+    for user in top_users:
+        user['total_data_formatted'] = format_bytes(user['total_data'])
+        user['total_time_formatted'] = format_time(user['total_time'])
+    
+    return render_template('admin/user_data_usage.html', 
+                         top_users=top_users,
+                         activity_breakdown=activity_breakdown,
+                         stats=stats)
+
+@app.route('/admin/user-activity/<user_id>')
+def admin_user_activity_detail(user_id):
+    """View detailed activity for a specific user"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    # Get time range from request
+    days = request.args.get('days', 30, type=int)
+    
+    # Get user stats
+    user_stats = UserActivity.get_user_stats(user_id=user_id, days=days)
+    
+    # Get recent activities
+    from datetime import timedelta
+    cutoff_date = datetime.utcnow() - timedelta(days=days)
+    
+    recent_activities = UserActivity.query.filter(
+        UserActivity.user_id == user_id,
+        UserActivity.created_at >= cutoff_date
+    ).order_by(UserActivity.created_at.desc()).limit(100).all()
+    
+    activities = [activity.to_dict() for activity in recent_activities]
+    
+    # Get user info from first activity
+    user_email = recent_activities[0].user_email if recent_activities else 'N/A'
+    
+    # Format data size
+    def format_bytes(bytes):
+        for unit in ['B', 'KB', 'MB', 'GB']:
+            if bytes < 1024.0:
+                return f"{bytes:.2f} {unit}"
+            bytes /= 1024.0
+        return f"{bytes:.2f} TB"
+    
+    user_stats['total_data_formatted'] = format_bytes(user_stats['total_data_usage'])
+    
+    return render_template('admin/user_activity_detail.html',
+                         user_id=user_id,
+                         user_email=user_email,
+                         user_stats=user_stats,
+                         activities=activities,
+                         days=days)
 
 # Static pages routes
 @app.route('/privacy-policy')

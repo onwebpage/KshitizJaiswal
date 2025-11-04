@@ -614,3 +614,146 @@ class SocialLink(db.Model):
             db.session.commit()
             return True
         return False
+
+class UserActivity(db.Model):
+    """Track user activity and data usage across the website"""
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.String(100))  # Clerk user ID or session ID for anonymous users
+    user_email = db.Column(db.String(120))  # User email if available
+    activity_type = db.Column(db.String(50), nullable=False)  # page_view, reel_view, poll_vote, download, etc.
+    resource_type = db.Column(db.String(50))  # reel, opinion, course, lesson, etc.
+    resource_id = db.Column(db.Integer)  # ID of the resource accessed
+    ip_address = db.Column(db.String(45))  # IPv4 or IPv6
+    user_agent = db.Column(db.Text)  # Browser/device information
+    page_url = db.Column(db.String(500))  # URL accessed
+    referrer = db.Column(db.String(500))  # Referrer URL
+    session_id = db.Column(db.String(100))  # Session identifier
+    data_size = db.Column(db.Integer, default=0)  # Estimated data size in bytes
+    duration = db.Column(db.Integer, default=0)  # Time spent in seconds
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id or 'Anonymous',
+            'user_email': self.user_email or 'N/A',
+            'activity_type': self.activity_type,
+            'resource_type': self.resource_type or 'N/A',
+            'resource_id': self.resource_id or 0,
+            'ip_address': self.ip_address or 'N/A',
+            'page_url': self.page_url or 'N/A',
+            'data_size': self.data_size or 0,
+            'duration': self.duration or 0,
+            'created_at': self.created_at.isoformat() if self.created_at else ''
+        }
+    
+    @staticmethod
+    def log_activity(user_id=None, user_email=None, activity_type='page_view', 
+                    resource_type=None, resource_id=None, request_obj=None, 
+                    data_size=0, duration=0):
+        """Log user activity"""
+        try:
+            activity = UserActivity(
+                user_id=user_id,
+                user_email=user_email,
+                activity_type=activity_type,
+                resource_type=resource_type,
+                resource_id=resource_id,
+                ip_address=request_obj.remote_addr if request_obj else None,
+                user_agent=request_obj.headers.get('User-Agent') if request_obj else None,
+                page_url=request_obj.url if request_obj else None,
+                referrer=request_obj.referrer if request_obj else None,
+                session_id=request_obj.cookies.get('session') if request_obj else None,
+                data_size=data_size,
+                duration=duration
+            )
+            db.session.add(activity)
+            db.session.commit()
+            return True
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error logging activity: {e}")
+            return False
+    
+    @staticmethod
+    def get_user_stats(user_id=None, days=30):
+        """Get user statistics for the last N days"""
+        from datetime import timedelta
+        from sqlalchemy import func
+        
+        cutoff_date = datetime.utcnow() - timedelta(days=days)
+        query = UserActivity.query.filter(UserActivity.created_at >= cutoff_date)
+        
+        if user_id:
+            query = query.filter_by(user_id=user_id)
+        
+        stats = {
+            'total_activities': query.count(),
+            'total_data_usage': db.session.query(func.sum(UserActivity.data_size)).filter(
+                UserActivity.created_at >= cutoff_date,
+                UserActivity.user_id == user_id if user_id else True
+            ).scalar() or 0,
+            'total_duration': db.session.query(func.sum(UserActivity.duration)).filter(
+                UserActivity.created_at >= cutoff_date,
+                UserActivity.user_id == user_id if user_id else True
+            ).scalar() or 0,
+            'page_views': query.filter_by(activity_type='page_view').count(),
+            'reel_views': query.filter_by(activity_type='reel_view').count(),
+            'poll_votes': query.filter_by(activity_type='poll_vote').count(),
+        }
+        
+        return stats
+    
+    @staticmethod
+    def get_top_users(limit=10, days=30):
+        """Get top users by activity"""
+        from datetime import timedelta
+        from sqlalchemy import func
+        
+        cutoff_date = datetime.utcnow() - timedelta(days=days)
+        
+        top_users = db.session.query(
+            UserActivity.user_id,
+            UserActivity.user_email,
+            func.count(UserActivity.id).label('activity_count'),
+            func.sum(UserActivity.data_size).label('total_data'),
+            func.sum(UserActivity.duration).label('total_time')
+        ).filter(
+            UserActivity.created_at >= cutoff_date,
+            UserActivity.user_id.isnot(None)
+        ).group_by(
+            UserActivity.user_id,
+            UserActivity.user_email
+        ).order_by(
+            func.count(UserActivity.id).desc()
+        ).limit(limit).all()
+        
+        return [{
+            'user_id': user.user_id,
+            'user_email': user.user_email or 'N/A',
+            'activity_count': user.activity_count,
+            'total_data': user.total_data or 0,
+            'total_time': user.total_time or 0
+        } for user in top_users]
+    
+    @staticmethod
+    def get_activity_by_type(days=30):
+        """Get activity breakdown by type"""
+        from datetime import timedelta
+        from sqlalchemy import func
+        
+        cutoff_date = datetime.utcnow() - timedelta(days=days)
+        
+        activities = db.session.query(
+            UserActivity.activity_type,
+            func.count(UserActivity.id).label('count')
+        ).filter(
+            UserActivity.created_at >= cutoff_date
+        ).group_by(
+            UserActivity.activity_type
+        ).all()
+        
+        return [{
+            'activity_type': activity.activity_type,
+            'count': activity.count
+        } for activity in activities]
