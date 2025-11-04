@@ -346,7 +346,7 @@ class DataManager:
             'reels_section_subtitle': '"Reel to sirf ek hissa tha, kahani bahut badi hai."',
             'support_section_title': 'Friends of Kshitiz — Support Now',
             'support_section_subtitle': 'Aapki marzi, aapka support. Jitna chaho, utna.',
-            'custom_support_button_text': 'Custom Supporter — Choose Your Amount',
+            'custom_support_button_text': 'Custom Supporter — Your choice, your support. Give as much as you want.',
             'custom_support_subtitle': 'Aapki marzi, aapka support. Jitna chaho, utna.',
             'support_stats_count': 127,
             'support_stats_amount': 2340
