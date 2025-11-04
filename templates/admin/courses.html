@@ -13,20 +13,21 @@
     <table class="table table-striped">
         <thead>
             <tr>
-                <th>ID</th>
-                <th>Thumbnail</th>
-                <th>Title</th>
-                <th>Price</th>
+                {% if is_column_visible('course', 'ID') %}<th>ID</th>{% endif %}
+                {% if is_column_visible('course', 'Thumbnail') %}<th>Thumbnail</th>{% endif %}
+                {% if is_column_visible('course', 'Title') %}<th>Title</th>{% endif %}
+                {% if is_column_visible('course', 'Price') %}<th>Price</th>{% endif %}
                 <th>Modules</th>
-                <th>Status</th>
-                <th>Sort Order</th>
+                {% if is_column_visible('course', 'Is Active') %}<th>Status</th>{% endif %}
+                {% if is_column_visible('course', 'Sort Order') %}<th>Sort Order</th>{% endif %}
                 <th>Actions</th>
             </tr>
         </thead>
         <tbody>
             {% for course in courses %}
             <tr>
-                <td>{{ course.id }}</td>
+                {% if is_column_visible('course', 'ID') %}<td>{{ course.id }}</td>{% endif %}
+                {% if is_column_visible('course', 'Thumbnail') %}
                 <td>
                     {% if course.thumbnail %}
                     <img src="{{ url_for('static', filename=course.thumbnail) if not course.thumbnail.startswith('http') else course.thumbnail }}" 
@@ -37,12 +38,16 @@
                     </div>
                     {% endif %}
                 </td>
+                {% endif %}
+                {% if is_column_visible('course', 'Title') %}
                 <td>
                     <strong>{{ course.title }}</strong><br>
                     <small class="text-muted">{{ course.description|truncate(50) }}</small>
                 </td>
-                <td>₹{{ course.price }}</td>
+                {% endif %}
+                {% if is_column_visible('course', 'Price') %}<td>₹{{ course.price }}</td>{% endif %}
                 <td>{{ course.modules|length }}</td>
+                {% if is_column_visible('course', 'Is Active') %}
                 <td>
                     {% if course.is_active %}
                     <span class="badge bg-success">Active</span>
@@ -50,7 +55,8 @@
                     <span class="badge bg-secondary">Inactive</span>
                     {% endif %}
                 </td>
-                <td>{{ course.sort_order }}</td>
+                {% endif %}
+                {% if is_column_visible('course', 'Sort Order') %}<td>{{ course.sort_order }}</td>{% endif %}
                 <td>
                     <a href="{{ url_for('admin_edit_course', course_id=course.id) }}" class="btn btn-sm btn-warning">
                         <i class="fas fa-edit"></i>

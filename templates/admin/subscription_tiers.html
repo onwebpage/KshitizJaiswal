@@ -60,34 +60,43 @@
                             <table class="table">
                                 <thead>
                                     <tr>
-                                        <th>Order</th>
-                                        <th>Name</th>
-                                        <th>Price</th>
-                                        <th>Period</th>
-                                        <th>Icon</th>
-                                        <th>Popular</th>
-                                        <th>Status</th>
+                                        {% if is_column_visible('subscription_tier', 'Sort Order') %}<th>Order</th>{% endif %}
+                                        {% if is_column_visible('subscription_tier', 'Name') %}<th>Name</th>{% endif %}
+                                        {% if is_column_visible('subscription_tier', 'Price') %}<th>Price</th>{% endif %}
+                                        {% if is_column_visible('subscription_tier', 'Period') %}<th>Period</th>{% endif %}
+                                        {% if is_column_visible('subscription_tier', 'Icon') %}<th>Icon</th>{% endif %}
+                                        {% if is_column_visible('subscription_tier', 'Is Popular') %}<th>Popular</th>{% endif %}
+                                        {% if is_column_visible('subscription_tier', 'Is Active') %}<th>Status</th>{% endif %}
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {% for tier in tiers %}
                                     <tr>
+                                        {% if is_column_visible('subscription_tier', 'Sort Order') %}
                                         <td>
                                             <span class="badge bg-secondary">{{ tier.sort_order }}</span>
                                         </td>
+                                        {% endif %}
+                                        {% if is_column_visible('subscription_tier', 'Name') %}
                                         <td>
                                             <strong>{{ tier.name }}</strong>
                                             <br>
                                             <small class="text-muted">{{ tier.description }}</small>
                                         </td>
+                                        {% endif %}
+                                        {% if is_column_visible('subscription_tier', 'Price') %}
                                         <td>
                                             <span class="fw-bold text-success">₹{{ tier.price }}</span>
                                         </td>
-                                        <td>{{ tier.period }}</td>
+                                        {% endif %}
+                                        {% if is_column_visible('subscription_tier', 'Period') %}<td>{{ tier.period }}</td>{% endif %}
+                                        {% if is_column_visible('subscription_tier', 'Icon') %}
                                         <td>
                                             <i class="{{ tier.icon }}" style="font-size: 1.5em; color: #dc3545;"></i>
                                         </td>
+                                        {% endif %}
+                                        {% if is_column_visible('subscription_tier', 'Is Popular') %}
                                         <td>
                                             {% if tier.is_popular %}
                                                 <span class="badge bg-warning text-dark">Popular</span>
@@ -95,6 +104,8 @@
                                                 <span class="badge bg-light text-dark">No</span>
                                             {% endif %}
                                         </td>
+                                        {% endif %}
+                                        {% if is_column_visible('subscription_tier', 'Is Active') %}
                                         <td>
                                             {% if tier.is_active %}
                                                 <span class="badge bg-success">Active</span>
@@ -102,6 +113,7 @@
                                                 <span class="badge bg-secondary">Inactive</span>
                                             {% endif %}
                                         </td>
+                                        {% endif %}
                                         <td>
                                             <div class="btn-group">
                                                 <a href="{{ url_for('admin_edit_subscription_tier', tier_id=tier.id) }}" 

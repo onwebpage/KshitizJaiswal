@@ -117,7 +117,23 @@ class ColumnVisibility(db.Model):
     @staticmethod
     def get_hidden_columns(table_name):
         """Get list of hidden columns for a table"""
-        visibility = ColumnVisibility.query.filter_by(table_name=table_name).first()
+        from utils import normalize_table_name, get_legacy_table_name_mapping
+        # Normalize table name to handle legacy plural names
+        normalized_table = normalize_table_name(table_name)
+        
+        # Try normalized name first
+        visibility = ColumnVisibility.query.filter_by(table_name=normalized_table).first()
+        
+        # If not found, try to find a legacy plural name that maps to this table
+        if not visibility:
+            legacy_mapping = get_legacy_table_name_mapping()
+            # Reverse lookup: find the plural name that maps to our normalized table
+            for legacy_name, actual_name in legacy_mapping.items():
+                if actual_name == normalized_table:
+                    visibility = ColumnVisibility.query.filter_by(table_name=legacy_name).first()
+                    if visibility:
+                        break
+        
         if visibility and visibility.hidden_columns:
             return json.loads(visibility.hidden_columns)
         return []
@@ -125,19 +141,41 @@ class ColumnVisibility(db.Model):
     @staticmethod
     def is_column_visible(table_name, column_name):
         """Check if a column should be visible"""
-        hidden_columns = ColumnVisibility.get_hidden_columns(table_name)
+        from utils import normalize_table_name
+        # Normalize table name to handle legacy plural names
+        normalized_table = normalize_table_name(table_name)
+        hidden_columns = ColumnVisibility.get_hidden_columns(normalized_table)
         return column_name not in hidden_columns
     
     @staticmethod
     def set_hidden_columns(table_name, columns):
         """Set hidden columns for a table"""
-        visibility = ColumnVisibility.query.filter_by(table_name=table_name).first()
+        from utils import normalize_table_name, get_legacy_table_name_mapping
+        # Normalize table name to handle legacy plural names
+        normalized_table = normalize_table_name(table_name)
+        
+        # Try to find existing record with normalized name first
+        visibility = ColumnVisibility.query.filter_by(table_name=normalized_table).first()
+        
+        # If not found, check for legacy name and migrate it
+        if not visibility:
+            legacy_mapping = get_legacy_table_name_mapping()
+            # Reverse lookup: find the plural name that maps to our normalized table
+            for legacy_name, actual_name in legacy_mapping.items():
+                if actual_name == normalized_table:
+                    legacy_visibility = ColumnVisibility.query.filter_by(table_name=legacy_name).first()
+                    if legacy_visibility:
+                        # Migrate: update the legacy record to use the normalized name
+                        legacy_visibility.table_name = normalized_table
+                        visibility = legacy_visibility
+                        break
+        
         if visibility:
             visibility.hidden_columns = json.dumps(columns)
             visibility.updated_at = datetime.utcnow()
         else:
             visibility = ColumnVisibility(
-                table_name=table_name,
+                table_name=normalized_table,
                 hidden_columns=json.dumps(columns)
             )
             db.session.add(visibility)

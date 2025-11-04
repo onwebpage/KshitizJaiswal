@@ -1722,7 +1722,7 @@ def admin_column_visibility():
         return redirect(url_for('admin_login'))
     
     from models import ColumnVisibility
-    from utils import get_table_columns
+    from utils import get_table_columns, get_all_database_tables, get_readable_table_name
     
     if request.method == 'POST':
         table_name = request.form.get('table_name')
@@ -1730,20 +1730,17 @@ def admin_column_visibility():
         
         if table_name:
             ColumnVisibility.set_hidden_columns(table_name, hidden_columns)
-            flash(f'Column visibility settings updated for {table_name}!', 'success')
+            readable_name = get_readable_table_name(table_name)
+            flash(f'Column visibility settings updated for {readable_name}!', 'success')
             return redirect(url_for('admin_column_visibility'))
     
-    # Get all table settings
-    tables = {
-        'subscribers': 'Subscribers',
-        'reels': 'Reels',
-        'opinions': 'Opinions',
-        'courses': 'Courses',
-        'modules': 'Course Modules',
-        'lessons': 'Lessons',
-        'enrollments': 'Course Enrollments',
-        'subscription_tiers': 'Subscription Tiers'
-    }
+    # Get all database tables dynamically
+    all_tables = get_all_database_tables()
+    
+    # Build tables dictionary with readable names
+    tables = {}
+    for table_name in all_tables:
+        tables[table_name] = get_readable_table_name(table_name)
     
     # Get current visibility settings for all tables
     table_settings = {}

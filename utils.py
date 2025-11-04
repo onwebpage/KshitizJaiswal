@@ -97,18 +97,117 @@ def get_youtube_embed_url(url):
 def is_column_visible(table_name, column_name):
     """Check if a column should be visible in the admin panel"""
     from models import ColumnVisibility
-    return ColumnVisibility.is_column_visible(table_name, column_name)
+    # Normalize table name to handle legacy plural names
+    normalized_table = normalize_table_name(table_name)
+    return ColumnVisibility.is_column_visible(normalized_table, column_name)
+
+def get_all_database_tables():
+    """Get all tables from the database"""
+    from app import db
+    from sqlalchemy import inspect
+    
+    inspector = inspect(db.engine)
+    tables = inspector.get_table_names()
+    
+    # Filter out internal/system tables
+    excluded_tables = ['alembic_version', 'sqlite_sequence']
+    tables = [t for t in tables if t not in excluded_tables]
+    
+    return sorted(tables)
 
 def get_table_columns(table_name):
-    """Get all available columns for a table"""
-    table_columns = {
-        'subscribers': ['ID', 'Name', 'Email', 'Place', 'Age', 'Subscribed At'],
-        'reels': ['ID', 'Title', 'Thumbnail', 'Video URL', 'Category', 'Topic', 'Views', 'Featured', 'Created At'],
-        'opinions': ['ID', 'Title', 'Position', 'Description', 'Topic', 'Poll Question', 'Total Votes', 'Created At'],
-        'courses': ['ID', 'Title', 'Description', 'Price', 'Thumbnail', 'Is Published', 'Created At'],
-        'modules': ['ID', 'Course', 'Title', 'Description', 'Order', 'Created At'],
-        'lessons': ['ID', 'Module', 'Title', 'Content Type', 'Order', 'Created At'],
-        'enrollments': ['ID', 'User Email', 'Course', 'Granted At', 'Expires At'],
-        'subscription_tiers': ['ID', 'Name', 'Price', 'Period', 'Is Popular', 'Is Active', 'Sort Order']
+    """Get all available columns for a table dynamically from the database"""
+    from app import db
+    from sqlalchemy import inspect
+    
+    # Manual column mappings for display names (optional, for better readability)
+    column_display_names = {
+        'id': 'ID',
+        'clerk_user_id': 'User ID',
+        'course_id': 'Course ID',
+        'module_id': 'Module ID',
+        'created_at': 'Created At',
+        'updated_at': 'Updated At',
+        'subscribed_at': 'Subscribed At',
+        'granted_at': 'Granted At',
+        'expires_at': 'Expires At',
+        'is_active': 'Is Active',
+        'is_featured': 'Is Featured',
+        'is_popular': 'Is Popular',
+        'video_url': 'Video URL',
+        'thumbnail': 'Thumbnail',
+        'view_count': 'View Count',
+        'sort_order': 'Sort Order',
+        'poll_question': 'Poll Question',
+        'poll_options': 'Poll Options',
+        'topic_tag': 'Topic Tag',
+        'category_tag': 'Category Tag',
+        'behind_thought': 'Behind Thought',
+        'extra_context': 'Extra Context',
+        'password_hash': 'Password Hash',
+        'content_key': 'Content Key',
+        'content_data': 'Content Data',
+        'hidden_columns': 'Hidden Columns',
+        'payment_id': 'Payment ID',
+        'amount_paid': 'Amount Paid',
+        'icon_class': 'Icon Class'
     }
-    return table_columns.get(table_name, [])
+    
+    try:
+        inspector = inspect(db.engine)
+        columns = inspector.get_columns(table_name)
+        
+        # Convert column names to display names
+        display_columns = []
+        for col in columns:
+            col_name = col['name']
+            # Use custom display name if available, otherwise convert snake_case to Title Case
+            display_name = column_display_names.get(col_name)
+            if not display_name:
+                display_name = col_name.replace('_', ' ').title()
+            display_columns.append(display_name)
+        
+        return display_columns
+    except Exception as e:
+        # Fallback to empty list if table doesn't exist
+        return []
+
+def get_column_actual_name(display_name):
+    """Convert display name back to actual column name"""
+    return display_name.lower().replace(' ', '_')
+
+def get_legacy_table_name_mapping():
+    """Map legacy plural table names to actual database table names for backward compatibility"""
+    return {
+        'subscribers': 'subscriber',
+        'reels': 'reel',
+        'opinions': 'opinion',
+        'courses': 'course',
+        'modules': 'module',
+        'lessons': 'lesson',
+        'enrollments': 'user_course_access',
+        'subscription_tiers': 'subscription_tier',
+        'social_links': 'social_link'
+    }
+
+def normalize_table_name(table_name):
+    """Normalize table name to actual database table name (handles legacy names)"""
+    legacy_mapping = get_legacy_table_name_mapping()
+    return legacy_mapping.get(table_name, table_name)
+
+def get_readable_table_name(table_name):
+    """Convert table name to readable format"""
+    # Handle special cases
+    special_names = {
+        'user_course_access': 'Course Enrollments',
+        'site_content': 'Site Content',
+        'column_visibility': 'Column Visibility Settings',
+        'subscription_tier': 'Subscription Tiers',
+        'social_link': 'Social Links'
+    }
+    
+    if table_name in special_names:
+        return special_names[table_name]
+    
+    # Default conversion: replace underscores with spaces and title case
+    return table_name.replace('_', ' ').title()
