@@ -90,6 +90,7 @@
     
     <!-- Main Content -->
     <div class="admin-content">
+        {% block admin_content %}
                     
                     <!-- Dashboard Tab -->
                     <div class="admin-tab active" id="dashboard">
@@ -402,7 +403,7 @@
                             </form>
                         </div>
                     </div>
-                    
+        {% endblock %}
     </div>
 </div>
 {% endblock %}
