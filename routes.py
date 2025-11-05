@@ -2456,7 +2456,8 @@ def lesson_view(course_id, lesson_id):
             return redirect(url_for('course_detail', course_id=course_id))
     
     lesson_data = lesson.to_dict()
-    lesson_data['embed_url'] = get_youtube_embed_url(lesson.video_url) if lesson.video_url else None
+    # Removed YouTube embed URL conversion - now using custom video player with direct video files
+    # lesson_data['embed_url'] = get_youtube_embed_url(lesson.video_url) if lesson.video_url else None
     
     module = Module.query.get(lesson.module_id)
     course_data = course.to_dict()
