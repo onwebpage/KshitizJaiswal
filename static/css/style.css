@@ -644,7 +644,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .reel-carousel {
   display: flex;
-  animation: scrollLeft 40s linear infinite;
+  animation: scrollRight 40s linear infinite;
   gap: 2rem;
   padding: 0.5rem 0;
 }
@@ -653,12 +653,12 @@ h1, h2, h3, h4, h5, h6 {
   animation-play-state: paused;
 }
 
-@keyframes scrollLeft {
+@keyframes scrollRight {
   0% {
-    transform: translateX(0);
+    transform: translateX(-50%);
   }
   100% {
-    transform: translateX(-50%);
+    transform: translateX(0);
   }
 }
 
