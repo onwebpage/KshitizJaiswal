@@ -21,19 +21,37 @@
                     {% if reel.video_url %}
                         {% if reel.is_instagram %}
                         <!-- Instagram Embed with Script (Minimal - No Profile/Interactions) -->
-                        <div class="instagram-embed-container">
+                        <div class="instagram-embed-container" id="instagram-container">
                             <blockquote class="instagram-media instagram-media-minimal" 
                                 data-instgrm-captioned
                                 data-instgrm-permalink="{{ reel.video_url }}"
                                 data-instgrm-version="14"
                                 style="background:#FFF; border:0; border-radius:3px; box-shadow:0 0 1px 0 rgba(0,0,0,0.5),0 1px 10px 0 rgba(0,0,0,0.15); margin: 1px; max-width:540px; min-width:326px; padding:0; width:99.375%; width:-webkit-calc(100% - 2px); width:calc(100% - 2px);">
                             </blockquote>
+                            <!-- Play/Pause Controls -->
+                            <div class="video-controls">
+                                <button class="control-btn play-btn" id="playBtn" title="Play">
+                                    <i class="fas fa-play"></i>
+                                </button>
+                                <button class="control-btn pause-btn" id="pauseBtn" style="display:none;" title="Pause">
+                                    <i class="fas fa-pause"></i>
+                                </button>
+                            </div>
                         </div>
                         {% else %}
                         <!-- YouTube Embed -->
-                        <div class="video-container">
-                            <iframe src="{{ reel.embed_url }}" frameborder="0" allowfullscreen 
+                        <div class="video-container" id="youtube-container">
+                            <iframe id="youtube-player" src="{{ reel.embed_url }}?enablejsapi=1" frameborder="0" allowfullscreen 
                                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+                            <!-- Play/Pause Controls -->
+                            <div class="video-controls">
+                                <button class="control-btn play-btn" id="ytPlayBtn" title="Play">
+                                    <i class="fas fa-play"></i>
+                                </button>
+                                <button class="control-btn pause-btn" id="ytPauseBtn" style="display:none;" title="Pause">
+                                    <i class="fas fa-pause"></i>
+                                </button>
+                            </div>
                         </div>
                         {% endif %}
                     {% elif reel.thumbnail %}
@@ -435,6 +453,55 @@
 .instagram-embed-container iframe {
     pointer-events: none;
 }
+
+/* Video Controls */
+.video-controls {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 15px;
+    z-index: 1000;
+}
+
+.control-btn {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.95);
+    color: #1a1a1a;
+    font-size: 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+
+.control-btn:hover {
+    background: #fff;
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+}
+
+.control-btn:active {
+    transform: scale(0.95);
+}
+
+.control-btn i {
+    pointer-events: none;
+}
+
+.video-container {
+    position: relative;
+}
+
+.instagram-embed-container {
+    position: relative;
+}
 </style>
 
 {% if reel.is_instagram %}
@@ -500,6 +567,124 @@ window.addEventListener('load', function() {
             iframe.style.pointerEvents = 'none';
         });
     }, 3000);
+    
+    // Play/Pause functionality for Instagram
+    const playBtn = document.getElementById('playBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    
+    if (playBtn && pauseBtn) {
+        playBtn.addEventListener('click', function() {
+            const iframe = document.querySelector('.instagram-embed-container iframe');
+            if (iframe) {
+                // Temporarily enable pointer events to allow click
+                iframe.style.pointerEvents = 'auto';
+                
+                // Simulate click on the iframe to play
+                const rect = iframe.getBoundingClientRect();
+                const x = rect.left + rect.width / 2;
+                const y = rect.top + rect.height / 2;
+                
+                const clickEvent = new MouseEvent('click', {
+                    view: window,
+                    bubbles: true,
+                    cancelable: true,
+                    clientX: x,
+                    clientY: y
+                });
+                
+                iframe.dispatchEvent(clickEvent);
+                
+                // Disable pointer events again after a short delay
+                setTimeout(function() {
+                    iframe.style.pointerEvents = 'none';
+                }, 500);
+                
+                // Toggle buttons
+                playBtn.style.display = 'none';
+                pauseBtn.style.display = 'flex';
+            }
+        });
+        
+        pauseBtn.addEventListener('click', function() {
+            const iframe = document.querySelector('.instagram-embed-container iframe');
+            if (iframe) {
+                // Temporarily enable pointer events to allow click
+                iframe.style.pointerEvents = 'auto';
+                
+                // Simulate click on the iframe to pause
+                const rect = iframe.getBoundingClientRect();
+                const x = rect.left + rect.width / 2;
+                const y = rect.top + rect.height / 2;
+                
+                const clickEvent = new MouseEvent('click', {
+                    view: window,
+                    bubbles: true,
+                    cancelable: true,
+                    clientX: x,
+                    clientY: y
+                });
+                
+                iframe.dispatchEvent(clickEvent);
+                
+                // Disable pointer events again after a short delay
+                setTimeout(function() {
+                    iframe.style.pointerEvents = 'none';
+                }, 500);
+                
+                // Toggle buttons
+                pauseBtn.style.display = 'none';
+                playBtn.style.display = 'flex';
+            }
+        });
+    }
+});
+</script>
+{% else %}
+<script>
+// YouTube IFrame API for better control
+var tag = document.createElement('script');
+tag.src = "https://www.youtube.com/iframe_api";
+var firstScriptTag = document.getElementsByTagName('script')[0];
+firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+var player;
+function onYouTubeIframeAPIReady() {
+    const iframe = document.getElementById('youtube-player');
+    if (iframe) {
+        const src = iframe.src;
+        const videoId = src.split('/embed/')[1].split('?')[0];
+        
+        player = new YT.Player('youtube-player', {
+            videoId: videoId,
+            playerVars: {
+                'enablejsapi': 1
+            }
+        });
+    }
+}
+
+// Play/Pause functionality for YouTube
+document.addEventListener('DOMContentLoaded', function() {
+    const ytPlayBtn = document.getElementById('ytPlayBtn');
+    const ytPauseBtn = document.getElementById('ytPauseBtn');
+    
+    if (ytPlayBtn && ytPauseBtn) {
+        ytPlayBtn.addEventListener('click', function() {
+            if (player && player.playVideo) {
+                player.playVideo();
+                ytPlayBtn.style.display = 'none';
+                ytPauseBtn.style.display = 'flex';
+            }
+        });
+        
+        ytPauseBtn.addEventListener('click', function() {
+            if (player && player.pauseVideo) {
+                player.pauseVideo();
+                ytPauseBtn.style.display = 'none';
+                ytPlayBtn.style.display = 'flex';
+            }
+        });
+    }
 });
 </script>
 {% endif %}
