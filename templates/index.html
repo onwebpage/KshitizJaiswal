@@ -36,7 +36,7 @@
                                 {% endif %}
                             </div>
                             {% endif %}
-                            <img src="{{ url_for('static', filename=reel.thumbnail) if reel.thumbnail and not reel.thumbnail.startswith('http') else reel.thumbnail }}" alt="{{ reel.title }}" class="img-fluid">
+                            <img src="{% if reel.thumbnail %}{{ url_for('static', filename=reel.thumbnail) if not reel.thumbnail.startswith('http') else reel.thumbnail }}{% else %}https://via.placeholder.com/400x300/8B0000/FFFFFF?text=No+Image{% endif %}" alt="{{ reel.title }}" class="img-fluid" onerror="this.src='https://via.placeholder.com/400x300/8B0000/FFFFFF?text=No+Image'">
                             <div class="reel-overlay">
                                 <i class="fas fa-play-circle"></i>
                                 <h6>{{ reel.title }}</h6>
@@ -62,7 +62,7 @@
                                 {% endif %}
                             </div>
                             {% endif %}
-                            <img src="{{ url_for('static', filename=reel.thumbnail) if reel.thumbnail and not reel.thumbnail.startswith('http') else reel.thumbnail }}" alt="{{ reel.title }}" class="img-fluid">
+                            <img src="{% if reel.thumbnail %}{{ url_for('static', filename=reel.thumbnail) if not reel.thumbnail.startswith('http') else reel.thumbnail }}{% else %}https://via.placeholder.com/400x300/8B0000/FFFFFF?text=No+Image{% endif %}" alt="{{ reel.title }}" class="img-fluid" onerror="this.src='https://via.placeholder.com/400x300/8B0000/FFFFFF?text=No+Image'">
                             <div class="reel-overlay">
                                 <i class="fas fa-play-circle"></i>
                                 <h6>{{ reel.title }}</h6>
