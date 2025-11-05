@@ -405,12 +405,12 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 600px;
-    max-height: 700px;
+    min-height: 500px;
+    max-height: 500px;
     background: #000;
     border-radius: 12px;
     padding: 0;
-    overflow: hidden;
+    overflow: hidden !important;
 }
 
 .instagram-media {
@@ -421,7 +421,8 @@
 /* Wrapper to crop Instagram embed - hides profile and interactions */
 .instagram-media-minimal {
     position: relative;
-    margin: -80px 0 -200px 0 !important;
+    margin: -120px 0 -300px 0 !important;
+    max-height: none !important;
 }
 
 /* Additional styling to ensure clean video display */
@@ -429,41 +430,41 @@
     border: none !important;
     box-shadow: none !important;
 }
+
+/* Force hide all potential interaction elements */
+.instagram-embed-container iframe {
+    pointer-events: none;
+}
 </style>
 
 {% if reel.is_instagram %}
 <script async src="//www.instagram.com/embed.js"></script>
 <script>
-// Wait for Instagram embed to load, then hide profile and interaction elements
+// Aggressively hide Instagram profile and interaction elements
 window.addEventListener('load', function() {
     setTimeout(function() {
-        // Try to find and hide elements using iframe manipulation
-        const instagramIframe = document.querySelector('.instagram-media-minimal iframe');
-        if (instagramIframe) {
-            // Add CSS to hide the header and footer within the embed
-            const style = document.createElement('style');
-            style.textContent = `
-                .instagram-media-minimal {
-                    max-height: 600px;
-                    overflow: hidden;
-                }
-            `;
-            document.head.appendChild(style);
+        // Force container constraints
+        const container = document.querySelector('.instagram-embed-container');
+        if (container) {
+            container.style.maxHeight = '500px';
+            container.style.overflow = 'hidden';
         }
         
-        // Alternative: Use MutationObserver to detect when Instagram processes the embed
+        // Use MutationObserver to detect and constrain Instagram embed
         const observer = new MutationObserver(function(mutations) {
             mutations.forEach(function(mutation) {
                 if (mutation.addedNodes.length) {
                     mutation.addedNodes.forEach(function(node) {
-                        if (node.tagName === 'IFRAME' && node.className && node.className.includes('instagram-media-rendered')) {
+                        if (node.tagName === 'IFRAME') {
                             // Instagram embed loaded as iframe
-                            // Apply overflow hidden to container to crop unwanted elements
                             const container = node.closest('.instagram-embed-container');
                             if (container) {
-                                container.style.maxHeight = '600px';
+                                container.style.maxHeight = '500px';
                                 container.style.overflow = 'hidden';
                             }
+                            
+                            // Disable pointer events to prevent interaction
+                            node.style.pointerEvents = 'none';
                         }
                     });
                 }
@@ -474,7 +475,31 @@ window.addEventListener('load', function() {
         if (targetNode) {
             observer.observe(targetNode, { childList: true, subtree: true });
         }
-    }, 2000);
+        
+        // Additional check for already loaded iframes
+        const existingIframes = document.querySelectorAll('.instagram-embed-container iframe');
+        existingIframes.forEach(function(iframe) {
+            iframe.style.pointerEvents = 'none';
+            const container = iframe.closest('.instagram-embed-container');
+            if (container) {
+                container.style.maxHeight = '500px';
+                container.style.overflow = 'hidden';
+            }
+        });
+    }, 1000);
+    
+    // Double-check after a longer delay
+    setTimeout(function() {
+        const container = document.querySelector('.instagram-embed-container');
+        if (container) {
+            container.style.maxHeight = '500px';
+            container.style.overflow = 'hidden';
+        }
+        const iframes = document.querySelectorAll('.instagram-embed-container iframe');
+        iframes.forEach(function(iframe) {
+            iframe.style.pointerEvents = 'none';
+        });
+    }, 3000);
 });
 </script>
 {% endif %}
