@@ -640,6 +640,7 @@ h1, h2, h3, h4, h5, h6 {
   margin: 2rem 0;
   padding: 1rem 0;
   position: relative;
+  width: 100%;
 }
 
 .reel-carousel {
@@ -647,6 +648,8 @@ h1, h2, h3, h4, h5, h6 {
   animation: slideLeftToRight 40s linear infinite;
   gap: 2rem;
   padding: 0.5rem 0;
+  will-change: transform;
+  width: max-content;
 }
 
 .reel-carousel:hover {
@@ -654,10 +657,10 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 @keyframes slideLeftToRight {
-  0% {
-    transform: translateX(0);
+  from {
+    transform: translateX(0%);
   }
-  100% {
+  to {
     transform: translateX(-50%);
   }
 }
