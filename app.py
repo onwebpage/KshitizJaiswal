@@ -31,15 +31,29 @@ os.makedirs('instance', exist_ok=True)
 # Configure the database
 database_url = os.environ.get("DATABASE_URL")
 
+# Check if we should use PostgreSQL or SQLite
+use_sqlite = False
+
 if database_url:
-    # Production: Use PostgreSQL from Render
-    logging.info("Using PostgreSQL database (Production)")
-    app.config["SQLALCHEMY_DATABASE_URI"] = database_url
-    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-        "pool_recycle": 300,
-        "pool_pre_ping": True,
-    }
+    # Try to use PostgreSQL, but fall back to SQLite if connection fails
+    try:
+        import psycopg2
+        # Quick connection test
+        test_conn = psycopg2.connect(database_url)
+        test_conn.close()
+        logging.info("Using PostgreSQL database (Production)")
+        app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+        app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+            "pool_recycle": 300,
+            "pool_pre_ping": True,
+        }
+    except Exception as e:
+        logging.warning(f"PostgreSQL connection failed ({e}), falling back to SQLite")
+        use_sqlite = True
 else:
+    use_sqlite = True
+
+if use_sqlite:
     # Development: Use SQLite
     logging.info("Using SQLite database (Development)")
     db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instance', 'app.db')
