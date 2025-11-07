@@ -2191,8 +2191,8 @@ def clerk_login():
     """Clerk login page"""
     from urllib.parse import urljoin
     
-    # Get next URL and ensure it's absolute
-    next_url = session.pop('next_url', None)
+    # Get next URL from query parameter or session
+    next_url = request.args.get('next') or session.pop('next_url', None)
     if not next_url:
         next_url = url_for('index', _external=True)
     elif not next_url.startswith('http'):

@@ -187,7 +187,7 @@ async function purchaseCourse(courseId, price) {
     const clerkUserId = window.Clerk?.user?.id;
     
     if (!clerkUserId) {
-        alert('Please sign in to purchase this course.');
+        // Directly redirect to login page with return URL
         window.location.href = '/login?next=' + encodeURIComponent(window.location.pathname);
         return;
     }
