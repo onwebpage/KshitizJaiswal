@@ -18,29 +18,36 @@ razorpay_client = razorpay.Client(auth=(
 def index():
     """Homepage"""
     # Track page view
-    user_id = get_clerk_user_id()
-    user = get_clerk_user()
-    user_email = user.get('email_addresses', [{}])[0].get('email_address') if user else None
-    UserActivity.log_activity(
-        user_id=user_id,
-        user_email=user_email,
-        activity_type='page_view',
-        resource_type='homepage',
-        request_obj=request,
-        data_size=5000  # Estimated page size in bytes
-    )
+    try:
+        user_id = get_clerk_user_id()
+        user = get_clerk_user()
+        user_email = user.get('email_addresses', [{}])[0].get('email_address') if user else None
+        UserActivity.log_activity(
+            user_id=user_id,
+            user_email=user_email,
+            activity_type='page_view',
+            resource_type='homepage',
+            request_obj=request,
+            data_size=5000  # Estimated page size in bytes
+        )
+    except Exception:
+        pass  # Skip activity logging if database unavailable
     
     content = DataManager.get_content()
     newsletter_form = NewsletterForm()
     poll_form = PollVoteForm()
     
     # Show only top 10 latest/featured reels on homepage
-    featured_reels = Reel.query.filter_by(is_featured=True).order_by(Reel.created_at.desc()).limit(10).all()
-    if not featured_reels:
-        # If no featured reels, show latest 10
-        featured_reels = Reel.query.order_by(Reel.created_at.desc()).limit(10).all()
-    
-    content['reels'] = [reel.to_dict() for reel in featured_reels]
+    try:
+        featured_reels = Reel.query.filter_by(is_featured=True).order_by(Reel.created_at.desc()).limit(10).all()
+        if not featured_reels:
+            # If no featured reels, show latest 10
+            featured_reels = Reel.query.order_by(Reel.created_at.desc()).limit(10).all()
+        content['reels'] = [reel.to_dict() for reel in featured_reels]
+    except Exception as e:
+        import logging
+        logging.error(f"Database error fetching featured reels: {e}")
+        # content['reels'] already set by DataManager.get_content()
     
     # Calculate poll percentages
     for opinion in content['opinions']:
@@ -48,17 +55,25 @@ def index():
         opinion['total_votes'] = sum(opinion['votes'])
     
     # Get subscription tiers from database
-    AdminUser.create_default_tiers()  # Create default tiers if none exist
-    subscription_tiers = AdminUser.get_subscription_tiers()
+    try:
+        AdminUser.create_default_tiers()  # Create default tiers if none exist
+        subscription_tiers = AdminUser.get_subscription_tiers()
+    except Exception as e:
+        import logging
+        logging.error(f"Database error fetching subscription tiers: {e}")
+        subscription_tiers = []
     
     # Get Razorpay settings from database
-    # already imported - SiteContent
     import json
-    payment_content = SiteContent.query.filter_by(content_key='payment_settings').first()
     razorpay_key = 'rzp_test_dummy_key'
-    if payment_content:
-        payment_settings = json.loads(payment_content.content_data)
-        razorpay_key = payment_settings.get('razorpay_key_id', 'rzp_test_dummy_key')
+    try:
+        payment_content = SiteContent.query.filter_by(content_key='payment_settings').first()
+        if payment_content:
+            payment_settings = json.loads(payment_content.content_data)
+            razorpay_key = payment_settings.get('razorpay_key_id', 'rzp_test_dummy_key')
+    except Exception as e:
+        import logging
+        logging.error(f"Database error fetching payment settings: {e}")
     
     # Get page content
     page_content = DataManager.get_page_content()

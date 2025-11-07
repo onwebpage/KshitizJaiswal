@@ -84,14 +84,16 @@ def inject_global_context():
                 'slug': slugify(topic),
                 'year': latest_date.year if latest_date else ''
             })
-    except:
+    except Exception as e:
+        logging.debug(f"Database not available for footer archives: {e}")
         pass  # If DB not ready, just skip
     
     # Get social links
     social_links = []
     try:
         social_links = [link.to_dict() for link in SocialLink.get_active_links()]
-    except:
+    except Exception as e:
+        logging.debug(f"Database not available for social links: {e}")
         pass  # If DB not ready, just skip
     
     return {
