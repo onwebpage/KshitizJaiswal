@@ -31,11 +31,21 @@ os.makedirs('instance', exist_ok=True)
 # Configure the database
 database_url = os.environ.get("DATABASE_URL")
 
-# For now, use SQLite for reliable local development
-logging.info(f"Using SQLite database")
-db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instance', 'app.db')
-app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{db_path}"
-app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {}
+if database_url:
+    # Production: Use PostgreSQL from Render
+    logging.info("Using PostgreSQL database (Production)")
+    app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+        "pool_recycle": 300,
+        "pool_pre_ping": True,
+    }
+else:
+    # Development: Use SQLite
+    logging.info("Using SQLite database (Development)")
+    db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instance', 'app.db')
+    app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{db_path}"
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {}
+
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 # Initialize the app with the extension
