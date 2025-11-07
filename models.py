@@ -213,75 +213,91 @@ class DataManager:
     
     @staticmethod
     def get_content():
-        """Get website content from database"""
-        # Get reels from database
-        reels = [reel.to_dict() for reel in Reel.query.all()]
-        
-        # Get opinions from database
-        opinions = [opinion.to_dict() for opinion in Opinion.query.all()]
-        
-        # Get hero content
-        hero_content = SiteContent.query.filter_by(content_key='hero').first()
-        if hero_content:
-            hero = json.loads(hero_content.content_data)
-        else:
-            hero = {
-                "name": "Kshitiz Jaiswal",
-                "tagline": "Unfiltered Commentator. The content here is selective, but the truth is never biased.",
-                "banner_url": "https://pixabay.com/get/g533a6aa47eba4823795ce2e25fdfdbeab9c4946d039afcc8be299199aea4607bcead5e63e650f3598d32b8af6f69fa29cd392bcfe2db7bc9db577a352240b008_1280.jpg"
-            }
-            # Save default hero content
-            hero_record = SiteContent(content_key='hero', content_data=json.dumps(hero))
-            db.session.add(hero_record)
-            db.session.commit()
-        
-        # Get other content sections
-        shows_content = SiteContent.query.filter_by(content_key='upcoming_shows').first()
-        if shows_content:
-            upcoming_shows = json.loads(shows_content.content_data)
-        else:
-            upcoming_shows = [
-                {
-                    "title": "Weekly Truth Bombs",
-                    "description": "Unfiltered takes on current events",
-                    "image": "https://pixabay.com/get/g51d3a9b60f5b304d6d9a2109588df26fa955fdad29b549ed6f2d44cdb714ef5b54d4b04df2f46da1bd05dede83422e909ae5403a8c87771e7130a78714c2e5df_1280.jpg",
-                    "coming_soon": True
-                }
-            ]
-            shows_record = SiteContent(content_key='upcoming_shows', content_data=json.dumps(upcoming_shows))
-            db.session.add(shows_record)
-            db.session.commit()
-        
-        resources_content = SiteContent.query.filter_by(content_key='resources').first()
-        if resources_content:
-            resources = json.loads(resources_content.content_data)
-        else:
-            resources = [
-                {
-                    "title": "Critical Thinking Course",
-                    "description": "Learn to think independently",
-                    "image": "https://pixabay.com/get/g1607648249e3d2cc886480cc481c2224cb52f7fd6b06e51d63e7c2ee7d304d71973191ec7388dc286501651899d7fd130bc378c50e5ab80727d452f099c3f672_1280.jpg",
-                    "link": "#",
-                    "price": "₹999"
-                }
-            ]
-            resources_record = SiteContent(content_key='resources', content_data=json.dumps(resources))
-            db.session.add(resources_record)
-            db.session.commit()
-        
-        # If no content exists, create default reels and opinions
-        if not reels and not opinions:
-            DataManager._create_default_content()
+        """Get website content from database with error handling"""
+        try:
+            # Get reels from database
             reels = [reel.to_dict() for reel in Reel.query.all()]
+            
+            # Get opinions from database
             opinions = [opinion.to_dict() for opinion in Opinion.query.all()]
-        
-        return {
-            "hero": hero,
-            "reels": reels,
-            "opinions": opinions,
-            "upcoming_shows": upcoming_shows,
-            "resources": resources
-        }
+            
+            # Get hero content
+            hero_content = SiteContent.query.filter_by(content_key='hero').first()
+            if hero_content:
+                hero = json.loads(hero_content.content_data)
+            else:
+                hero = {
+                    "name": "Kshitiz Jaiswal",
+                    "tagline": "Unfiltered Commentator. The content here is selective, but the truth is never biased.",
+                    "banner_url": "https://pixabay.com/get/g533a6aa47eba4823795ce2e25fdfdbeab9c4946d039afcc8be299199aea4607bcead5e63e650f3598d32b8af6f69fa29cd392bcfe2db7bc9db577a352240b008_1280.jpg"
+                }
+                # Save default hero content
+                hero_record = SiteContent(content_key='hero', content_data=json.dumps(hero))
+                db.session.add(hero_record)
+                db.session.commit()
+            
+            # Get other content sections
+            shows_content = SiteContent.query.filter_by(content_key='upcoming_shows').first()
+            if shows_content:
+                upcoming_shows = json.loads(shows_content.content_data)
+            else:
+                upcoming_shows = [
+                    {
+                        "title": "Weekly Truth Bombs",
+                        "description": "Unfiltered takes on current events",
+                        "image": "https://pixabay.com/get/g51d3a9b60f5b304d6d9a2109588df26fa955fdad29b549ed6f2d44cdb714ef5b54d4b04df2f46da1bd05dede83422e909ae5403a8c87771e7130a78714c2e5df_1280.jpg",
+                        "coming_soon": True
+                    }
+                ]
+                shows_record = SiteContent(content_key='upcoming_shows', content_data=json.dumps(upcoming_shows))
+                db.session.add(shows_record)
+                db.session.commit()
+            
+            resources_content = SiteContent.query.filter_by(content_key='resources').first()
+            if resources_content:
+                resources = json.loads(resources_content.content_data)
+            else:
+                resources = [
+                    {
+                        "title": "Critical Thinking Course",
+                        "description": "Learn to think independently",
+                        "image": "https://pixabay.com/get/g1607648249e3d2cc886480cc481c2224cb52f7fd6b06e51d63e7c2ee7d304d71973191ec7388dc286501651899d7fd130bc378c50e5ab80727d452f099c3f672_1280.jpg",
+                        "link": "#",
+                        "price": "₹999"
+                    }
+                ]
+                resources_record = SiteContent(content_key='resources', content_data=json.dumps(resources))
+                db.session.add(resources_record)
+                db.session.commit()
+            
+            # If no content exists, create default reels and opinions
+            if not reels and not opinions:
+                DataManager._create_default_content()
+                reels = [reel.to_dict() for reel in Reel.query.all()]
+                opinions = [opinion.to_dict() for opinion in Opinion.query.all()]
+            
+            return {
+                "hero": hero,
+                "reels": reels,
+                "opinions": opinions,
+                "upcoming_shows": upcoming_shows,
+                "resources": resources
+            }
+        except Exception as e:
+            # If database is unavailable, return default content
+            import logging
+            logging.error(f"Database error in get_content: {e}")
+            return {
+                "hero": {
+                    "name": "Kshitiz Jaiswal",
+                    "tagline": "Unfiltered Commentator. The content here is selective, but the truth is never biased.",
+                    "banner_url": "https://pixabay.com/get/g533a6aa47eba4823795ce2e25fdfdbeab9c4946d039afcc8be299199aea4607bcead5e63e650f3598d32b8af6f69fa29cd392bcfe2db7bc9db577a352240b008_1280.jpg"
+                },
+                "reels": [],
+                "opinions": [],
+                "upcoming_shows": [],
+                "resources": []
+            }
     
     @staticmethod
     def save_content(content):

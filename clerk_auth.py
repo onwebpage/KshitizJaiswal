@@ -7,12 +7,18 @@ from clerk_backend_api.security import authenticate_request
 from clerk_backend_api.security.types import AuthenticateRequestOptions
 
 # Initialize Clerk SDK
-clerk_sdk = Clerk(bearer_auth=os.environ.get('CLERK_SECRET_KEY'))
+clerk_secret_key = os.environ.get('CLERK_SECRET_KEY')
+clerk_sdk = Clerk(bearer_auth=clerk_secret_key) if clerk_secret_key else None
 
 def clerk_auth_required(f):
     """Decorator to protect routes with Clerk authentication"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        # If Clerk is not configured, redirect to login
+        if not clerk_sdk:
+            session['next_url'] = request.url
+            return redirect(url_for('clerk_login'))
+        
         # Get session token from cookie or Authorization header
         auth_token = None
         
@@ -64,7 +70,7 @@ def clerk_auth_required(f):
 
 def get_clerk_user():
     """Get the current authenticated Clerk user"""
-    if not hasattr(g, 'clerk_user_id'):
+    if not clerk_sdk or not hasattr(g, 'clerk_user_id'):
         return None
     
     try:
