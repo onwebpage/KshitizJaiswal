@@ -19,20 +19,6 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "kshitiz-jaiswal-website-2025")
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
-# Configure the database, relative to the app instance folder
-database_url = os.environ.get("DATABASE_URL")
-logging.info(f"Using PostgreSQL database")
-
-app.config["SQLALCHEMY_DATABASE_URI"] = database_url
-app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-    "pool_recycle": 300,
-    "pool_pre_ping": True,
-    "connect_args": {
-        "connect_timeout": 10
-    }
-}
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-
 # Configure upload folder
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
@@ -40,6 +26,17 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 # Ensure upload directory exists
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs('data', exist_ok=True)
+os.makedirs('instance', exist_ok=True)
+
+# Configure the database
+database_url = os.environ.get("DATABASE_URL")
+
+# For now, use SQLite for reliable local development
+logging.info(f"Using SQLite database")
+db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instance', 'app.db')
+app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{db_path}"
+app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {}
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 # Initialize the app with the extension
 db.init_app(app)
