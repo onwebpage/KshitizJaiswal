@@ -14,6 +14,25 @@ razorpay_client = razorpay.Client(auth=(
     os.environ.get('RAZORPAY_KEY_SECRET', 'dummy_secret')
 ))
 
+@app.context_processor
+def inject_section_visibility():
+    """Inject section visibility flags into all templates"""
+    try:
+        section_vis = {
+            'hero': SiteConfig.get('section_hero_visible', 'true').lower() != 'false',
+            'reels': SiteConfig.get('section_reels_visible', 'true').lower() != 'false',
+            'support': SiteConfig.get('section_support_visible', 'true').lower() != 'false',
+            'statistics': SiteConfig.get('section_statistics_visible', 'true').lower() != 'false',
+            'testimonials': SiteConfig.get('section_testimonials_visible', 'true').lower() != 'false',
+            'newsletter': SiteConfig.get('section_newsletter_visible', 'true').lower() != 'false',
+            'courses': SiteConfig.get('section_courses_visible', 'true').lower() != 'false',
+            'footer': SiteConfig.get('section_footer_visible', 'true').lower() != 'false',
+        }
+    except Exception:
+        section_vis = {k: True for k in ['hero', 'reels', 'support', 'statistics', 'testimonials', 'newsletter', 'courses', 'footer']}
+    return {'section_vis': section_vis}
+
+
 @app.route('/')
 def index():
     """Homepage"""
@@ -50,9 +69,6 @@ def index():
         logging.error(f"Database error fetching featured reels: {e}")
         # content['reels'] already set by DataManager.get_content()
 
-    # Reels section visibility flag
-    reels_section_visible = SiteConfig.get('reels_section_visible', 'true').lower() != 'false'
-    
     # Calculate poll percentages
     for opinion in content['opinions']:
         opinion['percentages'] = calculate_poll_percentages(opinion['votes'])
@@ -82,14 +98,26 @@ def index():
     # Get page content
     page_content = DataManager.get_page_content()
     
-    return render_template('index.html', 
-                         content=content, 
+    # Get featured courses for homepage teaser (up to 3)
+    try:
+        featured_courses = Course.query.filter_by(is_active=True).order_by(Course.sort_order, Course.id).limit(3).all()
+        homepage_courses = []
+        for c in featured_courses:
+            cd = c.to_dict()
+            cd['module_count'] = len(c.modules)
+            cd['lesson_count'] = sum([len(m.lessons) for m in c.modules])
+            homepage_courses.append(cd)
+    except Exception:
+        homepage_courses = []
+
+    return render_template('index.html',
+                         content=content,
                          newsletter_form=newsletter_form,
                          poll_form=poll_form,
                          subscription_tiers=subscription_tiers,
                          razorpay_key=razorpay_key,
                          page_content=page_content,
-                         reels_section_visible=reels_section_visible)
+                         homepage_courses=homepage_courses)
 
 @app.route('/reels')
 def reels_library():
@@ -709,13 +737,58 @@ def admin_reorder_reels():
 
 @app.route('/admin/reels/toggle-section', methods=['POST'])
 def admin_toggle_reels_section():
-    """Toggle whole reels section on/off on homepage"""
+    """Toggle whole reels section on/off on homepage (legacy — now uses section_reels_visible)"""
     if 'admin_logged_in' not in session:
         return jsonify({'error': 'Not authenticated'}), 401
-    current = SiteConfig.get('reels_section_visible', 'true')
+    current = SiteConfig.get('section_reels_visible', 'true')
     new_val = 'false' if current.lower() == 'true' else 'true'
-    SiteConfig.set('reels_section_visible', new_val)
+    SiteConfig.set('section_reels_visible', new_val)
     return jsonify({'reels_section_visible': new_val == 'true'})
+
+
+@app.route('/admin/section-visibility', methods=['GET', 'POST'])
+def admin_section_visibility():
+    """Admin page: Show/Hide toggles for all major website sections"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+
+    SECTIONS = [
+        {'key': 'hero',         'label': 'Hero Banner',        'icon': 'fas fa-image',          'desc': 'The top banner with name, tagline and CTA buttons.'},
+        {'key': 'reels',        'label': 'Reels Section',       'icon': 'fas fa-film',           'desc': 'Scrolling reel cards on the homepage.'},
+        {'key': 'support',      'label': 'Support Section',     'icon': 'fas fa-heart',          'desc': 'Subscription tiers and donation area.'},
+        {'key': 'statistics',   'label': 'Statistics Bar',      'icon': 'fas fa-chart-bar',      'desc': 'Key numbers — views, followers, supporters.'},
+        {'key': 'testimonials', 'label': 'Testimonials',        'icon': 'fas fa-quote-left',     'desc': 'What viewers say about the commentary.'},
+        {'key': 'newsletter',   'label': 'Newsletter Section',  'icon': 'fas fa-envelope',       'desc': 'Email signup CTA on the homepage.'},
+        {'key': 'courses',      'label': 'Courses Teaser',      'icon': 'fas fa-graduation-cap', 'desc': 'Featured courses preview on the homepage.'},
+        {'key': 'footer',       'label': 'Footer',              'icon': 'fas fa-layer-group',    'desc': 'Site-wide footer with links and social icons.'},
+    ]
+
+    if request.method == 'POST':
+        for s in SECTIONS:
+            val = 'true' if request.form.get(f"section_{s['key']}_visible") else 'false'
+            SiteConfig.set(f"section_{s['key']}_visible", val)
+        flash('Section visibility settings saved!', 'success')
+        return redirect(url_for('admin_section_visibility'))
+
+    visibility = {}
+    for s in SECTIONS:
+        visibility[s['key']] = SiteConfig.get(f"section_{s['key']}_visible", 'true').lower() != 'false'
+
+    return render_template('admin/section_visibility.html', sections=SECTIONS, visibility=visibility)
+
+
+@app.route('/admin/section-visibility/toggle/<section>', methods=['POST'])
+def admin_toggle_section(section):
+    """AJAX toggle for a single section — returns new state as JSON"""
+    if 'admin_logged_in' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    allowed = ['hero', 'reels', 'support', 'statistics', 'testimonials', 'newsletter', 'courses', 'footer']
+    if section not in allowed:
+        return jsonify({'error': 'Invalid section'}), 400
+    current = SiteConfig.get(f'section_{section}_visible', 'true')
+    new_val = 'false' if current.lower() == 'true' else 'true'
+    SiteConfig.set(f'section_{section}_visible', new_val)
+    return jsonify({'visible': new_val == 'true', 'section': section})
 
 @app.route('/admin/opinion/<int:opinion_id>/edit', methods=['GET', 'POST'])
 def admin_edit_opinion(opinion_id):

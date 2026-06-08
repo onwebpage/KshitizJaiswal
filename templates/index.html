@@ -3,6 +3,7 @@
 {% block content %}
 {% set hero_img = content.hero.desktop_url or content.hero.banner_url or content.hero.mobile_url %}
 <!-- Hero Section -->
+{% if section_vis.hero %}
 <section class="hero-section responsive-hero">
     {% if hero_img %}
     <div class="hero-bg hero-bg-desktop d-none d-md-block" style="background-image: url('{% if content.hero.desktop_url %}{% if content.hero.desktop_url.startswith('http') %}{{ content.hero.desktop_url }}{% else %}{{ url_for('static', filename=content.hero.desktop_url) }}{% endif %}{% elif content.hero.banner_url %}{% if content.hero.banner_url.startswith('http') %}{{ content.hero.banner_url }}{% else %}{{ url_for('static', filename=content.hero.banner_url) }}{% endif %}{% endif %}');"></div>
@@ -25,9 +26,10 @@
         </div>
     </div>
 </section>
+{% endif %}
 
 <!-- Beyond The Reel Section -->
-{% if reels_section_visible %}
+{% if section_vis.reels %}
 <section id="beyond-reel" class="section-padding reels-section">
     <div class="container">
         <!-- Section Header -->
@@ -157,6 +159,7 @@
 {% endif %}
 
 <!-- Support Section -->
+{% if section_vis.support %}
 <section id="support" class="section-padding support-section-bg">
     <div class="container">
         <div class="text-center mb-4">
@@ -239,6 +242,178 @@
         </div>
     </div>
 </section>
+{% endif %}
+
+<!-- Statistics Section -->
+{% if section_vis.statistics %}
+<section class="section-padding statistics-section">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="section-title">By the Numbers</h2>
+            <p class="section-subtitle">The reach keeps growing — thanks to you.</p>
+        </div>
+        <div class="row g-4 text-center justify-content-center">
+            <div class="col-6 col-md-3">
+                <div class="stat-block">
+                    <div class="stat-block-icon"><i class="fas fa-eye"></i></div>
+                    <div class="stat-block-number">{{ page_content.stats_views or '1.2M+' }}</div>
+                    <div class="stat-block-label">Total Views</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-block">
+                    <div class="stat-block-icon"><i class="fas fa-users"></i></div>
+                    <div class="stat-block-number">{{ page_content.stats_followers or '50K+' }}</div>
+                    <div class="stat-block-label">Followers</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-block">
+                    <div class="stat-block-icon"><i class="fas fa-film"></i></div>
+                    <div class="stat-block-number">{{ content.reels|length }}+</div>
+                    <div class="stat-block-label">Reels Published</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-block">
+                    <div class="stat-block-icon"><i class="fas fa-heart"></i></div>
+                    <div class="stat-block-number">{{ page_content.support_stats_count or '127' }}+</div>
+                    <div class="stat-block-label">Supporters</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Testimonials Section -->
+{% if section_vis.testimonials %}
+<section class="section-padding testimonials-section">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="section-title">What People Say</h2>
+            <p class="section-subtitle">Real voices from the community.</p>
+        </div>
+        <div class="row g-4 justify-content-center">
+            <div class="col-md-4">
+                <div class="testimonial-card">
+                    <div class="testimonial-quote"><i class="fas fa-quote-left"></i></div>
+                    <p class="testimonial-text">{{ page_content.testimonial1_text or 'Kshitiz speaks what others are afraid to say. Finally, someone who cuts through the noise.' }}</p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar"><i class="fas fa-user-circle"></i></div>
+                        <div>
+                            <div class="testimonial-name">{{ page_content.testimonial1_name or 'Rahul S.' }}</div>
+                            <div class="testimonial-role">{{ page_content.testimonial1_role or 'Viewer, Mumbai' }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="testimonial-card">
+                    <div class="testimonial-quote"><i class="fas fa-quote-left"></i></div>
+                    <p class="testimonial-text">{{ page_content.testimonial2_text or 'The analysis is always backed by facts. I trust this commentary more than mainstream media.' }}</p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar"><i class="fas fa-user-circle"></i></div>
+                        <div>
+                            <div class="testimonial-name">{{ page_content.testimonial2_name or 'Priya M.' }}</div>
+                            <div class="testimonial-role">{{ page_content.testimonial2_role or 'Subscriber, Delhi' }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="testimonial-card">
+                    <div class="testimonial-quote"><i class="fas fa-quote-left"></i></div>
+                    <p class="testimonial-text">{{ page_content.testimonial3_text or 'Every reel leaves me thinking. This is the kind of content India needs right now.' }}</p>
+                    <div class="testimonial-author">
+                        <div class="testimonial-avatar"><i class="fas fa-user-circle"></i></div>
+                        <div>
+                            <div class="testimonial-name">{{ page_content.testimonial3_name or 'Ankit V.' }}</div>
+                            <div class="testimonial-role">{{ page_content.testimonial3_role or 'Supporter, Pune' }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Courses Teaser Section -->
+{% if section_vis.courses and homepage_courses %}
+<section class="section-padding courses-teaser-section">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="section-title">Learn From Kshitiz</h2>
+            <p class="section-subtitle">Structured courses on commentary, media literacy, and critical thinking.</p>
+            <a href="{{ url_for('courses') }}" class="btn btn-outline-primary btn-sm mt-2 rounded-pill px-4">
+                View All Courses <i class="fas fa-arrow-right ms-1"></i>
+            </a>
+        </div>
+        <div class="row g-4 justify-content-center">
+            {% for course in homepage_courses %}
+            <div class="col-lg-4 col-md-6">
+                <div class="course-teaser-card">
+                    {% if course.thumbnail %}
+                    <div class="course-teaser-thumb">
+                        <img src="{{ url_for('static', filename=course.thumbnail) if not course.thumbnail.startswith('http') else course.thumbnail }}"
+                             alt="{{ course.title }}" class="course-teaser-img"
+                             onerror="this.parentElement.style.display='none'">
+                    </div>
+                    {% endif %}
+                    <div class="course-teaser-body">
+                        <h5 class="course-teaser-title">{{ course.title }}</h5>
+                        <p class="course-teaser-desc">{{ (course.description or '')[:100] }}{% if (course.description or '')|length > 100 %}…{% endif %}</p>
+                        <div class="course-teaser-meta">
+                            <span><i class="fas fa-folder me-1"></i>{{ course.module_count }} modules</span>
+                            <span><i class="fas fa-play-circle me-1"></i>{{ course.lesson_count }} lessons</span>
+                        </div>
+                        <div class="course-teaser-footer">
+                            <span class="course-teaser-price">
+                                {% if course.price and course.price > 0 %}₹{{ course.price }}{% else %}Free{% endif %}
+                            </span>
+                            <a href="{{ url_for('course_detail', course_id=course.id) }}" class="btn btn-sm btn-primary rounded-pill px-3">
+                                View Course
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Newsletter CTA Section -->
+{% if section_vis.newsletter %}
+<section id="newsletter" class="section-padding newsletter-cta-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-7 text-center">
+                <div class="newsletter-cta-icon mb-3"><i class="fas fa-envelope-open-text"></i></div>
+                <h2 class="section-title">Join the Inner Circle</h2>
+                <p class="section-subtitle mb-4">Get unfiltered commentary, behind-the-reel insights, and exclusive updates straight to your inbox.</p>
+                <form method="POST" action="{{ url_for('newsletter_subscribe') }}" class="newsletter-cta-form" id="newsletterCTAForm">
+                    {{ newsletter_form.hidden_tag() }}
+                    <div class="row g-3 mb-3">
+                        <div class="col-sm-6">
+                            <input type="text" name="name" class="form-control form-control-lg" placeholder="Your name" required>
+                        </div>
+                        <div class="col-sm-6">
+                            <input type="email" name="email" class="form-control form-control-lg" placeholder="your@email.com" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5">
+                        <i class="fas fa-paper-plane me-2"></i>Subscribe Free
+                    </button>
+                </form>
+                <p class="text-muted small mt-3 mb-0"><i class="fas fa-shield-alt me-1"></i>No spam. Unsubscribe anytime.</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endif %}
 
 <!-- Reel Card CSS -->
 <style>

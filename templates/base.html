@@ -145,6 +145,7 @@
     </main>
 
     <!-- Footer -->
+    {% if section_vis.footer %}
     <footer class="footer-section">
         <div class="container">
             <div class="row g-4">
@@ -263,6 +264,7 @@
             </div>
         </div>
     </footer>
+    {% endif %}
 
     <!-- Disclaimer Modal -->
     <div class="modal fade" id="disclaimerModal" tabindex="-1" aria-labelledby="disclaimerModalLabel" aria-hidden="true">
