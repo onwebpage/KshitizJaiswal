@@ -29,7 +29,20 @@ os.makedirs('data', exist_ok=True)
 os.makedirs('instance', exist_ok=True)
 
 # Configure the database
-database_url = os.environ.get("DATABASE_URL")
+# Prefer Replit's native PostgreSQL (PGHOST=helium) over any external DATABASE_URL
+def _build_replit_pg_url():
+    host = os.environ.get("PGHOST")
+    port = os.environ.get("PGPORT", "5432")
+    user = os.environ.get("PGUSER")
+    password = os.environ.get("PGPASSWORD")
+    dbname = os.environ.get("PGDATABASE")
+    if host and user and dbname:
+        if password:
+            return f"postgresql://{user}:{password}@{host}:{port}/{dbname}"
+        return f"postgresql://{user}@{host}:{port}/{dbname}"
+    return None
+
+database_url = _build_replit_pg_url() or os.environ.get("DATABASE_URL")
 
 # Check if we should use PostgreSQL or SQLite
 use_sqlite = False

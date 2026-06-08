@@ -1,8 +1,8 @@
-modules = ["python-3.11", "postgresql-16", "python3"]
+modules = ["python-3.11", "python3", "postgresql-16"]
 
 [nix]
 channel = "stable-25_05"
-packages = ["freetype", "lcms2", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "openjpeg", "openssl", "postgresql", "tcl", "tk", "zlib"]
+packages = ["cacert", "freetype", "lcms2", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "openjpeg", "openssl", "postgresql", "tcl", "tk", "zlib"]
 
 [deployment]
 deploymentTarget = "autoscale"
@@ -33,65 +33,6 @@ waitForPort = 5000
 localPort = 5000
 externalPort = 80
 
-[[ports]]
-localPort = 33265
-externalPort = 3001
-
-[[ports]]
-localPort = 34179
-externalPort = 8099
-
-[[ports]]
-localPort = 34717
-externalPort = 8080
-
-[[ports]]
-localPort = 35581
-externalPort = 8008
-
-[[ports]]
-localPort = 36171
-externalPort = 5000
-
-[[ports]]
-localPort = 36779
-externalPort = 8000
-
-[[ports]]
-localPort = 37859
-externalPort = 9000
-
-[[ports]]
-localPort = 39521
-externalPort = 5173
-
-[[ports]]
-localPort = 41471
-externalPort = 4200
-
-[[ports]]
-localPort = 41847
-externalPort = 6800
-
-[[ports]]
-localPort = 42003
-externalPort = 3002
-
-[[ports]]
-localPort = 42405
-externalPort = 3000
-
-[[ports]]
-localPort = 42619
-externalPort = 6000
-
-[[ports]]
-localPort = 44183
-externalPort = 8081
-
-[[ports]]
-localPort = 45083
-externalPort = 3003
-
 [agent]
 integrations = ["python_database:1.0.0"]
+stack = "FLASK_VANILLA_JS"
