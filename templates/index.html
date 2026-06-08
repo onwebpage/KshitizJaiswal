@@ -3,79 +3,139 @@
 {% block content %}
 <!-- Hero Section -->
 <section class="hero-section responsive-hero">
-    <!-- Desktop Background -->
     <div class="hero-bg hero-bg-desktop d-none d-md-block" style="background-image: url('{% if content.hero.desktop_url %}{% if content.hero.desktop_url.startswith('http') %}{{ content.hero.desktop_url }}{% else %}{{ url_for('static', filename=content.hero.desktop_url) }}{% endif %}{% elif content.hero.banner_url %}{% if content.hero.banner_url.startswith('http') %}{{ content.hero.banner_url }}{% else %}{{ url_for('static', filename=content.hero.banner_url) }}{% endif %}{% endif %}');"></div>
-    
-    <!-- Mobile Background -->
     <div class="hero-bg hero-bg-mobile d-md-none" style="background-image: url('{% if content.hero.mobile_url %}{% if content.hero.mobile_url.startswith('http') %}{{ content.hero.mobile_url }}{% else %}{{ url_for('static', filename=content.hero.mobile_url) }}{% endif %}{% elif content.hero.banner_url %}{% if content.hero.banner_url.startswith('http') %}{{ content.hero.banner_url }}{% else %}{{ url_for('static', filename=content.hero.banner_url) }}{% endif %}{% endif %}');"></div>
 </section>
 
 <!-- Beyond The Reel Section -->
-<section id="beyond-reel" class="section-padding">
+{% if reels_section_visible %}
+<section id="beyond-reel" class="section-padding reels-section">
     <div class="container">
-        <div class="text-center mb-4">
+        <!-- Section Header -->
+        <div class="text-center mb-5">
             <h2 class="section-title">{{ page_content.reels_section_title }}</h2>
             <p class="section-subtitle">{{ page_content.reels_section_subtitle }}</p>
+            <a href="{{ url_for('reels_library') }}" class="btn btn-outline-primary btn-sm mt-2 rounded-pill px-4">
+                View Full Library <i class="fas fa-arrow-right ms-1"></i>
+            </a>
         </div>
-        
-        <div id="reelContent">
-        <div class="reel-carousel-container">
+
+        {% if content.reels %}
+        <!-- Scrolling Reel Cards -->
+        <div class="reel-carousel-container" aria-label="Video Carousel">
             <div class="reel-carousel" id="reelCarousel">
                 {% for reel in content.reels %}
-                <div class="reel-item">
-                    <a href="{{ url_for('reel_detail', reel_id=reel.id) }}" class="reel-link">
-                        <div class="reel-thumbnail">
-                            {% if reel.category_tag %}
-                            <div class="reel-category-tag {{ reel.category_tag }}">
-                                {% if reel.category_tag == 'trending' %}
-                                    🔥 Trending
-                                {% elif reel.category_tag == 'new' %}
-                                    🆕 New
-                                {% elif reel.category_tag == 'must_watch' %}
-                                    ⭐ Must Watch
+                <div class="reel-card layout-{{ reel.card_layout or 'standard' }}" data-reel-id="{{ reel.id }}">
+                    <!-- Thumbnail + Platform Badge -->
+                    <div class="reel-card-thumb">
+                        {% if reel.category_tag %}
+                        <span class="reel-cat-badge reel-cat-{{ reel.category_tag }}">
+                            {% if reel.category_tag == 'trending' %}🔥{% elif reel.category_tag == 'new' %}🆕{% elif reel.category_tag == 'must_watch' %}👀{% elif reel.category_tag == 'fan_favourite' %}❤{% elif reel.category_tag == 'exclusive' %}⭐{% elif reel.category_tag == 'behind_scenes' %}🎬{% endif %}
+                            {{ reel.category_tag | replace('_', ' ') | title }}
+                        </span>
+                        {% endif %}
+
+                        <!-- Platform badge -->
+                        {% set vtype = reel.video_type or 'auto' %}
+                        {% if 'instagram' in reel.video_url %}
+                        <span class="reel-platform-badge platform-ig"><i class="fab fa-instagram"></i></span>
+                        {% elif reel.video_url %}
+                        <span class="reel-platform-badge platform-yt"><i class="fab fa-youtube"></i></span>
+                        {% endif %}
+
+                        <img
+                            src="{% if reel.thumbnail %}{{ url_for('static', filename=reel.thumbnail) if not reel.thumbnail.startswith('http') else reel.thumbnail }}{% else %}https://placehold.co/400x225/1a0000/cc0000?text=No+Image{% endif %}"
+                            alt="{{ reel.title }}"
+                            class="reel-card-img"
+                            loading="lazy"
+                            onerror="this.src='https://placehold.co/400x225/1a0000/cc0000?text=No+Image'">
+
+                        <!-- Overlay: two actions -->
+                        <div class="reel-card-overlay">
+                            {% if reel.video_url %}
+                            <a href="{{ reel.video_url }}" target="_blank" rel="noopener noreferrer"
+                               class="reel-action-btn reel-btn-platform" title="Watch on Platform">
+                                {% if 'instagram' in reel.video_url %}
+                                <i class="fab fa-instagram"></i> Instagram
+                                {% else %}
+                                <i class="fab fa-youtube"></i> YouTube
                                 {% endif %}
-                            </div>
+                            </a>
                             {% endif %}
-                            <img src="{% if reel.thumbnail %}{{ url_for('static', filename=reel.thumbnail) if not reel.thumbnail.startswith('http') else reel.thumbnail }}{% else %}https://via.placeholder.com/400x300/8B0000/FFFFFF?text=No+Image{% endif %}" alt="{{ reel.title }}" class="img-fluid" onerror="this.src='https://via.placeholder.com/400x300/8B0000/FFFFFF?text=No+Image'">
-                            <div class="reel-overlay">
-                                <i class="fas fa-play-circle"></i>
-                                <h6>{{ reel.title }}</h6>
-                            </div>
+                            <a href="{{ url_for('reel_detail', reel_id=reel.id) }}"
+                               class="reel-action-btn reel-btn-detail" title="Behind the Reel">
+                                <i class="fas fa-book-open"></i> Behind the Reel
+                            </a>
                         </div>
-                    </a>
+                    </div>
+
+                    <!-- Card Info -->
+                    <div class="reel-card-info">
+                        <p class="reel-card-title">{{ reel.title }}</p>
+                        <div class="reel-card-meta">
+                            {% if reel.topic_tag %}
+                            <span class="reel-topic-tag">{{ reel.topic_tag }}</span>
+                            {% endif %}
+                            <span class="reel-views"><i class="fas fa-eye"></i> {{ reel.view_count or 0 }}</span>
+                        </div>
+                    </div>
                 </div>
                 {% endfor %}
-                
-                <!-- Duplicate for seamless scrolling -->
+
+                <!-- Duplicate set for seamless infinite scroll -->
                 {% for reel in content.reels %}
-                <div class="reel-item">
-                    <a href="{{ url_for('reel_detail', reel_id=reel.id) }}" class="reel-link">
-                        <div class="reel-thumbnail">
-                            {% if reel.category_tag %}
-                            <div class="reel-category-tag {{ reel.category_tag }}">
-                                {% if reel.category_tag == 'trending' %}
-                                    🔥 Trending
-                                {% elif reel.category_tag == 'new' %}
-                                    🆕 New
-                                {% elif reel.category_tag == 'must_watch' %}
-                                    ⭐ Must Watch
-                                {% endif %}
-                            </div>
+                <div class="reel-card layout-{{ reel.card_layout or 'standard' }}" aria-hidden="true">
+                    <div class="reel-card-thumb">
+                        {% if reel.category_tag %}
+                        <span class="reel-cat-badge reel-cat-{{ reel.category_tag }}">
+                            {% if reel.category_tag == 'trending' %}🔥{% elif reel.category_tag == 'new' %}🆕{% elif reel.category_tag == 'must_watch' %}👀{% elif reel.category_tag == 'fan_favourite' %}❤{% elif reel.category_tag == 'exclusive' %}⭐{% elif reel.category_tag == 'behind_scenes' %}🎬{% endif %}
+                            {{ reel.category_tag | replace('_', ' ') | title }}
+                        </span>
+                        {% endif %}
+                        {% if 'instagram' in reel.video_url %}
+                        <span class="reel-platform-badge platform-ig"><i class="fab fa-instagram"></i></span>
+                        {% elif reel.video_url %}
+                        <span class="reel-platform-badge platform-yt"><i class="fab fa-youtube"></i></span>
+                        {% endif %}
+                        <img
+                            src="{% if reel.thumbnail %}{{ url_for('static', filename=reel.thumbnail) if not reel.thumbnail.startswith('http') else reel.thumbnail }}{% else %}https://placehold.co/400x225/1a0000/cc0000?text=No+Image{% endif %}"
+                            alt="{{ reel.title }}"
+                            class="reel-card-img"
+                            loading="lazy"
+                            onerror="this.src='https://placehold.co/400x225/1a0000/cc0000?text=No+Image'">
+                        <div class="reel-card-overlay">
+                            {% if reel.video_url %}
+                            <a href="{{ reel.video_url }}" target="_blank" rel="noopener noreferrer"
+                               class="reel-action-btn reel-btn-platform">
+                                {% if 'instagram' in reel.video_url %}<i class="fab fa-instagram"></i> Instagram{% else %}<i class="fab fa-youtube"></i> YouTube{% endif %}
+                            </a>
                             {% endif %}
-                            <img src="{% if reel.thumbnail %}{{ url_for('static', filename=reel.thumbnail) if not reel.thumbnail.startswith('http') else reel.thumbnail }}{% else %}https://via.placeholder.com/400x300/8B0000/FFFFFF?text=No+Image{% endif %}" alt="{{ reel.title }}" class="img-fluid" onerror="this.src='https://via.placeholder.com/400x300/8B0000/FFFFFF?text=No+Image'">
-                            <div class="reel-overlay">
-                                <i class="fas fa-play-circle"></i>
-                                <h6>{{ reel.title }}</h6>
-                            </div>
+                            <a href="{{ url_for('reel_detail', reel_id=reel.id) }}"
+                               class="reel-action-btn reel-btn-detail">
+                                <i class="fas fa-book-open"></i> Behind the Reel
+                            </a>
                         </div>
-                    </a>
+                    </div>
+                    <div class="reel-card-info">
+                        <p class="reel-card-title">{{ reel.title }}</p>
+                        <div class="reel-card-meta">
+                            {% if reel.topic_tag %}<span class="reel-topic-tag">{{ reel.topic_tag }}</span>{% endif %}
+                            <span class="reel-views"><i class="fas fa-eye"></i> {{ reel.view_count or 0 }}</span>
+                        </div>
+                    </div>
                 </div>
                 {% endfor %}
             </div>
         </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-video fa-3x text-muted mb-3"></i>
+            <p class="text-muted">No reels yet — check back soon!</p>
         </div>
+        {% endif %}
     </div>
 </section>
+{% endif %}
 
 <!-- Support Section -->
 <section id="support" class="section-padding support-section-bg">
@@ -117,50 +177,42 @@
                             </div>
                         </div>
                         {% endfor %}
-                        
-                        {% if not subscription_tiers %}
-                        <!-- Fallback content if no tiers are available -->
-                        <div class="col-12 text-center">
-                            <p class="text-muted">Subscription tiers are being updated. Please check back soon!</p>
-                        </div>
-                        {% endif %}
-                    </div>
-                    
-                    <!-- Custom Amount Support -->
-                    <div class="custom-support-section mt-5">
-                        <div class="custom-support-card text-center">
-                            <div class="custom-amount-input-group">
-                                <span class="currency-symbol">₹</span>
-                                <input type="number" id="customAmount" class="custom-amount-input" placeholder="Enter amount" min="10" value="100">
-                                <button class="btn btn-custom-support" onclick="initiatePayment(document.getElementById('customAmount').value)">
-                                    <i class="fas fa-heart me-2"></i>{{ page_content.custom_support_button_text }}
-                                </button>
+
+                        <!-- Custom Amount Card -->
+                        <div class="col-lg-4 col-md-6">
+                            <div class="support-tier-card custom-support-card">
+                                <div class="tier-icon">
+                                    <i class="fas fa-heart"></i>
+                                </div>
+                                <h4 class="tier-title">{{ page_content.custom_support_button_text or 'Custom Support' }}</h4>
+                                <p class="tier-description">{{ page_content.custom_support_subtitle or 'Choose your own amount' }}</p>
+                                <div class="custom-amount-input-group mt-3">
+                                    <span class="currency-symbol">₹</span>
+                                    <input type="number" id="customAmount" class="custom-amount-input form-control" 
+                                           placeholder="Enter amount" min="1" step="1">
+                                    <button class="btn btn-custom-support" onclick="initiateCustomPayment()">
+                                        <i class="fas fa-heart me-1"></i>Support
+                                    </button>
+                                </div>
                             </div>
-                            <p class="text-white mt-2 mb-0" style="font-size: 0.85rem;">{{ page_content.custom_support_subtitle }}</p>
                         </div>
                     </div>
                 </div>
                 
-                <div class="support-footer">
-                    <div class="row align-items-center">
-                        <div class="col-md-6">
-                            <div class="payment-security">
-                                <i class="fas fa-shield-alt me-2"></i>
-                                <span>Secure payments powered by Razorpay</span>
-                            </div>
-                        </div>
-                        <div class="col-md-6 text-md-end">
-                            <div class="support-stats">
-                                <span class="stat-item">
-                                    <i class="fas fa-users me-1"></i>
-                                    <span class="stat-number">{{ page_content.support_stats_count }}</span> supporters
-                                </span>
-                                <span class="stat-item ms-3">
-                                    <i class="fas fa-heart me-1"></i>
-                                    <span class="stat-number">₹{{ "{:,}".format(page_content.support_stats_amount) }}</span> raised this month
-                                </span>
-                            </div>
-                        </div>
+                <!-- Support Footer Stats -->
+                <div class="support-footer text-center mt-4">
+                    <div class="d-flex align-items-center justify-content-center flex-wrap gap-3">
+                        <span class="text-white"><i class="fas fa-users me-1"></i>
+                            <strong>{{ page_content.support_stats_count or 127 }}+</strong> Supporters
+                        </span>
+                        <span class="text-white opacity-50">•</span>
+                        <span class="text-white"><i class="fas fa-rupee-sign me-1"></i>
+                            <strong>₹{{ page_content.support_stats_amount or 2340 }}</strong> raised this month
+                        </span>
+                        <span class="text-white opacity-50">•</span>
+                        <span class="text-white opacity-75">
+                            <i class="fas fa-shield-alt me-1"></i> Secure via Razorpay
+                        </span>
                     </div>
                 </div>
             </div>
@@ -169,33 +221,221 @@
     </div>
 </section>
 
-<!-- Hidden form for poll voting -->
-<form id="pollForm" style="display: none;">
-    {{ poll_form.hidden_tag() }}
-    {{ poll_form.opinion_id() }}
-    {{ poll_form.option_index() }}
-</form>
+<!-- Reel Card CSS -->
+<style>
+/* ── Carousel wrapper ──────────────────────────────── */
+.reels-section { background: var(--gray-50, #f8f9fa); }
 
+.reel-carousel-container {
+    overflow: hidden;
+    position: relative;
+    mask-image: linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%);
+}
+
+.reel-carousel {
+    display: flex;
+    gap: 1.1rem;
+    width: max-content;
+    animation: reelScroll 35s linear infinite;
+    will-change: transform;
+}
+
+.reel-carousel:hover { animation-play-state: paused; }
+
+@keyframes reelScroll {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+/* ── Individual card ───────────────────────────────── */
+.reel-card {
+    flex-shrink: 0;
+    width: 220px;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 2px 12px rgba(0,0,0,.09);
+    overflow: hidden;
+    transition: transform .25s ease, box-shadow .25s ease;
+    cursor: default;
+}
+
+.reel-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 8px 28px rgba(0,0,0,.18);
+}
+
+/* Portrait layout — narrower, taller */
+.reel-card.layout-portrait { width: 155px; }
+/* Landscape — wider */
+.reel-card.layout-landscape { width: 300px; }
+
+/* ── Thumbnail ─────────────────────────────────────── */
+.reel-card-thumb {
+    position: relative;
+    overflow: hidden;
+    background: #1a0000;
+}
+
+.reel-card.layout-standard .reel-card-thumb { aspect-ratio: 16/9; }
+.reel-card.layout-portrait  .reel-card-thumb { aspect-ratio: 9/16; }
+.reel-card.layout-landscape .reel-card-thumb { aspect-ratio: 21/9; }
+
+.reel-card-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform .35s ease;
+}
+.reel-card:hover .reel-card-img { transform: scale(1.07); }
+
+/* ── Overlay with action buttons ───────────────────── */
+.reel-card-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,.55);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .55rem;
+    opacity: 0;
+    transition: opacity .25s ease;
+    padding: .6rem;
+}
+.reel-card:hover .reel-card-overlay { opacity: 1; }
+
+.reel-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .45rem .95rem;
+    border-radius: 30px;
+    font-size: .78rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: transform .15s, background .15s;
+    white-space: nowrap;
+}
+.reel-action-btn:hover { transform: scale(1.05); text-decoration: none; }
+
+.reel-btn-platform {
+    background: #fff;
+    color: #cc0000;
+}
+.reel-btn-platform:hover { background: #cc0000; color: #fff; }
+
+.reel-btn-detail {
+    background: rgba(255,255,255,.18);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,.5);
+}
+.reel-btn-detail:hover { background: rgba(255,255,255,.35); color: #fff; }
+
+/* ── Platform badge ────────────────────────────────── */
+.reel-platform-badge {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-size: .72rem;
+    font-weight: 700;
+    backdrop-filter: blur(4px);
+    z-index: 3;
+}
+.platform-yt { background: rgba(255,0,0,.85); color: #fff; }
+.platform-ig { background: linear-gradient(135deg,#f58529,#dd2a7b,#8134af); color: #fff; }
+
+/* ── Category tag ──────────────────────────────────── */
+.reel-cat-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-size: .7rem;
+    font-weight: 700;
+    z-index: 3;
+    background: rgba(255,255,255,.92);
+    color: #333;
+    backdrop-filter: blur(4px);
+}
+
+/* ── Card info ─────────────────────────────────────── */
+.reel-card-info {
+    padding: .65rem .75rem .7rem;
+}
+.reel-card-title {
+    font-size: .82rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0 0 .35rem;
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.reel-card-meta {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    flex-wrap: wrap;
+}
+.reel-topic-tag {
+    font-size: .68rem;
+    background: rgba(204,0,0,.1);
+    color: #cc0000;
+    border-radius: 10px;
+    padding: 1px 7px;
+    font-weight: 600;
+}
+.reel-views {
+    font-size: .68rem;
+    color: #888;
+    margin-left: auto;
+}
+
+/* ── Mobile tweaks ─────────────────────────────────── */
+@media (max-width: 575.98px) {
+    .reel-card { width: 180px; }
+    .reel-card.layout-portrait { width: 125px; }
+    .reel-card.layout-landscape { width: 240px; }
+    .reel-carousel { animation-duration: 28s; }
+}
+</style>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
 <script>
-    // Pass Razorpay key to JavaScript
-    window.razorpayKey = '{{ razorpay_key }}';
-    
-    // Handle collapse button text toggle
-    document.addEventListener('DOMContentLoaded', function() {
-        const collapseElements = document.querySelectorAll('.collapse');
-        collapseElements.forEach(function(collapse) {
-            const button = document.querySelector('[data-bs-target="#' + collapse.id + '"]');
-            if (button) {
-                collapse.addEventListener('show.bs.collapse', function() {
-                    button.querySelector('.expand-text').classList.add('d-none');
-                    button.querySelector('.collapse-text').classList.remove('d-none');
-                });
-                collapse.addEventListener('hide.bs.collapse', function() {
-                    button.querySelector('.expand-text').classList.remove('d-none');
-                    button.querySelector('.collapse-text').classList.add('d-none');
-                });
-            }
-        });
-    });
+/* ── Razorpay helpers ───── */
+const RAZORPAY_KEY = "{{ razorpay_key }}";
+
+function initiatePayment(amount) {
+    const options = {
+        key: RAZORPAY_KEY,
+        amount: amount * 100,
+        currency: "INR",
+        name: "Kshitiz Jaiswal",
+        description: "Support the Unfiltered Commentary",
+        handler: function(response) { alert("Payment successful! Thank you for your support!"); },
+        prefill: { name: "", email: "" },
+        theme: { color: "#CC0000" }
+    };
+    try {
+        const rzp = new Razorpay(options);
+        rzp.open();
+    } catch(e) { alert("Payment gateway is being set up. Please try again soon."); }
+}
+
+function initiateCustomPayment() {
+    const amount = parseInt(document.getElementById('customAmount').value);
+    if (!amount || amount < 1) { alert('Please enter a valid amount.'); return; }
+    initiatePayment(amount);
+}
 </script>
 {% endblock %}

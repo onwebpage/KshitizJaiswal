@@ -6,7 +6,7 @@
 <div class="admin-section">
     <div class="container-fluid">
         <div class="row justify-content-center">
-            <div class="col-lg-8 col-md-10">
+            <div class="col-xl-9 col-lg-10 col-md-12">
                 <div class="admin-card">
                     <div class="admin-header">
                         <h2>{{ title }}</h2>
@@ -14,104 +14,139 @@
                             <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
                         </a>
                     </div>
-                    
-                    <form method="POST" enctype="multipart/form-data">
+
+                    <form method="POST" enctype="multipart/form-data" id="reelForm">
                         {{ form.hidden_tag() }}
-                        
+
                         <div class="row g-4">
+
+                            <!-- ── Title ── -->
                             <div class="col-12">
-                                <label class="form-label">{{ form.title.label.text }}</label>
+                                <label class="form-label fw-semibold">{{ form.title.label.text }} <span class="text-danger">*</span></label>
                                 {{ form.title(class="form-control", placeholder="Enter reel title") }}
-                                {% if form.title.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {% for error in form.title.errors %}
-                                            {{ error }}
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
+                                {% for err in form.title.errors %}<div class="invalid-feedback d-block">{{ err }}</div>{% endfor %}
                             </div>
-                            
-                            <div class="col-md-6">
-                                <label class="form-label">{{ form.thumbnail.label.text }}</label>
-                                {{ form.thumbnail(class="form-control") }}
-                                {% if form.thumbnail.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {% for error in form.thumbnail.errors %}
-                                            {{ error }}
-                                        {% endfor %}
+
+                            <!-- ── Content Type + Card Layout ── -->
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">{{ form.video_type.label.text }}</label>
+                                {{ form.video_type(class="form-select", id="videoType") }}
+                                <small class="form-text text-muted">Auto-detect works for most URLs.</small>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">{{ form.card_layout.label.text }}</label>
+                                {{ form.card_layout(class="form-select") }}
+                                <small class="form-text text-muted">Portrait for Reels/Shorts, Standard for regular videos.</small>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">{{ form.sort_order.label.text }}</label>
+                                {{ form.sort_order(class="form-control", type="number", min="0") }}
+                                <small class="form-text text-muted">0 = shown first in carousel.</small>
+                            </div>
+
+                            <!-- ── Video URL ── -->
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Video URL</label>
+                                {{ form.video_url(class="form-control", id="videoUrl", placeholder="https://youtube.com/watch?v=... or https://instagram.com/reel/...") }}
+                                <small class="form-text text-muted">
+                                    Supports: youtube.com/watch, youtube.com/shorts, youtu.be, instagram.com/reel, instagram.com/p
+                                </small>
+
+                                <!-- Live URL preview -->
+                                <div id="urlPreview" class="mt-3" style="display:none;">
+                                    <div class="card border-0 bg-light">
+                                        <div class="card-body p-2">
+                                            <small class="text-muted d-block mb-1">
+                                                <i class="fas fa-eye me-1"></i>Detected: <strong id="detectedType">—</strong>
+                                            </small>
+                                            <a id="originalLink" href="#" target="_blank" rel="noopener" class="btn btn-sm btn-outline-primary rounded-pill">
+                                                <i class="fas fa-external-link-alt me-1"></i>Open on Platform
+                                            </a>
+                                        </div>
                                     </div>
-                                {% endif %}
-                                <small class="form-text text-muted">Supported formats: JPG, JPEG, PNG, GIF</small>
+                                </div>
+                            </div>
+
+                            <!-- ── Thumbnail ── -->
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">{{ form.thumbnail.label.text }}</label>
+                                {{ form.thumbnail(class="form-control", id="thumbnailFile") }}
+                                <small class="form-text text-muted">Upload JPG/PNG (max recommended 800×450)</small>
                                 {% if reel and reel.thumbnail %}
-                                    <div class="mt-2">
-                                        <small class="text-muted">Current thumbnail:</small><br>
-                                        <img src="{{ reel.thumbnail }}" alt="Current thumbnail" class="admin-thumbnail">
-                                    </div>
+                                <div class="mt-2">
+                                    <small class="text-muted">Current:</small>
+                                    <img src="{{ url_for('static', filename=reel.thumbnail) if reel.thumbnail and not reel.thumbnail.startswith('http') else reel.thumbnail }}"
+                                         alt="Current thumbnail" class="admin-thumbnail d-block mt-1" style="width:100px;height:60px;object-fit:cover;border-radius:8px;">
+                                </div>
                                 {% endif %}
                             </div>
-                            
+
                             <div class="col-md-6">
-                                <label class="form-label">{{ form.video_url.label.text }}</label>
-                                {{ form.video_url(class="form-control", placeholder="https://youtube.com/watch?v=...") }}
-                                {% if form.video_url.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {% for error in form.video_url.errors %}
-                                            {{ error }}
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
-                                <small class="form-text text-muted">Optional: Link to the actual video</small>
+                                <label class="form-label fw-semibold">Or Thumbnail URL</label>
+                                {{ form.thumbnail_url(class="form-control", placeholder="https://...") }}
+                                <small class="form-text text-muted">Used if no file is uploaded.</small>
                             </div>
-                            
+
+                            <!-- ── Visibility Controls ── -->
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">{{ form.is_featured.label.text }}</label>
+                                {{ form.is_featured(class="form-select") }}
+                                <small class="form-text text-muted">Featured reels appear in the homepage carousel.</small>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">{{ form.is_visible.label.text }}</label>
+                                {{ form.is_visible(class="form-select") }}
+                                <small class="form-text text-muted">Hidden reels won't show anywhere on the site.</small>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">{{ form.category_tag.label.text }}</label>
+                                {{ form.category_tag(class="form-select") }}
+                            </div>
+
+                            <!-- ── Topic Tag ── -->
                             <div class="col-12">
-                                <label class="form-label">{{ form.behind_thought.label.text }}</label>
+                                <label class="form-label fw-semibold">{{ form.topic_tag.label.text }}</label>
+                                {{ form.topic_tag(class="form-control") }}
+                                <small class="form-text text-muted">Groups related reels together (e.g. "Vote Chori Issue").</small>
+                            </div>
+
+                            <!-- ── Behind the Thought ── -->
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">{{ form.behind_thought.label.text }} <span class="text-danger">*</span></label>
                                 {{ form.behind_thought(class="form-control", rows="6", placeholder="Explain the thought process behind this reel...") }}
-                                {% if form.behind_thought.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {% for error in form.behind_thought.errors %}
-                                            {{ error }}
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
+                                {% for err in form.behind_thought.errors %}<div class="invalid-feedback d-block">{{ err }}</div>{% endfor %}
                             </div>
-                            
+
+                            <!-- ── Sources ── -->
                             <div class="col-12">
-                                <label class="form-label">{{ form.sources.label.text }}</label>
-                                {{ form.sources(class="form-control", rows="4", placeholder="Enter sources (one per line):
-https://source1.com
-https://source2.com") }}
-                                {% if form.sources.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {% for error in form.sources.errors %}
-                                            {{ error }}
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
-                                <small class="form-text text-muted">Add one source per line</small>
+                                <label class="form-label fw-semibold">{{ form.sources.label.text }}</label>
+                                {{ form.sources(class="form-control", rows="4", placeholder="Add one source URL per line:&#10;https://source1.com&#10;https://source2.com") }}
+                                <small class="form-text text-muted">One source per line.</small>
                             </div>
-                            
+
+                            <!-- ── Extra Context ── -->
                             <div class="col-12">
-                                <label class="form-label">{{ form.extra_context.label.text }}</label>
+                                <label class="form-label fw-semibold">{{ form.extra_context.label.text }}</label>
                                 {{ form.extra_context(class="form-control", rows="4", placeholder="Any additional context or information...") }}
-                                {% if form.extra_context.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {% for error in form.extra_context.errors %}
-                                            {{ error }}
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
                             </div>
-                            
+
+                            <!-- ── Submit ── -->
                             <div class="col-12">
-                                <div class="d-flex gap-2">
-                                    <button type="submit" class="btn btn-primary">
+                                <hr class="my-2">
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <button type="submit" class="btn btn-primary px-4">
                                         <i class="fas fa-save me-1"></i>Save Reel
                                     </button>
-                                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">
+                                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary px-4">
                                         <i class="fas fa-times me-1"></i>Cancel
                                     </a>
                                 </div>
                             </div>
+
                         </div>
                     </form>
                 </div>
@@ -124,17 +159,57 @@ https://source2.com") }}
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Auto-hide flash messages after 5 seconds
-        const flashAlerts = document.querySelectorAll('.alert.alert-dismissible');
-        flashAlerts.forEach(function(alert) {
-            setTimeout(function() {
-                if (alert && alert.parentNode) {
-                    const alertInstance = new bootstrap.Alert(alert);
-                    alertInstance.close();
-                }
-            }, 5000);
+document.addEventListener('DOMContentLoaded', function () {
+    const urlInput    = document.getElementById('videoUrl');
+    const typeSelect  = document.getElementById('videoType');
+    const preview     = document.getElementById('urlPreview');
+    const detectedEl  = document.getElementById('detectedType');
+    const linkEl      = document.getElementById('originalLink');
+
+    function detectVideo(url) {
+        if (!url) { preview.style.display = 'none'; return; }
+        const igMatch = url.match(/instagram\.com\/(?:p|reel)\/([A-Za-z0-9_-]+)/);
+        if (igMatch) {
+            detectedEl.textContent = '📸 Instagram Reel';
+            linkEl.href = `https://www.instagram.com/reel/${igMatch[1]}/`;
+            preview.style.display = '';
+            return;
+        }
+        const ytShort = url.match(/youtube\.com\/shorts\/([A-Za-z0-9_-]+)/);
+        if (ytShort) {
+            detectedEl.textContent = '▶️ YouTube Short';
+            linkEl.href = `https://youtu.be/${ytShort[1]}`;
+            preview.style.display = '';
+            return;
+        }
+        const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_-]+)/);
+        if (ytMatch) {
+            detectedEl.textContent = '▶️ YouTube Video';
+            linkEl.href = `https://youtu.be/${ytMatch[1]}`;
+            preview.style.display = '';
+            return;
+        }
+        preview.style.display = 'none';
+    }
+
+    if (urlInput) {
+        urlInput.addEventListener('input', () => detectVideo(urlInput.value.trim()));
+        detectVideo(urlInput.value.trim()); // run on load for edit page
+    }
+
+    // Auto-select content type when URL is pasted
+    if (urlInput && typeSelect) {
+        urlInput.addEventListener('input', function() {
+            const url = this.value.trim();
+            if (url.includes('instagram.com')) typeSelect.value = 'instagram';
+            else if (url.includes('youtube.com') || url.includes('youtu.be')) typeSelect.value = 'youtube';
         });
+    }
+
+    // Flash message auto-close
+    document.querySelectorAll('.alert.alert-dismissible').forEach(function(el) {
+        setTimeout(() => { try { new bootstrap.Alert(el).close(); } catch(e){} }, 5000);
     });
+});
 </script>
 {% endblock %}

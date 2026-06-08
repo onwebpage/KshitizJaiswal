@@ -1,8 +1,8 @@
 from flask import render_template, request, jsonify, redirect, url_for, flash, session, abort
 from app import app, db
-from models import DataManager, AdminUser, SiteContent, Reel, Opinion, Subscriber, SubscriptionTier, Course, Module, Lesson, UserCourseAccess, SocialLink, ColumnVisibility, UserActivity
+from models import DataManager, AdminUser, SiteContent, Reel, Opinion, Subscriber, SubscriptionTier, Course, Module, Lesson, UserCourseAccess, SocialLink, ColumnVisibility, UserActivity, SiteConfig
 from forms import NewsletterForm, PollVoteForm, AdminLoginForm, ReelForm, OpinionForm, HeroContentForm, PaymentSettingsForm, SubscriptionTierForm, CourseForm, ModuleForm, LessonForm, SocialLinkForm
-from utils import save_uploaded_file, calculate_poll_percentages, get_youtube_embed_url, slugify
+from utils import save_uploaded_file, calculate_poll_percentages, get_youtube_embed_url, get_video_info, slugify
 from clerk_auth import clerk_auth_required, get_clerk_user, get_clerk_user_id
 import razorpay
 import os
@@ -37,17 +37,21 @@ def index():
     newsletter_form = NewsletterForm()
     poll_form = PollVoteForm()
     
-    # Show only top 10 latest/featured reels on homepage
+    # Show only top 10 featured/visible reels on homepage ordered by sort_order
     try:
-        featured_reels = Reel.query.filter_by(is_featured=True).order_by(Reel.created_at.desc()).limit(10).all()
+        featured_reels = Reel.query.filter_by(is_featured=True, is_visible=True).order_by(
+            Reel.sort_order.asc(), Reel.created_at.desc()).limit(10).all()
         if not featured_reels:
-            # If no featured reels, show latest 10
-            featured_reels = Reel.query.order_by(Reel.created_at.desc()).limit(10).all()
+            featured_reels = Reel.query.filter_by(is_visible=True).order_by(
+                Reel.sort_order.asc(), Reel.created_at.desc()).limit(10).all()
         content['reels'] = [reel.to_dict() for reel in featured_reels]
     except Exception as e:
         import logging
         logging.error(f"Database error fetching featured reels: {e}")
         # content['reels'] already set by DataManager.get_content()
+
+    # Reels section visibility flag
+    reels_section_visible = SiteConfig.get('reels_section_visible', 'true').lower() != 'false'
     
     # Calculate poll percentages
     for opinion in content['opinions']:
@@ -84,7 +88,8 @@ def index():
                          poll_form=poll_form,
                          subscription_tiers=subscription_tiers,
                          razorpay_key=razorpay_key,
-                         page_content=page_content)
+                         page_content=page_content,
+                         reels_section_visible=reels_section_visible)
 
 @app.route('/reels')
 def reels_library():
@@ -169,18 +174,20 @@ def reel_detail(reel_id):
     
     # Get reel data
     reel_data = reel.to_dict()
-    
-    # Process YouTube or Instagram URL for embedding
+
+    # Process video URL — get embed URL, original URL, and type
     if reel_data.get('video_url'):
-        reel_data['embed_url'] = get_youtube_embed_url(reel_data['video_url'])
-        # Check if it's an Instagram URL
-        import re
-        instagram_pattern = r'(?:https?://)?(?:www\.)?instagram\.com/(?:p|reel)/([a-zA-Z0-9_-]+)'
-        if re.search(instagram_pattern, reel_data['video_url']):
-            reel_data['is_instagram'] = True
-        else:
-            reel_data['is_instagram'] = False
-    
+        vinfo = get_video_info(reel_data['video_url'], reel_data.get('video_type', 'auto'))
+        reel_data['embed_url'] = vinfo['embed_url']
+        reel_data['original_url'] = vinfo['original_url']
+        reel_data['detected_type'] = vinfo['video_type']
+        reel_data['is_instagram'] = vinfo['video_type'] == 'instagram'
+    else:
+        reel_data['embed_url'] = None
+        reel_data['original_url'] = ''
+        reel_data['detected_type'] = 'unknown'
+        reel_data['is_instagram'] = False
+
     # Get related reels from same topic
     related_reels = []
     if reel.topic_tag:
@@ -535,16 +542,24 @@ def admin_add_reel():
         # Process sources
         sources = [s.strip() for s in form.sources.data.split('\n') if s.strip()]
         
+        # Handle thumbnail URL fallback
+        if not thumbnail_url and form.thumbnail_url.data:
+            thumbnail_url = form.thumbnail_url.data
+
         new_reel = Reel(
             title=form.title.data,
             thumbnail=thumbnail_url or '',
             video_url=form.video_url.data or '',
+            video_type=form.video_type.data or 'auto',
+            card_layout=form.card_layout.data or 'standard',
+            sort_order=form.sort_order.data or 0,
             behind_thought=form.behind_thought.data,
             sources=json.dumps(sources),
             extra_context=form.extra_context.data or '',
             category_tag=form.category_tag.data or '',
             topic_tag=form.topic_tag.data or '',
             is_featured=bool(int(form.is_featured.data)),
+            is_visible=bool(int(form.is_visible.data)),
             view_count=0
         )
         
@@ -611,14 +626,22 @@ def admin_edit_reel(reel_id):
         # Process sources
         sources = [s.strip() for s in form.sources.data.split('\n') if s.strip()]
         
+        # Handle thumbnail URL fallback on edit
+        if not reel.thumbnail and form.thumbnail_url.data:
+            reel.thumbnail = form.thumbnail_url.data
+
         reel.title = form.title.data
         reel.video_url = form.video_url.data or ''
+        reel.video_type = form.video_type.data or 'auto'
+        reel.card_layout = form.card_layout.data or 'standard'
+        reel.sort_order = form.sort_order.data or 0
         reel.behind_thought = form.behind_thought.data
         reel.sources = json.dumps(sources)
         reel.extra_context = form.extra_context.data or ''
         reel.category_tag = form.category_tag.data or ''
         reel.topic_tag = form.topic_tag.data or ''
         reel.is_featured = bool(int(form.is_featured.data))
+        reel.is_visible = bool(int(form.is_visible.data))
         
         db.session.commit()
         
@@ -629,12 +652,16 @@ def admin_edit_reel(reel_id):
     if request.method == 'GET':
         form.title.data = reel.title
         form.video_url.data = reel.video_url
+        form.video_type.data = reel.video_type or 'auto'
+        form.card_layout.data = reel.card_layout or 'standard'
+        form.sort_order.data = reel.sort_order or 0
         form.behind_thought.data = reel.behind_thought
         form.sources.data = '\n'.join(json.loads(reel.sources) if reel.sources else [])
         form.extra_context.data = reel.extra_context
         form.category_tag.data = reel.category_tag or ''
         form.topic_tag.data = reel.topic_tag or ''
         form.is_featured.data = '1' if reel.is_featured else '0'
+        form.is_visible.data = '0' if reel.is_visible is False else '1'
     
     return render_template('admin/reel_form.html', form=form, title='Edit Reel', reel=reel)
 
@@ -643,15 +670,46 @@ def admin_delete_reel(reel_id):
     """Delete reel"""
     if 'admin_logged_in' not in session:
         return redirect(url_for('admin_login'))
-    
-    # already imported - Reel, db
-    
     reel = Reel.query.get_or_404(reel_id)
     db.session.delete(reel)
     db.session.commit()
-    
     flash('Reel deleted successfully!', 'success')
     return redirect(url_for('admin_dashboard'))
+
+
+@app.route('/admin/reel/<int:reel_id>/toggle-visible', methods=['POST'])
+def admin_toggle_reel_visible(reel_id):
+    """Toggle per-reel visibility"""
+    if 'admin_logged_in' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    reel = Reel.query.get_or_404(reel_id)
+    reel.is_visible = not reel.is_visible
+    db.session.commit()
+    return jsonify({'is_visible': reel.is_visible, 'id': reel.id})
+
+
+@app.route('/admin/reels/reorder', methods=['POST'])
+def admin_reorder_reels():
+    """Save new sort order for reels (array of IDs in desired order)"""
+    if 'admin_logged_in' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    data = request.get_json(silent=True) or {}
+    ordered_ids = data.get('ids', [])
+    for idx, reel_id in enumerate(ordered_ids):
+        Reel.query.filter_by(id=int(reel_id)).update({'sort_order': idx})
+    db.session.commit()
+    return jsonify({'status': 'ok', 'count': len(ordered_ids)})
+
+
+@app.route('/admin/reels/toggle-section', methods=['POST'])
+def admin_toggle_reels_section():
+    """Toggle whole reels section on/off on homepage"""
+    if 'admin_logged_in' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    current = SiteConfig.get('reels_section_visible', 'true')
+    new_val = 'false' if current.lower() == 'true' else 'true'
+    SiteConfig.set('reels_section_visible', new_val)
+    return jsonify({'reels_section_visible': new_val == 'true'})
 
 @app.route('/admin/opinion/<int:opinion_id>/edit', methods=['GET', 'POST'])
 def admin_edit_opinion(opinion_id):

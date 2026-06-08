@@ -65,41 +65,70 @@ def slugify(text):
     
     return text
 
-def get_youtube_embed_url(url):
-    """Convert YouTube or Instagram URL to embeddable format with security parameters"""
+def get_video_info(url, video_type='auto'):
+    """Detect video source and return embed URL, original URL, and type.
+    
+    Returns a dict:
+      embed_url    — iframe-safe URL (YouTube embed or Instagram embed)
+      original_url — the canonical link to open on the platform
+      video_type   — 'youtube' | 'youtube_short' | 'instagram' | 'unknown'
+      video_id     — the extracted ID string
+    """
     if not url:
-        return None
-    
-    import re
-    
-    # Check if it's an Instagram URL
-    instagram_pattern = r'(?:https?://)?(?:www\.)?instagram\.com/(?:p|reel)/([a-zA-Z0-9_-]+)'
+        return {'embed_url': None, 'original_url': url or '', 'video_type': 'unknown', 'video_id': None}
+
+    # ── Instagram ────────────────────────────────────────────────
+    instagram_pattern = r'(?:https?://)?(?:www\.)?instagram\.com/(?:p|reel)/([A-Za-z0-9_-]+)'
     instagram_match = re.search(instagram_pattern, url)
-    if instagram_match:
-        reel_id = instagram_match.group(1)
-        return f"https://www.instagram.com/reel/{reel_id}/embed"
-    
-    # Handle different YouTube URL formats
-    patterns = [
-        r'(?:https?://)?(?:www\.)?youtube\.com/watch\?v=([a-zA-Z0-9_-]+)',
-        r'(?:https?://)?(?:www\.)?youtube\.com/shorts/([a-zA-Z0-9_-]+)',
-        r'(?:https?://)?youtu\.be/([a-zA-Z0-9_-]+)',
-        r'(?:https?://)?(?:www\.)?youtube\.com/embed/([a-zA-Z0-9_-]+)'
+
+    if instagram_match or video_type == 'instagram':
+        if instagram_match:
+            reel_id = instagram_match.group(1)
+        else:
+            # Forced type — best-effort ID extraction
+            reel_id = re.sub(r'/+$', '', url).split('/')[-1]
+        return {
+            'embed_url': f'https://www.instagram.com/reel/{reel_id}/embed/',
+            'original_url': f'https://www.instagram.com/reel/{reel_id}/',
+            'video_type': 'instagram',
+            'video_id': reel_id,
+        }
+
+    # ── YouTube ───────────────────────────────────────────────────
+    yt_patterns = [
+        (r'(?:https?://)?(?:www\.)?youtube\.com/shorts/([A-Za-z0-9_-]+)', True),
+        (r'(?:https?://)?(?:www\.)?youtube\.com/watch\?v=([A-Za-z0-9_-]+)', False),
+        (r'(?:https?://)?youtu\.be/([A-Za-z0-9_-]+)', False),
+        (r'(?:https?://)?(?:www\.)?youtube\.com/embed/([A-Za-z0-9_-]+)', False),
     ]
-    
-    for pattern in patterns:
+    for pattern, is_short in yt_patterns:
         match = re.search(pattern, url)
         if match:
-            video_id = match.group(1)
-            # Add parameters for better embedding
-            # controls=1: Show player controls for playback
-            # rel=0: Don't show related videos from other channels
-            # modestbranding=1: Use modest YouTube branding
-            # iv_load_policy=3: Disable video annotations
-            # playsinline=1: Play inline without full-screen on mobile
-            return f"https://www.youtube.com/embed/{video_id}?controls=1&rel=0&modestbranding=1&iv_load_policy=3&playsinline=1"
-    
-    return None
+            video_id = match.group(1).split('?')[0]  # strip any trailing query params
+            embed_params = 'controls=1&rel=0&modestbranding=1&iv_load_policy=3&playsinline=1'
+            return {
+                'embed_url': f'https://www.youtube.com/embed/{video_id}?{embed_params}',
+                'original_url': f'https://youtu.be/{video_id}',
+                'video_type': 'youtube_short' if is_short else 'youtube',
+                'video_id': video_id,
+            }
+
+    # ── Forced YouTube with no recognisable pattern ───────────────
+    if video_type == 'youtube':
+        return {
+            'embed_url': None,
+            'original_url': url,
+            'video_type': 'youtube',
+            'video_id': None,
+        }
+
+    return {'embed_url': None, 'original_url': url, 'video_type': 'unknown', 'video_id': None}
+
+
+def get_youtube_embed_url(url):
+    """Backward-compatible wrapper — returns just the embed URL string."""
+    info = get_video_info(url)
+    return info['embed_url']
 
 def is_column_visible(table_name, column_name):
     """Check if a column should be visible in the admin panel"""

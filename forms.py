@@ -20,7 +20,19 @@ class AdminLoginForm(FlaskForm):
 class ReelForm(FlaskForm):
     title = StringField('Title', validators=[DataRequired(), Length(max=100)])
     thumbnail = FileField('Thumbnail', validators=[FileAllowed(['jpg', 'jpeg', 'png', 'gif'])])
+    thumbnail_url = StringField('Or Thumbnail URL', validators=[Length(max=500)])
     video_url = StringField('Video URL')
+    video_type = SelectField('Content Type', choices=[
+        ('auto', '🔍 Auto-detect'),
+        ('youtube', '▶️ YouTube Video'),
+        ('instagram', '📸 Instagram Reel'),
+    ], default='auto')
+    card_layout = SelectField('Card Layout', choices=[
+        ('standard', 'Standard (16:9)'),
+        ('portrait', 'Portrait (9:16) — best for Reels/Shorts'),
+        ('landscape', 'Landscape (21:9) — wide cinematic'),
+    ], default='standard')
+    sort_order = IntegerField('Display Order (lower = first)', validators=[NumberRange(min=0)], default=0)
     behind_thought = TextAreaField('Behind the Thought', validators=[DataRequired()])
     sources = TextAreaField('Sources (one per line)')
     extra_context = TextAreaField('Extra Context')
@@ -36,6 +48,7 @@ class ReelForm(FlaskForm):
     topic_tag = StringField('Topic Tag', validators=[Length(max=100)], 
                            render_kw={"placeholder": "e.g., Vote Chori Issue, Education Reform"})
     is_featured = SelectField('Show on Homepage?', choices=[('0', 'No'), ('1', 'Yes')], default='0')
+    is_visible = SelectField('Visible on Site?', choices=[('1', 'Yes — Show'), ('0', 'No — Hide')], default='1')
 
 class OpinionForm(FlaskForm):
     title = StringField('Title', validators=[DataRequired(), Length(max=100)])

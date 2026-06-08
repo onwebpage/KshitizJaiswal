@@ -10,6 +10,10 @@ class Reel(db.Model):
     title = db.Column(db.String(200), nullable=False)
     thumbnail = db.Column(db.String(500))
     video_url = db.Column(db.String(500))
+    video_type = db.Column(db.String(20), default='auto')  # 'youtube', 'instagram', 'auto'
+    card_layout = db.Column(db.String(20), default='standard')  # 'standard', 'portrait', 'landscape'
+    sort_order = db.Column(db.Integer, default=0)
+    is_visible = db.Column(db.Boolean, default=True)
     behind_thought = db.Column(db.Text)
     sources = db.Column(db.Text)  # JSON string of sources list
     extra_context = db.Column(db.Text)
@@ -25,6 +29,10 @@ class Reel(db.Model):
             'title': self.title,
             'thumbnail': self.thumbnail or '',
             'video_url': self.video_url or '',
+            'video_type': self.video_type or 'auto',
+            'card_layout': self.card_layout or 'standard',
+            'sort_order': self.sort_order or 0,
+            'is_visible': self.is_visible if self.is_visible is not None else True,
             'behind_thought': self.behind_thought or '',
             'sources': json.loads(self.sources) if self.sources else [],
             'extra_context': self.extra_context or '',
@@ -530,6 +538,34 @@ class UserCourseAccess(db.Model):
             if access.expires_at is None or access.expires_at > datetime.utcnow():
                 valid_accesses.append(access)
         return valid_accesses
+
+class SiteConfig(db.Model):
+    """Key-value store for site-wide configuration flags"""
+    id = db.Column(db.Integer, primary_key=True)
+    key = db.Column(db.String(100), unique=True, nullable=False)
+    value = db.Column(db.Text)
+
+    @staticmethod
+    def get(key, default=None):
+        try:
+            config = SiteConfig.query.filter_by(key=key).first()
+            return config.value if config else default
+        except Exception:
+            return default
+
+    @staticmethod
+    def set(key, value):
+        try:
+            config = SiteConfig.query.filter_by(key=key).first()
+            if config:
+                config.value = str(value)
+            else:
+                config = SiteConfig(key=key, value=str(value))
+                db.session.add(config)
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+
 
 class AdminUser:
     """Simple admin authentication"""

@@ -72,9 +72,9 @@
                 <!-- Title and Meta -->
                 <div class="reel-header mb-4">
                     <h1 class="reel-title">{{ reel.title }}</h1>
-                    <div class="reel-meta">
+                    <div class="reel-meta d-flex flex-wrap align-items-center gap-2">
                         {% if reel.category_tag %}
-                        <span class="badge bg-primary me-2">
+                        <span class="badge bg-primary">
                             {% if reel.category_tag == 'trending' %}🔥 Trending
                             {% elif reel.category_tag == 'new' %}🆕 New
                             {% elif reel.category_tag == 'fan_favourite' %}❤ Fan Favourite
@@ -85,13 +85,26 @@
                         </span>
                         {% endif %}
                         {% if reel.topic_tag %}
-                        <span class="badge bg-secondary me-2">
+                        <span class="badge bg-secondary">
                             <i class="fas fa-tag me-1"></i>{{ reel.topic_tag }}
                         </span>
                         {% endif %}
                         <span class="text-muted">
                             <i class="fas fa-eye me-1"></i>{{ reel.view_count }} views
                         </span>
+
+                        <!-- Open on Platform button -->
+                        {% if reel.original_url %}
+                        <a href="{{ reel.original_url }}" target="_blank" rel="noopener noreferrer"
+                           class="btn btn-sm rounded-pill ms-auto"
+                           style="{% if reel.is_instagram %}background:linear-gradient(135deg,#f58529,#dd2a7b,#8134af);color:#fff;{% else %}background:#cc0000;color:#fff;{% endif %}">
+                            {% if reel.is_instagram %}
+                            <i class="fab fa-instagram me-1"></i>Open on Instagram
+                            {% else %}
+                            <i class="fab fa-youtube me-1"></i>Watch on YouTube
+                            {% endif %}
+                        </a>
+                        {% endif %}
                     </div>
                 </div>
 
