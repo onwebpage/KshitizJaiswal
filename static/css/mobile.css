@@ -1,0 +1,862 @@
+/* ============================================================
+   MOBILE-FIRST RESPONSIVE STYLESHEET
+   Targets: 320px – 767px (mobile), 768px–1023px (tablet)
+   Layered on top of style.css — no overwrites to base rules
+   ============================================================ */
+
+/* ── 1. GLOBAL SAFETY NET ───────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+img, video, iframe, embed, object {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Minimum touch target size */
+a, button, [role="button"],
+input[type="submit"], input[type="button"],
+.btn, .nav-link, .page-link {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* ── 2. FLUID TYPOGRAPHY (clamp) ─────────────────────────────── */
+.section-title {
+  font-size: clamp(1.6rem, 5vw, 2.5rem);
+}
+
+.section-subtitle {
+  font-size: clamp(0.95rem, 3vw, 1.1rem);
+}
+
+.page-title {
+  font-size: clamp(1.75rem, 6vw, 3rem);
+}
+
+.hero-title {
+  font-size: clamp(1.8rem, 7vw, 4rem);
+}
+
+.hero-tagline {
+  font-size: clamp(1rem, 3.5vw, 1.5rem);
+}
+
+/* ── 3. SECTION PADDING ─────────────────────────────────────── */
+@media (max-width: 575.98px) {
+  .section-padding {
+    padding: 48px 0;
+  }
+}
+
+@media (min-width: 576px) and (max-width: 767.98px) {
+  .section-padding {
+    padding: 60px 0;
+  }
+}
+
+/* ── 4. NAVBAR ───────────────────────────────────────────────── */
+@media (max-width: 991.98px) {
+  /* Ensure collapsible menu doesn't overflow */
+  .navbar-collapse {
+    max-height: calc(100vh - 80px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .navbar-collapse .navbar-nav {
+    padding: 0.75rem 0;
+  }
+
+  .nav-link {
+    padding: 0.75rem 1rem !important;
+    font-size: 1rem;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+  }
+
+  .support-btn {
+    margin: 0.5rem 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #clerk-login-btn {
+    margin: 0.25rem 1rem 0.5rem;
+  }
+
+  /* Toggler easier to tap */
+  .navbar-toggler {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* Capsule navbar — keep it on-screen on very small phones */
+@media (max-width: 359px) {
+  .custom-navbar {
+    margin: 0 8px !important;
+    border-radius: 30px !important;
+  }
+
+  .navbar-brand {
+    font-size: 1rem !important;
+  }
+}
+
+/* ── 5. HERO SECTION ─────────────────────────────────────────── */
+@media (max-width: 767.98px) {
+  .hero-section,
+  .responsive-hero {
+    height: auto;
+    min-height: 100svh;
+    background-attachment: scroll !important;
+  }
+
+  .hero-bg,
+  .hero-bg-desktop,
+  .hero-bg-mobile {
+    background-attachment: scroll !important;
+  }
+
+  .hero-cta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0 1rem;
+  }
+
+  .hero-cta .btn {
+    width: 100%;
+    max-width: 320px;
+    margin: 0 !important;
+    padding: 0.875rem 1.5rem;
+    font-size: 1rem;
+  }
+}
+
+/* ── 6. REEL CAROUSEL ────────────────────────────────────────── */
+@media (max-width: 575.98px) {
+  .reel-item {
+    width: 220px;
+  }
+
+  .reel-carousel {
+    animation-duration: 25s;
+    gap: 1rem;
+  }
+
+  .reel-thumbnail img {
+    height: 160px;
+  }
+
+  .reel-overlay i {
+    font-size: 2.5rem;
+  }
+
+  .reel-overlay h6 {
+    font-size: 0.9rem;
+  }
+}
+
+@media (min-width: 576px) and (max-width: 767.98px) {
+  .reel-item {
+    width: 260px;
+  }
+
+  .reel-thumbnail img {
+    height: 180px;
+  }
+}
+
+/* Touch-friendly: don't pause on touch (hover) */
+@media (hover: none) {
+  .reel-carousel:hover {
+    animation-play-state: running;
+  }
+
+  .reel-thumbnail:hover {
+    transform: none;
+  }
+
+  .reel-item:hover {
+    transform: none;
+  }
+}
+
+/* ── 7. REELS LIBRARY GRID ───────────────────────────────────── */
+@media (max-width: 575.98px) {
+  .reels-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  .reels-library-section {
+    padding-top: 80px;
+  }
+
+  .search-filter-bar {
+    padding: 1.25rem;
+  }
+
+  .search-filter-bar .row > [class*="col-"] {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+}
+
+@media (min-width: 576px) and (max-width: 767.98px) {
+  .reels-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+  }
+}
+
+/* ── 8. SUPPORT / SUBSCRIPTION TIERS ────────────────────────── */
+@media (max-width: 767.98px) {
+  .popular-tier {
+    transform: none !important;
+  }
+
+  .popular-tier:hover {
+    transform: translateY(-10px) !important;
+  }
+
+  .support-tier-card {
+    padding: 1.75rem 1.25rem;
+  }
+
+  .tier-amount {
+    font-size: 2.25rem;
+  }
+
+  /* Stack the stats row */
+  .support-footer .row {
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+
+  .support-stats {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .stat-item.ms-3 {
+    margin-left: 0 !important;
+  }
+
+  .payment-security {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .custom-amount-input-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .custom-amount-input {
+    width: 100%;
+    text-align: left;
+  }
+
+  .btn-custom-support {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    justify-content: center;
+    display: flex;
+    align-items: center;
+  }
+
+  .currency-symbol {
+    display: none;
+  }
+}
+
+/* ── 9. NEWSLETTER SECTION ───────────────────────────────────── */
+@media (max-width: 767.98px) {
+  .newsletter-section {
+    padding: 2rem 1.25rem;
+    border-radius: 12px;
+  }
+
+  .newsletter-form .row > [class*="col-"] {
+    margin-bottom: 0.75rem;
+  }
+
+  .newsletter-form .btn {
+    width: 100%;
+  }
+}
+
+/* ── 10. COURSES PAGE ────────────────────────────────────────── */
+@media (max-width: 575.98px) {
+  .course-card-image {
+    height: 160px !important;
+  }
+
+  .course-card-body {
+    padding: 1rem;
+  }
+
+  .course-footer {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .btn-course-action {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .courses-hero {
+    padding-top: 100px;
+    padding-bottom: 2.5rem;
+  }
+}
+
+/* ── 11. CONTACT PAGE ────────────────────────────────────────── */
+@media (max-width: 767.98px) {
+  .contact-section {
+    padding: 90px 0 50px;
+  }
+
+  .social-links-large {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+
+  .social-link-large {
+    padding: 0.75rem;
+    font-size: 0.9rem;
+  }
+
+  .social-link-large i {
+    font-size: 1.2rem;
+    margin-right: 0.5rem;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .social-links-large {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-card {
+    padding: 1.25rem;
+  }
+}
+
+/* ── 12. REEL DETAIL PAGE ────────────────────────────────────── */
+@media (max-width: 767.98px) {
+  .reel-detail-section {
+    padding: 85px 0 50px;
+  }
+
+  .reel-title {
+    font-size: clamp(1.4rem, 5vw, 2.5rem);
+  }
+
+  .video-section {
+    padding: 1.25rem;
+    border-radius: 10px;
+  }
+
+  .content-section {
+    padding: 1.25rem;
+    margin-top: 1.5rem;
+  }
+
+  .sidebar-section {
+    padding: 1.25rem;
+  }
+
+  .share-buttons {
+    flex-wrap: wrap;
+  }
+}
+
+/* ── 13. POLLS PAGES ─────────────────────────────────────────── */
+@media (max-width: 767.98px) {
+  .polls-archive-hero,
+  .poll-detail-hero,
+  .poll-group-hero,
+  .resources-hero {
+    padding: 90px 0 50px;
+  }
+
+  .polls-hero-title,
+  .poll-detail-title,
+  .group-detail-title,
+  .resources-hero-title {
+    font-size: clamp(1.6rem, 6vw, 2.5rem);
+  }
+
+  .poll-detail-card {
+    padding: 1.25rem;
+    border-radius: 12px;
+  }
+
+  .poll-option-vote {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .vote-btn {
+    width: 100%;
+  }
+
+  .poll-archive-item {
+    padding: 1.25rem;
+  }
+
+  .poll-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .poll-actions .btn {
+    width: 100%;
+    justify-content: center;
+    display: flex;
+    align-items: center;
+  }
+
+  .chart-wrapper {
+    height: 260px;
+  }
+
+  .timeline-meta {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .poll-timeline {
+    padding-left: 1.75rem;
+  }
+
+  .timeline-item {
+    padding-left: 0.75rem;
+  }
+
+  .search-input-group {
+    flex-direction: column;
+  }
+
+  .search-input,
+  .search-btn {
+    width: 100%;
+  }
+}
+
+/* ── 14. ADMIN PANEL ─────────────────────────────────────────── */
+@media (max-width: 991.98px) {
+  .admin-section {
+    flex-direction: column;
+  }
+
+  .admin-sidebar {
+    position: relative !important;
+    height: auto !important;
+    width: 100% !important;
+    border-right: none !important;
+    border-bottom: 1px solid var(--gray-200) !important;
+    border-radius: 0 !important;
+    top: auto !important;
+    overflow-x: auto;
+    padding: 1rem;
+  }
+
+  .admin-nav {
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 0.4rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 0.5rem;
+  }
+
+  .admin-nav::-webkit-scrollbar { display: none; }
+
+  .admin-nav-item {
+    white-space: nowrap;
+    padding: 0.6rem 0.9rem;
+    font-size: 0.85rem;
+  }
+
+  .admin-nav-item:hover,
+  .admin-nav-item.active {
+    transform: none;
+  }
+
+  .admin-content {
+    padding: 1rem;
+  }
+
+  .stat-card {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.75rem;
+  }
+
+  .stat-icon {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto;
+  }
+}
+
+/* ── 15. FOOTER ──────────────────────────────────────────────── */
+@media (max-width: 767.98px) {
+  .footer-section {
+    padding: 2.5rem 0 1.25rem;
+  }
+
+  .footer-brand {
+    text-align: center;
+    margin-bottom: 1.5rem;
+  }
+
+  .footer-social {
+    justify-content: center;
+  }
+
+  .footer-description {
+    font-size: 0.9rem;
+  }
+
+  .footer-column {
+    text-align: center;
+  }
+
+  .footer-column-title::after {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .footer-links a:hover {
+    padding-left: 0;
+  }
+
+  .footer-bottom .row {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    text-align: center;
+  }
+
+  .footer-stats {
+    justify-content: center;
+  }
+}
+
+/* ── 16. TABLES (make scrollable on mobile) ──────────────────── */
+@media (max-width: 767.98px) {
+  .table-responsive-wrapper,
+  .admin-card .table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* ── 17. FORMS & INPUTS ──────────────────────────────────────── */
+@media (max-width: 767.98px) {
+  .form-control,
+  .form-select {
+    font-size: 16px; /* Prevents iOS auto-zoom */
+    min-height: 44px;
+  }
+
+  .form-group,
+  .mb-3 {
+    margin-bottom: 1rem !important;
+  }
+
+  /* Full-width submit buttons on mobile */
+  .contact-form .btn[type="submit"],
+  .newsletter-form .btn[type="submit"] {
+    width: 100%;
+  }
+}
+
+/* ── 18. MODALS ──────────────────────────────────────────────── */
+@media (max-width: 575.98px) {
+  .modal-dialog {
+    margin: 0.5rem;
+    max-width: calc(100% - 1rem);
+  }
+
+  .modal-content {
+    border-radius: 16px;
+  }
+
+  .modal-body {
+    padding: 1.25rem;
+  }
+
+  .modal-footer {
+    padding: 0.75rem 1.25rem;
+  }
+}
+
+/* ── 19. HERO PAGES (archive, resources, etc.) ───────────────── */
+@media (max-width: 767.98px) {
+  .archives-hero,
+  .archive-hero,
+  .upcoming-hero,
+  [class*="-hero"] {
+    padding: 90px 0 50px;
+  }
+}
+
+/* ── 20. PAGINATION ──────────────────────────────────────────── */
+@media (max-width: 575.98px) {
+  .pagination {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.25rem;
+  }
+
+  .page-link {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+  }
+}
+
+/* ── 21. SCROLL ANIMATIONS — disable large offsets on mobile ─── */
+@media (max-width: 767.98px) {
+  .slide-in-left {
+    transform: translateX(-30px);
+  }
+
+  .slide-in-right {
+    transform: translateX(30px);
+  }
+
+  .fade-in-section {
+    transform: translateY(25px);
+  }
+}
+
+/* ── 22. CARD HOVER — disable lift on touch devices ─────────── */
+@media (hover: none) {
+  .resource-card:hover,
+  .opinion-card:hover,
+  .show-card:hover,
+  .course-card:hover,
+  .contact-card:hover,
+  .poll-archive-item:hover,
+  .admin-card:hover,
+  .group-card:hover,
+  .shoutout-card:hover,
+  .related-poll-card:hover {
+    transform: none;
+  }
+
+  .btn:hover {
+    transform: none;
+  }
+}
+
+/* ── 23. UPCOMING SHOWS GRID ─────────────────────────────────── */
+@media (max-width: 575.98px) {
+  .show-image {
+    height: 160px;
+  }
+
+  .show-content {
+    padding: 1rem;
+  }
+}
+
+/* ── 24. LESSON VIEW ─────────────────────────────────────────── */
+@media (max-width: 767.98px) {
+  .lesson-sidebar {
+    position: static !important;
+    margin-bottom: 1.5rem;
+  }
+
+  .lesson-content-area {
+    padding: 1rem !important;
+  }
+}
+
+/* ── 25. CLERK AUTH PAGES ────────────────────────────────────── */
+@media (max-width: 575.98px) {
+  .clerk-auth-section {
+    padding: 90px 1rem 2rem;
+  }
+}
+
+/* ── 26. BREADCRUMBS ─────────────────────────────────────────── */
+@media (max-width: 575.98px) {
+  .breadcrumb {
+    font-size: 0.85rem;
+    flex-wrap: wrap;
+  }
+
+  .breadcrumb-item + .breadcrumb-item::before {
+    padding: 0 0.3rem;
+  }
+}
+
+/* ── 27. BADGE & TAG WRAPPING ────────────────────────────────── */
+@media (max-width: 575.98px) {
+  .reel-meta .badge,
+  .d-flex.flex-wrap {
+    gap: 0.35rem;
+  }
+}
+
+/* ── 28. REELS LIBRARY — filter bar mobile ───────────────────── */
+@media (max-width: 767.98px) {
+  .reels-library-section.section-padding {
+    padding-top: 90px;
+  }
+
+  .library-header {
+    margin-bottom: 2rem !important;
+  }
+
+  .search-filter-bar {
+    margin-bottom: 2rem !important;
+    padding: 1.25rem;
+  }
+}
+
+/* ── 29. SUPPORT SECTION SPACING ────────────────────────────── */
+@media (max-width: 575.98px) {
+  #support .col-lg-10 {
+    padding: 0 0.5rem;
+  }
+
+  .support-tiers-container .row.g-4 {
+    --bs-gutter-y: 1.5rem;
+  }
+
+  .custom-support-section.mt-5 {
+    margin-top: 2rem !important;
+  }
+
+  .support-footer {
+    margin-top: 2rem;
+    padding-top: 1.25rem;
+  }
+}
+
+/* ── 30. PERFORMANCE: will-change only when visible ─────────── */
+.reel-carousel {
+  contain: layout style;
+}
+
+@media (max-width: 767.98px) {
+  /* Reduce animation overhead on low-end mobile */
+  .reel-thumbnail::before,
+  .admin-card::before,
+  .btn::before,
+  .support-btn::before {
+    display: none;
+  }
+}
+
+/* ── 31. PREVENT horizontal scroll from fixed capsule nav ────── */
+@media (max-width: 767.98px) {
+  .custom-navbar.fixed-top {
+    left: 0 !important;
+    right: 0 !important;
+    width: auto !important;
+  }
+}
+
+/* ── 32. SAFE AREA INSETS (notch support) ────────────────────── */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .footer-section {
+    padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
+  }
+
+  .custom-navbar {
+    padding-top: calc(0.6rem + env(safe-area-inset-top));
+  }
+}
+
+/* ── 33. TEXT OVERFLOW PROTECTION ────────────────────────────── */
+.reel-grid-title,
+.course-title,
+.timeline-title,
+.related-poll-title,
+.poll-title {
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+/* ── 34. TABLET LAYOUT IMPROVEMENTS ─────────────────────────── */
+@media (min-width: 768px) and (max-width: 1023.98px) {
+  .section-padding {
+    padding: 70px 0;
+  }
+
+  .hero-title {
+    font-size: 3rem;
+  }
+
+  .hero-tagline {
+    font-size: 1.2rem;
+  }
+
+  .support-tier-card {
+    padding: 2rem 1.5rem;
+  }
+
+  .popular-tier {
+    transform: none;
+  }
+
+  .popular-tier:hover {
+    transform: translateY(-10px);
+  }
+}
+
+/* ── 35. PRINT ───────────────────────────────────────────────── */
+@media print {
+  .custom-navbar,
+  .footer-section,
+  .newsletter-section,
+  .support-section-bg,
+  .reel-carousel-container,
+  .modal {
+    display: none !important;
+  }
+
+  body {
+    font-size: 12pt;
+    color: #000;
+  }
+
+  main {
+    padding-top: 0 !important;
+  }
+}
