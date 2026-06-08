@@ -237,7 +237,9 @@ class DataManager:
                 hero = {
                     "name": "Kshitiz Jaiswal",
                     "tagline": "Unfiltered Commentator. The content here is selective, but the truth is never biased.",
-                    "banner_url": "https://pixabay.com/get/g533a6aa47eba4823795ce2e25fdfdbeab9c4946d039afcc8be299199aea4607bcead5e63e650f3598d32b8af6f69fa29cd392bcfe2db7bc9db577a352240b008_1280.jpg"
+                    "banner_url": "uploads/hero/banner.jpg",
+                    "desktop_url": "uploads/hero/banner.jpg",
+                    "mobile_url": "uploads/hero/banner.jpg"
                 }
                 # Save default hero content
                 hero_record = SiteContent(content_key='hero', content_data=json.dumps(hero))
@@ -299,7 +301,9 @@ class DataManager:
                 "hero": {
                     "name": "Kshitiz Jaiswal",
                     "tagline": "Unfiltered Commentator. The content here is selective, but the truth is never biased.",
-                    "banner_url": "https://pixabay.com/get/g533a6aa47eba4823795ce2e25fdfdbeab9c4946d039afcc8be299199aea4607bcead5e63e650f3598d32b8af6f69fa29cd392bcfe2db7bc9db577a352240b008_1280.jpg"
+                    "banner_url": "uploads/hero/banner.jpg",
+                    "desktop_url": "uploads/hero/banner.jpg",
+                    "mobile_url": "uploads/hero/banner.jpg"
                 },
                 "reels": [],
                 "opinions": [],
