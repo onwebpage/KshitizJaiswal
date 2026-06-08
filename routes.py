@@ -110,6 +110,37 @@ def index():
     except Exception:
         homepage_courses = []
 
+    # Load statistics section data
+    DEFAULT_STATS_DATA = {
+        'title': 'By the Numbers',
+        'subtitle': 'The reach keeps growing — thanks to you.',
+        'stats': [
+            {'icon': 'fas fa-rupee-sign', 'label': 'Total Support',   'value': '₹0',   'auto': ''},
+            {'icon': 'fas fa-receipt',    'label': 'Donations',        'value': '0',    'auto': ''},
+            {'icon': 'fas fa-users',      'label': 'Supporters',       'value': '0',    'auto': 'subscriber_count'},
+            {'icon': 'fas fa-film',       'label': 'Reels Published',  'value': '0',    'auto': 'reel_count'},
+            {'icon': 'fas fa-eye',        'label': 'Total Views',      'value': '1.2M+','auto': ''},
+            {'icon': 'fas fa-heart',      'label': 'Followers',        'value': '50K+', 'auto': ''},
+        ]
+    }
+    try:
+        stats_record = SiteContent.query.filter_by(content_key='statistics_data').first()
+        stats_data = json.loads(stats_record.content_data) if stats_record else DEFAULT_STATS_DATA
+        if 'stats' not in stats_data:
+            stats_data['stats'] = DEFAULT_STATS_DATA['stats']
+        # Resolve auto values at render time
+        for stat in stats_data['stats']:
+            if stat.get('auto') == 'subscriber_count':
+                stat['resolved_value'] = str(Subscriber.query.count())
+            elif stat.get('auto') == 'reel_count':
+                stat['resolved_value'] = str(Reel.query.filter_by(is_visible=True).count())
+            else:
+                stat['resolved_value'] = stat.get('value', '')
+    except Exception:
+        stats_data = DEFAULT_STATS_DATA
+        for stat in stats_data['stats']:
+            stat['resolved_value'] = stat.get('value', '')
+
     return render_template('index.html',
                          content=content,
                          newsletter_form=newsletter_form,
@@ -117,7 +148,8 @@ def index():
                          subscription_tiers=subscription_tiers,
                          razorpay_key=razorpay_key,
                          page_content=page_content,
-                         homepage_courses=homepage_courses)
+                         homepage_courses=homepage_courses,
+                         stats_data=stats_data)
 
 @app.route('/reels')
 def reels_library():
@@ -789,6 +821,81 @@ def admin_toggle_section(section):
     new_val = 'false' if current.lower() == 'true' else 'true'
     SiteConfig.set(f'section_{section}_visible', new_val)
     return jsonify({'visible': new_val == 'true', 'section': section})
+
+@app.route('/admin/statistics-section', methods=['GET', 'POST'])
+def admin_statistics_section():
+    """Admin: Manage statistics section data and visibility"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+
+    from datetime import datetime as _dt
+
+    DEFAULT_STATS = {
+        'title': 'By the Numbers',
+        'subtitle': 'The reach keeps growing — thanks to you.',
+        'stats': [
+            {'icon': 'fas fa-rupee-sign',          'label': 'Total Support',   'value': '₹0',   'auto': ''},
+            {'icon': 'fas fa-receipt',              'label': 'Donations',       'value': '0',    'auto': ''},
+            {'icon': 'fas fa-users',               'label': 'Supporters',       'value': '0',    'auto': 'subscriber_count'},
+            {'icon': 'fas fa-film',                'label': 'Reels Published',  'value': '0',    'auto': 'reel_count'},
+            {'icon': 'fas fa-eye',                 'label': 'Total Views',      'value': '1.2M+','auto': ''},
+            {'icon': 'fas fa-heart',               'label': 'Followers',        'value': '50K+', 'auto': ''},
+        ]
+    }
+
+    # Live DB values for display / auto-sync
+    try:
+        live_subscriber_count = Subscriber.query.count()
+    except Exception:
+        live_subscriber_count = 0
+    try:
+        live_reel_count = Reel.query.filter_by(is_visible=True).count()
+    except Exception:
+        live_reel_count = 0
+
+    if request.method == 'POST':
+        title    = request.form.get('title', 'By the Numbers').strip()
+        subtitle = request.form.get('subtitle', '').strip()
+
+        stats = []
+        idx = 0
+        while True:
+            icon = request.form.get(f'stat_icon_{idx}')
+            if icon is None:
+                break
+            label = request.form.get(f'stat_label_{idx}', '').strip()
+            value = request.form.get(f'stat_value_{idx}', '').strip()
+            auto  = request.form.get(f'stat_auto_{idx}', '')
+            # keep rows that have at least an icon or label
+            if icon.strip() or label:
+                stats.append({'icon': icon.strip(), 'label': label, 'value': value, 'auto': auto})
+            idx += 1
+
+        data = {'title': title, 'subtitle': subtitle, 'stats': stats}
+        record = SiteContent.query.filter_by(content_key='statistics_data').first()
+        if record:
+            record.content_data = json.dumps(data)
+            record.updated_at   = _dt.utcnow()
+        else:
+            record = SiteContent(content_key='statistics_data', content_data=json.dumps(data))
+            db.session.add(record)
+        db.session.commit()
+        flash('Statistics section saved successfully!', 'success')
+        return redirect(url_for('admin_statistics_section'))
+
+    record = SiteContent.query.filter_by(content_key='statistics_data').first()
+    data   = json.loads(record.content_data) if record else DEFAULT_STATS
+    if 'stats' not in data:
+        data['stats'] = DEFAULT_STATS['stats']
+
+    is_visible = SiteConfig.get('section_statistics_visible', 'true').lower() != 'false'
+
+    return render_template('admin/statistics_section.html',
+                           data=data,
+                           is_visible=is_visible,
+                           live_subscriber_count=live_subscriber_count,
+                           live_reel_count=live_reel_count)
+
 
 @app.route('/admin/opinion/<int:opinion_id>/edit', methods=['GET', 'POST'])
 def admin_edit_opinion(opinion_id):

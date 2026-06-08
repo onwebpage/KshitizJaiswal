@@ -1,0 +1,335 @@
+{% extends "base.html" %}
+
+{% block title %}Statistics Section — Admin Panel{% endblock %}
+
+{% block content %}
+<div class="admin-section">
+    <!-- Sidebar -->
+    <div class="admin-sidebar">
+        <div class="admin-header">
+            <h4><i class="fas fa-cog me-2"></i>Admin Panel</h4>
+            <a href="{{ url_for('admin_logout') }}" class="btn btn-sm btn-outline-danger">
+                <i class="fas fa-sign-out-alt me-1"></i>Logout
+            </a>
+        </div>
+        <div class="admin-nav">
+            <a href="{{ url_for('admin_dashboard') }}" class="admin-nav-item">
+                <i class="fas fa-home me-2"></i>Dashboard
+            </a>
+            <hr class="my-2">
+            <div class="admin-nav-section-title"><small class="text-muted">CONTENT MANAGEMENT</small></div>
+            <a href="{{ url_for('admin_page_content') }}" class="admin-nav-item">
+                <i class="fas fa-file-alt me-2"></i>Page Content
+            </a>
+            <a href="{{ url_for('admin_hero_content') }}" class="admin-nav-item">
+                <i class="fas fa-image me-2"></i>Hero Section
+            </a>
+            <a href="{{ url_for('admin_site_settings') }}" class="admin-nav-item">
+                <i class="fas fa-cogs me-2"></i>Site Settings
+            </a>
+            <a href="{{ url_for('admin_section_visibility') }}" class="admin-nav-item">
+                <i class="fas fa-toggle-on me-2"></i>Section Visibility
+            </a>
+            <a href="{{ url_for('admin_statistics_section') }}" class="admin-nav-item active">
+                <i class="fas fa-chart-bar me-2"></i>Statistics Section
+            </a>
+            <a href="{{ url_for('admin_social_links') }}" class="admin-nav-item">
+                <i class="fas fa-share-alt me-2"></i>Social Links
+            </a>
+            <hr class="my-2">
+            <div class="admin-nav-section-title"><small class="text-muted">MEDIA & POSTS</small></div>
+            <a href="{{ url_for('admin_dashboard') }}#reels" class="admin-nav-item">
+                <i class="fas fa-video me-2"></i>Manage Reels
+            </a>
+            <a href="{{ url_for('admin_dashboard') }}#opinions" class="admin-nav-item">
+                <i class="fas fa-poll me-2"></i>Manage Opinions
+            </a>
+            <hr class="my-2">
+            <div class="admin-nav-section-title"><small class="text-muted">REVENUE & COURSES</small></div>
+            <a href="{{ url_for('admin_subscription_tiers') }}" class="admin-nav-item">
+                <i class="fas fa-crown me-2"></i>Subscription Tiers
+            </a>
+            <a href="{{ url_for('admin_payment_settings') }}" class="admin-nav-item">
+                <i class="fas fa-credit-card me-2"></i>Payment Settings
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="admin-content">
+        <div class="admin-header">
+            <h2><i class="fas fa-chart-bar me-2 text-primary"></i>Statistics Section</h2>
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-arrow-left me-1"></i>Dashboard
+            </a>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show mb-4">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="row g-4">
+
+            <!-- Visibility Status Card -->
+            <div class="col-12">
+                <div class="card border-0 shadow-sm" style="border-radius:14px; border-left: 4px solid {{ '#198754' if is_visible else '#6c757d' }} !important;">
+                    <div class="card-body d-flex align-items-center justify-content-between flex-wrap gap-3 p-4">
+                        <div class="d-flex align-items-center gap-3">
+                            <div style="width:48px;height:48px;border-radius:12px;background:{{ 'linear-gradient(135deg,#198754,#157347)' if is_visible else 'linear-gradient(135deg,#6c757d,#495057)' }};display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.3rem;">
+                                <i class="fas fa-{{ 'eye' if is_visible else 'eye-slash' }}"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-0 fw-bold">Section is currently <span class="{{ 'text-success' if is_visible else 'text-secondary' }}">{{ 'Visible' if is_visible else 'Hidden' }}</span></h5>
+                                <p class="text-muted small mb-0">Changes to visibility take effect instantly on the live website.</p>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-outline-{{ 'danger' if is_visible else 'success' }}" id="visToggleBtn" onclick="toggleVisibility()">
+                                <i class="fas fa-{{ 'eye-slash' if is_visible else 'eye' }} me-1"></i>
+                                {{ 'Hide Section' if is_visible else 'Show Section' }}
+                            </button>
+                            <a href="{{ url_for('admin_section_visibility') }}" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-toggle-on me-1"></i>All Sections
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Data Preview Card -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm h-100" style="border-radius:14px;">
+                    <div class="card-header bg-transparent border-0 pt-4 px-4 pb-0">
+                        <h5 class="fw-bold mb-0"><i class="fas fa-database me-2 text-info"></i>Live Database Values</h5>
+                        <p class="text-muted small mt-1 mb-0">Auto-synced stats pull these values at page load.</p>
+                    </div>
+                    <div class="card-body px-4">
+                        <div class="live-stat-item">
+                            <span class="live-stat-label"><i class="fas fa-users me-2 text-primary"></i>Subscriber Count</span>
+                            <span class="live-stat-value badge bg-primary fs-6">{{ live_subscriber_count }}</span>
+                        </div>
+                        <div class="live-stat-item">
+                            <span class="live-stat-label"><i class="fas fa-film me-2 text-danger"></i>Visible Reels</span>
+                            <span class="live-stat-value badge bg-danger fs-6">{{ live_reel_count }}</span>
+                        </div>
+                        <hr class="my-3">
+                        <p class="small text-muted mb-0">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Set a stat's <strong>Auto Source</strong> to "Live Subscriber Count" or "Live Reel Count" to automatically display these values without manual updates.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edit Form -->
+            <div class="col-lg-8">
+                <form method="POST" id="statsForm">
+                    <!-- Section Title & Subtitle -->
+                    <div class="card border-0 shadow-sm mb-4" style="border-radius:14px;">
+                        <div class="card-header bg-transparent border-0 pt-4 px-4 pb-0">
+                            <h5 class="fw-bold mb-0"><i class="fas fa-heading me-2 text-secondary"></i>Section Header</h5>
+                        </div>
+                        <div class="card-body px-4 pb-4">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Section Title</label>
+                                <input type="text" class="form-control" name="title" value="{{ data.title or 'By the Numbers' }}" placeholder="By the Numbers">
+                            </div>
+                            <div class="mb-0">
+                                <label class="form-label fw-semibold">Section Subtitle</label>
+                                <input type="text" class="form-control" name="subtitle" value="{{ data.subtitle or '' }}" placeholder="The reach keeps growing — thanks to you.">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stat Items Table -->
+                    <div class="card border-0 shadow-sm" style="border-radius:14px;">
+                        <div class="card-header bg-transparent border-0 pt-4 px-4 pb-2 d-flex align-items-center justify-content-between">
+                            <div>
+                                <h5 class="fw-bold mb-0"><i class="fas fa-list me-2 text-secondary"></i>Stat Cards</h5>
+                                <p class="text-muted small mb-0 mt-1">Each card shows one statistic. Add, edit, or remove as needed.</p>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="addStatRow()">
+                                <i class="fas fa-plus me-1"></i>Add Stat
+                            </button>
+                        </div>
+                        <div class="card-body px-4 pb-4">
+
+                            <!-- Column Headers -->
+                            <div class="row g-2 mb-2 d-none d-md-flex">
+                                <div class="col-md-2"><small class="text-muted fw-semibold text-uppercase">Icon</small></div>
+                                <div class="col-md-3"><small class="text-muted fw-semibold text-uppercase">Label</small></div>
+                                <div class="col-md-3"><small class="text-muted fw-semibold text-uppercase">Value</small></div>
+                                <div class="col-md-3"><small class="text-muted fw-semibold text-uppercase">Auto Source</small></div>
+                                <div class="col-md-1"></div>
+                            </div>
+
+                            <!-- Stat Rows -->
+                            <div id="statsRows">
+                                {% for stat in data.stats %}
+                                {% set i = loop.index0 %}
+                                <div class="stat-row row g-2 mb-2 align-items-center" id="row-{{ i }}">
+                                    <div class="col-md-2">
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text stat-icon-preview"><i class="{{ stat.icon or 'fas fa-chart-bar' }}"></i></span>
+                                            <input type="text" class="form-control form-control-sm" name="stat_icon_{{ i }}" value="{{ stat.icon or '' }}" placeholder="fas fa-..." oninput="previewIcon(this)">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <input type="text" class="form-control form-control-sm" name="stat_label_{{ i }}" value="{{ stat.label or '' }}" placeholder="e.g. Total Support">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <input type="text" class="form-control form-control-sm stat-value-input" name="stat_value_{{ i }}" value="{{ stat.value or '' }}" placeholder="e.g. ₹12,450" {% if stat.auto %}disabled{% endif %}>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <select class="form-select form-select-sm" name="stat_auto_{{ i }}" onchange="handleAutoChange(this)">
+                                            <option value="" {% if not stat.auto %}selected{% endif %}>Manual (use value above)</option>
+                                            <option value="subscriber_count" {% if stat.auto == 'subscriber_count' %}selected{% endif %}>Live Subscriber Count ({{ live_subscriber_count }})</option>
+                                            <option value="reel_count" {% if stat.auto == 'reel_count' %}selected{% endif %}>Live Reel Count ({{ live_reel_count }})</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-1 text-end">
+                                        <button type="button" class="btn btn-sm btn-outline-danger rounded-circle" onclick="removeStatRow(this)" title="Remove">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+
+                            <!-- Empty state -->
+                            <div id="emptyState" class="{{ 'd-none' if data.stats else '' }} text-center py-4 text-muted">
+                                <i class="fas fa-chart-bar fa-2x mb-2 opacity-25"></i>
+                                <p class="mb-0">No stats yet. Click <strong>Add Stat</strong> to create one.</p>
+                            </div>
+
+                            <div class="mt-4 pt-3 border-top d-flex gap-3 justify-content-between align-items-center">
+                                <p class="text-muted small mb-0">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Icon must be a valid <a href="https://fontawesome.com/search?m=free" target="_blank">Font Awesome</a> class (e.g. <code>fas fa-heart</code>).
+                                </p>
+                                <button type="submit" class="btn btn-primary rounded-pill px-4">
+                                    <i class="fas fa-save me-2"></i>Save Changes
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+        </div><!-- /row -->
+    </div><!-- /admin-content -->
+</div>
+
+<style>
+.live-stat-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: .6rem 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+.live-stat-item:last-child { border-bottom: none; }
+.live-stat-label { font-size: .9rem; color: #444; }
+.stat-icon-preview i { color: #cc0000; font-size: .95rem; }
+</style>
+
+{% block scripts %}
+<script>
+let rowCount = {{ data.stats | length }};
+
+function addStatRow() {
+    const container = document.getElementById('statsRows');
+    const emptyState = document.getElementById('emptyState');
+    emptyState.classList.add('d-none');
+
+    const idx = rowCount++;
+    const row = document.createElement('div');
+    row.className = 'stat-row row g-2 mb-2 align-items-center';
+    row.id = `row-${idx}`;
+    row.innerHTML = `
+        <div class="col-md-2">
+            <div class="input-group input-group-sm">
+                <span class="input-group-text stat-icon-preview"><i class="fas fa-chart-bar"></i></span>
+                <input type="text" class="form-control form-control-sm" name="stat_icon_${idx}" value="fas fa-chart-bar" placeholder="fas fa-..." oninput="previewIcon(this)">
+            </div>
+        </div>
+        <div class="col-md-3">
+            <input type="text" class="form-control form-control-sm" name="stat_label_${idx}" value="" placeholder="e.g. Total Support">
+        </div>
+        <div class="col-md-3">
+            <input type="text" class="form-control form-control-sm stat-value-input" name="stat_value_${idx}" value="" placeholder="e.g. ₹12,450">
+        </div>
+        <div class="col-md-3">
+            <select class="form-select form-select-sm" name="stat_auto_${idx}" onchange="handleAutoChange(this)">
+                <option value="" selected>Manual (use value above)</option>
+                <option value="subscriber_count">Live Subscriber Count ({{ live_subscriber_count }})</option>
+                <option value="reel_count">Live Reel Count ({{ live_reel_count }})</option>
+            </select>
+        </div>
+        <div class="col-md-1 text-end">
+            <button type="button" class="btn btn-sm btn-outline-danger rounded-circle" onclick="removeStatRow(this)" title="Remove">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>`;
+    container.appendChild(row);
+}
+
+function removeStatRow(btn) {
+    const row = btn.closest('.stat-row');
+    row.remove();
+    // Renumber all rows
+    document.querySelectorAll('.stat-row').forEach((r, i) => {
+        r.id = `row-${i}`;
+        r.querySelectorAll('[name]').forEach(el => {
+            el.name = el.name.replace(/_\d+$/, `_${i}`);
+        });
+    });
+    rowCount = document.querySelectorAll('.stat-row').length;
+    document.getElementById('emptyState').classList.toggle('d-none', rowCount > 0);
+}
+
+function previewIcon(input) {
+    const preview = input.closest('.input-group').querySelector('.stat-icon-preview i');
+    if (preview) {
+        preview.className = input.value.trim() || 'fas fa-chart-bar';
+    }
+}
+
+function handleAutoChange(select) {
+    const row = select.closest('.stat-row');
+    const valueInput = row.querySelector('.stat-value-input');
+    if (select.value) {
+        valueInput.disabled = true;
+        valueInput.placeholder = 'Auto-synced from database';
+    } else {
+        valueInput.disabled = false;
+        valueInput.placeholder = 'e.g. ₹12,450';
+    }
+}
+
+async function toggleVisibility() {
+    const btn = document.getElementById('visToggleBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Saving...';
+    try {
+        const res = await fetch('/admin/section-visibility/toggle/statistics', { method: 'POST' });
+        const data = await res.json();
+        // Reload to reflect updated state cleanly
+        window.location.reload();
+    } catch(e) {
+        alert('Error toggling visibility. Please try again.');
+        btn.disabled = false;
+    }
+}
+</script>
+{% endblock %}
+
+{% endblock %}

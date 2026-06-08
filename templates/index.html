@@ -249,39 +249,22 @@
 <section class="section-padding statistics-section">
     <div class="container">
         <div class="text-center mb-5">
-            <h2 class="section-title">By the Numbers</h2>
-            <p class="section-subtitle">The reach keeps growing — thanks to you.</p>
+            <h2 class="section-title">{{ stats_data.title or 'By the Numbers' }}</h2>
+            <p class="section-subtitle">{{ stats_data.subtitle or 'The reach keeps growing — thanks to you.' }}</p>
         </div>
+        {% if stats_data.stats %}
         <div class="row g-4 text-center justify-content-center">
-            <div class="col-6 col-md-3">
+            {% for stat in stats_data.stats %}
+            <div class="col-6 col-md-3 col-lg-2">
                 <div class="stat-block">
-                    <div class="stat-block-icon"><i class="fas fa-eye"></i></div>
-                    <div class="stat-block-number">{{ page_content.stats_views or '1.2M+' }}</div>
-                    <div class="stat-block-label">Total Views</div>
+                    <div class="stat-block-icon"><i class="{{ stat.icon or 'fas fa-chart-bar' }}"></i></div>
+                    <div class="stat-block-number">{{ stat.resolved_value or stat.value or '—' }}</div>
+                    <div class="stat-block-label">{{ stat.label }}</div>
                 </div>
             </div>
-            <div class="col-6 col-md-3">
-                <div class="stat-block">
-                    <div class="stat-block-icon"><i class="fas fa-users"></i></div>
-                    <div class="stat-block-number">{{ page_content.stats_followers or '50K+' }}</div>
-                    <div class="stat-block-label">Followers</div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="stat-block">
-                    <div class="stat-block-icon"><i class="fas fa-film"></i></div>
-                    <div class="stat-block-number">{{ content.reels|length }}+</div>
-                    <div class="stat-block-label">Reels Published</div>
-                </div>
-            </div>
-            <div class="col-6 col-md-3">
-                <div class="stat-block">
-                    <div class="stat-block-icon"><i class="fas fa-heart"></i></div>
-                    <div class="stat-block-number">{{ page_content.support_stats_count or '127' }}+</div>
-                    <div class="stat-block-label">Supporters</div>
-                </div>
-            </div>
+            {% endfor %}
         </div>
+        {% endif %}
     </div>
 </section>
 {% endif %}
