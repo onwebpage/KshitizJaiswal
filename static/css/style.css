@@ -243,6 +243,17 @@ h1, h2, h3, h4, h5, h6 {
   padding: 80px 0;
 }
 
+/* Compact hero banner — shown when no hero image is configured */
+.compact-hero-banner {
+  background: linear-gradient(135deg, #1a0000 0%, #cc0000 100%);
+  padding: 3rem 0;
+}
+
+/* Support section background */
+.support-section-bg {
+  background: linear-gradient(135deg, #1a0000 0%, #8b0000 50%, #cc0000 100%);
+}
+
 .text-gradient {
   background: var(--gradient-primary);
   -webkit-background-clip: text;
@@ -401,6 +412,7 @@ h1, h2, h3, h4, h5, h6 {
 /* Hero Section */
 .hero-section {
   height: 100vh;
+  background: linear-gradient(135deg, #1a0000 0%, #8b0000 50%, #cc0000 100%);
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
