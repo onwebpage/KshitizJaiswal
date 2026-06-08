@@ -84,6 +84,20 @@ with app.app_context():
     try:
         db.create_all()
         logging.info("Database tables created successfully")
+        # Run column migrations for existing tables
+        from sqlalchemy import text
+        migrations = [
+            "ALTER TABLE user_course_access ALTER COLUMN clerk_user_id DROP NOT NULL",
+            "ALTER TABLE user_course_access ADD COLUMN IF NOT EXISTS guest_name VARCHAR(200)",
+            "ALTER TABLE user_course_access ADD COLUMN IF NOT EXISTS guest_email VARCHAR(200)",
+            "ALTER TABLE user_course_access ADD COLUMN IF NOT EXISTS guest_phone VARCHAR(20)",
+        ]
+        for sql in migrations:
+            try:
+                db.session.execute(text(sql))
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
     except Exception as e:
         logging.error(f"Failed to create database tables: {e}")
         logging.warning("App will continue but database operations may fail")

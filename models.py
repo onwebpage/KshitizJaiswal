@@ -497,33 +497,54 @@ class Lesson(db.Model):
 
 class UserCourseAccess(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    clerk_user_id = db.Column(db.String(100), nullable=False)  # Clerk user ID
+    clerk_user_id = db.Column(db.String(100), nullable=True)  # Clerk user ID (nullable for guest purchases)
     course_id = db.Column(db.Integer, db.ForeignKey('course.id'), nullable=False)
     payment_id = db.Column(db.String(200))  # Razorpay payment ID
     amount_paid = db.Column(db.Integer)  # Amount paid in rupees
     granted_at = db.Column(db.DateTime, default=datetime.utcnow)
     expires_at = db.Column(db.DateTime)  # Optional expiration date
+    # Guest purchase fields (used when user is not logged in)
+    guest_name = db.Column(db.String(200))
+    guest_email = db.Column(db.String(200))
+    guest_phone = db.Column(db.String(20))
     
     course = db.relationship('Course', backref='user_accesses')
     
     def to_dict(self):
         return {
             'id': self.id,
-            'clerk_user_id': self.clerk_user_id,
+            'clerk_user_id': self.clerk_user_id or '',
             'course_id': self.course_id,
             'payment_id': self.payment_id or '',
             'amount_paid': self.amount_paid,
             'granted_at': self.granted_at.isoformat() if self.granted_at else '',
-            'expires_at': self.expires_at.isoformat() if self.expires_at else None
+            'expires_at': self.expires_at.isoformat() if self.expires_at else None,
+            'guest_name': self.guest_name or '',
+            'guest_email': self.guest_email or '',
+            'guest_phone': self.guest_phone or ''
         }
     
     @staticmethod
     def has_access(clerk_user_id, course_id):
-        """Check if a user has access to a course"""
+        """Check if a logged-in user has access to a course"""
         if not clerk_user_id:
             return False
         access = UserCourseAccess.query.filter_by(
             clerk_user_id=clerk_user_id,
+            course_id=course_id
+        ).first()
+        if access:
+            if access.expires_at is None or access.expires_at > datetime.utcnow():
+                return True
+        return False
+
+    @staticmethod
+    def has_access_by_email(email, course_id):
+        """Check if a guest (by email) has access to a course"""
+        if not email:
+            return False
+        access = UserCourseAccess.query.filter_by(
+            guest_email=email,
             course_id=course_id
         ).first()
         if access:

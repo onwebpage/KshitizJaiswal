@@ -179,34 +179,114 @@
     </div>
 </section>
 
+<!-- Course Purchase Modal -->
+<div class="modal fade" id="purchaseModal" tabindex="-1" aria-labelledby="purchaseModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:16px; overflow:hidden; border:none;">
+            <div class="modal-header" style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); border:none; padding:24px 28px;">
+                <div>
+                    <h5 class="modal-title text-white fw-bold mb-1" id="purchaseModalLabel"><i class="fas fa-shopping-cart me-2"></i>Complete Your Purchase</h5>
+                    <p class="text-white-50 mb-0 small" id="purchaseModalCourseName"></p>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="price-display text-center mb-4 p-3" style="background:#f8fafc; border-radius:12px;">
+                    <span style="font-size:2rem; font-weight:700; color:#667eea;">₹<span id="purchaseModalPrice"></span></span>
+                    <p class="text-muted small mb-0 mt-1"><i class="fas fa-infinity me-1"></i>Lifetime Access</p>
+                </div>
+                <form id="purchaseForm" novalidate>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Full Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="buyerName" placeholder="Enter your full name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Email Address <span class="text-danger">*</span></label>
+                        <input type="email" class="form-control" id="buyerEmail" placeholder="Enter your email" required>
+                        <div class="form-text text-muted"><i class="fas fa-info-circle me-1"></i>Access details will be sent here</div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Mobile Number <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">+91</span>
+                            <input type="tel" class="form-control" id="buyerPhone" placeholder="10-digit mobile number" maxlength="10" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn w-100 fw-bold py-3" style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); color:white; border-radius:12px; font-size:1.05rem; border:none;">
+                        <i class="fas fa-lock me-2"></i>Proceed to Payment
+                    </button>
+                    <p class="text-center text-muted small mt-3 mb-0">
+                        <i class="fas fa-shield-alt me-1 text-success"></i>100% Secure payment via Razorpay
+                    </p>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
 const razorpayKey = "{{ razorpay_key }}";
+let _activeCourseId = null;
+let _activeCoursePrice = null;
 
-async function purchaseCourse(courseId, price) {
-    const clerkUserId = window.Clerk?.user?.id;
-    
-    if (!clerkUserId) {
-        // Directly redirect to login page with return URL
-        window.location.href = '/login?next=' + encodeURIComponent(window.location.pathname);
+function purchaseCourse(courseId, price) {
+    _activeCourseId = courseId;
+    _activeCoursePrice = price;
+    document.getElementById('purchaseModalPrice').textContent = price;
+    document.getElementById('purchaseModalCourseName').textContent = document.querySelector('h1')?.textContent?.trim() || 'Course Purchase';
+
+    // Pre-fill if Clerk user is signed in
+    const clerkUser = window.Clerk?.user;
+    if (clerkUser) {
+        document.getElementById('buyerName').value = (clerkUser.firstName || '') + ' ' + (clerkUser.lastName || '');
+        document.getElementById('buyerEmail').value = clerkUser.primaryEmailAddress?.emailAddress || '';
+    }
+
+    const modal = new bootstrap.Modal(document.getElementById('purchaseModal'));
+    modal.show();
+}
+
+document.getElementById('purchaseForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const name = document.getElementById('buyerName').value.trim();
+    const email = document.getElementById('buyerEmail').value.trim();
+    const phone = document.getElementById('buyerPhone').value.trim();
+
+    if (!name || !email || !phone) {
+        alert('Please fill in all required fields.');
         return;
     }
-    
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        alert('Please enter a valid email address.');
+        return;
+    }
+    if (!/^\d{10}$/.test(phone)) {
+        alert('Please enter a valid 10-digit mobile number.');
+        return;
+    }
+
+    const submitBtn = this.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating order...';
+
     try {
-        const response = await fetch(`/course/${courseId}/purchase`, {
+        const response = await fetch(`/course/${_activeCourseId}/purchase`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            }
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email, phone })
         });
-        
         const data = await response.json();
-        
+
         if (!data.success) {
             alert(data.message || 'Failed to initiate payment');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-lock me-2"></i>Proceed to Payment';
             return;
         }
-        
+
+        bootstrap.Modal.getInstance(document.getElementById('purchaseModal')).hide();
+
         const options = {
             key: razorpayKey,
             amount: data.amount,
@@ -214,41 +294,45 @@ async function purchaseCourse(courseId, price) {
             order_id: data.order_id,
             name: 'Kshitiz Jaiswal',
             description: 'Course Purchase',
+            prefill: { name, email, contact: '+91' + phone },
+            theme: { color: '#667eea' },
             handler: async function(paymentResponse) {
                 const verifyResponse = await fetch('/course/payment/verify', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         razorpay_payment_id: paymentResponse.razorpay_payment_id,
                         razorpay_order_id: paymentResponse.razorpay_order_id,
                         razorpay_signature: paymentResponse.razorpay_signature,
-                        course_id: courseId
+                        course_id: _activeCourseId,
+                        name, email, phone
                     })
                 });
-                
                 const verifyData = await verifyResponse.json();
-                
                 if (verifyData.success) {
-                    alert(verifyData.message);
+                    alert('🎉 ' + verifyData.message);
                     window.location.href = verifyData.redirect_url;
                 } else {
                     alert('Payment verification failed: ' + verifyData.message);
                 }
             },
-            prefill: {
-                email: window.Clerk?.user?.primaryEmailAddress?.emailAddress || ''
+            modal: {
+                ondismiss: function() {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-lock me-2"></i>Proceed to Payment';
+                }
             }
         };
-        
+
         const rzp = new Razorpay(options);
         rzp.open();
     } catch (error) {
         console.error('Payment error:', error);
         alert('An error occurred. Please try again.');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-lock me-2"></i>Proceed to Payment';
     }
-}
+});
 </script>
 
 <style>

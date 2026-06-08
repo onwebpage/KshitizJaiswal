@@ -446,10 +446,8 @@ def poll_detail(poll_id):
 
 @app.route('/create_payment', methods=['POST'])
 def create_payment():
-    """Create Razorpay payment order"""
+    """Create Razorpay payment order for support payments"""
     try:
-        # Get Razorpay settings from database
-        # already imported - SiteContent
         import json
         payment_content = SiteContent.query.filter_by(content_key='payment_settings').first()
         
@@ -457,22 +455,30 @@ def create_payment():
             payment_settings = json.loads(payment_content.content_data)
             razorpay_key_id = payment_settings.get('razorpay_key_id')
             razorpay_key_secret = payment_settings.get('razorpay_key_secret')
-            
             if razorpay_key_id and razorpay_key_secret:
-                # Create dynamic Razorpay client with database settings
                 dynamic_client = razorpay.Client(auth=(razorpay_key_id, razorpay_key_secret))
             else:
-                dynamic_client = razorpay_client  # Fallback to default
+                dynamic_client = razorpay_client
         else:
-            dynamic_client = razorpay_client  # Fallback to default
-        
-        amount = int(request.json.get('amount', 10)) * 100  # Convert to paise
+            dynamic_client = razorpay_client
+
+        data = request.json or {}
+        amount = int(data.get('amount', 10)) * 100  # Convert to paise
+        buyer_name = data.get('name', '')
+        buyer_email = data.get('email', '')
+        buyer_phone = data.get('phone', '')
         
         order_data = {
             'amount': amount,
             'currency': 'INR',
             'receipt': f'support_{amount//100}',
-            'payment_capture': 1
+            'payment_capture': 1,
+            'notes': {
+                'type': 'support',
+                'buyer_name': buyer_name,
+                'buyer_email': buyer_email,
+                'buyer_phone': buyer_phone
+            }
         }
         
         order = dynamic_client.order.create(data=order_data)
@@ -2562,25 +2568,34 @@ def lesson_view(course_id, lesson_id):
 
 @app.route('/course/<int:course_id>/purchase', methods=['POST'])
 def purchase_course(course_id):
-    """Initiate course purchase"""
+    """Initiate course purchase — no login required"""
     course = Course.query.get_or_404(course_id)
+    
+    data = request.get_json() or {}
+    guest_name = data.get('name', '').strip()
+    guest_email = data.get('email', '').strip()
+    guest_phone = data.get('phone', '').strip()
     
     clerk_user_id = get_clerk_user_id()
     
-    if not clerk_user_id:
-        return jsonify({'success': False, 'message': 'Please sign in first'}), 401
-    
-    has_access = UserCourseAccess.has_access(clerk_user_id, course_id)
-    if has_access:
+    # Check if already has access (by Clerk ID or by email)
+    if clerk_user_id and UserCourseAccess.has_access(clerk_user_id, course_id):
         return jsonify({'success': False, 'message': 'You already have access to this course'}), 400
+    if guest_email and UserCourseAccess.has_access_by_email(guest_email, course_id):
+        return jsonify({'success': False, 'message': 'This email already has access to this course'}), 400
     
     try:
         amount = course.price * 100
-        
         order = razorpay_client.order.create({
             'amount': amount,
             'currency': 'INR',
-            'payment_capture': 1
+            'payment_capture': 1,
+            'notes': {
+                'course_id': str(course_id),
+                'buyer_name': guest_name,
+                'buyer_email': guest_email,
+                'buyer_phone': guest_phone
+            }
         })
         
         return jsonify({
@@ -2595,18 +2610,18 @@ def purchase_course(course_id):
 
 @app.route('/course/payment/verify', methods=['POST'])
 def verify_course_payment():
-    """Verify course payment and grant access"""
+    """Verify course payment and grant access — no login required"""
     data = request.get_json()
     
     payment_id = data.get('razorpay_payment_id')
     order_id = data.get('razorpay_order_id')
     signature = data.get('razorpay_signature')
     course_id = data.get('course_id')
+    guest_name = data.get('name', '').strip()
+    guest_email = data.get('email', '').strip()
+    guest_phone = data.get('phone', '').strip()
     
     clerk_user_id = get_clerk_user_id()
-    
-    if not clerk_user_id:
-        return jsonify({'success': False, 'message': 'User not authenticated'}), 401
     
     try:
         params_dict = {
@@ -2625,14 +2640,17 @@ def verify_course_payment():
             clerk_user_id=clerk_user_id,
             course_id=course_id,
             payment_id=payment_id,
-            amount_paid=course.price
+            amount_paid=course.price,
+            guest_name=guest_name,
+            guest_email=guest_email,
+            guest_phone=guest_phone
         )
         db.session.add(access)
         db.session.commit()
         
         return jsonify({
             'success': True,
-            'message': 'Payment verified! You now have access to the course.',
+            'message': 'Payment successful! You now have access to the course.',
             'redirect_url': url_for('course_detail', course_id=course_id)
         })
     
