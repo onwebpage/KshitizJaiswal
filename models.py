@@ -712,7 +712,7 @@ class UserActivity(db.Model):
     user_agent = db.Column(db.Text)  # Browser/device information
     page_url = db.Column(db.String(500))  # URL accessed
     referrer = db.Column(db.String(500))  # Referrer URL
-    session_id = db.Column(db.String(100))  # Session identifier
+    session_id = db.Column(db.Text)  # Session identifier
     data_size = db.Column(db.Integer, default=0)  # Estimated data size in bytes
     duration = db.Column(db.Integer, default=0)  # Time spent in seconds
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)

@@ -95,6 +95,7 @@ with app.app_context():
             "ALTER TABLE module ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'published'",
             "ALTER TABLE lesson ADD COLUMN IF NOT EXISTS is_visible BOOLEAN NOT NULL DEFAULT TRUE",
             "ALTER TABLE lesson ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'published'",
+            "ALTER TABLE user_activity ALTER COLUMN session_id TYPE TEXT",
         ]
         for sql in migrations:
             try:

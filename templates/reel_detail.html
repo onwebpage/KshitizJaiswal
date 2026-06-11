@@ -52,7 +52,8 @@
                     {% elif reel.thumbnail %}
                         <div class="video-placeholder">
                             <img src="{{ url_for('static', filename=reel.thumbnail) if reel.thumbnail and not reel.thumbnail.startswith('http') else reel.thumbnail }}" 
-                                 alt="{{ reel.title }}" class="img-fluid rounded">
+                                 alt="{{ reel.title }}" class="img-fluid rounded"
+                                 onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/reel-placeholder.svg') }}'">
                             <div class="video-overlay">
                                 <i class="fas fa-play-circle fa-3x"></i>
                                 <p class="mt-3">Full video coming soon</p>
@@ -183,7 +184,8 @@
                         {% for related in related_reels %}
                         <a href="{{ url_for('reel_detail', reel_id=related.id) }}" class="related-reel-item">
                             <img src="{{ url_for('static', filename=related.thumbnail) if related.thumbnail and not related.thumbnail.startswith('http') else related.thumbnail }}" 
-                                 alt="{{ related.title }}" class="related-thumbnail">
+                                 alt="{{ related.title }}" class="related-thumbnail"
+                                 onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/reel-placeholder.svg') }}'">
                             <div class="related-info">
                                 <h6>{{ related.title }}</h6>
                                 <small class="text-muted"><i class="fas fa-eye me-1"></i>{{ related.view_count }} views</small>

@@ -624,11 +624,26 @@
             description: `Support - ₹${amount}`,
             order_id: orderData.order_id,
             handler: function(response) {
-                // Payment successful
-                showNotification('Payment successful! Thank you for your support!', 'success');
-                
-                // Optional: Send payment details to server for verification
-                console.log('Payment successful:', response);
+                fetch('/support/payment/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_signature: response.razorpay_signature
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification('Payment successful! Thank you for your support! ❤️', 'success');
+                    } else {
+                        showNotification('Payment received but verification failed. Please contact support.', 'warning');
+                    }
+                })
+                .catch(() => {
+                    showNotification('Payment received! Thank you for your support!', 'success');
+                });
             },
             prefill: {
                 name: '',

@@ -16,7 +16,8 @@ razorpay_client = razorpay.Client(auth=(
 
 @app.context_processor
 def inject_section_visibility():
-    """Inject section visibility flags into all templates"""
+    """Inject section visibility flags and site settings into all templates"""
+    import json
     try:
         section_vis = {
             'hero': SiteConfig.get('section_hero_visible', 'true').lower() != 'false',
@@ -30,7 +31,14 @@ def inject_section_visibility():
         }
     except Exception:
         section_vis = {k: True for k in ['hero', 'reels', 'support', 'statistics', 'testimonials', 'newsletter', 'courses', 'footer']}
-    return {'section_vis': section_vis}
+
+    try:
+        settings_record = SiteContent.query.filter_by(content_key='site_settings').first()
+        site_settings = json.loads(settings_record.content_data) if settings_record else {}
+    except Exception:
+        site_settings = {}
+
+    return {'section_vis': section_vis, 'site_settings': site_settings}
 
 
 @app.route('/')
@@ -2128,7 +2136,8 @@ def admin_site_settings():
             'meta_description': request.form.get('meta_description', ''),
             'meta_keywords': request.form.get('meta_keywords', ''),
             'google_analytics_id': request.form.get('google_analytics_id', ''),
-            'facebook_pixel_id': request.form.get('facebook_pixel_id', '')
+            'facebook_pixel_id': request.form.get('facebook_pixel_id', ''),
+            'clarity_id': request.form.get('clarity_id', '')
         }
         
         settings_record = SiteContent.query.filter_by(content_key='site_settings').first()
@@ -2958,4 +2967,51 @@ def verify_course_payment():
         return jsonify({'success': False, 'message': 'Payment verification failed'}), 400
     except Exception as e:
         db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@app.route('/support/payment/verify', methods=['POST'])
+def verify_support_payment():
+    """Verify Razorpay signature for support/donation payments"""
+    try:
+        data = request.get_json() or {}
+        payment_id = data.get('razorpay_payment_id', '')
+        order_id = data.get('razorpay_order_id', '')
+        signature = data.get('razorpay_signature', '')
+
+        if not all([payment_id, order_id, signature]):
+            return jsonify({'success': False, 'message': 'Missing payment details'}), 400
+
+        import json
+        payment_content = SiteContent.query.filter_by(content_key='payment_settings').first()
+        if payment_content:
+            payment_settings = json.loads(payment_content.content_data)
+            key_id = payment_settings.get('razorpay_key_id')
+            key_secret = payment_settings.get('razorpay_key_secret')
+            if key_id and key_secret:
+                client = razorpay.Client(auth=(key_id, key_secret))
+            else:
+                client = razorpay_client
+        else:
+            client = razorpay_client
+
+        params_dict = {
+            'razorpay_order_id': order_id,
+            'razorpay_payment_id': payment_id,
+            'razorpay_signature': signature
+        }
+        client.utility.verify_payment_signature(params_dict)
+
+        UserActivity.log_activity(
+            activity_type='support_payment',
+            resource_type='support',
+            resource_id=None,
+            request_obj=request
+        )
+
+        return jsonify({'success': True, 'message': 'Thank you for your support!'})
+
+    except razorpay.errors.SignatureVerificationError:
+        return jsonify({'success': False, 'message': 'Payment verification failed'}), 400
+    except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500

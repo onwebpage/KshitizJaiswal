@@ -39,26 +39,30 @@
     <meta property="og:description" content="The content here is selective, but the truth is never biased.">
     <meta property="og:type" content="website">
     
-    <!-- Google Tag Manager -->
+    <!-- Google Tag Manager (only loads when GTM ID is configured in admin site settings) -->
+    {% if site_settings and site_settings.get('google_analytics_id') and site_settings.get('google_analytics_id') not in ('', 'GTM-XXXXXXX') %}
     <script>
         (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
         new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
         j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
         'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-        })(window,document,'script','dataLayer','GTM-XXXXXXX');
-        // Replace GTM-XXXXXXX with your actual GTM ID
+        })(window,document,'script','dataLayer','{{ site_settings.get("google_analytics_id") }}');
     </script>
+    {% endif %}
     
-    <!-- Microsoft Clarity -->
+    <!-- Microsoft Clarity (only loads when Clarity ID is configured in admin site settings) -->
+    {% if site_settings and site_settings.get('clarity_id') and site_settings.get('clarity_id') not in ('', 'YOUR_CLARITY_ID') %}
     <script type="text/javascript">
         (function(c,l,a,r,i,t,y){
             c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
             t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
             y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-        })(window, document, "clarity", "script", "YOUR_CLARITY_ID");
+        })(window, document, "clarity", "script", "{{ site_settings.get('clarity_id') }}");
     </script>
+    {% endif %}
     
-    <!-- Meta Pixel Code -->
+    <!-- Meta Pixel Code (only loads when pixel_id is configured in admin site settings) -->
+    {% if site_settings and site_settings.get('facebook_pixel_id') and site_settings.get('facebook_pixel_id') != 'YOUR_PIXEL_ID' %}
     <script>
         !function(f,b,e,v,n,t,s)
         {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
@@ -68,17 +72,20 @@
         t.src=v;s=b.getElementsByTagName(e)[0];
         s.parentNode.insertBefore(t,s)}(window, document,'script',
         'https://connect.facebook.net/en_US/fbevents.js');
-        fbq('init', 'YOUR_PIXEL_ID');
+        fbq('init', '{{ site_settings.get("facebook_pixel_id") }}');
         fbq('track', 'PageView');
     </script>
     <noscript><img height="1" width="1" style="display:none"
-        src="https://www.facebook.com/tr?id=YOUR_PIXEL_ID&ev=PageView&noscript=1"
+        src="https://www.facebook.com/tr?id={{ site_settings.get('facebook_pixel_id') }}&ev=PageView&noscript=1"
     /></noscript>
+    {% endif %}
 </head>
 <body>
     <!-- Google Tag Manager (noscript) -->
-    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-XXXXXXX"
+    {% if site_settings and site_settings.get('google_analytics_id') and site_settings.get('google_analytics_id') not in ('', 'GTM-XXXXXXX') %}
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id={{ site_settings.get('google_analytics_id') }}"
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    {% endif %}
     <!-- End Google Tag Manager (noscript) -->
     
     <!-- Navigation -->

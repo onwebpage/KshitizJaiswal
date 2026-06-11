@@ -94,7 +94,14 @@
                     <div class="mb-3">
                         <label for="facebook_pixel_id" class="form-label">Facebook Pixel ID</label>
                         <input type="text" class="form-control" id="facebook_pixel_id" name="facebook_pixel_id" 
-                               value="{{ settings.facebook_pixel_id or '' }}">
+                               value="{{ settings.facebook_pixel_id or '' }}" placeholder="e.g. 123456789012345">
+                        <div class="form-text">Your Meta/Facebook Pixel ID for ad tracking</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="clarity_id" class="form-label">Microsoft Clarity ID</label>
+                        <input type="text" class="form-control" id="clarity_id" name="clarity_id" 
+                               value="{{ settings.clarity_id or '' }}" placeholder="e.g. abcde12345">
+                        <div class="form-text">Your Microsoft Clarity project ID for heatmaps &amp; session recording</div>
                     </div>
                 </div>
             </div>

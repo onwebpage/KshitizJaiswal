@@ -117,8 +117,9 @@
                             {% endif %}
                         </div>
                         {% endif %}
-                        <img src="{{ url_for('static', filename=reel.thumbnail) if reel.thumbnail and not reel.thumbnail.startswith('http') else reel.thumbnail }}" 
-                             alt="{{ reel.title }}" class="reel-thumbnail">
+                        <img src="{{ url_for('static', filename=reel.thumbnail) if reel.thumbnail and not reel.thumbnail.startswith('http') else (reel.thumbnail if reel.thumbnail else '') }}" 
+                             alt="{{ reel.title }}" class="reel-thumbnail"
+                             onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/reel-placeholder.svg') }}'">
                         <div class="reel-overlay">
                             <i class="fas fa-play-circle fa-3x"></i>
                         </div>
