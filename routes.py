@@ -1619,6 +1619,21 @@ def admin_delete_show(show_index):
     return redirect(url_for('admin_shows'))
 
 # Admin Course Management Routes
+def _get_curriculum_settings():
+    """Return curriculum display settings dict with defaults."""
+    record = SiteContent.query.filter_by(content_key='curriculum_display').first()
+    defaults = {
+        'display_mode': 'full',
+        'show_video_duration': True,
+    }
+    if record:
+        try:
+            stored = json.loads(record.content_data)
+            defaults.update(stored)
+        except Exception:
+            pass
+    return defaults
+
 @app.route('/admin/courses')
 def admin_courses():
     """Admin courses listing"""
@@ -1628,7 +1643,33 @@ def admin_courses():
     content = DataManager.get_content()
     subscribers = [s.to_dict() for s in Subscriber.query.all()]
     courses = Course.query.order_by(Course.sort_order, Course.id).all()
-    return render_template('admin/courses.html', courses=courses, content=content, subscribers=subscribers)
+    curriculum_settings = _get_curriculum_settings()
+    return render_template('admin/courses.html', courses=courses, content=content, subscribers=subscribers, curriculum_settings=curriculum_settings)
+
+@app.route('/admin/curriculum-settings', methods=['POST'])
+def admin_save_curriculum_settings():
+    """Save curriculum display settings"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    
+    display_mode = request.form.get('display_mode', 'full')
+    show_video_duration = request.form.get('show_video_duration') == 'on'
+    
+    settings = {
+        'display_mode': display_mode,
+        'show_video_duration': show_video_duration,
+    }
+    
+    record = SiteContent.query.filter_by(content_key='curriculum_display').first()
+    if record:
+        record.content_data = json.dumps(settings)
+    else:
+        record = SiteContent(content_key='curriculum_display', content_data=json.dumps(settings))
+        db.session.add(record)
+    db.session.commit()
+    
+    flash('Curriculum display settings saved successfully.', 'success')
+    return redirect(url_for('admin_courses'))
 
 @app.route('/admin/course/add', methods=['GET', 'POST'])
 def admin_add_course():
@@ -2687,7 +2728,9 @@ def course_detail(course_id):
         payment_settings = json.loads(payment_content.content_data)
         razorpay_key = payment_settings.get('razorpay_key_id', 'rzp_test_dummy_key')
     
-    return render_template('course_detail.html', course=course_data, razorpay_key=razorpay_key)
+    curriculum_settings = _get_curriculum_settings()
+    
+    return render_template('course_detail.html', course=course_data, razorpay_key=razorpay_key, curriculum_settings=curriculum_settings)
 
 @app.route('/course/<int:course_id>/lesson/<int:lesson_id>')
 def lesson_view(course_id, lesson_id):

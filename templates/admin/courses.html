@@ -8,6 +8,71 @@
     </a>
 </div>
 
+<!-- Curriculum Display Settings -->
+<div class="card mb-4 border-0 shadow-sm">
+    <div class="card-header bg-dark text-white d-flex align-items-center gap-2">
+        <i class="fas fa-sliders-h"></i>
+        <strong>Curriculum Display Settings</strong>
+        <span class="ms-2 text-muted small fw-normal">Controls what visitors see on course pages</span>
+    </div>
+    <div class="card-body">
+        <form action="{{ url_for('admin_save_curriculum_settings') }}" method="POST">
+            <div class="row g-4 align-items-end">
+                <div class="col-md-7">
+                    <label class="form-label fw-semibold mb-2">Curriculum Visibility</label>
+                    <div class="d-flex flex-column gap-2">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="display_mode" id="dm_full" value="full"
+                                {% if curriculum_settings.display_mode == 'full' %}checked{% endif %}>
+                            <label class="form-check-label" for="dm_full">
+                                <strong>Option A</strong> — Show full curriculum
+                                <span class="text-muted small">(Modules, Days, Topics &amp; Video Duration)</span>
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="display_mode" id="dm_modules" value="modules_only"
+                                {% if curriculum_settings.display_mode == 'modules_only' %}checked{% endif %}>
+                            <label class="form-check-label" for="dm_modules">
+                                <strong>Option B</strong> — Show only Module Titles
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="display_mode" id="dm_days" value="days_only"
+                                {% if curriculum_settings.display_mode == 'days_only' %}checked{% endif %}>
+                            <label class="form-check-label" for="dm_days">
+                                <strong>Option C</strong> — Show only Day Titles
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="display_mode" id="dm_hidden" value="hidden"
+                                {% if curriculum_settings.display_mode == 'hidden' %}checked{% endif %}>
+                            <label class="form-check-label" for="dm_hidden">
+                                <strong>Option D</strong> — Hide curriculum section completely
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold mb-2">Video Duration</label>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" role="switch" name="show_video_duration" id="show_duration"
+                            {% if curriculum_settings.show_video_duration %}checked{% endif %}>
+                        <label class="form-check-label" for="show_duration">
+                            <strong>Option E</strong> — Show video duration
+                            <br><span class="text-muted small">(applies when Option A is selected)</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-success w-100">
+                        <i class="fas fa-save me-1"></i> Save Settings
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
 {% if courses %}
 <div class="table-responsive">
     <table class="table table-striped">

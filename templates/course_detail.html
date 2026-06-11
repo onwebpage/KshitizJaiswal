@@ -48,28 +48,46 @@
                     <h3 class="section-heading mb-4">
                         <i class="fas fa-list-ul me-2"></i>Course Curriculum
                     </h3>
-                    
-                    {% if course.modules %}
-                    <div class="course-modules">
-                        {% for module in course.modules %}
-                        <div class="module-card">
-                            <div class="module-header" data-bs-toggle="collapse" data-bs-target="#module{{ module.id }}" aria-expanded="{% if loop.first %}true{% else %}false{% endif %}">
-                                <div class="module-title-section">
-                                    <div class="module-number">{{ loop.index }}</div>
-                                    <div>
-                                        <h5 class="module-title mb-1">{{ module.title }}</h5>
-                                        <p class="module-subtitle mb-0">{{ module.lessons|length }} lessons</p>
+
+                    {% set display_mode = curriculum_settings.display_mode if curriculum_settings else 'full' %}
+                    {% set show_duration = curriculum_settings.show_video_duration if curriculum_settings else true %}
+
+                    {% if display_mode == 'hidden' %}
+                    {# Curriculum hidden by admin setting #}
+                    {% elif course.modules %}
+
+                        {% if display_mode == 'modules_only' %}
+                        {# Option B: Module titles only #}
+                        <div class="course-modules">
+                            {% for module in course.modules %}
+                            <div class="module-card">
+                                <div class="module-header" style="cursor:default;">
+                                    <div class="module-title-section">
+                                        <div class="module-number">{{ loop.index }}</div>
+                                        <div>
+                                            <h5 class="module-title mb-1">{{ module.title }}</h5>
+                                            <p class="module-subtitle mb-0">{{ module.lessons|length }} lessons</p>
+                                        </div>
                                     </div>
                                 </div>
-                                <i class="fas fa-chevron-down collapse-icon"></i>
                             </div>
-                            
-                            <div id="module{{ module.id }}" class="collapse {% if loop.first %}show{% endif %}">
-                                <div class="module-body">
-                                    {% if module.description %}
-                                    <p class="module-description">{{ module.description }}</p>
-                                    {% endif %}
-                                    
+                            {% endfor %}
+                        </div>
+
+                        {% elif display_mode == 'days_only' %}
+                        {# Option C: Day/Lesson titles only — flat list grouped under modules #}
+                        <div class="course-modules">
+                            {% for module in course.modules %}
+                            <div class="module-card">
+                                <div class="module-header" style="cursor:default;">
+                                    <div class="module-title-section">
+                                        <div class="module-number">{{ loop.index }}</div>
+                                        <div>
+                                            <h5 class="module-title mb-1">{{ module.title }}</h5>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="module-body" style="display:block;">
                                     {% if module.lessons %}
                                     <div class="lessons-list">
                                         {% for lesson in module.lessons %}
@@ -90,22 +108,75 @@
                                                 <span class="lesson-title locked">{{ lesson.title }}</span>
                                                 {% endif %}
                                             </div>
-                                            {% if lesson.duration %}
-                                            <div class="lesson-duration">
-                                                <i class="far fa-clock me-1"></i>{{ lesson.duration }}
-                                            </div>
-                                            {% endif %}
                                         </div>
                                         {% endfor %}
                                     </div>
-                                    {% else %}
-                                    <p class="text-muted mb-0">No lessons available yet.</p>
                                     {% endif %}
                                 </div>
                             </div>
+                            {% endfor %}
                         </div>
-                        {% endfor %}
-                    </div>
+
+                        {% else %}
+                        {# Option A (default): Full curriculum — Modules, Days, Topics, and optionally Video Duration #}
+                        <div class="course-modules">
+                            {% for module in course.modules %}
+                            <div class="module-card">
+                                <div class="module-header" data-bs-toggle="collapse" data-bs-target="#module{{ module.id }}" aria-expanded="{% if loop.first %}true{% else %}false{% endif %}">
+                                    <div class="module-title-section">
+                                        <div class="module-number">{{ loop.index }}</div>
+                                        <div>
+                                            <h5 class="module-title mb-1">{{ module.title }}</h5>
+                                            <p class="module-subtitle mb-0">{{ module.lessons|length }} lessons</p>
+                                        </div>
+                                    </div>
+                                    <i class="fas fa-chevron-down collapse-icon"></i>
+                                </div>
+                                
+                                <div id="module{{ module.id }}" class="collapse {% if loop.first %}show{% endif %}">
+                                    <div class="module-body">
+                                        {% if module.description %}
+                                        <p class="module-description">{{ module.description }}</p>
+                                        {% endif %}
+                                        
+                                        {% if module.lessons %}
+                                        <div class="lessons-list">
+                                            {% for lesson in module.lessons %}
+                                            <div class="lesson-item">
+                                                <div class="lesson-icon">
+                                                    {% if course.has_access %}
+                                                    <i class="fas fa-play-circle text-primary"></i>
+                                                    {% else %}
+                                                    <i class="fas fa-lock text-muted"></i>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="lesson-info">
+                                                    {% if course.has_access %}
+                                                    <a href="{{ url_for('lesson_view', course_id=course.id, lesson_id=lesson.id) }}" class="lesson-title">
+                                                        {{ lesson.title }}
+                                                    </a>
+                                                    {% else %}
+                                                    <span class="lesson-title locked">{{ lesson.title }}</span>
+                                                    {% endif %}
+                                                </div>
+                                                {% if show_duration and lesson.duration %}
+                                                <div class="lesson-duration">
+                                                    <i class="far fa-clock me-1"></i>{{ lesson.duration }}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                        {% else %}
+                                        <p class="text-muted mb-0">No lessons available yet.</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
                     {% else %}
                     <div class="text-center py-5">
                         <i class="fas fa-folder-open fa-4x text-muted mb-3"></i>
