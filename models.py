@@ -458,6 +458,8 @@ class Module(db.Model):
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
     sort_order = db.Column(db.Integer, default=0)
+    is_visible = db.Column(db.Boolean, default=True, nullable=False)
+    status = db.Column(db.String(20), default='published', nullable=False)  # 'draft' or 'published'
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     lessons = db.relationship('Lesson', backref='module', lazy=True, cascade='all, delete-orphan', order_by='Lesson.sort_order')
@@ -469,6 +471,8 @@ class Module(db.Model):
             'title': self.title,
             'description': self.description or '',
             'sort_order': self.sort_order,
+            'is_visible': self.is_visible if self.is_visible is not None else True,
+            'status': self.status or 'published',
             'lessons': [lesson.to_dict() for lesson in self.lessons]
         }
 
@@ -481,6 +485,8 @@ class Lesson(db.Model):
     notes = db.Column(db.Text)  # Lesson notes/resources
     duration = db.Column(db.String(20))  # e.g., "15:30"
     sort_order = db.Column(db.Integer, default=0)
+    is_visible = db.Column(db.Boolean, default=True, nullable=False)
+    status = db.Column(db.String(20), default='published', nullable=False)  # 'draft' or 'published'
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     def to_dict(self):
@@ -492,7 +498,9 @@ class Lesson(db.Model):
             'video_url': self.video_url or '',
             'notes': self.notes or '',
             'duration': self.duration or '',
-            'sort_order': self.sort_order
+            'sort_order': self.sort_order,
+            'is_visible': self.is_visible if self.is_visible is not None else True,
+            'status': self.status or 'published',
         }
 
 class UserCourseAccess(db.Model):

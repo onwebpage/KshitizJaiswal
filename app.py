@@ -91,6 +91,10 @@ with app.app_context():
             "ALTER TABLE user_course_access ADD COLUMN IF NOT EXISTS guest_name VARCHAR(200)",
             "ALTER TABLE user_course_access ADD COLUMN IF NOT EXISTS guest_email VARCHAR(200)",
             "ALTER TABLE user_course_access ADD COLUMN IF NOT EXISTS guest_phone VARCHAR(20)",
+            "ALTER TABLE module ADD COLUMN IF NOT EXISTS is_visible BOOLEAN NOT NULL DEFAULT TRUE",
+            "ALTER TABLE module ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'published'",
+            "ALTER TABLE lesson ADD COLUMN IF NOT EXISTS is_visible BOOLEAN NOT NULL DEFAULT TRUE",
+            "ALTER TABLE lesson ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'published'",
         ]
         for sql in migrations:
             try:

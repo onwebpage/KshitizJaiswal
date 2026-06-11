@@ -57,27 +57,30 @@
                     {% elif course.modules %}
 
                         {% if display_mode == 'modules_only' %}
-                        {# Option B: Module titles only #}
+                        {# Option B: Module titles only — skip hidden/draft modules #}
                         <div class="course-modules">
                             {% for module in course.modules %}
+                            {% if module.is_visible and module.status == 'published' %}
                             <div class="module-card">
                                 <div class="module-header" style="cursor:default;">
                                     <div class="module-title-section">
                                         <div class="module-number">{{ loop.index }}</div>
                                         <div>
                                             <h5 class="module-title mb-1">{{ module.title }}</h5>
-                                            <p class="module-subtitle mb-0">{{ module.lessons|length }} lessons</p>
+                                            <p class="module-subtitle mb-0">{{ module.lessons|selectattr('is_visible')|selectattr('status','equalto','published')|list|length }} lessons</p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
+                            {% endif %}
                             {% endfor %}
                         </div>
 
                         {% elif display_mode == 'days_only' %}
-                        {# Option C: Day/Lesson titles only — flat list grouped under modules #}
+                        {# Option C: Day/Lesson titles only — skip hidden/draft #}
                         <div class="course-modules">
                             {% for module in course.modules %}
+                            {% if module.is_visible and module.status == 'published' %}
                             <div class="module-card">
                                 <div class="module-header" style="cursor:default;">
                                     <div class="module-title-section">
@@ -88,9 +91,10 @@
                                     </div>
                                 </div>
                                 <div class="module-body" style="display:block;">
-                                    {% if module.lessons %}
+                                    {% set visible_lessons = module.lessons|selectattr('is_visible')|selectattr('status','equalto','published')|list %}
+                                    {% if visible_lessons %}
                                     <div class="lessons-list">
-                                        {% for lesson in module.lessons %}
+                                        {% for lesson in visible_lessons %}
                                         <div class="lesson-item">
                                             <div class="lesson-icon">
                                                 {% if course.has_access %}
@@ -114,20 +118,23 @@
                                     {% endif %}
                                 </div>
                             </div>
+                            {% endif %}
                             {% endfor %}
                         </div>
 
                         {% else %}
-                        {# Option A (default): Full curriculum — Modules, Days, Topics, and optionally Video Duration #}
+                        {# Option A (default): Full curriculum — skip hidden/draft modules and lessons #}
                         <div class="course-modules">
                             {% for module in course.modules %}
+                            {% if module.is_visible and module.status == 'published' %}
                             <div class="module-card">
                                 <div class="module-header" data-bs-toggle="collapse" data-bs-target="#module{{ module.id }}" aria-expanded="{% if loop.first %}true{% else %}false{% endif %}">
                                     <div class="module-title-section">
                                         <div class="module-number">{{ loop.index }}</div>
                                         <div>
                                             <h5 class="module-title mb-1">{{ module.title }}</h5>
-                                            <p class="module-subtitle mb-0">{{ module.lessons|length }} lessons</p>
+                                            {% set visible_lessons = module.lessons|selectattr('is_visible')|selectattr('status','equalto','published')|list %}
+                                            <p class="module-subtitle mb-0">{{ visible_lessons|length }} lessons</p>
                                         </div>
                                     </div>
                                     <i class="fas fa-chevron-down collapse-icon"></i>
@@ -139,9 +146,10 @@
                                         <p class="module-description">{{ module.description }}</p>
                                         {% endif %}
                                         
-                                        {% if module.lessons %}
+                                        {% set visible_lessons = module.lessons|selectattr('is_visible')|selectattr('status','equalto','published')|list %}
+                                        {% if visible_lessons %}
                                         <div class="lessons-list">
-                                            {% for lesson in module.lessons %}
+                                            {% for lesson in visible_lessons %}
                                             <div class="lesson-item">
                                                 <div class="lesson-icon">
                                                     {% if course.has_access %}
@@ -173,6 +181,7 @@
                                     </div>
                                 </div>
                             </div>
+                            {% endif %}
                             {% endfor %}
                         </div>
                         {% endif %}

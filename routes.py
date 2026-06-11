@@ -1913,6 +1913,83 @@ def admin_delete_lesson(lesson_id):
     flash(f'Lesson "{lesson_title}" deleted successfully!', 'success')
     return redirect(url_for('admin_lessons'))
 
+# ── Course Builder ────────────────────────────────────────────────────────────
+
+@app.route('/admin/course/<int:course_id>/builder')
+def admin_course_builder(course_id):
+    """Drag-drop course builder with module/lesson visibility and status controls"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    course = Course.query.get_or_404(course_id)
+    modules = Module.query.filter_by(course_id=course_id).order_by(Module.sort_order).all()
+    return render_template('admin/course_builder.html', course=course, modules=modules)
+
+# ── AJAX: Reorder ─────────────────────────────────────────────────────────────
+
+@app.route('/admin/api/modules/reorder', methods=['POST'])
+def admin_api_reorder_modules():
+    """Reorder modules via drag-drop. Body: {course_id, order: [id, ...]}"""
+    if 'admin_logged_in' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    data = request.get_json()
+    order = data.get('order', [])
+    for idx, module_id in enumerate(order):
+        Module.query.filter_by(id=module_id).update({'sort_order': idx})
+    db.session.commit()
+    return jsonify({'ok': True})
+
+@app.route('/admin/api/lessons/reorder', methods=['POST'])
+def admin_api_reorder_lessons():
+    """Reorder lessons within a module. Body: {module_id, order: [id, ...]}"""
+    if 'admin_logged_in' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    data = request.get_json()
+    order = data.get('order', [])
+    for idx, lesson_id in enumerate(order):
+        Lesson.query.filter_by(id=lesson_id).update({'sort_order': idx})
+    db.session.commit()
+    return jsonify({'ok': True})
+
+# ── AJAX: Toggle visibility ───────────────────────────────────────────────────
+
+@app.route('/admin/module/<int:module_id>/toggle-visibility', methods=['POST'])
+def admin_toggle_module_visibility(module_id):
+    if 'admin_logged_in' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    module = Module.query.get_or_404(module_id)
+    module.is_visible = not module.is_visible
+    db.session.commit()
+    return jsonify({'ok': True, 'is_visible': module.is_visible})
+
+@app.route('/admin/lesson/<int:lesson_id>/toggle-visibility', methods=['POST'])
+def admin_toggle_lesson_visibility(lesson_id):
+    if 'admin_logged_in' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    lesson = Lesson.query.get_or_404(lesson_id)
+    lesson.is_visible = not lesson.is_visible
+    db.session.commit()
+    return jsonify({'ok': True, 'is_visible': lesson.is_visible})
+
+# ── AJAX: Toggle status (draft / published) ───────────────────────────────────
+
+@app.route('/admin/module/<int:module_id>/toggle-status', methods=['POST'])
+def admin_toggle_module_status(module_id):
+    if 'admin_logged_in' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    module = Module.query.get_or_404(module_id)
+    module.status = 'draft' if module.status == 'published' else 'published'
+    db.session.commit()
+    return jsonify({'ok': True, 'status': module.status})
+
+@app.route('/admin/lesson/<int:lesson_id>/toggle-status', methods=['POST'])
+def admin_toggle_lesson_status(lesson_id):
+    if 'admin_logged_in' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    lesson = Lesson.query.get_or_404(lesson_id)
+    lesson.status = 'draft' if lesson.status == 'published' else 'published'
+    db.session.commit()
+    return jsonify({'ok': True, 'status': lesson.status})
+
 # NEW ADMIN FEATURES
 
 @app.route('/admin/analytics')

@@ -123,6 +123,9 @@
                 {% endif %}
                 {% if is_column_visible('course', 'Sort Order') %}<td>{{ course.sort_order }}</td>{% endif %}
                 <td>
+                    <a href="{{ url_for('admin_course_builder', course_id=course.id) }}" class="btn btn-sm btn-success" title="Course Builder (drag-drop, visibility, draft/publish)">
+                        <i class="fas fa-tools"></i> Builder
+                    </a>
                     <a href="{{ url_for('admin_edit_course', course_id=course.id) }}" class="btn btn-sm btn-warning">
                         <i class="fas fa-edit"></i>
                     </a>

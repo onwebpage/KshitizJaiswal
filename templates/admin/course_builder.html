@@ -1,0 +1,272 @@
+{% extends "admin/dashboard.html" %}
+
+{% block admin_content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <a href="{{ url_for('admin_courses') }}" class="btn btn-sm btn-outline-secondary me-2">
+            <i class="fas fa-arrow-left me-1"></i>Back to Courses
+        </a>
+        <h2 class="d-inline-block mb-0 align-middle">Course Builder: <span class="text-primary">{{ course.title }}</span></h2>
+    </div>
+    <a href="{{ url_for('admin_add_module') }}" class="btn btn-primary">
+        <i class="fas fa-plus me-1"></i>Add Module
+    </a>
+</div>
+
+<div class="alert alert-info py-2 mb-3">
+    <i class="fas fa-info-circle me-1"></i>
+    <strong>Drag</strong> modules or lessons to reorder. Use the toggle buttons to show/hide or switch between <span class="badge bg-success">Published</span> and <span class="badge bg-warning text-dark">Draft</span>.
+    Changes are saved instantly.
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+{% endif %}
+{% endwith %}
+
+<div id="toast-container" style="position:fixed;top:1rem;right:1rem;z-index:9999;min-width:220px;"></div>
+
+<div id="modules-sortable" class="cb-module-list">
+{% if modules %}
+    {% for module in modules %}
+    <div class="cb-module card mb-3 shadow-sm" data-module-id="{{ module.id }}">
+        <div class="card-header d-flex align-items-center gap-2 py-2 cb-module-header">
+            <span class="cb-drag-handle text-muted me-1" title="Drag to reorder"><i class="fas fa-grip-vertical fa-lg"></i></span>
+            <div class="module-number-badge">{{ loop.index }}</div>
+            <div class="flex-grow-1">
+                <strong class="cb-module-title">{{ module.title }}</strong>
+                {% if module.description %}
+                <small class="text-muted ms-2">{{ module.description|truncate(60) }}</small>
+                {% endif %}
+            </div>
+            <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                <span class="badge {{ 'bg-success' if module.status == 'published' else 'bg-warning text-dark' }} cb-status-badge" data-id="{{ module.id }}" data-type="module">
+                    {{ module.status|capitalize }}
+                </span>
+                <button class="btn btn-sm cb-status-btn {{ 'btn-outline-success' if module.status == 'published' else 'btn-outline-warning' }}"
+                        data-id="{{ module.id }}" data-type="module"
+                        title="{{ 'Set to Draft' if module.status == 'published' else 'Publish' }}">
+                    <i class="fas {{ 'fa-toggle-on' if module.status == 'published' else 'fa-toggle-off' }}"></i>
+                    {{ 'Published' if module.status == 'published' else 'Draft' }}
+                </button>
+                <button class="btn btn-sm cb-visibility-btn {{ 'btn-outline-secondary' if module.is_visible else 'btn-outline-danger' }}"
+                        data-id="{{ module.id }}" data-type="module"
+                        title="{{ 'Hide Module' if module.is_visible else 'Show Module' }}">
+                    <i class="fas {{ 'fa-eye' if module.is_visible else 'fa-eye-slash' }}"></i>
+                    {{ 'Visible' if module.is_visible else 'Hidden' }}
+                </button>
+                <a href="{{ url_for('admin_edit_module', module_id=module.id) }}" class="btn btn-sm btn-outline-primary" title="Edit Module">
+                    <i class="fas fa-edit"></i>
+                </a>
+                <form action="{{ url_for('admin_delete_module', module_id=module.id) }}" method="POST" class="d-inline"
+                      onsubmit="return confirm('Delete this module and all its lessons?');">
+                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Module">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </form>
+                <button class="btn btn-sm btn-outline-secondary cb-toggle-lessons" data-module-id="{{ module.id }}" title="Toggle Lessons">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="card-body p-0 cb-lessons-wrapper" id="lessons-wrapper-{{ module.id }}">
+            <div class="cb-lessons-sortable px-3 pt-2 pb-1" id="lessons-sortable-{{ module.id }}" data-module-id="{{ module.id }}">
+                {% if module.lessons %}
+                    {% for lesson in module.lessons %}
+                    <div class="cb-lesson d-flex align-items-center gap-2 py-2 border-bottom" data-lesson-id="{{ lesson.id }}">
+                        <span class="cb-drag-handle text-muted" title="Drag to reorder"><i class="fas fa-grip-vertical"></i></span>
+                        <i class="fas fa-play-circle text-muted"></i>
+                        <div class="flex-grow-1">
+                            <span class="cb-lesson-title fw-semibold">{{ lesson.title }}</span>
+                            {% if lesson.duration %}
+                            <small class="text-muted ms-2"><i class="far fa-clock me-1"></i>{{ lesson.duration }}</small>
+                            {% endif %}
+                        </div>
+                        <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                            <span class="badge {{ 'bg-success' if lesson.status == 'published' else 'bg-warning text-dark' }} cb-status-badge" data-id="{{ lesson.id }}" data-type="lesson">
+                                {{ lesson.status|capitalize }}
+                            </span>
+                            <button class="btn btn-sm cb-status-btn {{ 'btn-outline-success' if lesson.status == 'published' else 'btn-outline-warning' }}"
+                                    data-id="{{ lesson.id }}" data-type="lesson"
+                                    title="{{ 'Set to Draft' if lesson.status == 'published' else 'Publish' }}">
+                                <i class="fas {{ 'fa-toggle-on' if lesson.status == 'published' else 'fa-toggle-off' }}"></i>
+                                {{ 'Published' if lesson.status == 'published' else 'Draft' }}
+                            </button>
+                            <button class="btn btn-sm cb-visibility-btn {{ 'btn-outline-secondary' if lesson.is_visible else 'btn-outline-danger' }}"
+                                    data-id="{{ lesson.id }}" data-type="lesson"
+                                    title="{{ 'Hide Lesson' if lesson.is_visible else 'Show Lesson' }}">
+                                <i class="fas {{ 'fa-eye' if lesson.is_visible else 'fa-eye-slash' }}"></i>
+                                {{ 'Visible' if lesson.is_visible else 'Hidden' }}
+                            </button>
+                            <a href="{{ url_for('admin_edit_lesson', lesson_id=lesson.id) }}" class="btn btn-sm btn-outline-primary" title="Edit Lesson">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <form action="{{ url_for('admin_delete_lesson', lesson_id=lesson.id) }}" method="POST" class="d-inline"
+                                  onsubmit="return confirm('Delete this lesson?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Lesson">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="text-muted py-3 text-center cb-no-lessons">
+                    <i class="fas fa-inbox me-1"></i>No lessons yet.
+                    <a href="{{ url_for('admin_add_lesson') }}">Add a lesson</a>
+                </div>
+                {% endif %}
+            </div>
+            <div class="px-3 pb-2 pt-1">
+                <a href="{{ url_for('admin_add_lesson') }}" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-plus me-1"></i>Add Lesson to this Module
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+<div class="alert alert-secondary text-center py-5">
+    <i class="fas fa-layer-group fa-3x mb-3 d-block text-muted"></i>
+    No modules yet for this course.
+    <a href="{{ url_for('admin_add_module') }}" class="btn btn-primary mt-2 d-block w-25 mx-auto">Add First Module</a>
+</div>
+{% endif %}
+</div>
+
+<style>
+.cb-module-list { min-height: 60px; }
+.cb-module { border-radius: 10px; overflow: hidden; }
+.cb-module-header { background: #f8f9fa; cursor: default; }
+.cb-drag-handle { cursor: grab; padding: 0 4px; }
+.cb-drag-handle:active { cursor: grabbing; }
+.cb-lesson { transition: background 0.15s; border-radius: 6px; }
+.cb-lesson:hover { background: #f1f3f5; }
+.cb-lesson.sortable-ghost { opacity: 0.4; background: #dee2e6; }
+.cb-module.sortable-ghost { opacity: 0.4; }
+.module-number-badge {
+    width: 26px; height: 26px; border-radius: 50%; background: #0d6efd;
+    color: #fff; display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; flex-shrink: 0;
+}
+.cb-toast { animation: fadeInDown 0.25s ease; }
+@keyframes fadeInDown { from { opacity:0; transform: translateY(-8px); } to { opacity:1; transform: translateY(0); } }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<script>
+(function () {
+    function showToast(msg, type) {
+        var t = document.getElementById('toast-container');
+        var el = document.createElement('div');
+        el.className = 'alert alert-' + (type || 'success') + ' cb-toast py-2 px-3 mb-2 shadow';
+        el.textContent = msg;
+        t.appendChild(el);
+        setTimeout(function () { el.remove(); }, 2500);
+    }
+
+    function postJson(url, data, cb) {
+        fetch(url, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        }).then(function(r){ return r.json(); }).then(cb).catch(function(){
+            showToast('Network error — please try again.', 'danger');
+        });
+    }
+
+    // ── Module-level drag-drop ───────────────────────────────────────────────
+    var moduleList = document.getElementById('modules-sortable');
+    if (moduleList) {
+        Sortable.create(moduleList, {
+            handle: '.cb-module .cb-module-header .cb-drag-handle',
+            animation: 150,
+            ghostClass: 'sortable-ghost',
+            onEnd: function () {
+                var order = Array.from(moduleList.querySelectorAll('.cb-module')).map(function(el){
+                    return parseInt(el.dataset.moduleId);
+                });
+                postJson('/admin/api/modules/reorder', {order: order}, function(r){
+                    showToast(r.ok ? 'Module order saved.' : 'Save failed.', r.ok ? 'success' : 'danger');
+                });
+            }
+        });
+    }
+
+    // ── Lesson-level drag-drop (per module) ─────────────────────────────────
+    document.querySelectorAll('.cb-lessons-sortable').forEach(function(el) {
+        Sortable.create(el, {
+            handle: '.cb-lesson .cb-drag-handle',
+            animation: 150,
+            ghostClass: 'sortable-ghost',
+            onEnd: function () {
+                var moduleId = parseInt(el.dataset.moduleId);
+                var order = Array.from(el.querySelectorAll('.cb-lesson')).map(function(le){
+                    return parseInt(le.dataset.lessonId);
+                });
+                postJson('/admin/api/lessons/reorder', {module_id: moduleId, order: order}, function(r){
+                    showToast(r.ok ? 'Lesson order saved.' : 'Save failed.', r.ok ? 'success' : 'danger');
+                });
+            }
+        });
+    });
+
+    // ── Toggle status (Draft / Published) ───────────────────────────────────
+    document.querySelectorAll('.cb-status-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var id = btn.dataset.id;
+            var type = btn.dataset.type;
+            var url = '/admin/' + type + '/' + id + '/toggle-status';
+            postJson(url, {}, function(r) {
+                if (!r.ok) { showToast('Failed to update status.', 'danger'); return; }
+                var isPub = r.status === 'published';
+                var badge = document.querySelector('.cb-status-badge[data-id="' + id + '"][data-type="' + type + '"]');
+                if (badge) {
+                    badge.textContent = isPub ? 'Published' : 'Draft';
+                    badge.className = 'badge cb-status-badge' + (isPub ? ' bg-success' : ' bg-warning text-dark');
+                    badge.dataset.id = id; badge.dataset.type = type;
+                }
+                btn.innerHTML = '<i class="fas ' + (isPub ? 'fa-toggle-on' : 'fa-toggle-off') + '"></i> ' + (isPub ? 'Published' : 'Draft');
+                btn.className = 'btn btn-sm cb-status-btn ' + (isPub ? 'btn-outline-success' : 'btn-outline-warning');
+                showToast((type === 'module' ? 'Module' : 'Lesson') + ' ' + r.status + '.', 'success');
+            });
+        });
+    });
+
+    // ── Toggle visibility ────────────────────────────────────────────────────
+    document.querySelectorAll('.cb-visibility-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var id = btn.dataset.id;
+            var type = btn.dataset.type;
+            var url = '/admin/' + type + '/' + id + '/toggle-visibility';
+            postJson(url, {}, function(r) {
+                if (!r.ok) { showToast('Failed to update visibility.', 'danger'); return; }
+                var vis = r.is_visible;
+                btn.innerHTML = '<i class="fas ' + (vis ? 'fa-eye' : 'fa-eye-slash') + '"></i> ' + (vis ? 'Visible' : 'Hidden');
+                btn.className = 'btn btn-sm cb-visibility-btn ' + (vis ? 'btn-outline-secondary' : 'btn-outline-danger');
+                showToast((type === 'module' ? 'Module' : 'Lesson') + ' ' + (vis ? 'shown' : 'hidden') + '.', vis ? 'success' : 'warning');
+            });
+        });
+    });
+
+    // ── Collapse / expand lessons ────────────────────────────────────────────
+    document.querySelectorAll('.cb-toggle-lessons').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var mid = btn.dataset.moduleId;
+            var wrapper = document.getElementById('lessons-wrapper-' + mid);
+            if (!wrapper) return;
+            var hidden = wrapper.style.display === 'none';
+            wrapper.style.display = hidden ? '' : 'none';
+            btn.querySelector('i').className = 'fas ' + (hidden ? 'fa-chevron-up' : 'fa-chevron-down');
+        });
+    });
+})();
+</script>
+{% endblock %}
