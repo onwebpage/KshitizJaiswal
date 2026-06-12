@@ -602,44 +602,37 @@
         }
     });
 
-    // Initialize payment system
+    // Initialize payment system — only provide a fallback if no page-level handler is defined
     function initPaymentSystem() {
-        // Make initiatePayment available globally
-        window.initiatePayment = function(amount) {
-            if (!window.razorpayKey) {
-                showNotification('Payment system is not configured yet. Please contact the administrator.', 'error');
-                return;
-            }
-
-            // Show loading
-            showNotification('Preparing payment...', 'info');
-
-            // Create payment order
-            fetch('/create_payment', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    amount: amount
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    openRazorpayCheckout(data, amount);
-                } else {
-                    showNotification(data.message || 'Failed to create payment order', 'error');
+        // Only set window.initiatePayment if the page hasn't already defined one
+        if (typeof window.initiatePayment === 'undefined') {
+            window.initiatePayment = function(amount) {
+                if (!window.razorpayKey) {
+                    showNotification('Payment system is not configured yet. Please contact the administrator.', 'error');
+                    return;
                 }
-            })
-            .catch(error => {
-                console.error('Payment error:', error);
-                showNotification('Payment initialization failed. Please try again.', 'error');
-            });
-        };
+                showNotification('Preparing payment...', 'info');
+                fetch('/create_payment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ amount: amount })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        openRazorpayCheckout(data, amount);
+                    } else {
+                        showNotification(data.message || 'Failed to create payment order', 'error');
+                    }
+                })
+                .catch(() => {
+                    showNotification('Payment initialization failed. Please try again.', 'error');
+                });
+            };
+        }
     }
 
-    // Open Razorpay checkout
+    // Open Razorpay checkout (fallback helper)
     function openRazorpayCheckout(orderData, amount) {
         const options = {
             key: window.razorpayKey,
@@ -660,34 +653,16 @@
                 })
                 .then(res => res.json())
                 .then(data => {
-                    if (data.success) {
-                        showNotification('Payment successful! Thank you for your support! ❤️', 'success');
-                    } else {
-                        showNotification('Payment received but verification failed. Please contact support.', 'warning');
-                    }
+                    showNotification(data.success ? 'Payment successful! Thank you for your support! ❤️' : 'Payment received but verification failed. Please contact support.', data.success ? 'success' : 'warning');
                 })
                 .catch(() => {
                     showNotification('Payment received! Thank you for your support!', 'success');
                 });
             },
-            prefill: {
-                name: '',
-                email: '',
-                contact: ''
-            },
-            notes: {
-                address: 'Support for Kshitiz Jaiswal'
-            },
-            theme: {
-                color: '#6366f1'
-            },
-            modal: {
-                ondismiss: function() {
-                    showNotification('Payment cancelled', 'info');
-                }
-            }
+            prefill: { name: '', email: '', contact: '' },
+            theme: { color: '#CC0000' },
+            modal: { ondismiss: function() { showNotification('Payment cancelled', 'info'); } }
         };
-
         try {
             const rzp = new Razorpay(options);
             rzp.open();
