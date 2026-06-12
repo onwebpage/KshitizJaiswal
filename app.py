@@ -1,5 +1,8 @@
 import os
 import logging
+import traceback
+from collections import deque
+from datetime import datetime
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
@@ -8,6 +11,19 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
+
+# In-memory error log — keeps last 100 errors for admin review
+_error_log = deque(maxlen=100)
+
+def log_app_error(error, context=''):
+    """Store an error entry for admin error log viewing."""
+    _error_log.appendleft({
+        'timestamp': datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC'),
+        'type': type(error).__name__,
+        'message': str(error),
+        'traceback': traceback.format_exc(),
+        'context': context,
+    })
 
 class Base(DeclarativeBase):
     pass

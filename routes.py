@@ -1,5 +1,5 @@
 from flask import render_template, request, jsonify, redirect, url_for, flash, session, abort
-from app import app, db
+from app import app, db, _error_log, log_app_error
 from models import DataManager, AdminUser, SiteContent, Reel, Opinion, Subscriber, SubscriptionTier, Course, Module, Lesson, UserCourseAccess, SocialLink, ColumnVisibility, UserActivity, SiteConfig
 from forms import NewsletterForm, PollVoteForm, AdminLoginForm, ReelForm, OpinionForm, HeroContentForm, PaymentSettingsForm, SubscriptionTierForm, CourseForm, ModuleForm, LessonForm, SocialLinkForm
 from utils import save_uploaded_file, calculate_poll_percentages, get_youtube_embed_url, get_video_info, slugify
@@ -325,9 +325,12 @@ def upcoming_shows():
 
 @app.route('/newsletter', methods=['POST'])
 def newsletter_subscribe():
-    """Newsletter subscription"""
+    """Newsletter subscription — supports both form POST and AJAX (JSON) requests"""
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or \
+              request.headers.get('Accept', '').startswith('application/json')
+
     form = NewsletterForm()
-    
+
     if form.validate_on_submit():
         try:
             DataManager.add_subscriber(
@@ -336,12 +339,19 @@ def newsletter_subscribe():
                 form.place.data,
                 form.age.data
             )
+            if is_ajax:
+                return jsonify({'success': True, 'message': 'Successfully subscribed to newsletter!'})
             flash('Successfully subscribed to newsletter!', 'success')
         except Exception as e:
+            if is_ajax:
+                return jsonify({'success': False, 'message': 'You may already be subscribed, or an error occurred.'})
             flash('Error subscribing to newsletter. Please try again.', 'error')
     else:
+        errors = '; '.join([f for field in form for f in field.errors])
+        if is_ajax:
+            return jsonify({'success': False, 'message': errors or 'Please fill all fields correctly.'})
         flash('Please fill all fields correctly.', 'error')
-    
+
     return redirect(url_for('index') + '#newsletter')
 
 @app.route('/vote', methods=['POST'])
@@ -2331,6 +2341,22 @@ def admin_activity_logs():
     activities.sort(key=lambda x: x['timestamp'], reverse=True)
     
     return render_template('admin/activity_logs.html', activities=activities[:50])
+
+@app.route('/admin/error-logs')
+def admin_error_logs():
+    """Admin error log viewer"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    return render_template('admin/error_logs.html', errors=list(_error_log))
+
+@app.route('/admin/error-logs/clear', methods=['POST'])
+def admin_error_logs_clear():
+    """Clear admin error log"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    _error_log.clear()
+    flash('Error log cleared.', 'success')
+    return redirect(url_for('admin_error_logs'))
 
 @app.route('/admin/database-export')
 def admin_database_export():

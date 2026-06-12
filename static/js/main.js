@@ -255,21 +255,17 @@
             }
         }, 7000);
 
-        // Add event listener for when user accepts disclaimer
-        const disclaimerModal = document.getElementById('disclaimerModal');
-        const acceptButton = disclaimerModal.querySelector('[data-bs-dismiss="modal"]');
-        
-        if (acceptButton) {
-            acceptButton.addEventListener('click', function() {
-                localStorage.setItem('disclaimerAccepted', 'true');
-                disclaimerShown = true;
-                
-                // Track disclaimer acceptance with GTM
-                if (window.dataLayer) {
-                    window.dataLayer.push({
-                        'event': 'disclaimer_accepted'
-                    });
-                }
+        // Add event listener for when user accepts disclaimer (both accept and dismiss buttons)
+        const disclaimerModalEl = document.getElementById('disclaimerModal');
+        if (disclaimerModalEl) {
+            disclaimerModalEl.querySelectorAll('[data-bs-dismiss="modal"]').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    localStorage.setItem('disclaimerAccepted', 'true');
+                    disclaimerShown = true;
+                    if (window.dataLayer) {
+                        window.dataLayer.push({ 'event': 'disclaimer_accepted' });
+                    }
+                });
             });
         }
     }
@@ -330,28 +326,66 @@
             });
         }
 
-        // Add event listener for successful subscription
+        // AJAX newsletter popup form submission
         const newsletterForm = document.getElementById('newsletterPopupForm');
         if (newsletterForm) {
-            newsletterForm.addEventListener('submit', function() {
-                localStorage.setItem('newsletterSubscribed', 'true');
-                
-                // Track subscription with GTM
-                if (window.dataLayer) {
-                    window.dataLayer.push({
-                        'event': 'newsletter_subscribed',
-                        'subscription_source': 'popup'
+            newsletterForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                const name = document.getElementById('popupName')?.value?.trim();
+                const email = document.getElementById('popupEmail')?.value?.trim();
+                const place = document.getElementById('popupPlace')?.value?.trim();
+                const age = document.getElementById('popupAge')?.value?.trim();
+                const errDiv = document.getElementById('newsletterPopupError');
+                const submitBtn = document.getElementById('newsletterPopupSubmit');
+
+                // Basic validation
+                if (!name || !email || !place || !age) {
+                    if (errDiv) { errDiv.textContent = 'Please fill in all fields.'; errDiv.classList.remove('d-none'); }
+                    return;
+                }
+
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Subscribing…';
+                if (errDiv) errDiv.classList.add('d-none');
+
+                const formData = new FormData();
+                formData.append('name', name);
+                formData.append('email', email);
+                formData.append('place', place);
+                formData.append('age', age);
+
+                // Get CSRF token from hidden input or cookie
+                const csrfToken = document.querySelector('[name=csrf_token]')?.value ||
+                                  document.cookie.split(';').map(c => c.trim()).find(c => c.startsWith('csrf_token='))?.split('=')[1] || '';
+                if (csrfToken) formData.append('csrf_token', csrfToken);
+
+                try {
+                    const resp = await fetch('/newsletter', {
+                        method: 'POST',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        body: formData
                     });
-                }
-                
-                // Track with Microsoft Clarity
-                if (window.clarity) {
-                    window.clarity('event', 'newsletter_subscribed');
-                }
-                
-                // Track with Meta Pixel
-                if (window.fbq) {
-                    window.fbq('track', 'Lead');
+                    const data = await resp.json();
+
+                    if (data.success) {
+                        localStorage.setItem('newsletterSubscribed', 'true');
+                        newsletterForm.classList.add('d-none');
+                        const successEl = document.getElementById('newsletterPopupSuccess');
+                        if (successEl) successEl.classList.remove('d-none');
+
+                        if (window.dataLayer) window.dataLayer.push({ 'event': 'newsletter_subscribed', 'subscription_source': 'popup' });
+                        if (window.clarity) window.clarity('event', 'newsletter_subscribed');
+                        if (window.fbq) window.fbq('track', 'Lead');
+                    } else {
+                        if (errDiv) { errDiv.textContent = data.message || 'Something went wrong. Please try again.'; errDiv.classList.remove('d-none'); }
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Subscribe Free';
+                    }
+                } catch (err) {
+                    if (errDiv) { errDiv.textContent = 'Connection error. Please try again.'; errDiv.classList.remove('d-none'); }
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Subscribe Free';
                 }
             });
         }

@@ -1,5 +1,14 @@
 {% extends "base.html" %}
 
+{% block title %}{{ course.title }} - Kshitiz Jaiswal{% endblock %}
+{% block meta_description %}{{ course.description|truncate(160) }}{% endblock %}
+{% block og_title %}{{ course.title }} - Kshitiz Jaiswal Courses{% endblock %}
+{% block og_description %}{{ course.description|truncate(200) }}{% endblock %}
+{% block og_type %}product{% endblock %}
+{% if course.thumbnail %}
+{% block og_image %}{{ url_for('static', filename=course.thumbnail, _external=True) if not course.thumbnail.startswith('http') else course.thumbnail }}{% endblock %}
+{% endif %}
+
 {% block content %}
 <section class="course-detail-hero py-5">
     <div class="container">
@@ -390,10 +399,9 @@ document.getElementById('purchaseForm').addEventListener('submit', async functio
                 });
                 const verifyData = await verifyResponse.json();
                 if (verifyData.success) {
-                    alert('🎉 ' + verifyData.message);
-                    window.location.href = verifyData.redirect_url;
+                    showPaymentSuccess(verifyData.redirect_url, email);
                 } else {
-                    alert('Payment verification failed: ' + verifyData.message);
+                    showPaymentFailure(verifyData.message || 'Payment verification failed. Please contact support.');
                 }
             },
             modal: {
@@ -408,11 +416,74 @@ document.getElementById('purchaseForm').addEventListener('submit', async functio
         rzp.open();
     } catch (error) {
         console.error('Payment error:', error);
-        alert('An error occurred. Please try again.');
         submitBtn.disabled = false;
         submitBtn.innerHTML = '<i class="fas fa-lock me-2"></i>Proceed to Payment';
+        showPaymentFailure('An error occurred. Please try again.');
     }
 });
+
+// Auto-open purchase modal if ?buy=1 in URL
+if (new URLSearchParams(window.location.search).get('buy') === '1') {
+    window.addEventListener('load', function() {
+        setTimeout(function() {
+            const btn = document.querySelector('.btn-purchase[onclick]');
+            if (btn) btn.click();
+        }, 600);
+    });
+}
+
+function showPaymentSuccess(redirectUrl, email) {
+    const isGuest = !document.querySelector('[data-clerk-user-id]');
+    const modal = document.createElement('div');
+    modal.id = 'paymentSuccessOverlay';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+    modal.innerHTML = `
+        <div style="background:#fff;border-radius:20px;max-width:460px;width:100%;padding:40px 32px;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,0.3);">
+            <div style="width:72px;height:72px;background:linear-gradient(135deg,#43e97b,#38f9d7);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
+                <i class="fas fa-check" style="color:#fff;font-size:28px;"></i>
+            </div>
+            <h4 class="fw-bold mb-2">Payment Successful! 🎉</h4>
+            <p class="text-muted mb-4">You now have lifetime access to this course.</p>
+            ${isGuest ? `
+            <div style="background:#f8faff;border-radius:12px;padding:20px;margin-bottom:24px;border:1px solid #e8edff;">
+                <h6 class="fw-bold mb-2"><i class="fas fa-user-plus me-2 text-primary"></i>Save Your Access</h6>
+                <p class="text-muted small mb-3">Create a free account to access your course anytime from any device.</p>
+                <button onclick="window.location.href='/login?redirect=' + encodeURIComponent('${redirectUrl || '/courses'}') + '&email=' + encodeURIComponent('${email || ''}')" 
+                    class="btn btn-primary w-100 mb-2" style="border-radius:10px;">
+                    <i class="fas fa-user-plus me-2"></i>Create Free Account
+                </button>
+                <button onclick="window.location.href='${redirectUrl || '/courses'}'" 
+                    class="btn btn-link text-muted btn-sm w-100">
+                    Skip — Access Course Directly
+                </button>
+            </div>
+            ` : `
+            <a href="${redirectUrl || '/courses'}" class="btn btn-primary btn-lg w-100 mb-2" style="border-radius:12px;">
+                <i class="fas fa-play-circle me-2"></i>Start Learning Now
+            </a>
+            `}
+        </div>`;
+    document.body.appendChild(modal);
+}
+
+function showPaymentFailure(message) {
+    const modal = document.createElement('div');
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+    modal.innerHTML = `
+        <div style="background:#fff;border-radius:20px;max-width:420px;width:100%;padding:36px 28px;text-align:center;">
+            <div style="width:64px;height:64px;background:#fee2e2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+                <i class="fas fa-times" style="color:#ef4444;font-size:24px;"></i>
+            </div>
+            <h5 class="fw-bold mb-2">Payment Issue</h5>
+            <p class="text-muted mb-4">${message}</p>
+            <div class="d-flex gap-2 justify-content-center">
+                <button onclick="this.closest('div[style]').remove()" class="btn btn-outline-secondary">Try Again</button>
+                <a href="/contact" class="btn btn-primary">Contact Support</a>
+            </div>
+        </div>`;
+    modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+    document.body.appendChild(modal);
+}
 </script>
 
 <style>
