@@ -630,6 +630,26 @@
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
 const RAZORPAY_KEY = "{{ razorpay_key }}";
+window.razorpayKey = RAZORPAY_KEY;
+
+function showSupportSuccess() {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+    overlay.innerHTML = `
+        <div style="background:#fff;border-radius:20px;max-width:420px;width:100%;padding:40px 28px;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,0.3);">
+            <div style="width:72px;height:72px;background:linear-gradient(135deg,#43e97b,#38f9d7);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
+                <i class="fas fa-heart" style="color:#fff;font-size:28px;"></i>
+            </div>
+            <h4 class="fw-bold mb-2">Thank You! ❤️</h4>
+            <p class="text-muted mb-4">Your support means the world to Kshitiz. Every rupee helps create honest, unfiltered commentary.</p>
+            <button onclick="this.closest('div[style*=fixed]').remove()" class="btn btn-primary w-100" style="border-radius:12px;">
+                <i class="fas fa-home me-2"></i>Continue
+            </button>
+            <p class="text-muted small mt-3 mb-0"><i class="fas fa-shield-alt me-1 text-success"></i>Secured by Razorpay</p>
+        </div>`;
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+    document.body.appendChild(overlay);
+}
 let _supportAmount = 0;
 
 function initiatePayment(amount) {
@@ -685,8 +705,22 @@ async function processSupportPayment() {
             description: 'Support the Unfiltered Commentary',
             prefill: { name: name || '', email: email || '', contact: phone ? '+91' + phone : '' },
             theme: { color: '#CC0000' },
-            handler: function(response) {
-                alert('🙏 Thank you for your support! Your contribution means a lot.');
+            handler: async function(response) {
+                try {
+                    const verifyRes = await fetch('/support/payment/verify', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_signature: response.razorpay_signature
+                        })
+                    });
+                    const verifyData = await verifyRes.json();
+                    showSupportSuccess();
+                } catch(e) {
+                    showSupportSuccess();
+                }
             },
             modal: {
                 ondismiss: function() {

@@ -615,8 +615,8 @@
     function initPaymentSystem() {
         // Make initiatePayment available globally
         window.initiatePayment = function(amount) {
-            if (!window.razorpayKey || window.razorpayKey === 'rzp_test_dummy_key') {
-                showNotification('Payment system is not configured. Please contact the administrator.', 'error');
+            if (!window.razorpayKey) {
+                showNotification('Payment system is not configured yet. Please contact the administrator.', 'error');
                 return;
             }
 

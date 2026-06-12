@@ -91,14 +91,16 @@ def index():
         logging.error(f"Database error fetching subscription tiers: {e}")
         subscription_tiers = []
     
-    # Get Razorpay settings from database
+    # Get Razorpay key — prefer env var, fallback to DB admin setting
     import json
-    razorpay_key = 'rzp_test_dummy_key'
+    razorpay_key = os.environ.get('RAZORPAY_KEY_ID', '')
     try:
         payment_content = SiteContent.query.filter_by(content_key='payment_settings').first()
         if payment_content:
             payment_settings = json.loads(payment_content.content_data)
-            razorpay_key = payment_settings.get('razorpay_key_id', 'rzp_test_dummy_key')
+            db_key = payment_settings.get('razorpay_key_id', '')
+            if db_key:
+                razorpay_key = db_key
     except Exception as e:
         import logging
         logging.error(f"Database error fetching payment settings: {e}")
@@ -336,8 +338,8 @@ def newsletter_subscribe():
             DataManager.add_subscriber(
                 form.name.data,
                 form.email.data,
-                form.place.data,
-                form.age.data
+                form.place.data or '',
+                form.age.data or 0
             )
             if is_ajax:
                 return jsonify({'success': True, 'message': 'Successfully subscribed to newsletter!'})
@@ -2783,11 +2785,13 @@ def courses():
         course_dict['lesson_count'] = sum([len(module.lessons) for module in course.modules])
         courses_data.append(course_dict)
     
+    razorpay_key = os.environ.get('RAZORPAY_KEY_ID', '')
     payment_content = SiteContent.query.filter_by(content_key='payment_settings').first()
-    razorpay_key = 'rzp_test_dummy_key'
     if payment_content:
         payment_settings = json.loads(payment_content.content_data)
-        razorpay_key = payment_settings.get('razorpay_key_id', 'rzp_test_dummy_key')
+        db_key = payment_settings.get('razorpay_key_id', '')
+        if db_key:
+            razorpay_key = db_key
     
     return render_template('courses.html', courses=courses_data, razorpay_key=razorpay_key)
 
@@ -2834,11 +2838,13 @@ def course_detail(course_id):
     course_data = course.to_dict()
     course_data['has_access'] = has_access
     
+    razorpay_key = os.environ.get('RAZORPAY_KEY_ID', '')
     payment_content = SiteContent.query.filter_by(content_key='payment_settings').first()
-    razorpay_key = 'rzp_test_dummy_key'
     if payment_content:
         payment_settings = json.loads(payment_content.content_data)
-        razorpay_key = payment_settings.get('razorpay_key_id', 'rzp_test_dummy_key')
+        db_key = payment_settings.get('razorpay_key_id', '')
+        if db_key:
+            razorpay_key = db_key
     
     curriculum_settings = _get_curriculum_settings()
     
@@ -2995,6 +3001,25 @@ def verify_course_payment():
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
 
+
+@app.route('/payment/success')
+def payment_success():
+    """Dedicated payment success page"""
+    return render_template('payment_success.html',
+        payment_type=request.args.get('type', ''),
+        message=request.args.get('message', ''),
+        course_title=request.args.get('course_title', ''),
+        redirect_url=request.args.get('redirect', ''),
+        email=request.args.get('email', ''),
+        is_logged_in=bool(get_clerk_user_id())
+    )
+
+@app.route('/payment/failed')
+def payment_failed():
+    """Dedicated payment failed page"""
+    return render_template('payment_failed.html',
+        message=request.args.get('message', '')
+    )
 
 @app.route('/support/payment/verify', methods=['POST'])
 def verify_support_payment():

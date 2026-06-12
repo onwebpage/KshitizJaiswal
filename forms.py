@@ -6,8 +6,8 @@ from flask_wtf.file import FileAllowed
 class NewsletterForm(FlaskForm):
     name = StringField('Name', validators=[DataRequired(), Length(min=2, max=50)])
     email = StringField('Email', validators=[DataRequired(), Email()])
-    place = StringField('Place', validators=[DataRequired(), Length(min=2, max=50)])
-    age = IntegerField('Age', validators=[DataRequired(), NumberRange(min=13, max=120)])
+    place = StringField('Place', validators=[Length(max=50)])
+    age = IntegerField('Age', validators=[NumberRange(min=13, max=120)], default=0)
 
 class PollVoteForm(FlaskForm):
     opinion_id = IntegerField('Opinion ID', validators=[DataRequired()])
