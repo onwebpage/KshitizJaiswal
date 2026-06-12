@@ -186,45 +186,31 @@
         });
     }
 
-    // Initialize scroll animations
+    // Initialize scroll animations — only on explicit card/block elements, never on <section> tags
     function initScrollAnimations() {
         const observerOptions = {
-            threshold: 0.15,
-            rootMargin: '0px 0px -100px 0px'
+            threshold: 0.1,
+            rootMargin: '0px 0px -60px 0px'
         };
 
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     entry.target.classList.add('is-visible');
+                    observer.unobserve(entry.target); // stop observing once visible
                 }
             });
         }, observerOptions);
 
-        // Observe elements for fade-in animation
-        const fadeElements = document.querySelectorAll('.fade-in-section, section, .hero-section');
-        fadeElements.forEach(el => {
-            if (!el.classList.contains('fade-in-section')) {
-                el.classList.add('fade-in-section');
-            }
-            observer.observe(el);
-        });
+        // Only fade-in elements that already have the class — never add it to <section> or hero
+        const explicitFadeEls = document.querySelectorAll('.fade-in-section');
+        explicitFadeEls.forEach(el => observer.observe(el));
 
-        // Observe elements for slide animations
-        const slideLeftElements = document.querySelectorAll('.slide-in-left');
-        slideLeftElements.forEach(el => observer.observe(el));
+        // Slide animations
+        document.querySelectorAll('.slide-in-left, .slide-in-right').forEach(el => observer.observe(el));
 
-        const slideRightElements = document.querySelectorAll('.slide-in-right');
-        slideRightElements.forEach(el => observer.observe(el));
-
-        // Observe elements for scale animation
-        const scaleElements = document.querySelectorAll('.scale-in, .reel-item, .resource-card, .opinion-card, .show-card, .contact-card');
-        scaleElements.forEach(el => {
-            if (!el.classList.contains('scale-in')) {
-                el.classList.add('scale-in');
-            }
-            observer.observe(el);
-        });
+        // Scale animations — only explicit .scale-in elements, not broad selectors
+        document.querySelectorAll('.scale-in').forEach(el => observer.observe(el));
     }
 
     // Initialize disclaimer popup
@@ -233,41 +219,46 @@
         if (window.location.pathname.startsWith('/admin')) {
             return;
         }
-        
+
+        const disclaimerModalEl = document.getElementById('disclaimerModal');
+        if (!disclaimerModalEl) return;
+
         // Check if already shown and accepted
         if (localStorage.getItem('disclaimerAccepted') === 'true') {
             disclaimerShown = true;
             return;
         }
-        
-        if (disclaimerShown) return;
-        
-        setTimeout(() => {
-            const disclaimerModal = new bootstrap.Modal(document.getElementById('disclaimerModal'));
-            disclaimerModal.show();
-            disclaimerShown = true;
-            
-            // Track disclaimer view with GTM
-            if (window.dataLayer) {
-                window.dataLayer.push({
-                    'event': 'disclaimer_shown'
-                });
-            }
-        }, 7000);
 
-        // Add event listener for when user accepts disclaimer (both accept and dismiss buttons)
-        const disclaimerModalEl = document.getElementById('disclaimerModal');
-        if (disclaimerModalEl) {
-            disclaimerModalEl.querySelectorAll('[data-bs-dismiss="modal"]').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    localStorage.setItem('disclaimerAccepted', 'true');
-                    disclaimerShown = true;
-                    if (window.dataLayer) {
-                        window.dataLayer.push({ 'event': 'disclaimer_accepted' });
-                    }
-                });
-            });
-        }
+        if (disclaimerShown) return;
+
+        // Clean up any stale backdrop after modal hides
+        disclaimerModalEl.addEventListener('hidden.bs.modal', function () {
+            localStorage.setItem('disclaimerAccepted', 'true');
+            disclaimerShown = true;
+
+            // Force-remove any lingering backdrops
+            document.querySelectorAll('.modal-backdrop').forEach(function(el) { el.remove(); });
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+
+            if (window.dataLayer) {
+                window.dataLayer.push({ 'event': 'disclaimer_accepted' });
+            }
+        });
+
+        setTimeout(() => {
+            try {
+                const disclaimerModal = new bootstrap.Modal(disclaimerModalEl, { backdrop: true, keyboard: true });
+                disclaimerModal.show();
+                disclaimerShown = true;
+                if (window.dataLayer) {
+                    window.dataLayer.push({ 'event': 'disclaimer_shown' });
+                }
+            } catch(e) {
+                console.warn('Disclaimer modal error:', e);
+            }
+        }, 5000);
     }
 
     // Initialize newsletter popup
