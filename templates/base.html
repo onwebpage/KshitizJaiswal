@@ -138,10 +138,28 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        {% if course_user %}
+                        <div class="dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-user-circle me-1"></i>{{ course_user.name.split()[0] }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" style="border-radius:12px;border:none;box-shadow:0 8px 32px rgba(0,0,0,0.15);">
+                                <li>
+                                    <span class="dropdown-item-text text-muted small px-3 py-1">{{ course_user.email or course_user.phone }}</span>
+                                </li>
+                                <li><hr class="dropdown-divider my-1"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('my_courses') }}"><i class="fas fa-graduation-cap me-2 text-primary"></i>My Courses</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('change_password') }}"><i class="fas fa-key me-2 text-warning"></i>Change Password</a></li>
+                                <li><hr class="dropdown-divider my-1"></li>
+                                <li><a class="dropdown-item text-danger" href="{{ url_for('user_logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Sign Out</a></li>
+                            </ul>
+                        </div>
+                        {% else %}
                         <div id="clerk-user-button" style="display: none;"></div>
-                        <a id="clerk-login-btn" class="nav-link" href="{{ url_for('clerk_login') }}">
+                        <a id="clerk-login-btn" class="nav-link" href="{{ url_for('user_login') }}">
                             <i class="fas fa-sign-in-alt me-1"></i>Login
                         </a>
+                        {% endif %}
                     </li>
                 </ul>
             </div>

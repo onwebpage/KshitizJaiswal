@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}WhatsApp Settings - Admin{% endblock %}
+
+{% block content %}
+<div class="admin-section">
+    <div class="admin-sidebar">
+        <div class="admin-header">
+            <h4><i class="fas fa-cog me-2"></i>Admin Panel</h4>
+            <a href="{{ url_for('admin_logout') }}" class="btn btn-sm btn-outline-danger">
+                <i class="fas fa-sign-out-alt me-1"></i>Logout
+            </a>
+        </div>
+        <div class="admin-nav">
+            <a href="{{ url_for('admin_dashboard') }}" class="admin-nav-item">
+                <i class="fas fa-home me-2"></i>Dashboard
+            </a>
+            <hr class="my-2">
+            <a href="{{ url_for('admin_payment_settings') }}" class="admin-nav-item">
+                <i class="fas fa-credit-card me-2"></i>Payment Settings
+            </a>
+            <a href="{{ url_for('admin_whatsapp_settings') }}" class="admin-nav-item active">
+                <i class="fab fa-whatsapp me-2"></i>WhatsApp Settings
+            </a>
+            <a href="{{ url_for('admin_users') }}" class="admin-nav-item">
+                <i class="fas fa-users me-2"></i>Course Users
+            </a>
+        </div>
+    </div>
+
+    <div class="admin-content">
+        <div class="admin-content-header">
+            <h2><i class="fab fa-whatsapp me-2 text-success"></i>WhatsApp Credential Delivery</h2>
+            <p class="text-muted mb-0">Configure automatic WhatsApp messages sent to users after course purchase.</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="row g-4">
+            <div class="col-lg-7">
+                <div class="card border-0 shadow-sm" style="border-radius:16px;">
+                    <div class="card-header border-0 pt-4 pb-2 px-4" style="background:transparent;">
+                        <h5 class="fw-bold mb-0"><i class="fas fa-cog me-2 text-primary"></i>Meta WhatsApp Cloud API</h5>
+                        <p class="text-muted small mt-1 mb-0">Uses the official Meta WhatsApp Business API to send credentials.</p>
+                    </div>
+                    <div class="card-body px-4 pb-4">
+                        <form method="POST">
+                            <div class="mb-4 d-flex align-items-center justify-content-between p-3 rounded"
+                                style="background:#f0fdf4;border:1px solid #86efac;">
+                                <div>
+                                    <p class="fw-semibold text-success mb-0">Enable WhatsApp Notifications</p>
+                                    <small class="text-muted">Sends login credentials to user's WhatsApp after purchase</small>
+                                </div>
+                                <div class="form-check form-switch ms-3">
+                                    <input class="form-check-input" type="checkbox" name="enabled" id="enabledToggle"
+                                        style="width:3em;height:1.5em;"
+                                        {% if settings.get('enabled') %}checked{% endif %}>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">
+                                    <i class="fas fa-hashtag me-1 text-muted"></i>Phone Number ID
+                                    <span class="badge bg-secondary ms-1" style="font-size:0.7rem;">from Meta Business Manager</span>
+                                </label>
+                                <input type="text" name="phone_number_id" class="form-control"
+                                    value="{{ settings.get('phone_number_id', '') }}"
+                                    placeholder="e.g. 123456789012345"
+                                    style="border-radius:10px;">
+                                <div class="form-text">Found in Meta Business Manager → WhatsApp → API Setup</div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold">
+                                    <i class="fas fa-key me-1 text-muted"></i>Permanent Access Token
+                                </label>
+                                <input type="password" name="access_token" class="form-control"
+                                    placeholder="{% if settings.get('access_token') %}••••••••••••••• (saved){% else %}Paste your permanent access token{% endif %}"
+                                    style="border-radius:10px;">
+                                <div class="form-text">
+                                    Leave blank to keep existing token.
+                                    <a href="https://developers.facebook.com/docs/whatsapp/business-management-api/get-started" target="_blank" rel="noopener">
+                                        How to get a token →
+                                    </a>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-success px-4 fw-semibold" style="border-radius:10px;">
+                                <i class="fas fa-save me-2"></i>Save Settings
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="card border-0 shadow-sm mb-3" style="border-radius:16px;background:linear-gradient(135deg,#25D366 0%,#128C7E 100%);">
+                    <div class="card-body p-4 text-white">
+                        <h6 class="fw-bold mb-2"><i class="fab fa-whatsapp me-2"></i>Message Preview</h6>
+                        <div style="background:rgba(255,255,255,0.15);border-radius:12px;padding:16px;font-size:0.85rem;line-height:1.6;">
+                            <p class="mb-1">🎓 *Welcome to Kshitiz Jaiswal's Courses!*</p>
+                            <p class="mb-1">Hello Kshitiz,</p>
+                            <p class="mb-2">Your account has been created after your purchase.</p>
+                            <p class="mb-1">📧 *Login ID:* kshitiz@email.com</p>
+                            <p class="mb-2">🔑 *Password:* Kshitiz@235</p>
+                            <p class="mb-1">👉 *Login here:* https://yoursite.com/user/login</p>
+                            <p class="mb-0 opacity-75"><em>You can change your password after logging in.</em></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm" style="border-radius:16px;">
+                    <div class="card-body p-4">
+                        <h6 class="fw-bold text-dark mb-3"><i class="fas fa-info-circle me-2 text-primary"></i>Setup Guide</h6>
+                        <ol class="small text-muted mb-0" style="padding-left:1.2rem;line-height:1.8;">
+                            <li>Create a <strong>Meta Business account</strong> at <a href="https://business.facebook.com" target="_blank">business.facebook.com</a></li>
+                            <li>Set up a <strong>WhatsApp Business App</strong> in Meta Developers</li>
+                            <li>Get your <strong>Phone Number ID</strong> from API Setup</li>
+                            <li>Generate a <strong>Permanent Access Token</strong></li>
+                            <li>Add the user's phone number as a <strong>test number</strong> first</li>
+                            <li>Enable and save the settings above</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm mt-3" style="border-radius:16px;background:#f8fafc;">
+                    <div class="card-body p-4">
+                        <h6 class="fw-bold mb-2"><i class="fas fa-users me-2 text-primary"></i>Course User Accounts</h6>
+                        <div class="d-flex align-items-center">
+                            <div style="font-size:2.5rem;font-weight:800;color:#7c3aed;">{{ course_user_count }}</div>
+                            <div class="ms-3 text-muted small">accounts auto-created<br>from course purchases</div>
+                        </div>
+                        <a href="{{ url_for('admin_users') }}" class="btn btn-outline-primary btn-sm mt-2" style="border-radius:8px;">
+                            View All Users →
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

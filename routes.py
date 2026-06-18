@@ -1,6 +1,6 @@
 from flask import render_template, request, jsonify, redirect, url_for, flash, session, abort
 from app import app, db, _error_log, log_app_error
-from models import DataManager, AdminUser, SiteContent, Reel, Opinion, Subscriber, SubscriptionTier, Course, Module, Lesson, UserCourseAccess, SocialLink, ColumnVisibility, UserActivity, SiteConfig
+from models import DataManager, AdminUser, SiteContent, Reel, Opinion, Subscriber, SubscriptionTier, Course, Module, Lesson, UserCourseAccess, SocialLink, ColumnVisibility, UserActivity, SiteConfig, CourseUser
 from forms import NewsletterForm, PollVoteForm, AdminLoginForm, ReelForm, OpinionForm, HeroContentForm, PaymentSettingsForm, SubscriptionTierForm, CourseForm, ModuleForm, LessonForm, SocialLinkForm
 from utils import save_uploaded_file, calculate_poll_percentages, get_youtube_embed_url, get_video_info, slugify
 from clerk_auth import clerk_auth_required, get_clerk_user, get_clerk_user_id
@@ -13,6 +13,22 @@ razorpay_client = razorpay.Client(auth=(
     os.environ.get('RAZORPAY_KEY_ID', 'rzp_test_dummy_key'),
     os.environ.get('RAZORPAY_KEY_SECRET', 'dummy_secret')
 ))
+
+def get_course_user_id():
+    """Return the logged-in CourseUser's ID from session, or None."""
+    return session.get('course_user_id')
+
+
+def get_course_user():
+    """Return the logged-in CourseUser object, or None."""
+    uid = session.get('course_user_id')
+    if uid:
+        try:
+            return CourseUser.query.get(uid)
+        except Exception:
+            pass
+    return None
+
 
 @app.context_processor
 def inject_section_visibility():
@@ -38,7 +54,7 @@ def inject_section_visibility():
     except Exception:
         site_settings = {}
 
-    return {'section_vis': section_vis, 'site_settings': site_settings}
+    return {'section_vis': section_vis, 'site_settings': site_settings, 'course_user': get_course_user()}
 
 
 @app.route('/')
@@ -2611,6 +2627,78 @@ def clerk_callback():
     next_url = session.pop('next_url', url_for('index'))
     return redirect(next_url)
 
+
+@app.route('/user/login', methods=['GET', 'POST'])
+def user_login():
+    """Course user login — by email or mobile number"""
+    if get_course_user():
+        return redirect(url_for('my_courses'))
+
+    error = None
+    next_url = request.args.get('next', '')
+
+    if request.method == 'POST':
+        identifier = request.form.get('identifier', '').strip()
+        password = request.form.get('password', '').strip()
+
+        if not identifier or not password:
+            error = 'Please enter your login ID and password.'
+        else:
+            user = CourseUser.get_by_identifier(identifier)
+            if user and user.check_password(password):
+                session['course_user_id'] = user.id
+                first = user.name.split()[0]
+                flash(f'Welcome back, {first}!', 'success')
+                if user.must_change_password:
+                    flash('Please change your auto-generated password for security.', 'warning')
+                    return redirect(url_for('change_password'))
+                return redirect(next_url or url_for('my_courses'))
+            else:
+                error = 'Invalid login ID or password. Please try again.'
+
+    return render_template('user_login.html', error=error, next_url=next_url)
+
+
+@app.route('/user/logout')
+def user_logout():
+    """Course user logout"""
+    session.pop('course_user_id', None)
+    flash('You have been signed out.', 'info')
+    return redirect(url_for('index'))
+
+
+@app.route('/user/change-password', methods=['GET', 'POST'])
+def change_password():
+    """Change password for course user"""
+    course_user = get_course_user()
+    if not course_user:
+        flash('Please sign in first.', 'warning')
+        return redirect(url_for('user_login'))
+
+    error = None
+
+    if request.method == 'POST':
+        current_password = request.form.get('current_password', '').strip()
+        new_password = request.form.get('new_password', '').strip()
+        confirm_password = request.form.get('confirm_password', '').strip()
+
+        if not all([current_password, new_password, confirm_password]):
+            error = 'All fields are required.'
+        elif not course_user.check_password(current_password):
+            error = 'Current password is incorrect.'
+        elif len(new_password) < 6:
+            error = 'New password must be at least 6 characters.'
+        elif new_password != confirm_password:
+            error = 'New passwords do not match.'
+        else:
+            course_user.set_password(new_password)
+            course_user.must_change_password = False
+            db.session.commit()
+            flash('Password changed successfully!', 'success')
+            return redirect(url_for('my_courses'))
+
+    return render_template('change_password.html', error=error, course_user=course_user)
+
 @app.errorhandler(404)
 def not_found_error(error):
     return render_template('404.html'), 404
@@ -2799,24 +2887,40 @@ def courses():
 def my_courses():
     """My Courses page - shows courses the user has purchased"""
     clerk_user_id = get_clerk_user_id()
-    
-    if not clerk_user_id:
+    course_user = get_course_user()
+
+    if not clerk_user_id and not course_user:
         flash('Please sign in to view your courses.', 'warning')
-        return redirect(url_for('clerk_login', next=request.url))
-    
-    user_accesses = UserCourseAccess.get_user_courses(clerk_user_id)
-    
+        return redirect(url_for('user_login', next=request.url))
+
     my_courses_data = []
-    for access in user_accesses:
-        course = Course.query.get(access.course_id)
-        if course and course.is_active:
-            course_dict = course.to_dict()
-            course_dict['has_access'] = True
-            course_dict['module_count'] = len(course.modules)
-            course_dict['lesson_count'] = sum([len(module.lessons) for module in course.modules])
-            course_dict['purchased_at'] = access.granted_at.strftime('%B %d, %Y') if access.granted_at else ''
-            my_courses_data.append(course_dict)
-    
+    seen_course_ids = set()
+
+    if clerk_user_id:
+        for access in UserCourseAccess.get_user_courses(clerk_user_id):
+            course = Course.query.get(access.course_id)
+            if course and course.is_active and course.id not in seen_course_ids:
+                course_dict = course.to_dict()
+                course_dict['has_access'] = True
+                course_dict['module_count'] = len(course.modules)
+                course_dict['lesson_count'] = sum([len(m.lessons) for m in course.modules])
+                course_dict['purchased_at'] = access.granted_at.strftime('%B %d, %Y') if access.granted_at else ''
+                my_courses_data.append(course_dict)
+                seen_course_ids.add(course.id)
+
+    if course_user:
+        for access in course_user.get_course_accesses():
+            if access.course_id not in seen_course_ids:
+                course = Course.query.get(access.course_id)
+                if course and course.is_active:
+                    course_dict = course.to_dict()
+                    course_dict['has_access'] = True
+                    course_dict['module_count'] = len(course.modules)
+                    course_dict['lesson_count'] = sum([len(m.lessons) for m in course.modules])
+                    course_dict['purchased_at'] = access.granted_at.strftime('%B %d, %Y') if access.granted_at else ''
+                    my_courses_data.append(course_dict)
+                    seen_course_ids.add(access.course_id)
+
     return render_template('my_courses.html', courses=my_courses_data)
 
 @app.route('/course/<int:course_id>')
@@ -2833,11 +2937,17 @@ def course_detail(course_id):
     if course.price == 0:
         has_access = True
     else:
-        has_access = UserCourseAccess.has_access(clerk_user_id, course_id) if clerk_user_id else False
-    
+        has_access = False
+        if clerk_user_id:
+            has_access = UserCourseAccess.has_access(clerk_user_id, course_id)
+        if not has_access:
+            _cu = get_course_user()
+            if _cu:
+                has_access = _cu.has_course_access(course_id)
+
     course_data = course.to_dict()
     course_data['has_access'] = has_access
-    
+
     razorpay_key = os.environ.get('RAZORPAY_KEY_ID', '')
     payment_content = SiteContent.query.filter_by(content_key='payment_settings').first()
     if payment_content:
@@ -2860,18 +2970,23 @@ def lesson_view(course_id, lesson_id):
         abort(404)
     
     clerk_user_id = get_clerk_user_id()
-    
+
     # Free courses (price = 0) are accessible to everyone without login
     if course.price == 0:
         has_access = True
     else:
-        if not clerk_user_id:
-            flash('Please sign in to access this course.', 'warning')
-            return redirect(url_for('clerk_login', next=request.url))
-        
-        has_access = UserCourseAccess.has_access(clerk_user_id, course_id)
-        
+        has_access = False
+        if clerk_user_id:
+            has_access = UserCourseAccess.has_access(clerk_user_id, course_id)
         if not has_access:
+            _cu = get_course_user()
+            if _cu:
+                has_access = _cu.has_course_access(course_id)
+
+        if not has_access:
+            if not clerk_user_id and not get_course_user():
+                flash('Please sign in to access this course.', 'warning')
+                return redirect(url_for('user_login', next=request.url))
             flash('You need to purchase this course to access lessons.', 'warning')
             return redirect(url_for('course_detail', course_id=course_id))
     
@@ -2988,10 +3103,48 @@ def verify_course_payment():
         )
         db.session.add(access)
         db.session.commit()
-        
+
+        # Auto-create CourseUser account if not already exists
+        try:
+            if guest_email or guest_phone:
+                existing_user = None
+                if guest_email:
+                    existing_user = CourseUser.get_by_identifier(guest_email)
+                if not existing_user and guest_phone:
+                    existing_user = CourseUser.get_by_identifier(guest_phone)
+
+                if not existing_user:
+                    auto_password = CourseUser.generate_password(guest_name, guest_phone)
+                    new_user = CourseUser(
+                        name=guest_name or 'User',
+                        email=guest_email or None,
+                        phone=guest_phone or None,
+                        must_change_password=True
+                    )
+                    new_user.set_password(auto_password)
+                    db.session.add(new_user)
+                    db.session.commit()
+
+                    import logging as _log
+                    _log.info(f"CourseUser created for {guest_email or guest_phone}")
+
+                    # Send WhatsApp credentials
+                    from utils import send_whatsapp_credentials
+                    login_id = guest_email or guest_phone
+                    send_whatsapp_credentials(
+                        phone=guest_phone,
+                        name=guest_name or 'User',
+                        login_id=login_id,
+                        password=auto_password,
+                        login_url=url_for('user_login', _external=True)
+                    )
+        except Exception as _e:
+            import logging as _log
+            _log.error(f"CourseUser creation error after payment: {_e}")
+
         return jsonify({
             'success': True,
-            'message': 'Payment successful! You now have access to the course.',
+            'message': 'Payment successful! Your account credentials have been sent to your WhatsApp.',
             'redirect_url': url_for('course_detail', course_id=course_id)
         })
     
@@ -3020,6 +3173,43 @@ def payment_failed():
     return render_template('payment_failed.html',
         message=request.args.get('message', '')
     )
+
+@app.route('/admin/whatsapp-settings', methods=['GET', 'POST'])
+def admin_whatsapp_settings():
+    """Manage WhatsApp credential delivery settings"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+
+    import json
+
+    wa_content = SiteContent.query.filter_by(content_key='whatsapp_settings').first()
+    current_settings = json.loads(wa_content.content_data) if wa_content else {
+        'enabled': False,
+        'phone_number_id': '',
+        'access_token': '',
+    }
+
+    if request.method == 'POST':
+        new_token = request.form.get('access_token', '').strip()
+        updated = {
+            'enabled': request.form.get('enabled') == 'on',
+            'phone_number_id': request.form.get('phone_number_id', '').strip(),
+            'access_token': new_token if new_token else current_settings.get('access_token', ''),
+        }
+        if wa_content:
+            wa_content.content_data = json.dumps(updated)
+        else:
+            wa_content = SiteContent(content_key='whatsapp_settings', content_data=json.dumps(updated))
+            db.session.add(wa_content)
+        db.session.commit()
+        flash('WhatsApp settings updated successfully!', 'success')
+        current_settings = updated
+
+    course_user_count = CourseUser.query.count()
+    return render_template('admin/whatsapp_settings.html',
+                           settings=current_settings,
+                           course_user_count=course_user_count)
+
 
 @app.route('/support/payment/verify', methods=['POST'])
 def verify_support_payment():

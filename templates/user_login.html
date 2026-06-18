@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Kshitiz Jaiswal{% endblock %}
+
+{% block content %}
+<section style="min-height: 100vh; padding-top: 80px; background: linear-gradient(135deg, #1e293b 0%, #7c3aed 100%);">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-5 col-lg-4">
+
+                <div class="text-center mb-4">
+                    <div style="width:70px;height:70px;background:rgba(255,255,255,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;backdrop-filter:blur(10px);">
+                        <i class="fas fa-graduation-cap text-white fa-2x"></i>
+                    </div>
+                    <h2 class="text-white fw-bold mb-1">Welcome Back</h2>
+                    <p class="text-white-50 mb-0">Sign in to access your courses</p>
+                </div>
+
+                <div class="card border-0 shadow-lg" style="border-radius:20px;overflow:hidden;">
+                    <div class="card-body p-4">
+                        {% if error %}
+                        <div class="alert alert-danger d-flex align-items-center mb-4" style="border-radius:12px;">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            <span>{{ error }}</span>
+                        </div>
+                        {% endif %}
+
+                        <form method="POST" action="{{ url_for('user_login') }}{% if next_url %}?next={{ next_url }}{% endif %}">
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold text-dark">
+                                    <i class="fas fa-user me-1 text-primary"></i>Email or Mobile Number
+                                </label>
+                                <input type="text" name="identifier" class="form-control form-control-lg"
+                                    placeholder="your@email.com or 9876543210"
+                                    autocomplete="username" autofocus
+                                    style="border-radius:12px;border:2px solid #e2e8f0;font-size:0.95rem;">
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold text-dark">
+                                    <i class="fas fa-lock me-1 text-primary"></i>Password
+                                </label>
+                                <div class="position-relative">
+                                    <input type="password" name="password" id="passwordInput" class="form-control form-control-lg"
+                                        placeholder="Your password"
+                                        autocomplete="current-password"
+                                        style="border-radius:12px;border:2px solid #e2e8f0;font-size:0.95rem;padding-right:50px;">
+                                    <button type="button" onclick="togglePassword()" class="btn btn-link position-absolute end-0 top-50 translate-middle-y pe-3" style="color:#64748b;text-decoration:none;">
+                                        <i class="fas fa-eye" id="eyeIcon"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn w-100 btn-lg fw-bold text-white"
+                                style="background:linear-gradient(135deg,#7c3aed 0%,#4f46e5 100%);border:none;border-radius:12px;padding:14px;">
+                                <i class="fas fa-sign-in-alt me-2"></i>Sign In
+                            </button>
+                        </form>
+
+                        <div class="text-center mt-4">
+                            <p class="text-muted small mb-0">
+                                Your login credentials were sent to your WhatsApp after purchase.<br>
+                                <a href="{{ url_for('courses') }}" class="text-primary fw-semibold">Browse Courses</a>
+                                if you haven't purchased yet.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
+                    <p class="text-white-50 small">
+                        <i class="fas fa-shield-alt me-1"></i>Your data is safe and encrypted.
+                    </p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+function togglePassword() {
+    const input = document.getElementById('passwordInput');
+    const icon = document.getElementById('eyeIcon');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.replace('fa-eye', 'fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.replace('fa-eye-slash', 'fa-eye');
+    }
+}
+</script>
+{% endblock %}

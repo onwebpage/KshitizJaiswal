@@ -231,6 +231,77 @@ def normalize_table_name(table_name):
     legacy_mapping = get_legacy_table_name_mapping()
     return legacy_mapping.get(table_name, table_name)
 
+def send_whatsapp_credentials(phone, name, login_id, password, login_url=None):
+    """Send login credentials to user via WhatsApp (Meta Cloud API)."""
+    import logging
+    import requests as req_lib
+    try:
+        from models import SiteContent
+        import json
+
+        wa_content = SiteContent.query.filter_by(content_key='whatsapp_settings').first()
+        if not wa_content:
+            logging.info("WhatsApp not configured — skipping credential delivery.")
+            return False
+
+        settings = json.loads(wa_content.content_data)
+        if not settings.get('enabled'):
+            logging.info("WhatsApp disabled in settings — skipping.")
+            return False
+
+        phone_number_id = settings.get('phone_number_id', '').strip()
+        access_token = settings.get('access_token', '').strip()
+
+        if not phone_number_id or not access_token:
+            logging.warning("WhatsApp phone_number_id or access_token missing.")
+            return False
+
+        clean_phone = re.sub(r'[^0-9]', '', phone or '')
+        if len(clean_phone) == 10:
+            clean_phone = '91' + clean_phone
+        if not clean_phone:
+            logging.warning("No valid phone number to send WhatsApp.")
+            return False
+
+        login_url = login_url or 'https://your-site.com/user/login'
+        first_name = (name or 'Student').split()[0]
+
+        message = (
+            f"🎓 *Welcome to Kshitiz Jaiswal's Courses!*\n\n"
+            f"Hello {first_name},\n\n"
+            f"Your account has been created successfully after your purchase.\n\n"
+            f"📧 *Login ID:* {login_id}\n"
+            f"🔑 *Password:* {password}\n\n"
+            f"👉 *Login here:* {login_url}\n\n"
+            f"_You can change your password after logging in._\n\n"
+            f"*Kshitiz Jaiswal — Unfiltered Commentator* 🎙️"
+        )
+
+        url = f"https://graph.facebook.com/v17.0/{phone_number_id}/messages"
+        headers = {
+            'Authorization': f'Bearer {access_token}',
+            'Content-Type': 'application/json',
+        }
+        payload = {
+            "messaging_product": "whatsapp",
+            "to": clean_phone,
+            "type": "text",
+            "text": {"body": message, "preview_url": False},
+        }
+
+        resp = req_lib.post(url, json=payload, headers=headers, timeout=10)
+        if resp.status_code == 200:
+            logging.info(f"WhatsApp credentials sent to {clean_phone}")
+            return True
+        else:
+            logging.warning(f"WhatsApp API returned {resp.status_code}: {resp.text}")
+            return False
+
+    except Exception as e:
+        logging.error(f"send_whatsapp_credentials error: {e}")
+        return False
+
+
 def get_readable_table_name(table_name):
     """Convert table name to readable format"""
     # Handle special cases

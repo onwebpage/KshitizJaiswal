@@ -1,5 +1,6 @@
 import json
 import os
+import re
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import db
@@ -571,6 +572,84 @@ class UserCourseAccess(db.Model):
             if access.expires_at is None or access.expires_at > datetime.utcnow():
                 valid_accesses.append(access)
         return valid_accesses
+
+class CourseUser(db.Model):
+    """Users auto-created on course purchase — login by email or phone"""
+    __tablename__ = 'course_user'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    email = db.Column(db.String(200), unique=True, nullable=True)
+    phone = db.Column(db.String(20), unique=True, nullable=True)
+    password_hash = db.Column(db.String(256), nullable=False)
+    must_change_password = db.Column(db.Boolean, default=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+    @staticmethod
+    def generate_password(name, phone):
+        """Format: Kshitiz@235 (Name + @ + last 3 digits of phone)"""
+        clean_name = (name or 'User').strip()
+        if not clean_name:
+            clean_name = 'User'
+        formatted = clean_name[0].upper() + clean_name[1:].lower()
+        digits = re.sub(r'[^0-9]', '', phone or '')
+        last3 = digits[-3:] if len(digits) >= 3 else digits.zfill(3)
+        return f"{formatted}@{last3}"
+
+    @staticmethod
+    def get_by_identifier(identifier):
+        """Find user by email or phone (flexible match)"""
+        if not identifier:
+            return None
+        identifier = identifier.strip()
+        user = CourseUser.query.filter(
+            db.func.lower(CourseUser.email) == identifier.lower()
+        ).first()
+        if not user:
+            digits = re.sub(r'[^0-9]', '', identifier)
+            if digits:
+                all_users = CourseUser.query.filter(CourseUser.phone.isnot(None)).all()
+                for u in all_users:
+                    u_digits = re.sub(r'[^0-9]', '', u.phone or '')
+                    if u_digits and (u_digits == digits or u_digits[-10:] == digits[-10:]):
+                        user = u
+                        break
+        return user
+
+    def get_course_accesses(self):
+        """Get all valid course accesses by email or phone"""
+        accesses = []
+        seen_ids = set()
+        if self.email:
+            for access in UserCourseAccess.query.filter_by(guest_email=self.email).all():
+                if access.id not in seen_ids:
+                    accesses.append(access)
+                    seen_ids.add(access.id)
+        if self.phone:
+            for access in UserCourseAccess.query.filter_by(guest_phone=self.phone).all():
+                if access.id not in seen_ids:
+                    accesses.append(access)
+                    seen_ids.add(access.id)
+        return [a for a in accesses if a.expires_at is None or a.expires_at > datetime.utcnow()]
+
+    def has_course_access(self, course_id):
+        return any(a.course_id == course_id for a in self.get_course_accesses())
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'email': self.email or '',
+            'phone': self.phone or '',
+            'must_change_password': self.must_change_password,
+            'created_at': self.created_at.isoformat() if self.created_at else ''
+        }
+
 
 class SiteConfig(db.Model):
     """Key-value store for site-wide configuration flags"""
