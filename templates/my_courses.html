@@ -12,6 +12,26 @@
 
 <section class="py-5 bg-light">
     <div class="container">
+        {% if wa_support_phone %}
+        <div class="alert d-flex align-items-center justify-content-between mb-4" style="background:linear-gradient(135deg,#dcfce7,#bbf7d0);border:1px solid #86efac;border-radius:14px;padding:16px 20px;">
+            <div class="d-flex align-items-center gap-3">
+                <div style="width:44px;height:44px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <i class="fab fa-whatsapp text-white" style="font-size:1.3rem;"></i>
+                </div>
+                <div>
+                    <p class="fw-bold text-dark mb-0" style="font-size:0.95rem;">Need help with your courses?</p>
+                    <p class="text-muted mb-0" style="font-size:0.85rem;">Our support team is available on WhatsApp. Chat with us anytime.</p>
+                </div>
+            </div>
+            <a href="https://wa.me/{{ wa_support_phone }}?text=Hi%2C+I+need+help+with+my+course+on+Kshitiz+Jaiswal%27s+platform."
+               target="_blank" rel="noopener"
+               class="btn btn-success fw-semibold flex-shrink-0 ms-3"
+               style="border-radius:10px;background:#25D366;border:none;white-space:nowrap;">
+                <i class="fab fa-whatsapp me-2"></i>Chat Support
+            </a>
+        </div>
+        {% endif %}
+
         {% if courses %}
         <div class="mb-4">
             <h4 class="section-heading">

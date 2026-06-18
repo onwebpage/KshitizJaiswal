@@ -54,7 +54,22 @@ def inject_section_visibility():
     except Exception:
         site_settings = {}
 
-    return {'section_vis': section_vis, 'site_settings': site_settings, 'course_user': get_course_user()}
+    # WhatsApp support phone for in-dashboard support button
+    wa_support_phone = ''
+    try:
+        import re as _re
+        wa_rec = SiteContent.query.filter_by(content_key='whatsapp_settings').first()
+        if wa_rec:
+            wa_data = json.loads(wa_rec.content_data)
+            raw = wa_data.get('support_phone', '')
+            digits = _re.sub(r'[^0-9]', '', raw)
+            if len(digits) == 10:
+                digits = '91' + digits
+            wa_support_phone = digits
+    except Exception:
+        pass
+
+    return {'section_vis': section_vis, 'site_settings': site_settings, 'course_user': get_course_user(), 'wa_support_phone': wa_support_phone}
 
 
 @app.route('/')
@@ -3128,16 +3143,25 @@ def verify_course_payment():
                     import logging as _log
                     _log.info(f"CourseUser created for {guest_email or guest_phone}")
 
-                    # Send WhatsApp credentials
-                    from utils import send_whatsapp_credentials
+                    # Send WhatsApp + Email credentials
+                    from utils import send_whatsapp_credentials, send_email_credentials
                     login_id = guest_email or guest_phone
+                    _login_url = url_for('user_login', _external=True)
                     send_whatsapp_credentials(
                         phone=guest_phone,
                         name=guest_name or 'User',
                         login_id=login_id,
                         password=auto_password,
-                        login_url=url_for('user_login', _external=True)
+                        login_url=_login_url
                     )
+                    if guest_email:
+                        send_email_credentials(
+                            email=guest_email,
+                            name=guest_name or 'User',
+                            login_id=login_id,
+                            password=auto_password,
+                            login_url=_login_url
+                        )
         except Exception as _e:
             import logging as _log
             _log.error(f"CourseUser creation error after payment: {_e}")
@@ -3176,38 +3200,67 @@ def payment_failed():
 
 @app.route('/admin/whatsapp-settings', methods=['GET', 'POST'])
 def admin_whatsapp_settings():
-    """Manage WhatsApp credential delivery settings"""
+    """Manage WhatsApp + Email credential delivery settings"""
     if 'admin_logged_in' not in session:
         return redirect(url_for('admin_login'))
 
     import json
 
     wa_content = SiteContent.query.filter_by(content_key='whatsapp_settings').first()
-    current_settings = json.loads(wa_content.content_data) if wa_content else {
-        'enabled': False,
-        'phone_number_id': '',
-        'access_token': '',
+    current_wa = json.loads(wa_content.content_data) if wa_content else {
+        'enabled': False, 'phone_number_id': '', 'access_token': '', 'support_phone': ''
+    }
+
+    email_content = SiteContent.query.filter_by(content_key='email_settings').first()
+    current_email = json.loads(email_content.content_data) if email_content else {
+        'enabled': False, 'smtp_host': '', 'smtp_port': '587',
+        'smtp_user': '', 'smtp_password': '', 'from_name': 'Kshitiz Jaiswal Courses', 'from_email': ''
     }
 
     if request.method == 'POST':
-        new_token = request.form.get('access_token', '').strip()
-        updated = {
-            'enabled': request.form.get('enabled') == 'on',
-            'phone_number_id': request.form.get('phone_number_id', '').strip(),
-            'access_token': new_token if new_token else current_settings.get('access_token', ''),
-        }
-        if wa_content:
-            wa_content.content_data = json.dumps(updated)
-        else:
-            wa_content = SiteContent(content_key='whatsapp_settings', content_data=json.dumps(updated))
-            db.session.add(wa_content)
-        db.session.commit()
-        flash('WhatsApp settings updated successfully!', 'success')
-        current_settings = updated
+        action = request.form.get('action', 'whatsapp')
+
+        if action == 'whatsapp':
+            new_token = request.form.get('access_token', '').strip()
+            updated_wa = {
+                'enabled': request.form.get('enabled') == 'on',
+                'phone_number_id': request.form.get('phone_number_id', '').strip(),
+                'access_token': new_token if new_token else current_wa.get('access_token', ''),
+                'support_phone': request.form.get('support_phone', '').strip(),
+            }
+            if wa_content:
+                wa_content.content_data = json.dumps(updated_wa)
+            else:
+                wa_content = SiteContent(content_key='whatsapp_settings', content_data=json.dumps(updated_wa))
+                db.session.add(wa_content)
+            db.session.commit()
+            flash('WhatsApp settings updated!', 'success')
+            current_wa = updated_wa
+
+        elif action == 'email':
+            new_smtp_pwd = request.form.get('smtp_password', '').strip()
+            updated_email = {
+                'enabled': request.form.get('email_enabled') == 'on',
+                'smtp_host': request.form.get('smtp_host', '').strip(),
+                'smtp_port': request.form.get('smtp_port', '587').strip(),
+                'smtp_user': request.form.get('smtp_user', '').strip(),
+                'smtp_password': new_smtp_pwd if new_smtp_pwd else current_email.get('smtp_password', ''),
+                'from_name': request.form.get('from_name', 'Kshitiz Jaiswal Courses').strip(),
+                'from_email': request.form.get('from_email', '').strip(),
+            }
+            if email_content:
+                email_content.content_data = json.dumps(updated_email)
+            else:
+                email_content = SiteContent(content_key='email_settings', content_data=json.dumps(updated_email))
+                db.session.add(email_content)
+            db.session.commit()
+            flash('Email settings updated!', 'success')
+            current_email = updated_email
 
     course_user_count = CourseUser.query.count()
     return render_template('admin/whatsapp_settings.html',
-                           settings=current_settings,
+                           settings=current_wa,
+                           email_settings=current_email,
                            course_user_count=course_user_count)
 
 

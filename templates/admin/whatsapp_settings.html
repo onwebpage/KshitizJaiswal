@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}WhatsApp Settings - Admin{% endblock %}
+{% block title %}Notifications Settings - Admin{% endblock %}
 
 {% block content %}
 <div class="admin-section">
@@ -20,7 +20,7 @@
                 <i class="fas fa-credit-card me-2"></i>Payment Settings
             </a>
             <a href="{{ url_for('admin_whatsapp_settings') }}" class="admin-nav-item active">
-                <i class="fab fa-whatsapp me-2"></i>WhatsApp Settings
+                <i class="fas fa-bell me-2"></i>Notifications
             </a>
             <a href="{{ url_for('admin_users') }}" class="admin-nav-item">
                 <i class="fas fa-users me-2"></i>Course Users
@@ -30,8 +30,8 @@
 
     <div class="admin-content">
         <div class="admin-content-header">
-            <h2><i class="fab fa-whatsapp me-2 text-success"></i>WhatsApp Credential Delivery</h2>
-            <p class="text-muted mb-0">Configure automatic WhatsApp messages sent to users after course purchase.</p>
+            <h2><i class="fas fa-bell me-2 text-primary"></i>Post-Purchase Notifications</h2>
+            <p class="text-muted mb-0">Configure automatic credential delivery and in-app support access for course buyers.</p>
         </div>
 
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -46,105 +46,236 @@
         {% endwith %}
 
         <div class="row g-4">
-            <div class="col-lg-7">
-                <div class="card border-0 shadow-sm" style="border-radius:16px;">
+
+            <!-- ── WhatsApp API Card ── -->
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm h-100" style="border-radius:16px;">
                     <div class="card-header border-0 pt-4 pb-2 px-4" style="background:transparent;">
-                        <h5 class="fw-bold mb-0"><i class="fas fa-cog me-2 text-primary"></i>Meta WhatsApp Cloud API</h5>
-                        <p class="text-muted small mt-1 mb-0">Uses the official Meta WhatsApp Business API to send credentials.</p>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <div style="width:36px;height:36px;background:#25D366;border-radius:8px;display:flex;align-items:center;justify-content:center;">
+                                <i class="fab fa-whatsapp text-white"></i>
+                            </div>
+                            <h5 class="fw-bold mb-0">WhatsApp Delivery</h5>
+                        </div>
+                        <p class="text-muted small mb-0">Sends login credentials via WhatsApp after purchase using Meta Cloud API.</p>
                     </div>
                     <div class="card-body px-4 pb-4">
                         <form method="POST">
+                            <input type="hidden" name="action" value="whatsapp">
+
                             <div class="mb-4 d-flex align-items-center justify-content-between p-3 rounded"
                                 style="background:#f0fdf4;border:1px solid #86efac;">
                                 <div>
-                                    <p class="fw-semibold text-success mb-0">Enable WhatsApp Notifications</p>
-                                    <small class="text-muted">Sends login credentials to user's WhatsApp after purchase</small>
+                                    <p class="fw-semibold text-success mb-0 small">Enable WhatsApp Credential Delivery</p>
+                                    <small class="text-muted">Auto-sends login ID + password to buyer's WhatsApp</small>
                                 </div>
                                 <div class="form-check form-switch ms-3">
-                                    <input class="form-check-input" type="checkbox" name="enabled" id="enabledToggle"
+                                    <input class="form-check-input" type="checkbox" name="enabled" id="waEnabled"
                                         style="width:3em;height:1.5em;"
                                         {% if settings.get('enabled') %}checked{% endif %}>
                                 </div>
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label fw-semibold">
+                                <label class="form-label fw-semibold small">
                                     <i class="fas fa-hashtag me-1 text-muted"></i>Phone Number ID
-                                    <span class="badge bg-secondary ms-1" style="font-size:0.7rem;">from Meta Business Manager</span>
+                                    <span class="badge bg-secondary ms-1" style="font-size:0.65rem;">Meta Business Manager</span>
                                 </label>
                                 <input type="text" name="phone_number_id" class="form-control"
                                     value="{{ settings.get('phone_number_id', '') }}"
                                     placeholder="e.g. 123456789012345"
                                     style="border-radius:10px;">
-                                <div class="form-text">Found in Meta Business Manager → WhatsApp → API Setup</div>
                             </div>
 
-                            <div class="mb-4">
-                                <label class="form-label fw-semibold">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold small">
                                     <i class="fas fa-key me-1 text-muted"></i>Permanent Access Token
                                 </label>
                                 <input type="password" name="access_token" class="form-control"
-                                    placeholder="{% if settings.get('access_token') %}••••••••••••••• (saved){% else %}Paste your permanent access token{% endif %}"
+                                    placeholder="{% if settings.get('access_token') %}••••• (saved — leave blank to keep){% else %}Paste token{% endif %}"
                                     style="border-radius:10px;">
                                 <div class="form-text">
-                                    Leave blank to keep existing token.
-                                    <a href="https://developers.facebook.com/docs/whatsapp/business-management-api/get-started" target="_blank" rel="noopener">
-                                        How to get a token →
-                                    </a>
+                                    <a href="https://developers.facebook.com/docs/whatsapp/business-management-api/get-started" target="_blank" rel="noopener">How to get a token →</a>
                                 </div>
                             </div>
 
-                            <button type="submit" class="btn btn-success px-4 fw-semibold" style="border-radius:10px;">
-                                <i class="fas fa-save me-2"></i>Save Settings
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold small">
+                                    <i class="fab fa-whatsapp me-1 text-success"></i>Support Phone Number
+                                    <span class="badge bg-info text-dark ms-1" style="font-size:0.65rem;">For support button</span>
+                                </label>
+                                <input type="text" name="support_phone" class="form-control"
+                                    value="{{ settings.get('support_phone', '') }}"
+                                    placeholder="e.g. 9876543210 (10-digit Indian number)"
+                                    style="border-radius:10px;">
+                                <div class="form-text">Shown as a WhatsApp chat button inside the Course Dashboard for enrolled users.</div>
+                            </div>
+
+                            <button type="submit" class="btn btn-success px-4 fw-semibold" style="border-radius:10px;background:#25D366;border:none;">
+                                <i class="fas fa-save me-2"></i>Save WhatsApp Settings
                             </button>
                         </form>
                     </div>
                 </div>
             </div>
 
-            <div class="col-lg-5">
-                <div class="card border-0 shadow-sm mb-3" style="border-radius:16px;background:linear-gradient(135deg,#25D366 0%,#128C7E 100%);">
-                    <div class="card-body p-4 text-white">
-                        <h6 class="fw-bold mb-2"><i class="fab fa-whatsapp me-2"></i>Message Preview</h6>
-                        <div style="background:rgba(255,255,255,0.15);border-radius:12px;padding:16px;font-size:0.85rem;line-height:1.6;">
-                            <p class="mb-1">🎓 *Welcome to Kshitiz Jaiswal's Courses!*</p>
-                            <p class="mb-1">Hello Kshitiz,</p>
-                            <p class="mb-2">Your account has been created after your purchase.</p>
-                            <p class="mb-1">📧 *Login ID:* kshitiz@email.com</p>
-                            <p class="mb-2">🔑 *Password:* Kshitiz@235</p>
-                            <p class="mb-1">👉 *Login here:* https://yoursite.com/user/login</p>
-                            <p class="mb-0 opacity-75"><em>You can change your password after logging in.</em></p>
+            <!-- ── Email Card ── -->
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm h-100" style="border-radius:16px;">
+                    <div class="card-header border-0 pt-4 pb-2 px-4" style="background:transparent;">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <div style="width:36px;height:36px;background:#4f46e5;border-radius:8px;display:flex;align-items:center;justify-content:center;">
+                                <i class="fas fa-envelope text-white"></i>
+                            </div>
+                            <h5 class="fw-bold mb-0">Email Delivery</h5>
                         </div>
+                        <p class="text-muted small mb-0">Also sends credentials by email (SMTP) if the buyer provided an email address.</p>
+                    </div>
+                    <div class="card-body px-4 pb-4">
+                        <form method="POST">
+                            <input type="hidden" name="action" value="email">
+
+                            <div class="mb-4 d-flex align-items-center justify-content-between p-3 rounded"
+                                style="background:#eff6ff;border:1px solid #93c5fd;">
+                                <div>
+                                    <p class="fw-semibold text-primary mb-0 small">Enable Email Credential Delivery</p>
+                                    <small class="text-muted">Sends a branded HTML email with login details</small>
+                                </div>
+                                <div class="form-check form-switch ms-3">
+                                    <input class="form-check-input" type="checkbox" name="email_enabled" id="emailEnabled"
+                                        style="width:3em;height:1.5em;"
+                                        {% if email_settings.get('enabled') %}checked{% endif %}>
+                                </div>
+                            </div>
+
+                            <div class="row g-2 mb-3">
+                                <div class="col-8">
+                                    <label class="form-label fw-semibold small"><i class="fas fa-server me-1 text-muted"></i>SMTP Host</label>
+                                    <input type="text" name="smtp_host" class="form-control"
+                                        value="{{ email_settings.get('smtp_host', '') }}"
+                                        placeholder="smtp.gmail.com"
+                                        style="border-radius:10px;">
+                                </div>
+                                <div class="col-4">
+                                    <label class="form-label fw-semibold small"><i class="fas fa-plug me-1 text-muted"></i>Port</label>
+                                    <input type="number" name="smtp_port" class="form-control"
+                                        value="{{ email_settings.get('smtp_port', '587') }}"
+                                        placeholder="587"
+                                        style="border-radius:10px;">
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold small"><i class="fas fa-user me-1 text-muted"></i>SMTP Username / Email</label>
+                                <input type="email" name="smtp_user" class="form-control"
+                                    value="{{ email_settings.get('smtp_user', '') }}"
+                                    placeholder="your@gmail.com"
+                                    style="border-radius:10px;">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold small"><i class="fas fa-lock me-1 text-muted"></i>SMTP Password / App Password</label>
+                                <input type="password" name="smtp_password" class="form-control"
+                                    placeholder="{% if email_settings.get('smtp_password') %}••••• (saved — leave blank to keep){% else %}App password{% endif %}"
+                                    style="border-radius:10px;">
+                                <div class="form-text">For Gmail: use an <a href="https://support.google.com/accounts/answer/185833" target="_blank">App Password</a>, not your regular password.</div>
+                            </div>
+
+                            <div class="row g-2 mb-4">
+                                <div class="col-6">
+                                    <label class="form-label fw-semibold small"><i class="fas fa-signature me-1 text-muted"></i>From Name</label>
+                                    <input type="text" name="from_name" class="form-control"
+                                        value="{{ email_settings.get('from_name', 'Kshitiz Jaiswal Courses') }}"
+                                        placeholder="Kshitiz Jaiswal Courses"
+                                        style="border-radius:10px;">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label fw-semibold small"><i class="fas fa-at me-1 text-muted"></i>From Email</label>
+                                    <input type="email" name="from_email" class="form-control"
+                                        value="{{ email_settings.get('from_email', '') }}"
+                                        placeholder="noreply@yourdomain.com"
+                                        style="border-radius:10px;">
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary px-4 fw-semibold" style="border-radius:10px;">
+                                <i class="fas fa-save me-2"></i>Save Email Settings
+                            </button>
+                        </form>
                     </div>
                 </div>
+            </div>
 
-                <div class="card border-0 shadow-sm" style="border-radius:16px;">
+            <!-- ── Stats & Preview Row ── -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm" style="border-radius:16px;background:#f8fafc;">
                     <div class="card-body p-4">
-                        <h6 class="fw-bold text-dark mb-3"><i class="fas fa-info-circle me-2 text-primary"></i>Setup Guide</h6>
-                        <ol class="small text-muted mb-0" style="padding-left:1.2rem;line-height:1.8;">
-                            <li>Create a <strong>Meta Business account</strong> at <a href="https://business.facebook.com" target="_blank">business.facebook.com</a></li>
-                            <li>Set up a <strong>WhatsApp Business App</strong> in Meta Developers</li>
-                            <li>Get your <strong>Phone Number ID</strong> from API Setup</li>
-                            <li>Generate a <strong>Permanent Access Token</strong></li>
-                            <li>Add the user's phone number as a <strong>test number</strong> first</li>
-                            <li>Enable and save the settings above</li>
-                        </ol>
-                    </div>
-                </div>
-
-                <div class="card border-0 shadow-sm mt-3" style="border-radius:16px;background:#f8fafc;">
-                    <div class="card-body p-4">
-                        <h6 class="fw-bold mb-2"><i class="fas fa-users me-2 text-primary"></i>Course User Accounts</h6>
-                        <div class="d-flex align-items-center">
+                        <h6 class="fw-bold mb-3"><i class="fas fa-users me-2 text-primary"></i>Course User Accounts</h6>
+                        <div class="d-flex align-items-center mb-2">
                             <div style="font-size:2.5rem;font-weight:800;color:#7c3aed;">{{ course_user_count }}</div>
                             <div class="ms-3 text-muted small">accounts auto-created<br>from course purchases</div>
                         </div>
-                        <a href="{{ url_for('admin_users') }}" class="btn btn-outline-primary btn-sm mt-2" style="border-radius:8px;">
+                        <a href="{{ url_for('admin_users') }}" class="btn btn-outline-primary btn-sm" style="border-radius:8px;">
                             View All Users →
                         </a>
                     </div>
                 </div>
             </div>
+
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm" style="border-radius:16px;background:linear-gradient(135deg,#25D366 0%,#128C7E 100%);">
+                    <div class="card-body p-4 text-white">
+                        <h6 class="fw-bold mb-2"><i class="fab fa-whatsapp me-2"></i>WhatsApp Message Preview</h6>
+                        <div style="background:rgba(255,255,255,0.15);border-radius:12px;padding:16px;font-size:0.82rem;line-height:1.7;">
+                            🎓 *Welcome to Kshitiz Jaiswal's Courses!*<br><br>
+                            Hello Kshitiz,<br><br>
+                            Your account has been created after your purchase.<br><br>
+                            📧 *Login ID:* kshitiz@email.com<br>
+                            🔑 *Password:* Kshitiz@235<br><br>
+                            👉 *Login here:* https://yoursite.com/user/login<br><br>
+                            <em style="opacity:0.8;">You can change your password after logging in.</em>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="card border-0" style="border-radius:16px;background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1px solid #86efac !important;">
+                    <div class="card-body p-4">
+                        <h6 class="fw-bold text-success mb-2"><i class="fas fa-info-circle me-2"></i>How it all works</h6>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="d-flex gap-2">
+                                    <div class="fw-bold text-success" style="font-size:1.2rem;">1</div>
+                                    <div>
+                                        <p class="fw-semibold text-dark mb-0 small">Purchase Complete</p>
+                                        <p class="text-muted mb-0" style="font-size:0.8rem;">Razorpay confirms payment, course access is granted instantly.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex gap-2">
+                                    <div class="fw-bold text-success" style="font-size:1.2rem;">2</div>
+                                    <div>
+                                        <p class="fw-semibold text-dark mb-0 small">Account Created</p>
+                                        <p class="text-muted mb-0" style="font-size:0.8rem;">Auto-generated password (Name@last3digits) sent via WhatsApp &amp; Email.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex gap-2">
+                                    <div class="fw-bold text-success" style="font-size:1.2rem;">3</div>
+                                    <div>
+                                        <p class="fw-semibold text-dark mb-0 small">Always Accessible</p>
+                                        <p class="text-muted mb-0" style="font-size:0.8rem;">WhatsApp Support button on dashboard lets users get help anytime.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 </div>

@@ -39,9 +39,19 @@
                 </div>
                 
                 {% if course.has_access %}
-                <div class="alert alert-success d-inline-flex align-items-center">
-                    <i class="fas fa-check-circle me-2"></i>
-                    <span>You have full access to this course!</span>
+                <div class="d-flex flex-wrap align-items-center gap-3">
+                    <div class="alert alert-success d-inline-flex align-items-center mb-0">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <span>You have full access to this course!</span>
+                    </div>
+                    {% if wa_support_phone %}
+                    <a href="https://wa.me/{{ wa_support_phone }}?text=Hi%2C+I+need+help+with+the+course%3A+{{ course.title | urlencode if course.title else 'this+course' }}"
+                       target="_blank" rel="noopener"
+                       class="btn fw-semibold"
+                       style="background:#25D366;color:#fff;border:none;border-radius:10px;padding:10px 18px;">
+                        <i class="fab fa-whatsapp me-2"></i>WhatsApp Support
+                    </a>
+                    {% endif %}
                 </div>
                 {% endif %}
             </div>

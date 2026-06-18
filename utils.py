@@ -231,6 +231,91 @@ def normalize_table_name(table_name):
     legacy_mapping = get_legacy_table_name_mapping()
     return legacy_mapping.get(table_name, table_name)
 
+def send_email_credentials(email, name, login_id, password, login_url=None):
+    """Send login credentials to user via email (SMTP). Reads settings from DB."""
+    import logging
+    import smtplib
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.text import MIMEText
+    try:
+        from models import SiteContent
+        import json
+
+        email_content = SiteContent.query.filter_by(content_key='email_settings').first()
+        if not email_content:
+            logging.info("Email settings not configured — skipping email delivery.")
+            return False
+
+        settings = json.loads(email_content.content_data)
+        if not settings.get('enabled'):
+            logging.info("Email delivery disabled — skipping.")
+            return False
+
+        smtp_host = settings.get('smtp_host', '').strip()
+        smtp_port = int(settings.get('smtp_port', 587))
+        smtp_user = settings.get('smtp_user', '').strip()
+        smtp_password = settings.get('smtp_password', '').strip()
+        from_email = settings.get('from_email', smtp_user).strip()
+        from_name = settings.get('from_name', 'Kshitiz Jaiswal Courses').strip()
+
+        if not smtp_host or not smtp_user or not smtp_password:
+            logging.warning("Email SMTP credentials missing.")
+            return False
+
+        login_url = login_url or 'https://your-site.com/user/login'
+        first_name = (name or 'Student').split()[0]
+
+        html_body = f"""
+        <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;background:#f8fafc;padding:32px 16px;">
+          <div style="background:linear-gradient(135deg,#7c3aed,#4f46e5);border-radius:16px 16px 0 0;padding:32px;text-align:center;">
+            <div style="font-size:48px;margin-bottom:12px;">🎓</div>
+            <h1 style="color:#fff;margin:0;font-size:24px;">Welcome to Your Course!</h1>
+            <p style="color:rgba(255,255,255,0.8);margin:8px 0 0;">Kshitiz Jaiswal — Unfiltered Commentator</p>
+          </div>
+          <div style="background:#fff;border-radius:0 0 16px 16px;padding:32px;box-shadow:0 4px 16px rgba(0,0,0,0.08);">
+            <p style="color:#334155;font-size:16px;">Hello <strong>{first_name}</strong>,</p>
+            <p style="color:#64748b;">Your account has been created after your course purchase. Use the credentials below to log in:</p>
+            <div style="background:#f1f5f9;border-radius:12px;padding:20px;margin:20px 0;">
+              <p style="margin:0 0 8px;color:#64748b;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Your Login Details</p>
+              <table style="width:100%;border-collapse:collapse;">
+                <tr><td style="padding:8px 0;color:#64748b;width:110px;">Login ID</td><td style="padding:8px 0;color:#1e293b;font-weight:700;">{login_id}</td></tr>
+                <tr><td style="padding:8px 0;color:#64748b;">Password</td><td style="padding:8px 0;color:#1e293b;font-weight:700;">{password}</td></tr>
+              </table>
+            </div>
+            <div style="text-align:center;margin:24px 0;">
+              <a href="{login_url}" style="background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;text-decoration:none;padding:14px 32px;border-radius:10px;font-weight:700;font-size:16px;display:inline-block;">
+                👉 Login to Your Dashboard
+              </a>
+            </div>
+            <p style="color:#94a3b8;font-size:13px;text-align:center;">You can change your password after logging in for the first time.</p>
+            <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0;">
+            <p style="color:#94a3b8;font-size:12px;text-align:center;">
+              Kshitiz Jaiswal | Unfiltered Commentator<br>
+              <a href="{login_url}" style="color:#7c3aed;">{login_url}</a>
+            </p>
+          </div>
+        </div>
+        """
+
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = f"🎓 Your Course Login Credentials — Kshitiz Jaiswal"
+        msg['From'] = f"{from_name} <{from_email}>"
+        msg['To'] = email
+        msg.attach(MIMEText(html_body, 'html'))
+
+        with smtplib.SMTP(smtp_host, smtp_port, timeout=15) as server:
+            server.starttls()
+            server.login(smtp_user, smtp_password)
+            server.sendmail(from_email, [email], msg.as_string())
+
+        logging.info(f"Email credentials sent to {email}")
+        return True
+
+    except Exception as e:
+        logging.error(f"send_email_credentials error: {e}")
+        return False
+
+
 def send_whatsapp_credentials(phone, name, login_id, password, login_url=None):
     """Send login credentials to user via WhatsApp (Meta Cloud API)."""
     import logging
