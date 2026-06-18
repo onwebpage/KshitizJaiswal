@@ -442,57 +442,100 @@ if (new URLSearchParams(window.location.search).get('buy') === '1') {
     });
 }
 
+const _WA_SUPPORT = "{{ wa_support_phone }}";
+const _LOGIN_URL = "{{ url_for('user_login') }}";
+const _COURSES_URL = "{{ url_for('courses') }}";
+
 function showPaymentSuccess(redirectUrl, email) {
-    const isGuest = !document.querySelector('[data-clerk-user-id]');
-    const modal = document.createElement('div');
-    modal.id = 'paymentSuccessOverlay';
-    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
-    modal.innerHTML = `
-        <div style="background:#fff;border-radius:20px;max-width:460px;width:100%;padding:40px 32px;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,0.3);">
-            <div style="width:72px;height:72px;background:linear-gradient(135deg,#43e97b,#38f9d7);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
-                <i class="fas fa-check" style="color:#fff;font-size:28px;"></i>
-            </div>
-            <h4 class="fw-bold mb-2">Payment Successful! 🎉</h4>
-            <p class="text-muted mb-4">You now have lifetime access to this course.</p>
-            ${isGuest ? `
-            <div style="background:#f8faff;border-radius:12px;padding:20px;margin-bottom:24px;border:1px solid #e8edff;">
-                <h6 class="fw-bold mb-2"><i class="fas fa-user-plus me-2 text-primary"></i>Save Your Access</h6>
-                <p class="text-muted small mb-3">Create a free account to access your course anytime from any device.</p>
-                <button onclick="window.location.href='/login?redirect=' + encodeURIComponent('${redirectUrl || '/courses'}') + '&email=' + encodeURIComponent('${email || ''}')" 
-                    class="btn btn-primary w-100 mb-2" style="border-radius:10px;">
-                    <i class="fas fa-user-plus me-2"></i>Create Free Account
-                </button>
-                <button onclick="window.location.href='${redirectUrl || '/courses'}'" 
-                    class="btn btn-link text-muted btn-sm w-100">
-                    Skip — Access Course Directly
-                </button>
-            </div>
-            ` : `
-            <a href="${redirectUrl || '/courses'}" class="btn btn-primary btn-lg w-100 mb-2" style="border-radius:12px;">
-                <i class="fas fa-play-circle me-2"></i>Start Learning Now
+    const overlay = document.createElement('div');
+    overlay.id = 'paymentSuccessOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.8);z-index:9999;display:flex;align-items:center;justify-content:center;padding:12px;overflow-y:auto;backdrop-filter:blur(4px);';
+
+    const waSection = _WA_SUPPORT ? `
+        <div style="border-top:1px solid #e2e8f0;padding-top:20px;margin-top:4px;">
+            <p style="font-weight:700;color:#1e293b;margin:0 0 12px;font-size:1rem;">Need Help? We're here for you.</p>
+            <a href="https://wa.me/${_WA_SUPPORT}?text=Hi%2C+I+just+purchased+a+course+and+need+help+getting+started."
+               target="_blank"
+               style="display:flex;align-items:center;justify-content:center;gap:10px;background:#25D366;color:#fff;text-decoration:none;padding:15px;border-radius:14px;font-weight:700;font-size:1rem;box-shadow:0 6px 20px rgba(37,211,102,0.4);transition:transform 0.2s;"
+               onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                <i class="fab fa-whatsapp" style="font-size:1.4rem;"></i>
+                Chat with us on WhatsApp
             </a>
-            `}
+        </div>` : '';
+
+    overlay.innerHTML = `
+        <div style="background:#fff;border-radius:24px;max-width:460px;width:100%;padding:36px 28px;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,0.4);margin:auto;">
+
+            <div style="width:80px;height:80px;background:linear-gradient(135deg,#43e97b,#38f9d7);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 8px 24px rgba(67,233,123,0.45);">
+                <i class="fas fa-check" style="color:#fff;font-size:34px;"></i>
+            </div>
+            <h3 style="font-weight:800;color:#1e293b;margin:0 0 8px;font-size:1.6rem;">Payment Successful! 🎉</h3>
+            <p style="color:#64748b;margin:0 0 24px;font-size:0.95rem;">Your course access has been activated instantly.</p>
+
+            <div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1px solid #86efac;border-radius:14px;padding:18px 20px;margin-bottom:20px;text-align:left;">
+                <div style="display:flex;align-items:flex-start;gap:12px;">
+                    <div style="width:42px;height:42px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <i class="fab fa-whatsapp" style="color:#fff;font-size:1.15rem;"></i>
+                    </div>
+                    <div>
+                        <p style="font-weight:700;color:#166534;margin:0 0 4px;font-size:0.95rem;">Credentials Sent to WhatsApp!</p>
+                        <p style="color:#15803d;font-size:0.82rem;margin:0;line-height:1.5;">Your <strong>login ID</strong> and <strong>password</strong> have been sent to your WhatsApp. Check your messages to sign in anytime.</p>
+                    </div>
+                </div>
+            </div>
+
+            <a href="${_LOGIN_URL}"
+               style="display:flex;align-items:center;justify-content:center;gap:10px;background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;text-decoration:none;padding:16px;border-radius:14px;font-weight:700;font-size:1.05rem;margin-bottom:10px;box-shadow:0 8px 24px rgba(124,58,237,0.38);">
+                <i class="fas fa-graduation-cap"></i>
+                Go to My Dashboard
+            </a>
+            <a href="${redirectUrl || _COURSES_URL}"
+               style="display:flex;align-items:center;justify-content:center;gap:8px;background:#f1f5f9;color:#475569;text-decoration:none;padding:13px;border-radius:12px;font-weight:600;font-size:0.9rem;margin-bottom:20px;">
+                <i class="fas fa-play-circle" style="color:#667eea;"></i>
+                View Course Now
+            </a>
+
+            ${waSection}
+
+            <p style="color:#cbd5e1;font-size:0.72rem;margin:18px 0 0;">
+                <i class="fas fa-shield-alt" style="color:#10b981;margin-right:4px;"></i>Payment secured by Razorpay
+            </p>
         </div>`;
-    document.body.appendChild(modal);
+
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) window.location.href = _LOGIN_URL;
+    });
 }
 
 function showPaymentFailure(message) {
-    const modal = document.createElement('div');
-    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
-    modal.innerHTML = `
-        <div style="background:#fff;border-radius:20px;max-width:420px;width:100%;padding:36px 28px;text-align:center;">
-            <div style="width:64px;height:64px;background:#fee2e2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
-                <i class="fas fa-times" style="color:#ef4444;font-size:24px;"></i>
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.8);z-index:9999;display:flex;align-items:center;justify-content:center;padding:12px;backdrop-filter:blur(4px);';
+
+    const waHelp = _WA_SUPPORT ? `
+        <a href="https://wa.me/${_WA_SUPPORT}?text=Hi%2C+I+had+a+payment+issue+and+need+help."
+           target="_blank"
+           style="display:flex;align-items:center;justify-content:center;gap:8px;background:#25D366;color:#fff;text-decoration:none;padding:13px;border-radius:12px;font-weight:700;font-size:0.9rem;">
+            <i class="fab fa-whatsapp" style="font-size:1.1rem;"></i>WhatsApp Support
+        </a>` : `<a href="/contact" style="display:inline-block;background:#f1f5f9;color:#475569;text-decoration:none;padding:12px 24px;border-radius:12px;font-weight:600;">Contact Support</a>`;
+
+    overlay.innerHTML = `
+        <div style="background:#fff;border-radius:22px;max-width:420px;width:100%;padding:36px 28px;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,0.35);">
+            <div style="width:72px;height:72px;background:linear-gradient(135deg,#fee2e2,#fecaca);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
+                <i class="fas fa-times" style="color:#ef4444;font-size:28px;"></i>
             </div>
-            <h5 class="fw-bold mb-2">Payment Issue</h5>
-            <p class="text-muted mb-4">${message}</p>
-            <div class="d-flex gap-2 justify-content-center">
-                <button onclick="this.closest('div[style]').remove()" class="btn btn-outline-secondary">Try Again</button>
-                <a href="/contact" class="btn btn-primary">Contact Support</a>
+            <h4 style="font-weight:800;color:#1e293b;margin:0 0 10px;">Payment Issue</h4>
+            <p style="color:#64748b;margin:0 0 24px;font-size:0.9rem;">${message}</p>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+                <button onclick="document.querySelector('#paymentSuccessOverlay, [style*=\"position:fixed\"]')?.remove(); this.closest('[style]').remove();"
+                    style="background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;border:none;padding:13px;border-radius:12px;font-weight:700;cursor:pointer;font-size:0.95rem;">
+                    <i class="fas fa-redo" style="margin-right:6px;"></i>Try Again
+                </button>
+                ${waHelp}
             </div>
         </div>`;
-    modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
-    document.body.appendChild(modal);
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+    document.body.appendChild(overlay);
 }
 </script>
 

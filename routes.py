@@ -3188,7 +3188,7 @@ def payment_success():
         course_title=request.args.get('course_title', ''),
         redirect_url=request.args.get('redirect', ''),
         email=request.args.get('email', ''),
-        is_logged_in=bool(get_clerk_user_id())
+        is_logged_in=bool(get_clerk_user_id() or get_course_user())
     )
 
 @app.route('/payment/failed')
