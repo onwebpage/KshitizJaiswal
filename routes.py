@@ -2248,6 +2248,152 @@ def admin_page_content():
     
     return render_template('admin/page_content.html', form=form, title='Page Content')
 
+
+@app.route('/admin/content-manager', methods=['GET', 'POST'])
+def admin_content_manager():
+    """Unified Content Manager — edit all homepage sections from one place"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+
+    from datetime import datetime as _dt
+
+    if request.method == 'POST':
+        action = request.form.get('action', '')
+        pc = DataManager.get_page_content()
+
+        if action == 'reels':
+            pc.update({
+                'reels_section_title':    request.form.get('reels_section_title', '').strip(),
+                'reels_section_subtitle': request.form.get('reels_section_subtitle', '').strip(),
+                'reels_button_text':      request.form.get('reels_button_text', '').strip(),
+            })
+            DataManager.save_page_content(pc)
+            SiteConfig.set('section_reels_visible', 'true' if request.form.get('section_reels_visible') else 'false')
+            flash('Reels section saved!', 'success')
+            return redirect(url_for('admin_content_manager') + '#reels')
+
+        elif action == 'support':
+            pc.update({
+                'support_section_title':      request.form.get('support_section_title', '').strip(),
+                'support_section_subtitle':   request.form.get('support_section_subtitle', '').strip(),
+                'custom_support_button_text': request.form.get('custom_support_button_text', '').strip(),
+                'custom_support_subtitle':    request.form.get('custom_support_subtitle', '').strip(),
+                'support_stats_count':        request.form.get('support_stats_count', '127').strip(),
+                'support_stats_amount':       request.form.get('support_stats_amount', '2340').strip(),
+            })
+            DataManager.save_page_content(pc)
+            SiteConfig.set('section_support_visible', 'true' if request.form.get('section_support_visible') else 'false')
+            flash('Support section saved!', 'success')
+            return redirect(url_for('admin_content_manager') + '#support')
+
+        elif action == 'statistics':
+            title    = request.form.get('stats_title', 'By the Numbers').strip()
+            subtitle = request.form.get('stats_subtitle', '').strip()
+            stats = []
+            idx = 0
+            while True:
+                icon = request.form.get(f'stat_icon_{idx}')
+                if icon is None:
+                    break
+                label   = request.form.get(f'stat_label_{idx}', '').strip()
+                value   = request.form.get(f'stat_value_{idx}', '').strip()
+                auto    = request.form.get(f'stat_auto_{idx}', '').strip()
+                visible = request.form.get(f'stat_visible_{idx}', '1')
+                if icon.strip() or label:
+                    stats.append({'icon': icon.strip(), 'label': label, 'value': value, 'auto': auto, 'visible': visible})
+                idx += 1
+            data   = {'title': title, 'subtitle': subtitle, 'stats': stats}
+            record = SiteContent.query.filter_by(content_key='statistics_data').first()
+            if record:
+                record.content_data = json.dumps(data)
+                record.updated_at   = _dt.utcnow()
+            else:
+                record = SiteContent(content_key='statistics_data', content_data=json.dumps(data))
+                db.session.add(record)
+            db.session.commit()
+            SiteConfig.set('section_statistics_visible', 'true' if request.form.get('section_statistics_visible') else 'false')
+            flash('Statistics section saved!', 'success')
+            return redirect(url_for('admin_content_manager') + '#statistics')
+
+        elif action == 'testimonials':
+            pc.update({
+                'testimonials_section_title':    request.form.get('testimonials_section_title', '').strip(),
+                'testimonials_section_subtitle': request.form.get('testimonials_section_subtitle', '').strip(),
+                'testimonial1_text': request.form.get('testimonial1_text', '').strip(),
+                'testimonial1_name': request.form.get('testimonial1_name', '').strip(),
+                'testimonial1_role': request.form.get('testimonial1_role', '').strip(),
+                'testimonial2_text': request.form.get('testimonial2_text', '').strip(),
+                'testimonial2_name': request.form.get('testimonial2_name', '').strip(),
+                'testimonial2_role': request.form.get('testimonial2_role', '').strip(),
+                'testimonial3_text': request.form.get('testimonial3_text', '').strip(),
+                'testimonial3_name': request.form.get('testimonial3_name', '').strip(),
+                'testimonial3_role': request.form.get('testimonial3_role', '').strip(),
+            })
+            DataManager.save_page_content(pc)
+            SiteConfig.set('section_testimonials_visible', 'true' if request.form.get('section_testimonials_visible') else 'false')
+            flash('Testimonials section saved!', 'success')
+            return redirect(url_for('admin_content_manager') + '#testimonials')
+
+        elif action == 'courses':
+            pc.update({
+                'courses_section_title':    request.form.get('courses_section_title', '').strip(),
+                'courses_section_subtitle': request.form.get('courses_section_subtitle', '').strip(),
+                'courses_button_text':      request.form.get('courses_button_text', '').strip(),
+            })
+            DataManager.save_page_content(pc)
+            SiteConfig.set('section_courses_visible', 'true' if request.form.get('section_courses_visible') else 'false')
+            flash('Courses section saved!', 'success')
+            return redirect(url_for('admin_content_manager') + '#courses')
+
+        elif action == 'newsletter':
+            pc.update({
+                'newsletter_section_title':    request.form.get('newsletter_section_title', '').strip(),
+                'newsletter_section_subtitle': request.form.get('newsletter_section_subtitle', '').strip(),
+                'newsletter_button_text':      request.form.get('newsletter_button_text', '').strip(),
+                'newsletter_privacy_text':     request.form.get('newsletter_privacy_text', '').strip(),
+            })
+            DataManager.save_page_content(pc)
+            SiteConfig.set('section_newsletter_visible', 'true' if request.form.get('section_newsletter_visible') else 'false')
+            flash('Newsletter section saved!', 'success')
+            return redirect(url_for('admin_content_manager') + '#newsletter')
+
+        flash('Unknown action.', 'error')
+        return redirect(url_for('admin_content_manager'))
+
+    # GET — load all data
+    pc = DataManager.get_page_content()
+
+    stats_record = SiteContent.query.filter_by(content_key='statistics_data').first()
+    stats_data   = json.loads(stats_record.content_data) if stats_record else {
+        'title': 'By the Numbers', 'subtitle': 'The reach keeps growing — thanks to you.', 'stats': []
+    }
+    if 'stats' not in stats_data:
+        stats_data['stats'] = []
+
+    try:
+        live_subscriber_count = Subscriber.query.count()
+    except Exception:
+        live_subscriber_count = 0
+    try:
+        live_reel_count = Reel.query.filter_by(is_visible=True).count()
+    except Exception:
+        live_reel_count = 0
+
+    visibility = {
+        s: SiteConfig.get(f'section_{s}_visible', 'true').lower() != 'false'
+        for s in ['reels', 'support', 'statistics', 'testimonials', 'courses', 'newsletter']
+    }
+    subscription_tiers = SubscriptionTier.query.order_by(SubscriptionTier.sort_order).all()
+
+    return render_template('admin/content_manager.html',
+                           pc=pc,
+                           stats_data=stats_data,
+                           visibility=visibility,
+                           subscription_tiers=subscription_tiers,
+                           live_subscriber_count=live_subscriber_count,
+                           live_reel_count=live_reel_count)
+
+
 @app.route('/admin/column-visibility', methods=['GET', 'POST'])
 def admin_column_visibility():
     """Column Visibility Settings"""

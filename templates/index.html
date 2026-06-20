@@ -274,8 +274,8 @@
 <section class="section-padding testimonials-section">
     <div class="container">
         <div class="text-center mb-5">
-            <h2 class="section-title">What People Say</h2>
-            <p class="section-subtitle">Real voices from the community.</p>
+            <h2 class="section-title">{{ page_content.testimonials_section_title or 'What People Say' }}</h2>
+            <p class="section-subtitle">{{ page_content.testimonials_section_subtitle or 'Real voices from the community.' }}</p>
         </div>
         <div class="row g-4 justify-content-center">
             <div class="col-md-4">
@@ -327,10 +327,10 @@
 <section class="section-padding courses-teaser-section">
     <div class="container">
         <div class="text-center mb-5">
-            <h2 class="section-title">Learn From Kshitiz</h2>
-            <p class="section-subtitle">Structured courses on commentary, media literacy, and critical thinking.</p>
+            <h2 class="section-title">{{ page_content.courses_section_title or 'Learn From Kshitiz' }}</h2>
+            <p class="section-subtitle">{{ page_content.courses_section_subtitle or 'Structured courses on commentary, media literacy, and critical thinking.' }}</p>
             <a href="{{ url_for('courses') }}" class="btn btn-outline-primary btn-sm mt-2 rounded-pill px-4">
-                View All Courses <i class="fas fa-arrow-right ms-1"></i>
+                {{ page_content.courses_button_text or 'View All Courses' }} <i class="fas fa-arrow-right ms-1"></i>
             </a>
         </div>
         <div class="row g-4 justify-content-center">
@@ -375,8 +375,8 @@
         <div class="row justify-content-center">
             <div class="col-lg-7 text-center">
                 <div class="newsletter-cta-icon mb-3"><i class="fas fa-envelope-open-text"></i></div>
-                <h2 class="section-title">Join the Inner Circle</h2>
-                <p class="section-subtitle mb-4">Get unfiltered commentary, behind-the-reel insights, and exclusive updates straight to your inbox.</p>
+                <h2 class="section-title">{{ page_content.newsletter_section_title or 'Join the Inner Circle' }}</h2>
+                <p class="section-subtitle mb-4">{{ page_content.newsletter_section_subtitle or 'Get unfiltered commentary, behind-the-reel insights, and exclusive updates straight to your inbox.' }}</p>
                 <form method="POST" action="{{ url_for('newsletter_subscribe') }}" class="newsletter-cta-form" id="newsletterCTAForm">
                     {{ newsletter_form.hidden_tag() }}
                     <div class="row g-3 mb-3">
@@ -388,10 +388,10 @@
                         </div>
                     </div>
                     <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5">
-                        <i class="fas fa-paper-plane me-2"></i>Subscribe Free
+                        <i class="fas fa-paper-plane me-2"></i>{{ page_content.newsletter_button_text or 'Subscribe Free' }}
                     </button>
                 </form>
-                <p class="text-muted small mt-3 mb-0"><i class="fas fa-shield-alt me-1"></i>No spam. Unsubscribe anytime.</p>
+                <p class="text-muted small mt-3 mb-0"><i class="fas fa-shield-alt me-1"></i>{{ page_content.newsletter_privacy_text or 'No spam. Unsubscribe anytime.' }}</p>
             </div>
         </div>
     </div>
