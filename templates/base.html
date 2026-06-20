@@ -102,37 +102,40 @@
     <!-- End Google Tag Manager (noscript) -->
     
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark fixed-top custom-navbar">
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top custom-navbar" id="mainNavbar">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="{{ url_for('index') }}">
-                <i class="fas fa-microphone-alt me-2"></i>Kshitiz Jaiswal
+            <a class="navbar-brand" href="{{ url_for('index') }}">
+                <span class="brand-icon"><i class="fas fa-microphone-alt"></i></span>
+                <span class="brand-text">Kshitiz Jaiswal</span>
             </a>
-            
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
+
+            <button class="navbar-toggler nav-hamburger" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="hamburger-bar"></span>
+                <span class="hamburger-bar"></span>
+                <span class="hamburger-bar"></span>
             </button>
-            
+
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
+                <ul class="navbar-nav ms-auto align-items-lg-center">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('index') }}">Home</a>
+                        <a class="nav-link{% if request.endpoint == 'index' %} active{% endif %}" href="{{ url_for('index') }}">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('reels_library') }}">Beyond the Reels</a>
+                        <a class="nav-link{% if request.endpoint == 'reels_library' %} active{% endif %}" href="{{ url_for('reels_library') }}">Beyond the Reels</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('polls_archive') }}">Kshitiz Ki Rai</a>
+                        <a class="nav-link{% if request.endpoint == 'polls_archive' %} active{% endif %}" href="{{ url_for('polls_archive') }}">Kshitiz Ki Rai</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('courses') }}">Courses</a>
+                        <a class="nav-link{% if request.endpoint in ('courses','course_detail','enroll_course') %} active{% endif %}" href="{{ url_for('courses') }}">Courses</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('upcoming_shows') }}">Upcoming Shows</a>
+                        <a class="nav-link{% if request.endpoint == 'upcoming_shows' %} active{% endif %}" href="{{ url_for('upcoming_shows') }}">Upcoming Shows</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('contact') }}">Contact</a>
+                        <a class="nav-link{% if request.endpoint == 'contact' %} active{% endif %}" href="{{ url_for('contact') }}">Contact</a>
                     </li>
-                    <li class="nav-item">
+                    <li class="nav-item nav-item-support">
                         <a class="nav-link support-btn" href="{{ url_for('index') }}#support">
                             <i class="fas fa-heart me-1"></i>Support
                         </a>
@@ -140,12 +143,13 @@
                     <li class="nav-item">
                         {% if course_user %}
                         <div class="dropdown">
-                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="fas fa-user-circle me-1"></i>{{ course_user.name.split()[0] }}
+                            <a class="nav-link nav-user-btn dropdown-toggle d-flex align-items-center gap-1" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <span class="nav-user-avatar"><i class="fas fa-user"></i></span>
+                                <span>{{ course_user.name.split()[0] }}</span>
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end" style="border-radius:12px;border:none;box-shadow:0 8px 32px rgba(0,0,0,0.15);">
+                            <ul class="dropdown-menu dropdown-menu-end nav-dropdown">
                                 <li>
-                                    <span class="dropdown-item-text text-muted small px-3 py-1">{{ course_user.email or course_user.phone }}</span>
+                                    <span class="dropdown-item-text text-muted small px-3 py-2">{{ course_user.email or course_user.phone }}</span>
                                 </li>
                                 <li><hr class="dropdown-divider my-1"></li>
                                 <li><a class="dropdown-item" href="{{ url_for('my_courses') }}"><i class="fas fa-graduation-cap me-2 text-primary"></i>My Courses</a></li>
@@ -156,7 +160,7 @@
                         </div>
                         {% else %}
                         <div id="clerk-user-button" style="display: none;"></div>
-                        <a id="clerk-login-btn" class="nav-link" href="{{ url_for('user_login') }}">
+                        <a id="clerk-login-btn" class="nav-link nav-login-btn" href="{{ url_for('user_login') }}">
                             <i class="fas fa-sign-in-alt me-1"></i>Login
                         </a>
                         {% endif %}

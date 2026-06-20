@@ -67,43 +67,73 @@ input[type="submit"], input[type="button"],
 
 /* ── 4. NAVBAR ───────────────────────────────────────────────── */
 @media (max-width: 991.98px) {
-  /* Ensure collapsible menu doesn't overflow */
+  /* Mobile dropdown panel */
   .navbar-collapse {
-    max-height: calc(100vh - 80px);
+    max-height: calc(100dvh - 90px);
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    margin-top: 8px;
+    padding: 0.5rem 0 1rem;
   }
 
   .navbar-collapse .navbar-nav {
-    padding: 0.75rem 0;
+    padding: 0.25rem 0;
+    gap: 2px;
   }
 
-  .nav-link {
-    padding: 0.75rem 1rem !important;
-    font-size: 1rem;
-    min-height: 48px;
+  /* Each nav link full-width pill in mobile */
+  .navbar-nav .nav-link {
+    padding: 0.72rem 1.2rem !important;
+    font-size: 0.95rem;
+    min-height: 50px;
     display: flex;
     align-items: center;
+    border-radius: 12px;
+    margin: 0 0.5rem;
+  }
+
+  .navbar-nav .nav-link::after {
+    display: none;
+  }
+
+  .navbar-nav .nav-link.active {
+    background: rgba(255,255,255,0.12);
+    border-left: 3px solid rgba(255, 100, 100, 0.85);
+    padding-left: 1rem !important;
+  }
+
+  /* Support button in mobile */
+  .nav-item-support {
+    margin: 0.4rem 0.5rem 0;
   }
 
   .support-btn {
-    margin: 0.5rem 1rem;
-    display: inline-flex;
+    display: flex !important;
     align-items: center;
     justify-content: center;
+    width: calc(100% - 0px);
+    border-radius: 14px !important;
+    padding: 0.65rem 1.2rem !important;
+    min-height: 50px;
+    margin: 0 !important;
   }
 
-  #clerk-login-btn {
-    margin: 0.25rem 1rem 0.5rem;
-  }
-
-  /* Toggler easier to tap */
-  .navbar-toggler {
-    width: 44px;
-    height: 44px;
-    display: flex;
+  /* Login button in mobile */
+  .nav-login-btn,
+  #clerk-login-btn.nav-login-btn {
+    display: flex !important;
     align-items: center;
-    justify-content: center;
+    margin: 0.3rem 0.5rem 0;
+    border-radius: 14px !important;
+    padding: 0.65rem 1.2rem !important;
+    min-height: 50px;
+  }
+
+  /* User button mobile */
+  .nav-user-btn {
+    margin: 0.3rem 0.5rem 0;
+    min-height: 50px;
   }
 }
 
@@ -115,7 +145,13 @@ input[type="submit"], input[type="button"],
   }
 
   .navbar-brand {
-    font-size: 1rem !important;
+    font-size: 0.95rem !important;
+  }
+
+  .brand-icon {
+    width: 26px !important;
+    height: 26px !important;
+    font-size: 0.72rem !important;
   }
 }
 
