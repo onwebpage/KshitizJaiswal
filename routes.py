@@ -145,19 +145,20 @@ def index():
         logging.error(f"Database error fetching subscription tiers: {e}")
         subscription_tiers = []
     
-    # Get Razorpay key — prefer env var, fallback to DB admin setting
+    # Get Razorpay key — env var takes priority, fallback to DB admin setting
     import json
     razorpay_key = os.environ.get('RAZORPAY_KEY_ID', '')
-    try:
-        payment_content = SiteContent.query.filter_by(content_key='payment_settings').first()
-        if payment_content:
-            payment_settings = json.loads(payment_content.content_data)
-            db_key = payment_settings.get('razorpay_key_id', '')
-            if db_key:
-                razorpay_key = db_key
-    except Exception as e:
-        import logging
-        logging.error(f"Database error fetching payment settings: {e}")
+    if not razorpay_key:
+        try:
+            payment_content = SiteContent.query.filter_by(content_key='payment_settings').first()
+            if payment_content:
+                payment_settings = json.loads(payment_content.content_data)
+                db_key = payment_settings.get('razorpay_key_id', '')
+                if db_key:
+                    razorpay_key = db_key
+        except Exception as e:
+            import logging
+            logging.error(f"Database error fetching payment settings: {e}")
     
     # Get page content
     page_content = DataManager.get_page_content()
@@ -585,7 +586,11 @@ def create_payment():
         import json
         payment_content = SiteContent.query.filter_by(content_key='payment_settings').first()
         
-        if payment_content:
+        env_key_id = os.environ.get('RAZORPAY_KEY_ID', '')
+        env_key_secret = os.environ.get('RAZORPAY_KEY_SECRET', '')
+        if env_key_id and env_key_secret:
+            dynamic_client = razorpay.Client(auth=(env_key_id, env_key_secret))
+        elif payment_content:
             payment_settings = json.loads(payment_content.content_data)
             razorpay_key_id = payment_settings.get('razorpay_key_id')
             razorpay_key_secret = payment_settings.get('razorpay_key_secret')
@@ -3058,12 +3063,13 @@ def courses():
         courses_data.append(course_dict)
     
     razorpay_key = os.environ.get('RAZORPAY_KEY_ID', '')
-    payment_content = SiteContent.query.filter_by(content_key='payment_settings').first()
-    if payment_content:
-        payment_settings = json.loads(payment_content.content_data)
-        db_key = payment_settings.get('razorpay_key_id', '')
-        if db_key:
-            razorpay_key = db_key
+    if not razorpay_key:
+        payment_content = SiteContent.query.filter_by(content_key='payment_settings').first()
+        if payment_content:
+            payment_settings = json.loads(payment_content.content_data)
+            db_key = payment_settings.get('razorpay_key_id', '')
+            if db_key:
+                razorpay_key = db_key
     
     return render_template('courses.html', courses=courses_data, razorpay_key=razorpay_key)
 
@@ -3133,12 +3139,13 @@ def course_detail(course_id):
     course_data['has_access'] = has_access
 
     razorpay_key = os.environ.get('RAZORPAY_KEY_ID', '')
-    payment_content = SiteContent.query.filter_by(content_key='payment_settings').first()
-    if payment_content:
-        payment_settings = json.loads(payment_content.content_data)
-        db_key = payment_settings.get('razorpay_key_id', '')
-        if db_key:
-            razorpay_key = db_key
+    if not razorpay_key:
+        payment_content = SiteContent.query.filter_by(content_key='payment_settings').first()
+        if payment_content:
+            payment_settings = json.loads(payment_content.content_data)
+            db_key = payment_settings.get('razorpay_key_id', '')
+            if db_key:
+                razorpay_key = db_key
     
     curriculum_settings = _get_curriculum_settings()
     
@@ -3446,17 +3453,22 @@ def verify_support_payment():
             return jsonify({'success': False, 'message': 'Missing payment details'}), 400
 
         import json
-        payment_content = SiteContent.query.filter_by(content_key='payment_settings').first()
-        if payment_content:
-            payment_settings = json.loads(payment_content.content_data)
-            key_id = payment_settings.get('razorpay_key_id')
-            key_secret = payment_settings.get('razorpay_key_secret')
-            if key_id and key_secret:
-                client = razorpay.Client(auth=(key_id, key_secret))
+        env_key_id = os.environ.get('RAZORPAY_KEY_ID', '')
+        env_key_secret = os.environ.get('RAZORPAY_KEY_SECRET', '')
+        if env_key_id and env_key_secret:
+            client = razorpay.Client(auth=(env_key_id, env_key_secret))
+        else:
+            payment_content = SiteContent.query.filter_by(content_key='payment_settings').first()
+            if payment_content:
+                payment_settings = json.loads(payment_content.content_data)
+                key_id = payment_settings.get('razorpay_key_id')
+                key_secret = payment_settings.get('razorpay_key_secret')
+                if key_id and key_secret:
+                    client = razorpay.Client(auth=(key_id, key_secret))
+                else:
+                    client = razorpay_client
             else:
                 client = razorpay_client
-        else:
-            client = razorpay_client
 
         params_dict = {
             'razorpay_order_id': order_id,
