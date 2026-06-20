@@ -1,0 +1,195 @@
+{#
+  Drag-and-drop image upload macro.
+
+  Usage:
+    {% from 'admin/_image_upload.html' import image_upload_field %}
+    {{ image_upload_field(field=form.thumbnail, label="Thumbnail", hint="JPG/PNG · max 800×600", current_image=reel.thumbnail if reel else None) }}
+#}
+
+{% macro image_upload_field(field, label, hint="JPG or PNG recommended", current_image=None) %}
+{% set fid = field.id %}
+<div class="mb-1">
+  <label class="form-label fw-semibold">
+    <i class="fas fa-image me-1 text-primary"></i>{{ label }}
+  </label>
+
+  <div class="img-dropzone" id="zone_{{ fid }}"
+       ondragover="dzOver(event,'{{ fid }}')"
+       ondragleave="dzLeave(event,'{{ fid }}')"
+       ondrop="dzDrop(event,'{{ fid }}')">
+    <div class="img-dropzone-inner" id="inner_{{ fid }}">
+      <i class="fas fa-cloud-upload-alt img-dz-icon"></i>
+      <p class="img-dz-text mb-1">Drag &amp; drop an image here</p>
+      <p class="img-dz-or text-muted mb-2">— or —</p>
+      <label for="{{ fid }}" class="btn btn-sm btn-outline-primary">
+        <i class="fas fa-folder-open me-1"></i>Browse file
+      </label>
+      <p class="img-dz-hint text-muted mt-2 mb-0"><small>{{ hint }}</small></p>
+    </div>
+
+    <!-- Preview overlay shown after file chosen -->
+    <div class="img-dz-preview-wrap" id="prevwrap_{{ fid }}" style="display:none;">
+      <img id="preview_{{ fid }}" class="img-dz-preview-img" alt="Preview">
+      <button type="button" class="btn btn-sm btn-danger img-dz-clear-btn"
+              onclick="dzClear('{{ fid }}')">
+        <i class="fas fa-times me-1"></i>Remove
+      </button>
+    </div>
+  </div>
+
+  {# Hidden file input #}
+  {{ field(id=fid, class="d-none", accept="image/*", onchange="dzOnChange(this,'{{ fid }}')") }}
+
+  {% if field.errors %}
+    {% for err in field.errors %}
+      <div class="invalid-feedback d-block">{{ err }}</div>
+    {% endfor %}
+  {% endif %}
+
+  {# Current image (edit mode) #}
+  {% if current_image %}
+  <div class="img-dz-current mt-2" id="current_{{ fid }}">
+    <small class="text-muted">
+      <i class="fas fa-image me-1"></i>Current image:
+    </small>
+    <div class="mt-1">
+      <img src="{{ url_for('static', filename=current_image) if current_image and not current_image.startswith('http') else current_image }}"
+           alt="Current"
+           class="img-dz-current-img"
+           onerror="this.src='{{ url_for('static', filename='img/reel-placeholder.svg') }}'">
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endmacro %}
+
+
+{# ── CSS block (include once per page via {% block extra_head %}) ── #}
+{% macro image_upload_css() %}
+<style>
+/* ── Drag-and-drop upload zone ── */
+.img-dropzone {
+  border: 2px dashed #6366f1;
+  border-radius: 12px;
+  background: #f8f9ff;
+  min-height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color .2s, background .2s;
+  position: relative;
+  overflow: hidden;
+}
+.img-dropzone:hover,
+.img-dropzone.dz-hover {
+  border-color: #4f46e5;
+  background: #eef0ff;
+}
+.img-dropzone-inner {
+  text-align: center;
+  padding: 24px 16px;
+  width: 100%;
+}
+.img-dz-icon {
+  font-size: 2rem;
+  color: #6366f1;
+  margin-bottom: 8px;
+}
+.img-dz-text { font-weight: 600; color: #374151; margin: 0; }
+.img-dz-or   { font-size: .85rem; }
+.img-dz-hint { font-size: .8rem; }
+
+/* Preview overlay */
+.img-dz-preview-wrap {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.img-dz-preview-img {
+  max-height: 130px;
+  max-width: 100%;
+  object-fit: contain;
+  border-radius: 6px;
+}
+.img-dz-clear-btn { z-index: 2; }
+
+/* Current image thumbnail */
+.img-dz-current-img {
+  width: 120px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+</style>
+{% endmacro %}
+
+
+{# ── JS block (include once per page via {% block scripts %}) ── #}
+{% macro image_upload_js() %}
+<script>
+function dzOver(e, id) {
+  e.preventDefault();
+  document.getElementById('zone_' + id).classList.add('dz-hover');
+}
+function dzLeave(e, id) {
+  document.getElementById('zone_' + id).classList.remove('dz-hover');
+}
+function dzDrop(e, id) {
+  e.preventDefault();
+  document.getElementById('zone_' + id).classList.remove('dz-hover');
+  const files = e.dataTransfer.files;
+  if (files.length) {
+    const input = document.getElementById(id);
+    // Transfer dropped file to the hidden input via DataTransfer
+    const dt = new DataTransfer();
+    dt.items.add(files[0]);
+    input.files = dt.files;
+    dzShowPreview(files[0], id);
+  }
+}
+function dzOnChange(input, id) {
+  if (input.files && input.files[0]) dzShowPreview(input.files[0], id);
+}
+function dzShowPreview(file, id) {
+  if (!file.type.startsWith('image/')) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    document.getElementById('preview_' + id).src = e.target.result;
+    document.getElementById('inner_'   + id).style.display = 'none';
+    document.getElementById('prevwrap_'+ id).style.display = 'flex';
+    // Hide current image block when new file chosen
+    const cur = document.getElementById('current_' + id);
+    if (cur) cur.style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+function dzClear(id) {
+  const input = document.getElementById(id);
+  input.value = '';
+  document.getElementById('inner_'   + id).style.display = '';
+  document.getElementById('prevwrap_'+ id).style.display = 'none';
+  const cur = document.getElementById('current_' + id);
+  if (cur) cur.style.display = '';
+}
+// Make the entire zone clickable (open file dialog)
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.img-dropzone').forEach(function(zone) {
+    zone.addEventListener('click', function(e) {
+      if (e.target.tagName === 'BUTTON' || e.target.tagName === 'LABEL' ||
+          e.target.closest('button') || e.target.closest('label')) return;
+      const inner = zone.querySelector('.img-dropzone-inner');
+      if (inner && inner.style.display === 'none') return; // preview shown, don't open
+      const id = zone.id.replace('zone_', '');
+      document.getElementById(id).click();
+    });
+  });
+});
+</script>
+{% endmacro %}

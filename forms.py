@@ -20,7 +20,6 @@ class AdminLoginForm(FlaskForm):
 class ReelForm(FlaskForm):
     title = StringField('Title', validators=[DataRequired(), Length(max=100)])
     thumbnail = FileField('Thumbnail', validators=[FileAllowed(['jpg', 'jpeg', 'png', 'gif'])])
-    thumbnail_url = StringField('Or Thumbnail URL', validators=[Length(max=500)])
     video_url = StringField('Video URL')
     video_type = SelectField('Content Type', choices=[
         ('auto', '🔍 Auto-detect'),
@@ -66,11 +65,8 @@ class HeroContentForm(FlaskForm):
     tagline = TextAreaField('Hero Tagline', validators=[DataRequired(), Length(max=500)])
     desktop_image = FileField('Desktop Hero Image', validators=[FileAllowed(['jpg', 'jpeg', 'png', 'gif'])])
     mobile_image = FileField('Mobile Hero Image', validators=[FileAllowed(['jpg', 'jpeg', 'png', 'gif'])])
-    desktop_url = StringField('Or Desktop Image URL', validators=[Length(max=500)])
-    mobile_url = StringField('Or Mobile Image URL', validators=[Length(max=500)])
     # Keep for backward compatibility
     banner_image = FileField('Hero Background Image (Legacy)', validators=[FileAllowed(['jpg', 'jpeg', 'png', 'gif'])])
-    banner_url = StringField('Or Banner URL (Legacy)', validators=[Length(max=500)])
 
 class PaymentSettingsForm(FlaskForm):
     razorpay_key_id = StringField('Razorpay Key ID', validators=[DataRequired(), Length(max=100)])
@@ -95,13 +91,13 @@ class ResourceForm(FlaskForm):
     description = TextAreaField('Description', validators=[DataRequired(), Length(max=500)])
     price = StringField('Price', validators=[Length(max=50)], default='Free')
     link = StringField('Link/URL', validators=[DataRequired(), Length(max=500)])
-    image = StringField('Image URL', validators=[Length(max=500)])
+    image = FileField('Image', validators=[FileAllowed(['jpg', 'jpeg', 'png', 'gif', 'webp'])])
     submit = SubmitField('Save Resource')
 
 class ShowForm(FlaskForm):
     title = StringField('Show Title', validators=[DataRequired(), Length(max=200)])
     description = TextAreaField('Description', validators=[DataRequired(), Length(max=500)])
-    image = StringField('Image URL', validators=[Length(max=500)])
+    image = FileField('Image', validators=[FileAllowed(['jpg', 'jpeg', 'png', 'gif', 'webp'])])
     coming_soon = SelectField('Status', choices=[('1', 'Coming Soon'), ('0', 'Available Now')], default='1')
     notify_link = StringField('Notification/Registration Link', validators=[Length(max=500)])
     submit = SubmitField('Save Show')
@@ -110,7 +106,6 @@ class CourseForm(FlaskForm):
     title = StringField('Course Title', validators=[DataRequired(), Length(max=200)])
     description = TextAreaField('Course Description', validators=[DataRequired()])
     thumbnail = FileField('Course Thumbnail', validators=[FileAllowed(['jpg', 'jpeg', 'png', 'gif'])])
-    thumbnail_url = StringField('Or Thumbnail URL', validators=[Length(max=500)])
     price = IntegerField('Price (₹)', validators=[DataRequired(), NumberRange(min=0)])
     is_active = SelectField('Active', choices=[('1', 'Yes'), ('0', 'No')], default='1')
     sort_order = IntegerField('Sort Order', validators=[NumberRange(min=0)], default=0)

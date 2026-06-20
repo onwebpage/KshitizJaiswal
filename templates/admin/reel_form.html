@@ -1,6 +1,9 @@
 {% extends "base.html" %}
+{% from 'admin/_image_upload.html' import image_upload_field, image_upload_css, image_upload_js %}
 
 {% block title %}{{ title }} - Admin Panel - Kshitiz Jaiswal{% endblock %}
+
+{% block extra_head %}{{ image_upload_css() }}{% endblock %}
 
 {% block content %}
 <div class="admin-section">
@@ -70,23 +73,13 @@
                             </div>
 
                             <!-- ── Thumbnail ── -->
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">{{ form.thumbnail.label.text }}</label>
-                                {{ form.thumbnail(class="form-control", id="thumbnailFile") }}
-                                <small class="form-text text-muted">Upload JPG/PNG (max recommended 800×450)</small>
-                                {% if reel and reel.thumbnail %}
-                                <div class="mt-2">
-                                    <small class="text-muted">Current:</small>
-                                    <img src="{{ url_for('static', filename=reel.thumbnail) if reel.thumbnail and not reel.thumbnail.startswith('http') else reel.thumbnail }}"
-                                         alt="Current thumbnail" class="admin-thumbnail d-block mt-1" style="width:100px;height:60px;object-fit:cover;border-radius:8px;">
-                                </div>
-                                {% endif %}
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Or Thumbnail URL</label>
-                                {{ form.thumbnail_url(class="form-control", placeholder="https://...") }}
-                                <small class="form-text text-muted">Used if no file is uploaded.</small>
+                            <div class="col-12">
+                                {{ image_upload_field(
+                                    field=form.thumbnail,
+                                    label="Thumbnail Image",
+                                    hint="JPG / PNG · Recommended 800×450 px",
+                                    current_image=reel.thumbnail if reel and reel.thumbnail else None
+                                ) }}
                             </div>
 
                             <!-- ── Visibility Controls ── -->
@@ -158,6 +151,7 @@
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+{{ image_upload_js() }}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const urlInput    = document.getElementById('videoUrl');

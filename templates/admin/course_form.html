@@ -1,7 +1,10 @@
 {% extends "admin/dashboard.html" %}
+{% from 'admin/_image_upload.html' import image_upload_field, image_upload_css, image_upload_js %}
 
 {% block admin_content %}
 <h2>{{ title }}</h2>
+
+{{ image_upload_css() }}
 
 <form method="POST" enctype="multipart/form-data">
     {{ form.hidden_tag() }}
@@ -17,21 +20,12 @@
     </div>
     
     <div class="mb-3">
-        {{ form.thumbnail.label(class="form-label") }}
-        {{ form.thumbnail(class="form-control") }}
-        {% if course and course.thumbnail %}
-        <div class="mt-2">
-            <small class="text-muted">Current thumbnail:</small><br>
-            <img src="{{ url_for('static', filename=course.thumbnail) if not course.thumbnail.startswith('http') else course.thumbnail }}" 
-                 alt="Current thumbnail" style="max-width: 200px; max-height: 200px; object-fit: cover; border-radius: 8px;">
-        </div>
-        {% endif %}
-    </div>
-    
-    <div class="mb-3">
-        {{ form.thumbnail_url.label(class="form-label") }}
-        {{ form.thumbnail_url(class="form-control", placeholder="https://example.com/image.jpg") }}
-        <small class="form-text text-muted">Or provide a URL instead of uploading a file</small>
+        {{ image_upload_field(
+            field=form.thumbnail,
+            label="Course Thumbnail",
+            hint="JPG / PNG · Recommended 800×450 px",
+            current_image=course.thumbnail if course and course.thumbnail else None
+        ) }}
     </div>
     
     <div class="mb-3">
@@ -55,4 +49,6 @@
         <a href="{{ url_for('admin_courses') }}" class="btn btn-secondary">Cancel</a>
     </div>
 </form>
+
+{{ image_upload_js() }}
 {% endblock %}

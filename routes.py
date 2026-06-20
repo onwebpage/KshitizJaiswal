@@ -1095,72 +1095,50 @@ def admin_hero_content():
     }
     
     if form.validate_on_submit():
+        # Keep existing URLs as fallback if no new file is uploaded
+        existing_desktop = current_hero.get('desktop_url', '')
+        existing_mobile  = current_hero.get('mobile_url', '')
+        existing_banner  = current_hero.get('banner_url', '')
+
         # Handle desktop image upload
-        desktop_url = ''
-        if form.desktop_image.data:
-            uploaded_path = save_uploaded_file(form.desktop_image.data, 'hero')
-            if uploaded_path:
-                desktop_url = uploaded_path
-        else:
-            # Use whatever is in the form field (empty if cleared, URL if provided)
-            desktop_url = form.desktop_url.data or ''
-        
+        desktop_url = save_uploaded_file(form.desktop_image.data, 'hero') or existing_desktop
+
         # Handle mobile image upload
-        mobile_url = ''
-        if form.mobile_image.data:
-            uploaded_path = save_uploaded_file(form.mobile_image.data, 'hero')
-            if uploaded_path:
-                mobile_url = uploaded_path
-        else:
-            # Use whatever is in the form field (empty if cleared, URL if provided)
-            mobile_url = form.mobile_url.data or ''
-        
-        # Handle legacy banner image upload for backward compatibility
-        banner_url = ''
-        if form.banner_image.data:
-            uploaded_path = save_uploaded_file(form.banner_image.data, 'hero')
-            if uploaded_path:
-                banner_url = uploaded_path
-                # If no desktop/mobile specified, use banner for both
-                if not desktop_url:
-                    desktop_url = uploaded_path
-                if not mobile_url:
-                    mobile_url = uploaded_path
-        else:
-            # Use whatever is in the form field (empty if cleared, URL if provided)
-            banner_url = form.banner_url.data or ''
-            # If no desktop/mobile specified, use banner for both
-            if not desktop_url and banner_url:
-                desktop_url = banner_url
-            if not mobile_url and banner_url:
-                mobile_url = banner_url
-        
+        mobile_url = save_uploaded_file(form.mobile_image.data, 'hero') or existing_mobile
+
+        # Handle legacy banner image upload
+        banner_uploaded = save_uploaded_file(form.banner_image.data, 'hero')
+        banner_url = banner_uploaded or existing_banner
+        # If no desktop/mobile set yet, promote banner to both
+        if banner_uploaded:
+            if not desktop_url:
+                desktop_url = banner_uploaded
+            if not mobile_url:
+                mobile_url = banner_uploaded
+
         # Update hero content
         updated_hero = {
             "name": form.name.data,
             "tagline": form.tagline.data,
-            "banner_url": banner_url,  # Keep for backward compatibility
+            "banner_url": banner_url,
             "desktop_url": desktop_url,
             "mobile_url": mobile_url
         }
-        
+
         if hero_content:
             hero_content.content_data = json.dumps(updated_hero)
         else:
             hero_content = SiteContent(content_key='hero', content_data=json.dumps(updated_hero))
             db.session.add(hero_content)
-        
+
         db.session.commit()
         flash('Hero content updated successfully!', 'success')
         return redirect(url_for('admin_dashboard'))
-    
-    # Pre-populate form with current data
+
+    # Pre-populate text fields; file inputs cannot be pre-populated
     if request.method == 'GET':
         form.name.data = current_hero.get('name', '')
         form.tagline.data = current_hero.get('tagline', '')
-        form.banner_url.data = current_hero.get('banner_url', '')
-        form.desktop_url.data = current_hero.get('desktop_url', '')
-        form.mobile_url.data = current_hero.get('mobile_url', '')
     
     return render_template('admin/hero_form.html', form=form, title='Hero Content', current_hero=current_hero)
 
@@ -1472,13 +1450,16 @@ def admin_add_resource():
         resources_content = SiteContent.query.filter_by(content_key='resources').first()
         resources = json.loads(resources_content.content_data) if resources_content else []
         
+        # Handle image upload
+        uploaded_image = save_uploaded_file(form.image.data, 'resources')
+
         # Add new resource
         new_resource = {
             'title': form.title.data,
             'description': form.description.data,
             'price': form.price.data,
             'link': form.link.data,
-            'image': form.image.data or 'https://pixabay.com/get/g1607648249e3d2cc886480cc481c2224cb52f7fd6b06e51d63e7c2ee7d304d71973191ec7388dc286501651899d7fd130bc378c50e5ab80727d452f099c3f672_1280.jpg'
+            'image': uploaded_image or 'https://pixabay.com/get/g1607648249e3d2cc886480cc481c2224cb52f7fd6b06e51d63e7c2ee7d304d71973191ec7388dc286501651899d7fd130bc378c50e5ab80727d452f099c3f672_1280.jpg'
         }
         resources.append(new_resource)
         
@@ -1517,30 +1498,32 @@ def admin_edit_resource(resource_index):
     form = ResourceForm()
     
     if form.validate_on_submit():
-        # Update resource
+        # Handle image upload — keep existing if no new file uploaded
+        uploaded_image = save_uploaded_file(form.image.data, 'resources')
+
         resources[resource_index] = {
             'title': form.title.data,
             'description': form.description.data,
             'price': form.price.data,
             'link': form.link.data,
-            'image': form.image.data or resource.get('image', '')
+            'image': uploaded_image or resource.get('image', '')
         }
         
-        # Save to database
         resources_content.content_data = json.dumps(resources)
         db.session.commit()
         
         flash('Learning resource updated successfully!', 'success')
         return redirect(url_for('admin_resources'))
     
-    # Populate form with current data
+    # Populate form with current data (image is FileField — do not set .data)
     form.title.data = resource.get('title', '')
     form.description.data = resource.get('description', '')
     form.price.data = resource.get('price', '')
     form.link.data = resource.get('link', '')
-    form.image.data = resource.get('image', '')
+    current_image = resource.get('image', '')
     
-    return render_template('admin/resource_form.html', form=form, title='Edit Learning Resource', resource=resource)
+    return render_template('admin/resource_form.html', form=form, title='Edit Learning Resource',
+                           resource=resource, current_image=current_image)
 
 @app.route('/admin/resource/delete/<int:resource_index>')
 def admin_delete_resource(resource_index):
@@ -1600,11 +1583,14 @@ def admin_add_show():
         shows_content = SiteContent.query.filter_by(content_key='upcoming_shows').first()
         shows = json.loads(shows_content.content_data) if shows_content else []
         
+        # Handle image upload
+        uploaded_image = save_uploaded_file(form.image.data, 'shows')
+
         # Add new show
         new_show = {
             'title': form.title.data,
             'description': form.description.data,
-            'image': form.image.data or 'https://pixabay.com/get/g51d3a9b60f5b304d6d9a2109588df26fa955fdad29b549ed6f2d44cdb714ef5b54d4b04df2f46da1bd05dede83422e909ae5403a8c87771e7130a78714c2e5df_1280.jpg',
+            'image': uploaded_image or 'https://pixabay.com/get/g51d3a9b60f5b304d6d9a2109588df26fa955fdad29b549ed6f2d44cdb714ef5b54d4b04df2f46da1bd05dede83422e909ae5403a8c87771e7130a78714c2e5df_1280.jpg',
             'coming_soon': bool(int(form.coming_soon.data)),
             'notify_link': form.notify_link.data
         }
@@ -1645,30 +1631,32 @@ def admin_edit_show(show_index):
     form = ShowForm()
     
     if form.validate_on_submit():
-        # Update show
+        # Handle image upload — keep existing if no new file uploaded
+        uploaded_image = save_uploaded_file(form.image.data, 'shows')
+
         shows[show_index] = {
             'title': form.title.data,
             'description': form.description.data,
-            'image': form.image.data or show.get('image', ''),
+            'image': uploaded_image or show.get('image', ''),
             'coming_soon': bool(int(form.coming_soon.data)),
             'notify_link': form.notify_link.data
         }
         
-        # Save to database
         shows_content.content_data = json.dumps(shows)
         db.session.commit()
         
         flash('Upcoming show updated successfully!', 'success')
         return redirect(url_for('admin_shows'))
     
-    # Populate form with current data
+    # Populate form with current data (image is FileField — do not set .data)
     form.title.data = show.get('title', '')
     form.description.data = show.get('description', '')
-    form.image.data = show.get('image', '')
     form.coming_soon.data = '1' if show.get('coming_soon', True) else '0'
     form.notify_link.data = show.get('notify_link', '')
+    current_image = show.get('image', '')
     
-    return render_template('admin/show_form.html', form=form, title='Edit Upcoming Show', show=show)
+    return render_template('admin/show_form.html', form=form, title='Edit Upcoming Show',
+                           show=show, current_image=current_image)
 
 @app.route('/admin/show/delete/<int:show_index>')
 def admin_delete_show(show_index):

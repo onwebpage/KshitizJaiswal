@@ -1,6 +1,9 @@
 {% extends "base.html" %}
+{% from 'admin/_image_upload.html' import image_upload_field, image_upload_css, image_upload_js %}
 
 {% block title %}{{ title }} - Admin{% endblock %}
+
+{% block extra_head %}{{ image_upload_css() }}{% endblock %}
 
 {% block content %}
 <div class="admin-section">
@@ -26,7 +29,7 @@
                         {% endif %}
                     {% endwith %}
                     
-                    <form method="POST">
+                    <form method="POST" enctype="multipart/form-data">
                         {{ form.hidden_tag() }}
                         
                         <div class="row g-4">
@@ -89,18 +92,12 @@
                             </div>
                             
                             <div class="col-12">
-                                <label for="{{ form.image.id }}" class="form-label">
-                                    <i class="fas fa-image me-1"></i>{{ form.image.label.text }}
-                                </label>
-                                {{ form.image(class="form-control", placeholder="https://example.com/image.jpg") }}
-                                {% if form.image.errors %}
-                                    <div class="text-danger">
-                                        {% for error in form.image.errors %}
-                                            <small>{{ error }}</small>
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
-                                <small class="form-text text-muted">Optional: URL to a preview image for this resource</small>
+                                {{ image_upload_field(
+                                    field=form.image,
+                                    label="Preview Image (optional)",
+                                    hint="JPG / PNG / WebP · Recommended 800×450 px",
+                                    current_image=current_image if current_image else None
+                                ) }}
                             </div>
                             
                             {% if resource %}
@@ -129,9 +126,9 @@
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+{{ image_upload_js() }}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Auto-hide flash messages after 5 seconds
         const flashAlerts = document.querySelectorAll('.alert.alert-dismissible');
         flashAlerts.forEach(function(alert) {
             setTimeout(function() {
