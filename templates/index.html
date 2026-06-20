@@ -353,14 +353,48 @@
                     </div>
                 </div>
 
-            </div>
-        </div>
+                <!-- Duplicate set for seamless infinite scroll -->
+                <div class="testimonial-slide" aria-hidden="true">
+                    <div class="testimonial-card-premium">
+                        <div class="tc-stars">★★★★★</div>
+                        <p class="tc-text">"{{ page_content.testimonial1_text or 'Kshitiz speaks what others are afraid to say. Finally, someone who cuts through the noise.' }}"</p>
+                        <div class="tc-author">
+                            <div class="tc-avatar">{{ (page_content.testimonial1_name or 'Rahul S.')[0] | upper }}</div>
+                            <div class="tc-info">
+                                <div class="tc-name">{{ page_content.testimonial1_name or 'Rahul S.' }} <span class="tc-verified"><i class="fas fa-check-circle"></i></span></div>
+                                <div class="tc-role">{{ page_content.testimonial1_role or 'Viewer, Mumbai' }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-slide" aria-hidden="true">
+                    <div class="testimonial-card-premium">
+                        <div class="tc-stars">★★★★★</div>
+                        <p class="tc-text">"{{ page_content.testimonial2_text or 'The analysis is always backed by facts. I trust this commentary more than mainstream media.' }}"</p>
+                        <div class="tc-author">
+                            <div class="tc-avatar">{{ (page_content.testimonial2_name or 'Priya M.')[0] | upper }}</div>
+                            <div class="tc-info">
+                                <div class="tc-name">{{ page_content.testimonial2_name or 'Priya M.' }} <span class="tc-verified"><i class="fas fa-check-circle"></i></span></div>
+                                <div class="tc-role">{{ page_content.testimonial2_role or 'Subscriber, Delhi' }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-slide" aria-hidden="true">
+                    <div class="testimonial-card-premium">
+                        <div class="tc-stars">★★★★★</div>
+                        <p class="tc-text">"{{ page_content.testimonial3_text or 'Every reel leaves me thinking. This is the kind of content India needs right now.' }}"</p>
+                        <div class="tc-author">
+                            <div class="tc-avatar">{{ (page_content.testimonial3_name or 'Ankit V.')[0] | upper }}</div>
+                            <div class="tc-info">
+                                <div class="tc-name">{{ page_content.testimonial3_name or 'Ankit V.' }} <span class="tc-verified"><i class="fas fa-check-circle"></i></span></div>
+                                <div class="tc-role">{{ page_content.testimonial3_role or 'Supporter, Pune' }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-        <!-- Dot navigation -->
-        <div class="tslider-dots" id="tDots">
-            <button class="tslider-dot active" data-idx="0" aria-label="Go to slide 1"></button>
-            <button class="tslider-dot" data-idx="1" aria-label="Go to slide 2"></button>
-            <button class="tslider-dot" data-idx="2" aria-label="Go to slide 3"></button>
+            </div>
         </div>
     </div>
 </section>
@@ -759,77 +793,21 @@
     });
 })();
 
-/* ── Testimonial Slider ──────────────────────────────────── */
+/* ── Testimonial Infinite Scroll Controls ────────────────── */
 (function() {
     var slider = document.getElementById('testimonialSlider');
     if (!slider) return;
-    var slides = slider.querySelectorAll('.testimonial-slide');
-    var totalSlides = slides.length;
-    var currentIdx = 0;
-    var autoTimer = null;
-
-    function getVisibleCount() {
-        var w = window.innerWidth;
-        if (w < 576) return 1;
-        if (w < 992) return 2;
-        return 3;
-    }
-
-    function getGap() {
-        var cs = getComputedStyle(slider);
-        return parseFloat(cs.gap || cs.columnGap || '20');
-    }
-
-    function getSlideWidth() {
-        if (!slides[0]) return 0;
-        return slides[0].offsetWidth + getGap();
-    }
-
-    function getMaxIdx() {
-        return Math.max(0, totalSlides - getVisibleCount());
-    }
-
-    function goTo(idx) {
-        var max = getMaxIdx();
-        currentIdx = Math.max(0, Math.min(idx, max));
-        slider.style.transform = 'translateX(-' + (currentIdx * getSlideWidth()) + 'px)';
-        document.querySelectorAll('.tslider-dot').forEach(function(d, i) {
-            d.classList.toggle('active', i === currentIdx);
-        });
-    }
-
-    function startAuto() {
-        clearInterval(autoTimer);
-        autoTimer = setInterval(function() {
-            goTo(currentIdx >= getMaxIdx() ? 0 : currentIdx + 1);
-        }, 4500);
-    }
-
     var prevBtn = document.getElementById('tPrev');
     var nextBtn = document.getElementById('tNext');
+    /* Prev: reverse direction; Next: restore forward */
     if (prevBtn) prevBtn.addEventListener('click', function() {
-        goTo(currentIdx <= 0 ? getMaxIdx() : currentIdx - 1);
-        startAuto();
+        slider.style.animationDirection = 'reverse';
+        slider.classList.remove('ts-paused');
     });
     if (nextBtn) nextBtn.addEventListener('click', function() {
-        goTo(currentIdx >= getMaxIdx() ? 0 : currentIdx + 1);
-        startAuto();
+        slider.style.animationDirection = 'normal';
+        slider.classList.remove('ts-paused');
     });
-    document.querySelectorAll('.tslider-dot').forEach(function(d) {
-        d.addEventListener('click', function() {
-            goTo(parseInt(this.getAttribute('data-idx'), 10));
-            startAuto();
-        });
-    });
-
-    window.addEventListener('resize', function() {
-        if (currentIdx > getMaxIdx()) currentIdx = getMaxIdx();
-        slider.style.transition = 'none';
-        goTo(currentIdx);
-        setTimeout(function() { slider.style.transition = ''; }, 50);
-    });
-
-    startAuto();
 })();
 
 const RAZORPAY_KEY = "{{ razorpay_key }}";

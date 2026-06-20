@@ -5146,3 +5146,39 @@ h1, h2, h3, h4, h5, h6 {
 
 /* ── Courses section tighter header ──────────────────────── */
 .courses-teaser-section .text-center.mb-5 { margin-bottom: 2rem !important; }
+
+/* ══ Testimonial Infinite Auto-Scroll Override ══════════════ */
+.testimonial-slider-wrap {
+    overflow: hidden;
+    mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+}
+.testimonial-slider {
+    display: flex;
+    gap: 1.25rem;
+    width: max-content;
+    animation: testimonialScroll 22s linear infinite;
+    transition: none !important;
+    will-change: transform;
+}
+.testimonial-slider-wrap:hover .testimonial-slider,
+.testimonial-slider.ts-paused {
+    animation-play-state: paused;
+}
+@keyframes testimonialScroll {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+.testimonial-slide {
+    flex: 0 0 320px;
+    min-width: 320px;
+    width: 320px;
+}
+@media (max-width: 767.98px) {
+    .testimonial-slide { flex: 0 0 270px; min-width: 270px; width: 270px; }
+}
+@media (max-width: 480px) {
+    .testimonial-slide { flex: 0 0 240px; min-width: 240px; width: 240px; }
+}
+/* Dots hidden — not applicable for infinite scroll */
+.tslider-dots { display: none; }
