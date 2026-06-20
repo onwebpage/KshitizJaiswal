@@ -32,11 +32,13 @@
 {% if section_vis.reels %}
 <section id="beyond-reel" class="section-padding reels-section">
     <div class="container">
-        <!-- Section Header -->
-        <div class="text-center mb-4">
-            <h2 class="section-title">{{ page_content.reels_section_title }}</h2>
-            <p class="section-subtitle">{{ page_content.reels_section_subtitle }}</p>
-            <a href="{{ url_for('reels_library') }}" class="btn btn-outline-primary btn-sm mt-2 rounded-pill px-4">
+        <!-- Section Header — two-column premium layout -->
+        <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+            <div>
+                <h2 class="section-title mb-1">{{ page_content.reels_section_title }}</h2>
+                <p class="section-subtitle mb-0">{{ page_content.reels_section_subtitle }}</p>
+            </div>
+            <a href="{{ url_for('reels_library') }}" class="btn btn-outline-primary btn-sm rounded-pill px-4 flex-shrink-0">
                 View Full Library <i class="fas fa-arrow-right ms-1"></i>
             </a>
         </div>
@@ -221,20 +223,25 @@
                     </div>
                 </div>
                 
-                <!-- Support Footer Stats -->
-                <div class="support-footer text-center mt-4">
-                    <div class="d-flex align-items-center justify-content-center flex-wrap gap-3">
-                        <span class="text-white"><i class="fas fa-users me-1"></i>
-                            <strong>{{ page_content.support_stats_count or 127 }}+</strong> Supporters
-                        </span>
-                        <span class="text-white opacity-50">•</span>
-                        <span class="text-white"><i class="fas fa-rupee-sign me-1"></i>
-                            <strong>₹{{ page_content.support_stats_amount or 2340 }}</strong> raised this month
-                        </span>
-                        <span class="text-white opacity-50">•</span>
-                        <span class="text-white opacity-75">
-                            <i class="fas fa-shield-alt me-1"></i> Secure via Razorpay
-                        </span>
+                <!-- Support Trust Row -->
+                <div class="support-trust-row">
+                    <div class="support-trust-item">
+                        <i class="fas fa-users"></i>
+                        <strong>{{ page_content.support_stats_count or 127 }}+</strong>
+                        <span>Supporters</span>
+                    </div>
+                    <div class="support-trust-item">
+                        <i class="fas fa-rupee-sign"></i>
+                        <strong>₹{{ page_content.support_stats_amount or 2340 }}</strong>
+                        <span>raised this month</span>
+                    </div>
+                    <div class="support-trust-item">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>100% Secure via Razorpay</span>
+                    </div>
+                    <div class="support-trust-item">
+                        <i class="fas fa-lock"></i>
+                        <span>Cancel anytime</span>
                     </div>
                 </div>
             </div>
@@ -271,60 +278,89 @@
 </section>
 {% endif %}
 
-<!-- Testimonials Section -->
+<!-- Testimonials Section — Premium Slider -->
 {% if section_vis.testimonials %}
 <section class="section-padding testimonials-section">
     <div class="container">
-        <div class="text-center mb-4">
-            <h2 class="section-title">{{ page_content.testimonials_section_title or 'What People Say' }}</h2>
-            <p class="section-subtitle">{{ page_content.testimonials_section_subtitle or 'Real voices from the community.' }}</p>
-        </div>
-        <div class="row g-4 justify-content-center">
-            <div class="col-md-4">
-                <div class="testimonial-card">
-                    <div class="testimonial-quote"><i class="fas fa-quote-left"></i></div>
-                    <p class="testimonial-text">{{ page_content.testimonial1_text or 'Kshitiz speaks what others are afraid to say. Finally, someone who cuts through the noise.' }}</p>
-                    <div class="testimonial-author">
-                        <div class="testimonial-avatar"><i class="fas fa-user-circle"></i></div>
-                        <div>
-                            <div class="testimonial-name">{{ page_content.testimonial1_name or 'Rahul S.' }}</div>
-                            <div class="testimonial-role">{{ page_content.testimonial1_role or 'Viewer, Mumbai' }}</div>
-                        </div>
-                    </div>
-                </div>
+        <!-- Header row: title left, controls right -->
+        <div class="testimonial-header">
+            <div>
+                <h2 class="section-title mb-1">{{ page_content.testimonials_section_title or 'What People Say' }}</h2>
+                <p class="section-subtitle mb-0">{{ page_content.testimonials_section_subtitle or 'Real voices from the community.' }}</p>
             </div>
-            <div class="col-md-4">
-                <div class="testimonial-card">
-                    <div class="testimonial-quote"><i class="fas fa-quote-left"></i></div>
-                    <p class="testimonial-text">{{ page_content.testimonial2_text or 'The analysis is always backed by facts. I trust this commentary more than mainstream media.' }}</p>
-                    <div class="testimonial-author">
-                        <div class="testimonial-avatar"><i class="fas fa-user-circle"></i></div>
-                        <div>
-                            <div class="testimonial-name">{{ page_content.testimonial2_name or 'Priya M.' }}</div>
-                            <div class="testimonial-role">{{ page_content.testimonial2_role or 'Subscriber, Delhi' }}</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="testimonial-card">
-                    <div class="testimonial-quote"><i class="fas fa-quote-left"></i></div>
-                    <p class="testimonial-text">{{ page_content.testimonial3_text or 'Every reel leaves me thinking. This is the kind of content India needs right now.' }}</p>
-                    <div class="testimonial-author">
-                        <div class="testimonial-avatar"><i class="fas fa-user-circle"></i></div>
-                        <div>
-                            <div class="testimonial-name">{{ page_content.testimonial3_name or 'Ankit V.' }}</div>
-                            <div class="testimonial-role">{{ page_content.testimonial3_role or 'Supporter, Pune' }}</div>
-                        </div>
-                    </div>
-                </div>
+            <div class="tslider-controls">
+                <button class="tslider-btn" id="tPrev" aria-label="Previous testimonial">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="tslider-btn" id="tNext" aria-label="Next testimonial">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
             </div>
         </div>
-        <!-- Dot indicators -->
-        <div class="d-flex justify-content-center gap-2 mt-4">
-            <span style="width:8px;height:8px;border-radius:50%;background:#cc0000;display:inline-block;"></span>
-            <span style="width:8px;height:8px;border-radius:50%;background:#ddd;display:inline-block;"></span>
-            <span style="width:8px;height:8px;border-radius:50%;background:#ddd;display:inline-block;"></span>
+
+        <!-- Slider -->
+        <div class="testimonial-slider-wrap">
+            <div class="testimonial-slider" id="testimonialSlider">
+
+                <div class="testimonial-slide">
+                    <div class="testimonial-card-premium">
+                        <div class="tc-stars">★★★★★</div>
+                        <p class="tc-text">"{{ page_content.testimonial1_text or 'Kshitiz speaks what others are afraid to say. Finally, someone who cuts through the noise.' }}"</p>
+                        <div class="tc-author">
+                            <div class="tc-avatar">{{ (page_content.testimonial1_name or 'Rahul S.')[0] | upper }}</div>
+                            <div class="tc-info">
+                                <div class="tc-name">
+                                    {{ page_content.testimonial1_name or 'Rahul S.' }}
+                                    <span class="tc-verified"><i class="fas fa-check-circle"></i></span>
+                                </div>
+                                <div class="tc-role">{{ page_content.testimonial1_role or 'Viewer, Mumbai' }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="testimonial-slide">
+                    <div class="testimonial-card-premium">
+                        <div class="tc-stars">★★★★★</div>
+                        <p class="tc-text">"{{ page_content.testimonial2_text or 'The analysis is always backed by facts. I trust this commentary more than mainstream media.' }}"</p>
+                        <div class="tc-author">
+                            <div class="tc-avatar">{{ (page_content.testimonial2_name or 'Priya M.')[0] | upper }}</div>
+                            <div class="tc-info">
+                                <div class="tc-name">
+                                    {{ page_content.testimonial2_name or 'Priya M.' }}
+                                    <span class="tc-verified"><i class="fas fa-check-circle"></i></span>
+                                </div>
+                                <div class="tc-role">{{ page_content.testimonial2_role or 'Subscriber, Delhi' }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="testimonial-slide">
+                    <div class="testimonial-card-premium">
+                        <div class="tc-stars">★★★★★</div>
+                        <p class="tc-text">"{{ page_content.testimonial3_text or 'Every reel leaves me thinking. This is the kind of content India needs right now.' }}"</p>
+                        <div class="tc-author">
+                            <div class="tc-avatar">{{ (page_content.testimonial3_name or 'Ankit V.')[0] | upper }}</div>
+                            <div class="tc-info">
+                                <div class="tc-name">
+                                    {{ page_content.testimonial3_name or 'Ankit V.' }}
+                                    <span class="tc-verified"><i class="fas fa-check-circle"></i></span>
+                                </div>
+                                <div class="tc-role">{{ page_content.testimonial3_role or 'Supporter, Pune' }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Dot navigation -->
+        <div class="tslider-dots" id="tDots">
+            <button class="tslider-dot active" data-idx="0" aria-label="Go to slide 1"></button>
+            <button class="tslider-dot" data-idx="1" aria-label="Go to slide 2"></button>
+            <button class="tslider-dot" data-idx="2" aria-label="Go to slide 3"></button>
         </div>
     </div>
 </section>
@@ -376,36 +412,50 @@
 </section>
 {% endif %}
 
-<!-- Newsletter CTA Section -->
+<!-- Newsletter CTA Section — Premium Glass Card -->
 {% if section_vis.newsletter %}
-<section id="newsletter" class="section-padding newsletter-cta-section">
+<section id="newsletter" class="newsletter-premium-section">
     <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-lg-6 text-center">
-                <div class="newsletter-cta-icon mb-2"><i class="fas fa-envelope-open-text"></i></div>
-                <h2 class="section-title">{{ page_content.newsletter_section_title or 'Join the Inner Circle' }}</h2>
-                <p class="section-subtitle">{{ page_content.newsletter_section_subtitle or 'Get unfiltered commentary, behind-the-reel insights, and exclusive updates straight to your inbox.' }}</p>
+        <div class="newsletter-glass-card">
+            <div class="row align-items-center g-4">
 
-                <div class="newsletter-success-msg" id="newsletterSuccess">
-                    <i class="fas fa-check-circle text-white"></i>
-                    <strong>You're in!</strong> Welcome to the Inner Circle.
+                <!-- Left: headline + trust -->
+                <div class="col-lg-5">
+                    <div class="nlp-icon"><i class="fas fa-envelope-open-text"></i></div>
+                    <h2 class="nlp-title">{{ page_content.newsletter_section_title or 'Join the Inner Circle' }}</h2>
+                    <p class="nlp-subtitle">{{ page_content.newsletter_section_subtitle or 'Get unfiltered commentary, behind-the-reel insights, and exclusive updates straight to your inbox.' }}</p>
+                    <div class="nlp-trust">
+                        <span><i class="fas fa-users"></i> {{ page_content.support_stats_count or '2,400' }}+ subscribers</span>
+                        <span><i class="fas fa-ban"></i> No spam, ever</span>
+                        <span><i class="fas fa-unlock-alt"></i> Unsubscribe anytime</span>
+                    </div>
                 </div>
 
-                <form method="POST" action="{{ url_for('newsletter_subscribe') }}" class="newsletter-cta-form" id="newsletterCTAForm">
-                    {{ newsletter_form.hidden_tag() }}
-                    <div class="row g-2 mb-3">
-                        <div class="col-sm-6">
-                            <input type="text" name="name" class="form-control" placeholder="Your name" required>
-                        </div>
-                        <div class="col-sm-6">
-                            <input type="email" name="email" class="form-control" placeholder="your@email.com" required>
-                        </div>
+                <!-- Divider (desktop only) -->
+                <div class="col-lg-1 d-none d-lg-flex justify-content-center">
+                    <div class="nlp-divider"></div>
+                </div>
+
+                <!-- Right: form -->
+                <div class="col-lg-6">
+                    <div class="newsletter-success-msg" id="newsletterSuccess">
+                        <i class="fas fa-check-circle"></i>
+                        <strong>You're in!</strong> Welcome to the Inner Circle.
                     </div>
-                    <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5">
-                        <i class="fas fa-paper-plane me-2"></i>{{ page_content.newsletter_button_text or 'Subscribe Free' }}
-                    </button>
-                </form>
-                <p class="text-muted small mt-3 mb-0"><i class="fas fa-shield-alt me-1"></i>{{ page_content.newsletter_privacy_text or 'No spam. Unsubscribe anytime.' }}</p>
+
+                    <form method="POST" action="{{ url_for('newsletter_subscribe') }}" class="nlp-form" id="newsletterCTAForm">
+                        {{ newsletter_form.hidden_tag() }}
+                        <div class="nlp-fields">
+                            <input type="text" name="name" class="nlp-input" placeholder="Your name" required>
+                            <input type="email" name="email" class="nlp-input" placeholder="your@email.com" required>
+                        </div>
+                        <button type="submit" class="nlp-btn">
+                            <i class="fas fa-paper-plane me-2"></i>{{ page_content.newsletter_button_text or 'Subscribe Free' }}
+                        </button>
+                        <p class="nlp-privacy"><i class="fas fa-shield-alt me-1"></i>{{ page_content.newsletter_privacy_text or 'No spam. Unsubscribe anytime. 100% free.' }}</p>
+                    </form>
+                </div>
+
             </div>
         </div>
     </div>
@@ -695,18 +745,91 @@
     });
 })();
 
-/* ── Newsletter AJAX success animation ─────────────────── */
+/* ── Newsletter form: spinner on submit ─────────────────── */
 (function() {
     var form = document.getElementById('newsletterCTAForm');
     var successBox = document.getElementById('newsletterSuccess');
     if (!form || !successBox) return;
-    form.addEventListener('submit', function(e) {
+    form.addEventListener('submit', function() {
         var btn = form.querySelector('button[type=submit]');
         if (btn) {
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Subscribing…';
         }
     });
+})();
+
+/* ── Testimonial Slider ──────────────────────────────────── */
+(function() {
+    var slider = document.getElementById('testimonialSlider');
+    if (!slider) return;
+    var slides = slider.querySelectorAll('.testimonial-slide');
+    var totalSlides = slides.length;
+    var currentIdx = 0;
+    var autoTimer = null;
+
+    function getVisibleCount() {
+        var w = window.innerWidth;
+        if (w < 576) return 1;
+        if (w < 992) return 2;
+        return 3;
+    }
+
+    function getGap() {
+        var cs = getComputedStyle(slider);
+        return parseFloat(cs.gap || cs.columnGap || '20');
+    }
+
+    function getSlideWidth() {
+        if (!slides[0]) return 0;
+        return slides[0].offsetWidth + getGap();
+    }
+
+    function getMaxIdx() {
+        return Math.max(0, totalSlides - getVisibleCount());
+    }
+
+    function goTo(idx) {
+        var max = getMaxIdx();
+        currentIdx = Math.max(0, Math.min(idx, max));
+        slider.style.transform = 'translateX(-' + (currentIdx * getSlideWidth()) + 'px)';
+        document.querySelectorAll('.tslider-dot').forEach(function(d, i) {
+            d.classList.toggle('active', i === currentIdx);
+        });
+    }
+
+    function startAuto() {
+        clearInterval(autoTimer);
+        autoTimer = setInterval(function() {
+            goTo(currentIdx >= getMaxIdx() ? 0 : currentIdx + 1);
+        }, 4500);
+    }
+
+    var prevBtn = document.getElementById('tPrev');
+    var nextBtn = document.getElementById('tNext');
+    if (prevBtn) prevBtn.addEventListener('click', function() {
+        goTo(currentIdx <= 0 ? getMaxIdx() : currentIdx - 1);
+        startAuto();
+    });
+    if (nextBtn) nextBtn.addEventListener('click', function() {
+        goTo(currentIdx >= getMaxIdx() ? 0 : currentIdx + 1);
+        startAuto();
+    });
+    document.querySelectorAll('.tslider-dot').forEach(function(d) {
+        d.addEventListener('click', function() {
+            goTo(parseInt(this.getAttribute('data-idx'), 10));
+            startAuto();
+        });
+    });
+
+    window.addEventListener('resize', function() {
+        if (currentIdx > getMaxIdx()) currentIdx = getMaxIdx();
+        slider.style.transition = 'none';
+        goTo(currentIdx);
+        setTimeout(function() { slider.style.transition = ''; }, 50);
+    });
+
+    startAuto();
 })();
 
 const RAZORPAY_KEY = "{{ razorpay_key }}";
