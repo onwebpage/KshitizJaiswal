@@ -20,6 +20,7 @@ class AdminLoginForm(FlaskForm):
 class ReelForm(FlaskForm):
     title = StringField('Title', validators=[DataRequired(), Length(max=100)])
     thumbnail = FileField('Thumbnail', validators=[FileAllowed(['jpg', 'jpeg', 'png', 'gif'])])
+    thumbnail_url = StringField('Thumbnail URL', validators=[Optional(), Length(max=500)])
     video_url = StringField('Video URL')
     video_type = SelectField('Content Type', choices=[
         ('auto', '🔍 Auto-detect'),

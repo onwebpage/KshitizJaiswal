@@ -701,6 +701,127 @@ def admin_logout():
     flash('Successfully logged out!', 'success')
     return redirect(url_for('index'))
 
+@app.route('/admin/fetch-video-meta')
+def admin_fetch_video_meta():
+    """Fetch title, thumbnail, and description from a YouTube/Instagram URL."""
+    if 'admin_logged_in' not in session:
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+
+    url = request.args.get('url', '').strip()
+    if not url:
+        return jsonify({'success': False, 'error': 'No URL provided'})
+
+    import re as _re
+    import requests as _req
+
+    headers = {
+        'User-Agent': (
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+            'AppleWebKit/537.36 (KHTML, like Gecko) '
+            'Chrome/120.0.0.0 Safari/537.36'
+        )
+    }
+
+    title = ''
+    thumbnail = ''
+    description = ''
+
+    def _og(html, prop):
+        """Extract og/meta tag content — handles both property= and name= variants."""
+        m = _re.search(
+            r'<meta[^>]+(?:property|name)=["\']' + _re.escape(prop) + r'["\'][^>]+content=["\'](.*?)["\']',
+            html, _re.IGNORECASE
+        ) or _re.search(
+            r'<meta[^>]+content=["\'](.*?)["\'][^>]+(?:property|name)=["\']' + _re.escape(prop) + r'["\']',
+            html, _re.IGNORECASE
+        )
+        return m.group(1).strip() if m else ''
+
+    try:
+        # ── YouTube ──────────────────────────────────────────────────
+        yt_id = None
+        for pat in [
+            r'youtube\.com/shorts/([A-Za-z0-9_-]{11})',
+            r'youtube\.com/watch\?(?:.*&)?v=([A-Za-z0-9_-]{11})',
+            r'youtu\.be/([A-Za-z0-9_-]{11})',
+        ]:
+            m = _re.search(pat, url)
+            if m:
+                yt_id = m.group(1)
+                break
+
+        if yt_id:
+            # oEmbed → reliable title + thumbnail
+            oembed = _req.get(
+                f'https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v={yt_id}&format=json',
+                timeout=8
+            )
+            if oembed.status_code == 200:
+                od = oembed.json()
+                title = od.get('title', '')
+                thumbnail = od.get('thumbnail_url', '')
+
+            # Fall back to maxresdefault if oEmbed thumbnail missing
+            if not thumbnail:
+                thumbnail = f'https://img.youtube.com/vi/{yt_id}/maxresdefault.jpg'
+
+            # Fetch page for og:description
+            page = _req.get(
+                f'https://www.youtube.com/watch?v={yt_id}',
+                headers=headers, timeout=8
+            )
+            if page.status_code == 200:
+                description = _og(page.text, 'og:description')
+                if not title:
+                    title = _og(page.text, 'og:title')
+
+        # ── Instagram ────────────────────────────────────────────────
+        elif 'instagram.com' in url:
+            ig_m = _re.search(r'instagram\.com/(?:p|reel)/([A-Za-z0-9_-]+)', url)
+            try:
+                oembed = _req.get(
+                    f'https://www.instagram.com/oembed/?url={url}',
+                    headers=headers, timeout=8
+                )
+                if oembed.status_code == 200:
+                    od = oembed.json()
+                    title = od.get('title', '')
+                    thumbnail = od.get('thumbnail_url', '')
+            except Exception:
+                pass
+
+            # Page scrape fallback
+            if not title or not description:
+                page = _req.get(url, headers=headers, timeout=8)
+                if page.status_code == 200:
+                    if not title:
+                        title = _og(page.text, 'og:title')
+                    if not thumbnail:
+                        thumbnail = _og(page.text, 'og:image')
+                    description = _og(page.text, 'og:description')
+
+        # ── Generic fallback ─────────────────────────────────────────
+        else:
+            page = _req.get(url, headers=headers, timeout=8)
+            if page.status_code == 200:
+                title = _og(page.text, 'og:title')
+                thumbnail = _og(page.text, 'og:image')
+                description = _og(page.text, 'og:description')
+
+        if not title and not thumbnail:
+            return jsonify({'success': False, 'error': 'Could not find metadata for this URL. The platform may block automated access.'})
+
+        return jsonify({
+            'success': True,
+            'title': title,
+            'thumbnail': thumbnail,
+            'description': description,
+        })
+
+    except Exception as exc:
+        return jsonify({'success': False, 'error': f'Request failed: {exc}'})
+
+
 @app.route('/admin/reel/add', methods=['GET', 'POST'])
 def admin_add_reel():
     """Add new reel"""
