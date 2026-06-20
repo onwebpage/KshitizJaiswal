@@ -194,8 +194,8 @@
                                     <li><i class="fas fa-check"></i> {{ benefit }}</li>
                                     {% endfor %}
                                 </ul>
-                                <button class="btn tier-btn {% if tier.is_popular %}btn-primary{% else %}btn-outline-primary{% endif %}" onclick="initiatePayment({{ tier.price }})">
-                                    Choose Plan
+                                <button class="btn tier-btn {% if tier.is_popular %}btn-primary{% else %}btn-outline-primary{% endif %}" onclick="initiateSubscription({{ tier.id }}, '{{ tier.name | e }}', {{ tier.price }}, '{{ tier.period }}')">
+                                    <i class="fas fa-sync-alt me-1"></i>AutoPay – ₹{{ tier.price }}/{{ tier.period }}
                                 </button>
                             </div>
                         </div>
@@ -436,14 +436,14 @@
 }
 </style>
 
-<!-- Support Payment Modal -->
+<!-- One-Time Support Payment Modal -->
 <div class="modal fade" id="supportModal" tabindex="-1" aria-labelledby="supportModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content" style="border-radius:16px; overflow:hidden; border:none;">
             <div class="modal-header" style="background:linear-gradient(135deg,#cc0000 0%,#8b0000 100%); border:none; padding:20px 24px;">
                 <div>
                     <h5 class="modal-title text-white fw-bold mb-0" id="supportModalLabel"><i class="fas fa-heart me-2"></i>Support Kshitiz</h5>
-                    <p class="text-white-50 mb-0 small">Amount: ₹<span id="supportModalAmount"></span></p>
+                    <p class="text-white-50 mb-0 small">One-time amount: ₹<span id="supportModalAmount"></span></p>
                 </div>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -468,7 +468,53 @@
                     <i class="fas fa-heart me-2"></i>Support Now
                 </button>
                 <p class="text-center text-muted small mt-3 mb-0">
-                    <i class="fas fa-shield-alt me-1 text-success"></i>Secure payment via Razorpay
+                    <i class="fas fa-shield-alt me-1 text-success"></i>Secure one-time payment via Razorpay
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- AutoPay Subscription Modal -->
+<div class="modal fade" id="subscriptionModal" tabindex="-1" aria-labelledby="subscriptionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:16px; overflow:hidden; border:none;">
+            <div class="modal-header" style="background:linear-gradient(135deg,#cc0000 0%,#8b0000 100%); border:none; padding:20px 24px;">
+                <div>
+                    <h5 class="modal-title text-white fw-bold mb-0" id="subscriptionModalLabel">
+                        <i class="fas fa-sync-alt me-2"></i>Set Up AutoPay
+                    </h5>
+                    <p class="text-white-50 mb-0 small" id="subModalMeta"></p>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <!-- AutoPay info banner -->
+                <div class="alert alert-info d-flex gap-2 align-items-start py-2 mb-3" style="border-radius:10px; font-size:.85rem;">
+                    <i class="fas fa-info-circle mt-1 flex-shrink-0"></i>
+                    <div>You will be charged automatically every <strong id="subPeriodText"></strong> via UPI AutoPay. You can cancel any time from within the Razorpay app or by contacting us.</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Full Name <span class="text-muted fw-normal">(optional)</span></label>
+                    <input type="text" class="form-control" id="subName" placeholder="Your name">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Email <span class="text-muted fw-normal">(optional)</span></label>
+                    <input type="email" class="form-control" id="subEmail" placeholder="your@email.com">
+                </div>
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Phone <span class="text-muted fw-normal">(optional)</span></label>
+                    <div class="input-group">
+                        <span class="input-group-text">+91</span>
+                        <input type="tel" class="form-control" id="subPhone" placeholder="Mobile number">
+                    </div>
+                </div>
+                <button class="btn w-100 fw-bold py-3" id="subPayBtn" onclick="processSubscription()"
+                    style="background:linear-gradient(135deg,#cc0000 0%,#8b0000 100%); color:white; border-radius:12px; font-size:1.05rem; border:none;">
+                    <i class="fas fa-sync-alt me-2"></i>Activate AutoPay
+                </button>
+                <p class="text-center text-muted small mt-3 mb-0">
+                    <i class="fas fa-shield-alt me-1 text-success"></i>Secured by Razorpay · UPI AutoPay mandate
                 </p>
             </div>
         </div>
@@ -484,16 +530,35 @@
 const RAZORPAY_KEY = "{{ razorpay_key }}";
 window.razorpayKey = RAZORPAY_KEY;
 
-function showSupportSuccess() {
+// ─── Helpers ───────────────────────────────────────────────────────────────
+
+function _prefillFromClerk(nameId, emailId) {
+    const clerkUser = window.Clerk?.user;
+    if (clerkUser) {
+        const el = document.getElementById(nameId);
+        const em = document.getElementById(emailId);
+        if (el && !el.value) el.value = ((clerkUser.firstName || '') + ' ' + (clerkUser.lastName || '')).trim();
+        if (em && !em.value) em.value = clerkUser.primaryEmailAddress?.emailAddress || '';
+    }
+}
+
+function _setBtnState(btnId, loading, defaultHTML) {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    btn.disabled = loading;
+    btn.innerHTML = loading ? '<i class="fas fa-spinner fa-spin me-2"></i>Processing…' : defaultHTML;
+}
+
+function showSuccessOverlay(icon, iconBg, title, message) {
     const overlay = document.createElement('div');
-    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
     overlay.innerHTML = `
         <div style="background:#fff;border-radius:20px;max-width:420px;width:100%;padding:40px 28px;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,0.3);">
-            <div style="width:72px;height:72px;background:linear-gradient(135deg,#43e97b,#38f9d7);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
-                <i class="fas fa-heart" style="color:#fff;font-size:28px;"></i>
+            <div style="width:72px;height:72px;background:${iconBg};border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
+                <i class="${icon}" style="color:#fff;font-size:28px;"></i>
             </div>
-            <h4 class="fw-bold mb-2">Thank You! ❤️</h4>
-            <p class="text-muted mb-4">Your support means the world to Kshitiz. Every rupee helps create honest, unfiltered commentary.</p>
+            <h4 class="fw-bold mb-2">${title}</h4>
+            <p class="text-muted mb-4">${message}</p>
             <button onclick="this.closest('div[style*=fixed]').remove()" class="btn btn-primary w-100" style="border-radius:12px;">
                 <i class="fas fa-home me-2"></i>Continue
             </button>
@@ -502,16 +567,33 @@ function showSupportSuccess() {
     overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
     document.body.appendChild(overlay);
 }
+
+function showSupportSuccess() {
+    showSuccessOverlay(
+        'fas fa-heart',
+        'linear-gradient(135deg,#43e97b,#38f9d7)',
+        'Thank You! ❤️',
+        'Your support means the world to Kshitiz. Every rupee helps create honest, unfiltered commentary.'
+    );
+}
+
+function showSubscriptionSuccess() {
+    showSuccessOverlay(
+        'fas fa-sync-alt',
+        'linear-gradient(135deg,#cc0000,#8b0000)',
+        'AutoPay Activated! 🎉',
+        'Your recurring support is now active. You will be charged automatically each cycle. Thank you for believing in unfiltered truth.'
+    );
+}
+
+// ─── One-time Support (custom amount card) ─────────────────────────────────
+
 let _supportAmount = 0;
 
 function initiatePayment(amount) {
     _supportAmount = amount;
     document.getElementById('supportModalAmount').textContent = amount;
-    const clerkUser = window.Clerk?.user;
-    if (clerkUser) {
-        document.getElementById('supportName').value = ((clerkUser.firstName || '') + ' ' + (clerkUser.lastName || '')).trim();
-        document.getElementById('supportEmail').value = clerkUser.primaryEmailAddress?.emailAddress || '';
-    }
+    _prefillFromClerk('supportName', 'supportEmail');
     new bootstrap.Modal(document.getElementById('supportModal')).show();
 }
 
@@ -522,16 +604,14 @@ function initiateCustomPayment() {
 }
 
 async function processSupportPayment() {
-    const name = document.getElementById('supportName').value.trim();
+    const name  = document.getElementById('supportName').value.trim();
     const email = document.getElementById('supportEmail').value.trim();
     const phone = document.getElementById('supportPhone').value.trim();
-    const btn = document.getElementById('supportPayBtn');
-
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+    const DFLT  = '<i class="fas fa-heart me-2"></i>Support Now';
+    _setBtnState('supportPayBtn', true, DFLT);
 
     try {
-        const orderRes = await fetch('/create_payment', {
+        const orderRes  = await fetch('/create_payment', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ amount: _supportAmount, name, email, phone })
@@ -540,14 +620,13 @@ async function processSupportPayment() {
 
         if (orderData.status !== 'success') {
             alert('Could not create payment: ' + (orderData.message || 'Please try again.'));
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-heart me-2"></i>Support Now';
+            _setBtnState('supportPayBtn', false, DFLT);
             return;
         }
 
         bootstrap.Modal.getInstance(document.getElementById('supportModal')).hide();
 
-        const options = {
+        const rzp = new Razorpay({
             key: RAZORPAY_KEY,
             amount: orderData.amount,
             currency: orderData.currency,
@@ -563,34 +642,100 @@ async function processSupportPayment() {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             razorpay_payment_id: response.razorpay_payment_id,
-                            razorpay_order_id: response.razorpay_order_id,
-                            razorpay_signature: response.razorpay_signature
+                            razorpay_order_id:   response.razorpay_order_id,
+                            razorpay_signature:  response.razorpay_signature
                         })
                     });
-                } catch(e) {}
+                } catch(e) { console.warn('Verification call failed', e); }
                 showSupportSuccess();
             },
             modal: {
-                ondismiss: function() {
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-heart me-2"></i>Support Now';
-                }
+                ondismiss: function() { _setBtnState('supportPayBtn', false, DFLT); }
             }
-        };
-
-        try {
-            const rzp = new Razorpay(options);
-            rzp.open();
-        } catch(e) {
-            alert('Payment gateway is being set up. Please try again soon.');
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-heart me-2"></i>Support Now';
-        }
+        });
+        rzp.open();
     } catch(err) {
-        console.error(err);
+        console.error('processSupportPayment error:', err);
         alert('An error occurred. Please try again.');
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-heart me-2"></i>Support Now';
+        _setBtnState('supportPayBtn', false, DFLT);
+    }
+}
+
+// ─── AutoPay Subscription (tier cards) ────────────────────────────────────
+
+let _subTierId = null, _subTierName = '', _subTierPrice = 0, _subTierPeriod = '';
+
+function initiateSubscription(tierId, tierName, tierPrice, tierPeriod) {
+    _subTierId     = tierId;
+    _subTierName   = tierName;
+    _subTierPrice  = tierPrice;
+    _subTierPeriod = tierPeriod;
+
+    document.getElementById('subModalMeta').textContent =
+        `${tierName} · ₹${tierPrice}/${tierPeriod} · recurring`;
+    document.getElementById('subPeriodText').textContent = tierPeriod;
+
+    _prefillFromClerk('subName', 'subEmail');
+    new bootstrap.Modal(document.getElementById('subscriptionModal')).show();
+}
+
+async function processSubscription() {
+    const name  = document.getElementById('subName').value.trim();
+    const email = document.getElementById('subEmail').value.trim();
+    const phone = document.getElementById('subPhone').value.trim();
+    const DFLT  = '<i class="fas fa-sync-alt me-2"></i>Activate AutoPay';
+    _setBtnState('subPayBtn', true, DFLT);
+
+    try {
+        const res  = await fetch('/create_subscription', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tier_id: _subTierId, name, email, phone })
+        });
+        const data = await res.json();
+
+        if (data.status !== 'success') {
+            alert('Could not set up AutoPay: ' + (data.message || 'Please try again.'));
+            _setBtnState('subPayBtn', false, DFLT);
+            return;
+        }
+
+        bootstrap.Modal.getInstance(document.getElementById('subscriptionModal')).hide();
+
+        const rzp = new Razorpay({
+            key: RAZORPAY_KEY,
+            subscription_id: data.subscription_id,
+            name: 'Kshitiz Jaiswal',
+            description: `${_subTierName} – ₹${_subTierPrice}/${_subTierPeriod} AutoPay`,
+            prefill: { name: name || '', email: email || '', contact: phone ? '+91' + phone : '' },
+            theme: { color: '#CC0000' },
+            handler: async function(response) {
+                try {
+                    const vRes = await fetch('/subscription/verify', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            razorpay_payment_id:      response.razorpay_payment_id,
+                            razorpay_subscription_id: response.razorpay_subscription_id,
+                            razorpay_signature:       response.razorpay_signature
+                        })
+                    });
+                    const vData = await vRes.json();
+                    if (!vData.success) {
+                        console.warn('Subscription verify returned:', vData);
+                    }
+                } catch(e) { console.warn('Subscription verify call failed', e); }
+                showSubscriptionSuccess();
+            },
+            modal: {
+                ondismiss: function() { _setBtnState('subPayBtn', false, DFLT); }
+            }
+        });
+        rzp.open();
+    } catch(err) {
+        console.error('processSubscription error:', err);
+        alert('An error occurred. Please try again.');
+        _setBtnState('subPayBtn', false, DFLT);
     }
 }
 </script>

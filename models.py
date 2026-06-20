@@ -101,8 +101,9 @@ class SubscriptionTier(db.Model):
     is_popular = db.Column(db.Boolean, default=False)
     is_active = db.Column(db.Boolean, default=True)
     sort_order = db.Column(db.Integer, default=0)
+    razorpay_plan_id = db.Column(db.String(100))  # Cached Razorpay Plan ID for autopay
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
+
     def to_dict(self):
         return {
             'id': self.id,
@@ -114,7 +115,49 @@ class SubscriptionTier(db.Model):
             'benefits': json.loads(self.benefits) if self.benefits else [],
             'is_popular': self.is_popular,
             'is_active': self.is_active,
-            'sort_order': self.sort_order
+            'sort_order': self.sort_order,
+            'razorpay_plan_id': self.razorpay_plan_id or ''
+        }
+
+
+class UserSubscription(db.Model):
+    """Tracks Razorpay autopay subscriptions created by supporters."""
+    __tablename__ = 'user_subscription'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200))
+    email = db.Column(db.String(200))
+    phone = db.Column(db.String(20))
+    tier_id = db.Column(db.Integer, db.ForeignKey('subscription_tier.id', ondelete='SET NULL'), nullable=True)
+    tier_name = db.Column(db.String(100))  # denormalised snapshot
+    razorpay_subscription_id = db.Column(db.String(100), unique=True, nullable=False)
+    razorpay_payment_id = db.Column(db.String(100))  # last successful payment
+    status = db.Column(db.String(30), default='created')
+    # Razorpay statuses: created | authenticated | active | pending | halted | cancelled | completed | expired
+    amount_paise = db.Column(db.Integer)  # price in paise at time of subscription
+    paid_count = db.Column(db.Integer, default=0)
+    total_count = db.Column(db.Integer, default=120)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    tier = db.relationship('SubscriptionTier', foreign_keys=[tier_id], lazy='joined')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name or '',
+            'email': self.email or '',
+            'phone': self.phone or '',
+            'tier_name': self.tier_name or '',
+            'razorpay_subscription_id': self.razorpay_subscription_id,
+            'razorpay_payment_id': self.razorpay_payment_id or '',
+            'status': self.status,
+            'amount_paise': self.amount_paise or 0,
+            'amount_rupees': (self.amount_paise or 0) // 100,
+            'paid_count': self.paid_count or 0,
+            'total_count': self.total_count or 0,
+            'created_at': self.created_at.strftime('%d %b %Y, %I:%M %p') if self.created_at else '',
+            'updated_at': self.updated_at.strftime('%d %b %Y, %I:%M %p') if self.updated_at else '',
         }
 
 class ColumnVisibility(db.Model):

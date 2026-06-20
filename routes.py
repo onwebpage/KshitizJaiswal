@@ -1,18 +1,40 @@
 from flask import render_template, request, jsonify, redirect, url_for, flash, session, abort
 from app import app, db, _error_log, log_app_error
-from models import DataManager, AdminUser, SiteContent, Reel, Opinion, Subscriber, SubscriptionTier, Course, Module, Lesson, UserCourseAccess, SocialLink, ColumnVisibility, UserActivity, SiteConfig, CourseUser, ChatbotFAQ, ChatbotInquiry
+from models import DataManager, AdminUser, SiteContent, Reel, Opinion, Subscriber, SubscriptionTier, UserSubscription, Course, Module, Lesson, UserCourseAccess, SocialLink, ColumnVisibility, UserActivity, SiteConfig, CourseUser, ChatbotFAQ, ChatbotInquiry
 from forms import NewsletterForm, PollVoteForm, AdminLoginForm, ReelForm, OpinionForm, HeroContentForm, PaymentSettingsForm, SubscriptionTierForm, CourseForm, ModuleForm, LessonForm, SocialLinkForm
 from utils import save_uploaded_file, calculate_poll_percentages, get_youtube_embed_url, get_video_info, slugify
 from clerk_auth import clerk_auth_required, get_clerk_user, get_clerk_user_id
 import razorpay
 import os
 import json
+import hmac
+import hashlib
+import logging
+from datetime import datetime
 
 # Initialize Razorpay client
 razorpay_client = razorpay.Client(auth=(
     os.environ.get('RAZORPAY_KEY_ID', 'rzp_test_dummy_key'),
     os.environ.get('RAZORPAY_KEY_SECRET', 'dummy_secret')
 ))
+
+
+def get_razorpay_client():
+    """Return a Razorpay client using env-var credentials (preferred) or DB settings."""
+    env_key_id = os.environ.get('RAZORPAY_KEY_ID', '')
+    env_key_secret = os.environ.get('RAZORPAY_KEY_SECRET', '')
+    if env_key_id and env_key_secret:
+        return razorpay.Client(auth=(env_key_id, env_key_secret))
+    try:
+        payment_content = SiteContent.query.filter_by(content_key='payment_settings').first()
+        if payment_content:
+            ps = json.loads(payment_content.content_data)
+            k, s = ps.get('razorpay_key_id', ''), ps.get('razorpay_key_secret', '')
+            if k and s:
+                return razorpay.Client(auth=(k, s))
+    except Exception:
+        pass
+    return razorpay_client
 
 def get_course_user_id():
     """Return the logged-in CourseUser's ID from session, or None."""
@@ -1418,6 +1440,10 @@ def admin_edit_subscription_tier(tier_id):
         if form.is_popular.data == '1' and not tier.is_popular:
             SubscriptionTier.query.filter(SubscriptionTier.id != tier_id).update({'is_popular': False})
         
+        # If price or period changed, invalidate the cached Razorpay plan so a new one is created next time
+        if tier.price != form.price.data or tier.period != form.period.data:
+            tier.razorpay_plan_id = None
+
         # Update tier
         tier.name = form.name.data
         tier.price = form.price.data
@@ -3598,23 +3624,7 @@ def verify_support_payment():
         if not all([payment_id, order_id, signature]):
             return jsonify({'success': False, 'message': 'Missing payment details'}), 400
 
-        import json
-        env_key_id = os.environ.get('RAZORPAY_KEY_ID', '')
-        env_key_secret = os.environ.get('RAZORPAY_KEY_SECRET', '')
-        if env_key_id and env_key_secret:
-            client = razorpay.Client(auth=(env_key_id, env_key_secret))
-        else:
-            payment_content = SiteContent.query.filter_by(content_key='payment_settings').first()
-            if payment_content:
-                payment_settings = json.loads(payment_content.content_data)
-                key_id = payment_settings.get('razorpay_key_id')
-                key_secret = payment_settings.get('razorpay_key_secret')
-                if key_id and key_secret:
-                    client = razorpay.Client(auth=(key_id, key_secret))
-                else:
-                    client = razorpay_client
-            else:
-                client = razorpay_client
+        client = get_razorpay_client()
 
         params_dict = {
             'razorpay_order_id': order_id,
@@ -3636,6 +3646,313 @@ def verify_support_payment():
         return jsonify({'success': False, 'message': 'Payment verification failed'}), 400
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# AUTOPAY — Razorpay Subscriptions
+# ─────────────────────────────────────────────────────────────────────────────
+
+_PERIOD_MAP = {'week': 'weekly', 'month': 'monthly', 'year': 'yearly'}
+_TOTAL_COUNT_MAP = {'week': 260, 'month': 120, 'year': 10}  # ~5yr / 10yr / 10yr
+
+
+@app.route('/create_subscription', methods=['POST'])
+def create_subscription():
+    """Create a Razorpay recurring subscription (AutoPay) for a support tier."""
+    try:
+        data = request.get_json() or {}
+        tier_id = data.get('tier_id')
+        name = (data.get('name') or '').strip()
+        email = (data.get('email') or '').strip()
+        phone = (data.get('phone') or '').strip()
+
+        tier = SubscriptionTier.query.get(tier_id)
+        if not tier or not tier.is_active:
+            return jsonify({'status': 'error', 'message': 'Invalid or inactive subscription tier'}), 400
+
+        client = get_razorpay_client()
+        rz_period = _PERIOD_MAP.get(tier.period, 'monthly')
+        total_count = _TOTAL_COUNT_MAP.get(tier.period, 120)
+        amount_paise = tier.price * 100
+
+        # Create (or reuse) a Razorpay Plan for this tier
+        if not tier.razorpay_plan_id:
+            plan_payload = {
+                'period': rz_period,
+                'interval': 1,
+                'item': {
+                    'name': f'{tier.name} – {tier.period.capitalize()} AutoPay',
+                    'amount': amount_paise,
+                    'currency': 'INR',
+                    'description': (tier.description or tier.name)[:255],
+                },
+                'notes': {'tier_id': str(tier.id)},
+            }
+            plan = client.plan.create(data=plan_payload)
+            tier.razorpay_plan_id = plan['id']
+            db.session.commit()
+            logging.info(f"Created Razorpay plan {plan['id']} for tier {tier.id}")
+
+        # Build subscription
+        sub_payload = {
+            'plan_id': tier.razorpay_plan_id,
+            'total_count': total_count,
+            'quantity': 1,
+            'customer_notify': 1,
+            'notes': {
+                'tier_name': tier.name,
+                'subscriber_name': name,
+                'subscriber_email': email,
+                'subscriber_phone': phone,
+            },
+        }
+        subscription = client.subscription.create(data=sub_payload)
+
+        # Persist a pending record so webhooks can update it later
+        record = UserSubscription(
+            name=name or None,
+            email=email or None,
+            phone=phone or None,
+            tier_id=tier.id,
+            tier_name=tier.name,
+            razorpay_subscription_id=subscription['id'],
+            status='created',
+            amount_paise=amount_paise,
+            total_count=total_count,
+            paid_count=0,
+        )
+        db.session.add(record)
+        db.session.commit()
+        logging.info(f"Created UserSubscription {record.id} → Razorpay {subscription['id']}")
+
+        return jsonify({
+            'status': 'success',
+            'subscription_id': subscription['id'],
+            'tier_name': tier.name,
+            'amount': amount_paise,
+            'period': tier.period,
+        })
+
+    except Exception as e:
+        logging.error(f"create_subscription error: {e}", exc_info=True)
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@app.route('/subscription/verify', methods=['POST'])
+def verify_subscription_payment():
+    """Verify Razorpay signature after the user completes AutoPay mandate setup."""
+    try:
+        data = request.get_json() or {}
+        payment_id = data.get('razorpay_payment_id', '')
+        subscription_id = data.get('razorpay_subscription_id', '')
+        signature = data.get('razorpay_signature', '')
+
+        if not all([payment_id, subscription_id, signature]):
+            return jsonify({'success': False, 'message': 'Missing payment details'}), 400
+
+        client = get_razorpay_client()
+
+        # Verify HMAC signature (subscription flow uses payment_id + subscription_id)
+        params = {
+            'razorpay_payment_id': payment_id,
+            'razorpay_subscription_id': subscription_id,
+            'razorpay_signature': signature,
+        }
+        client.utility.verify_payment_signature(params)
+
+        # Update our record
+        sub = UserSubscription.query.filter_by(
+            razorpay_subscription_id=subscription_id
+        ).first()
+        if sub:
+            sub.razorpay_payment_id = payment_id
+            sub.status = 'authenticated'
+            sub.paid_count = max(sub.paid_count or 0, 1)
+            sub.updated_at = datetime.utcnow()
+            db.session.commit()
+            logging.info(f"Subscription {subscription_id} authenticated (payment {payment_id})")
+
+        UserActivity.log_activity(
+            activity_type='autopay_subscription',
+            resource_type='subscription',
+            resource_id=None,
+            request_obj=request
+        )
+
+        return jsonify({'success': True, 'message': 'AutoPay activated! Thank you for your recurring support.'})
+
+    except razorpay.errors.SignatureVerificationError:
+        logging.warning(f"Subscription verify: signature mismatch for {subscription_id}")
+        return jsonify({'success': False, 'message': 'Payment verification failed'}), 400
+    except Exception as e:
+        logging.error(f"verify_subscription error: {e}", exc_info=True)
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+
+@app.route('/razorpay/webhook', methods=['POST'])
+def razorpay_webhook():
+    """
+    Handle Razorpay webhook events for subscriptions and payments.
+    Set RAZORPAY_WEBHOOK_SECRET in Replit Secrets to enable signature verification.
+    """
+    webhook_secret = os.environ.get('RAZORPAY_WEBHOOK_SECRET', '')
+    raw_body = request.get_data(as_text=True)
+    signature = request.headers.get('X-Razorpay-Signature', '')
+
+    # Verify signature if secret is configured
+    if webhook_secret:
+        if not signature:
+            logging.warning("Razorpay webhook: missing signature header")
+            return jsonify({'error': 'Missing signature'}), 400
+        expected = hmac.new(
+            webhook_secret.encode('utf-8'),
+            raw_body.encode('utf-8'),
+            hashlib.sha256
+        ).hexdigest()
+        if not hmac.compare_digest(expected, signature):
+            logging.warning("Razorpay webhook: signature mismatch — rejected")
+            return jsonify({'error': 'Invalid signature'}), 400
+
+    try:
+        payload = json.loads(raw_body)
+        event = payload.get('event', '')
+        logging.info(f"Razorpay webhook received: {event}")
+
+        event_payload = payload.get('payload', {})
+
+        if event == 'subscription.charged':
+            # Recurring charge succeeded
+            sub_entity = event_payload.get('subscription', {}).get('entity', {})
+            pay_entity = event_payload.get('payment', {}).get('entity', {})
+            sub_id = sub_entity.get('id', '')
+            payment_id = pay_entity.get('id', '')
+            paid_count = sub_entity.get('paid_count', 0)
+
+            sub = UserSubscription.query.filter_by(razorpay_subscription_id=sub_id).first()
+            if sub:
+                sub.razorpay_payment_id = payment_id
+                sub.status = 'active'
+                sub.paid_count = paid_count or (sub.paid_count or 0) + 1
+                sub.updated_at = datetime.utcnow()
+                db.session.commit()
+                logging.info(f"Subscription {sub_id}: charged (payment {payment_id}, count={sub.paid_count})")
+
+        elif event == 'subscription.activated':
+            sub_entity = event_payload.get('subscription', {}).get('entity', {})
+            sub_id = sub_entity.get('id', '')
+            sub = UserSubscription.query.filter_by(razorpay_subscription_id=sub_id).first()
+            if sub:
+                sub.status = 'active'
+                sub.updated_at = datetime.utcnow()
+                db.session.commit()
+                logging.info(f"Subscription {sub_id}: activated")
+
+        elif event == 'subscription.halted':
+            sub_entity = event_payload.get('subscription', {}).get('entity', {})
+            sub_id = sub_entity.get('id', '')
+            sub = UserSubscription.query.filter_by(razorpay_subscription_id=sub_id).first()
+            if sub:
+                sub.status = 'halted'
+                sub.updated_at = datetime.utcnow()
+                db.session.commit()
+                logging.warning(f"Subscription {sub_id}: halted (payment failure)")
+
+        elif event == 'subscription.cancelled':
+            sub_entity = event_payload.get('subscription', {}).get('entity', {})
+            sub_id = sub_entity.get('id', '')
+            sub = UserSubscription.query.filter_by(razorpay_subscription_id=sub_id).first()
+            if sub:
+                sub.status = 'cancelled'
+                sub.updated_at = datetime.utcnow()
+                db.session.commit()
+                logging.info(f"Subscription {sub_id}: cancelled")
+
+        elif event in ('subscription.completed', 'subscription.expired'):
+            sub_entity = event_payload.get('subscription', {}).get('entity', {})
+            sub_id = sub_entity.get('id', '')
+            terminal_status = 'completed' if event == 'subscription.completed' else 'expired'
+            sub = UserSubscription.query.filter_by(razorpay_subscription_id=sub_id).first()
+            if sub:
+                sub.status = terminal_status
+                sub.updated_at = datetime.utcnow()
+                db.session.commit()
+                logging.info(f"Subscription {sub_id}: {terminal_status}")
+
+        elif event == 'payment.failed':
+            # Log failed payments for subscriptions
+            pay_entity = event_payload.get('payment', {}).get('entity', {})
+            sub_id = pay_entity.get('subscription_id', '')
+            if sub_id:
+                sub = UserSubscription.query.filter_by(razorpay_subscription_id=sub_id).first()
+                if sub and sub.status == 'active':
+                    sub.status = 'pending'
+                    sub.updated_at = datetime.utcnow()
+                    db.session.commit()
+                logging.warning(f"Payment failed for subscription {sub_id}")
+
+        return jsonify({'status': 'ok'}), 200
+
+    except Exception as e:
+        logging.error(f"Webhook processing error: {e}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/admin/subscriptions')
+def admin_subscriptions():
+    """View and manage AutoPay subscriptions."""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+
+    status_filter = request.args.get('status', '')
+    q = UserSubscription.query.order_by(UserSubscription.created_at.desc())
+    if status_filter:
+        q = q.filter(UserSubscription.status == status_filter)
+
+    subscriptions = q.all()
+
+    # Summary counts
+    counts = {}
+    for s in ['created', 'authenticated', 'active', 'pending', 'halted', 'cancelled', 'completed', 'expired']:
+        counts[s] = UserSubscription.query.filter_by(status=s).count()
+    counts['total'] = UserSubscription.query.count()
+    counts['active_revenue'] = sum(
+        (sub.amount_paise or 0) // 100
+        for sub in UserSubscription.query.filter_by(status='active').all()
+    )
+
+    return render_template(
+        'admin/subscriptions.html',
+        subscriptions=subscriptions,
+        counts=counts,
+        status_filter=status_filter,
+    )
+
+
+@app.route('/admin/subscription/<int:sub_id>/cancel', methods=['POST'])
+def admin_cancel_subscription(sub_id):
+    """Cancel a Razorpay subscription via admin panel."""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+
+    sub = UserSubscription.query.get_or_404(sub_id)
+
+    if sub.status in ('cancelled', 'completed', 'expired'):
+        flash(f'Subscription is already {sub.status}.', 'warning')
+        return redirect(url_for('admin_subscriptions'))
+
+    try:
+        client = get_razorpay_client()
+        client.subscription.cancel(sub.razorpay_subscription_id, {'cancel_at_cycle_end': 0})
+        sub.status = 'cancelled'
+        sub.updated_at = datetime.utcnow()
+        db.session.commit()
+        flash(f'Subscription {sub.razorpay_subscription_id} cancelled successfully.', 'success')
+        logging.info(f"Admin cancelled subscription {sub.razorpay_subscription_id}")
+    except Exception as e:
+        logging.error(f"Admin cancel subscription error: {e}")
+        flash(f'Failed to cancel: {e}', 'error')
+
+    return redirect(url_for('admin_subscriptions'))
 
 
 # ═════════════════════════════════════════════════════════════════════════════
