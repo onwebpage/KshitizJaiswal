@@ -588,8 +588,6 @@ def create_payment():
         
         env_key_id = os.environ.get('RAZORPAY_KEY_ID', '')
         env_key_secret = os.environ.get('RAZORPAY_KEY_SECRET', '')
-        import logging
-        logging.warning(f"[PAY-DEBUG] KEY_ID from env: '{env_key_id}' | KEY_SECRET set: {bool(env_key_secret)} | secret_len: {len(env_key_secret)}")
         if env_key_id and env_key_secret:
             dynamic_client = razorpay.Client(auth=(env_key_id, env_key_secret))
         elif payment_content:
