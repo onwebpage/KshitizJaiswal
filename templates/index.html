@@ -59,7 +59,6 @@
                         {% endif %}
 
                         <!-- Platform badge -->
-                        {% set vtype = reel.video_type or 'auto' %}
                         {% if 'instagram' in reel.video_url %}
                         <span class="reel-platform-badge platform-ig"><i class="fab fa-instagram"></i></span>
                         {% elif reel.video_url %}
@@ -251,235 +250,6 @@
 </section>
 {% endif %}
 
-<!-- Statistics Section -->
-{% if section_vis.statistics %}
-<section class="section-padding statistics-section">
-    <div class="container">
-        <div class="text-center mb-4">
-            <h2 class="section-title">{{ stats_data.title or 'By the Numbers' }}</h2>
-            <p class="section-subtitle">{{ stats_data.subtitle or 'The reach keeps growing — thanks to you.' }}</p>
-        </div>
-        {% if stats_data.stats %}
-        <div class="row g-3 text-center justify-content-center">
-            {% for stat in stats_data.stats %}
-            {% set raw_val = (stat.resolved_value or stat.value or '') | string %}
-            {% set num_val = raw_val | replace('K','000') | replace('M','000000') | replace('+','') | replace(',','') %}
-            <div class="col-6 col-md-3 col-lg-2">
-                <div class="stat-block">
-                    <div class="stat-block-icon"><i class="{{ stat.icon or 'fas fa-chart-bar' }}"></i></div>
-                    <div class="stat-block-number" data-count="{{ raw_val }}">{{ raw_val }}</div>
-                    <div class="stat-block-label">{{ stat.label }}</div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-    </div>
-</section>
-{% endif %}
-
-<!-- Testimonials Section — Premium Slider -->
-{% if section_vis.testimonials %}
-{%- set _vis_testimonials = testimonials_list | selectattr('is_visible', 'equalto', true) | list if testimonials_list else [] -%}
-<section class="section-padding testimonials-section">
-    <div class="container">
-        <!-- Header row: title left, controls right -->
-        <div class="testimonial-header">
-            <div>
-                <h2 class="section-title mb-1">{{ page_content.testimonials_section_title or 'What People Say' }}</h2>
-                <p class="section-subtitle mb-0">{{ page_content.testimonials_section_subtitle or 'Real voices from the community.' }}</p>
-            </div>
-            <div class="tslider-controls">
-                <button class="tslider-btn" id="tPrev" aria-label="Previous testimonial">
-                    <i class="fas fa-chevron-left"></i>
-                </button>
-                <button class="tslider-btn" id="tNext" aria-label="Next testimonial">
-                    <i class="fas fa-chevron-right"></i>
-                </button>
-            </div>
-        </div>
-
-        <!-- Slider -->
-        <div class="testimonial-slider-wrap">
-            <div class="testimonial-slider" id="testimonialSlider">
-
-                {% if _vis_testimonials %}
-                    {#- Primary slides from new CRUD system -#}
-                    {% for t in _vis_testimonials %}
-                    <div class="testimonial-slide">
-                        <div class="testimonial-card-premium">
-                            <div class="tc-stars">{{ '★' * t.get('rating', 5) }}</div>
-                            <p class="tc-text">"{{ t.text }}"</p>
-                            <div class="tc-author">
-                                <div class="tc-avatar">{{ t.name[0] | upper }}</div>
-                                <div class="tc-info">
-                                    <div class="tc-name">
-                                        {{ t.name }}
-                                        <span class="tc-verified"><i class="fas fa-check-circle"></i></span>
-                                    </div>
-                                    <div class="tc-role">{{ t.role }}</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                    {#- Duplicate set for seamless infinite scroll -#}
-                    {% for t in _vis_testimonials %}
-                    <div class="testimonial-slide" aria-hidden="true">
-                        <div class="testimonial-card-premium">
-                            <div class="tc-stars">{{ '★' * t.get('rating', 5) }}</div>
-                            <p class="tc-text">"{{ t.text }}"</p>
-                            <div class="tc-author">
-                                <div class="tc-avatar">{{ t.name[0] | upper }}</div>
-                                <div class="tc-info">
-                                    <div class="tc-name">{{ t.name }} <span class="tc-verified"><i class="fas fa-check-circle"></i></span></div>
-                                    <div class="tc-role">{{ t.role }}</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                {% else %}
-                    {#- Fallback to old page_content-based testimonials -#}
-                    {% set _fallback = [
-                        {'text': page_content.testimonial1_text or 'Kshitiz speaks what others are afraid to say. Finally, someone who cuts through the noise.', 'name': page_content.testimonial1_name or 'Rahul S.', 'role': page_content.testimonial1_role or 'Viewer, Mumbai'},
-                        {'text': page_content.testimonial2_text or 'The analysis is always backed by facts. I trust this commentary more than mainstream media.', 'name': page_content.testimonial2_name or 'Priya M.', 'role': page_content.testimonial2_role or 'Subscriber, Delhi'},
-                        {'text': page_content.testimonial3_text or 'Every reel leaves me thinking. This is the kind of content India needs right now.', 'name': page_content.testimonial3_name or 'Ankit V.', 'role': page_content.testimonial3_role or 'Supporter, Pune'},
-                    ] %}
-                    {% for t in _fallback %}
-                    <div class="testimonial-slide">
-                        <div class="testimonial-card-premium">
-                            <div class="tc-stars">★★★★★</div>
-                            <p class="tc-text">"{{ t.text }}"</p>
-                            <div class="tc-author">
-                                <div class="tc-avatar">{{ t.name[0] | upper }}</div>
-                                <div class="tc-info">
-                                    <div class="tc-name">{{ t.name }} <span class="tc-verified"><i class="fas fa-check-circle"></i></span></div>
-                                    <div class="tc-role">{{ t.role }}</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                    {% for t in _fallback %}
-                    <div class="testimonial-slide" aria-hidden="true">
-                        <div class="testimonial-card-premium">
-                            <div class="tc-stars">★★★★★</div>
-                            <p class="tc-text">"{{ t.text }}"</p>
-                            <div class="tc-author">
-                                <div class="tc-avatar">{{ t.name[0] | upper }}</div>
-                                <div class="tc-info">
-                                    <div class="tc-name">{{ t.name }} <span class="tc-verified"><i class="fas fa-check-circle"></i></span></div>
-                                    <div class="tc-role">{{ t.role }}</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                {% endif %}
-
-            </div>
-        </div>
-    </div>
-</section>
-{% endif %}
-
-<!-- Courses Teaser Section -->
-{% if section_vis.courses and homepage_courses %}
-<section class="section-padding courses-teaser-section">
-    <div class="container">
-        <div class="text-center mb-5">
-            <h2 class="section-title">{{ page_content.courses_section_title or 'Learn From Kshitiz' }}</h2>
-            <p class="section-subtitle">{{ page_content.courses_section_subtitle or 'Structured courses on commentary, media literacy, and critical thinking.' }}</p>
-            <a href="{{ url_for('courses') }}" class="btn btn-outline-primary btn-sm mt-2 rounded-pill px-4">
-                {{ page_content.courses_button_text or 'View All Courses' }} <i class="fas fa-arrow-right ms-1"></i>
-            </a>
-        </div>
-        <div class="row g-4 justify-content-center">
-            {% for course in homepage_courses %}
-            <div class="col-lg-4 col-md-6">
-                <div class="course-teaser-card">
-                    {% if course.thumbnail %}
-                    <div class="course-teaser-thumb">
-                        <img src="{{ url_for('static', filename=course.thumbnail) if not course.thumbnail.startswith('http') else course.thumbnail }}"
-                             alt="{{ course.title }}" class="course-teaser-img"
-                             onerror="this.parentElement.style.display='none'">
-                    </div>
-                    {% endif %}
-                    <div class="course-teaser-body">
-                        <h5 class="course-teaser-title">{{ course.title }}</h5>
-                        <p class="course-teaser-desc">{{ (course.description or '')[:100] }}{% if (course.description or '')|length > 100 %}…{% endif %}</p>
-                        <div class="course-teaser-meta">
-                            <span><i class="fas fa-folder me-1"></i>{{ course.module_count }} modules</span>
-                            <span><i class="fas fa-play-circle me-1"></i>{{ course.lesson_count }} lessons</span>
-                        </div>
-                        <div class="course-teaser-footer">
-                            <span class="course-teaser-price">
-                                {% if course.price and course.price > 0 %}₹{{ course.price }}{% else %}Free{% endif %}
-                            </span>
-                            <a href="{{ url_for('course_detail', course_id=course.id) }}" class="btn btn-sm btn-primary rounded-pill px-3">
-                                View Course
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-</section>
-{% endif %}
-
-<!-- Newsletter CTA Section — Premium Glass Card -->
-{% if section_vis.newsletter %}
-<section id="newsletter" class="newsletter-premium-section">
-    <div class="container">
-        <div class="newsletter-glass-card">
-            <div class="row align-items-center g-4">
-
-                <!-- Left: headline + trust -->
-                <div class="col-lg-5">
-                    <div class="nlp-icon"><i class="fas fa-envelope-open-text"></i></div>
-                    <h2 class="nlp-title">{{ page_content.newsletter_section_title or 'Join the Inner Circle' }}</h2>
-                    <p class="nlp-subtitle">{{ page_content.newsletter_section_subtitle or 'Get unfiltered commentary, behind-the-reel insights, and exclusive updates straight to your inbox.' }}</p>
-                    <div class="nlp-trust">
-                        <span><i class="fas fa-users"></i> {{ page_content.support_stats_count or '2,400' }}+ subscribers</span>
-                        <span><i class="fas fa-ban"></i> No spam, ever</span>
-                        <span><i class="fas fa-unlock-alt"></i> Unsubscribe anytime</span>
-                    </div>
-                </div>
-
-                <!-- Divider (desktop only) -->
-                <div class="col-lg-1 d-none d-lg-flex justify-content-center">
-                    <div class="nlp-divider"></div>
-                </div>
-
-                <!-- Right: form -->
-                <div class="col-lg-6">
-                    <div class="newsletter-success-msg" id="newsletterSuccess">
-                        <i class="fas fa-check-circle"></i>
-                        <strong>You're in!</strong> Welcome to the Inner Circle.
-                    </div>
-
-                    <form method="POST" action="{{ url_for('newsletter_subscribe') }}" class="nlp-form" id="newsletterCTAForm">
-                        {{ newsletter_form.hidden_tag() }}
-                        <div class="nlp-fields">
-                            <input type="text" name="name" class="nlp-input" placeholder="Your name" required>
-                            <input type="email" name="email" class="nlp-input" placeholder="your@email.com" required>
-                        </div>
-                        <button type="submit" class="nlp-btn">
-                            <i class="fas fa-paper-plane me-2"></i>{{ page_content.newsletter_button_text or 'Subscribe Free' }}
-                        </button>
-                        <p class="nlp-privacy"><i class="fas fa-shield-alt me-1"></i>{{ page_content.newsletter_privacy_text or 'No spam. Unsubscribe anytime. 100% free.' }}</p>
-                    </form>
-                </div>
-
-            </div>
-        </div>
-    </div>
-</section>
-{% endif %}
-
 <!-- Reel Card CSS -->
 <style>
 /* ── Carousel wrapper ──────────────────────────────── */
@@ -664,42 +434,6 @@
     .reel-card.layout-landscape { width: 240px; }
     .reel-carousel { animation-duration: 28s; }
 }
-
-/* ── Testimonial Infinite Scroll ───────────────────── */
-.testimonial-slider-wrap {
-    overflow: hidden;
-    mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
-    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
-}
-.testimonial-slider {
-    display: flex !important;
-    gap: 1.25rem;
-    width: max-content !important;
-    animation: testimonialScroll 22s linear infinite !important;
-    transition: none !important;
-    transform: none;
-    will-change: transform;
-}
-.testimonial-slider-wrap:hover .testimonial-slider {
-    animation-play-state: paused !important;
-}
-@keyframes testimonialScroll {
-    0%   { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-}
-.testimonial-slide {
-    flex: 0 0 320px !important;
-    min-width: 320px !important;
-    width: 320px !important;
-}
-@media (max-width: 767.98px) {
-    .testimonial-slide { flex: 0 0 270px !important; min-width: 270px !important; width: 270px !important; }
-    .testimonial-slider { animation-duration: 18s !important; }
-}
-@media (max-width: 480px) {
-    .testimonial-slide { flex: 0 0 240px !important; min-width: 240px !important; width: 240px !important; }
-}
-.tslider-dots { display: none !important; }
 </style>
 
 <!-- Support Payment Modal -->
@@ -747,89 +481,6 @@
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
-/* ── Count-up animation for statistics ────────────────── */
-(function() {
-    function parseCountValue(str) {
-        if (!str || str === '—') return null;
-        str = str.toString().trim();
-        var suffix = '';
-        var multiplier = 1;
-        if (str.endsWith('M') || str.endsWith('m')) { multiplier = 1000000; suffix = 'M'; str = str.slice(0,-1); }
-        else if (str.endsWith('K') || str.endsWith('k')) { multiplier = 1000; suffix = 'K'; str = str.slice(0,-1); }
-        var plus = str.endsWith('+');
-        if (plus) str = str.slice(0,-1);
-        var num = parseFloat(str.replace(/,/g,''));
-        if (isNaN(num)) return null;
-        return { value: num * multiplier, suffix: suffix, plus: plus, raw: num };
-    }
-
-    function animateCount(el, parsed, duration) {
-        var start = null;
-        var startVal = 0;
-        var endVal = parsed.raw;
-        function step(ts) {
-            if (!start) start = ts;
-            var progress = Math.min((ts - start) / duration, 1);
-            var ease = 1 - Math.pow(1 - progress, 3);
-            var current = Math.floor(startVal + (endVal - startVal) * ease);
-            var display = current.toLocaleString('en-IN') + (parsed.suffix || '') + (parsed.plus ? '+' : '');
-            el.textContent = display;
-            if (progress < 1) { requestAnimationFrame(step); }
-            else {
-                el.textContent = el.getAttribute('data-count');
-                el.classList.add('stat-counted');
-            }
-        }
-        requestAnimationFrame(step);
-    }
-
-    var observed = new Set();
-    var observer = new IntersectionObserver(function(entries) {
-        entries.forEach(function(entry) {
-            if (entry.isIntersecting && !observed.has(entry.target)) {
-                observed.add(entry.target);
-                var parsed = parseCountValue(entry.target.getAttribute('data-count'));
-                if (parsed) { animateCount(entry.target, parsed, 1600); }
-            }
-        });
-    }, { threshold: 0.3 });
-
-    document.querySelectorAll('[data-count]').forEach(function(el) {
-        observer.observe(el);
-    });
-})();
-
-/* ── Newsletter form: spinner on submit ─────────────────── */
-(function() {
-    var form = document.getElementById('newsletterCTAForm');
-    var successBox = document.getElementById('newsletterSuccess');
-    if (!form || !successBox) return;
-    form.addEventListener('submit', function() {
-        var btn = form.querySelector('button[type=submit]');
-        if (btn) {
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Subscribing…';
-        }
-    });
-})();
-
-/* ── Testimonial Infinite Scroll Controls ────────────────── */
-(function() {
-    var slider = document.getElementById('testimonialSlider');
-    if (!slider) return;
-    var prevBtn = document.getElementById('tPrev');
-    var nextBtn = document.getElementById('tNext');
-    /* Prev: reverse direction; Next: restore forward */
-    if (prevBtn) prevBtn.addEventListener('click', function() {
-        slider.style.animationDirection = 'reverse';
-        slider.classList.remove('ts-paused');
-    });
-    if (nextBtn) nextBtn.addEventListener('click', function() {
-        slider.style.animationDirection = 'normal';
-        slider.classList.remove('ts-paused');
-    });
-})();
-
 const RAZORPAY_KEY = "{{ razorpay_key }}";
 window.razorpayKey = RAZORPAY_KEY;
 
@@ -856,7 +507,6 @@ let _supportAmount = 0;
 function initiatePayment(amount) {
     _supportAmount = amount;
     document.getElementById('supportModalAmount').textContent = amount;
-    // Pre-fill if Clerk user signed in
     const clerkUser = window.Clerk?.user;
     if (clerkUser) {
         document.getElementById('supportName').value = ((clerkUser.firstName || '') + ' ' + (clerkUser.lastName || '')).trim();
@@ -908,7 +558,7 @@ async function processSupportPayment() {
             theme: { color: '#CC0000' },
             handler: async function(response) {
                 try {
-                    const verifyRes = await fetch('/support/payment/verify', {
+                    await fetch('/support/payment/verify', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -917,11 +567,8 @@ async function processSupportPayment() {
                             razorpay_signature: response.razorpay_signature
                         })
                     });
-                    const verifyData = await verifyRes.json();
-                    showSupportSuccess();
-                } catch(e) {
-                    showSupportSuccess();
-                }
+                } catch(e) {}
+                showSupportSuccess();
             },
             modal: {
                 ondismiss: function() {

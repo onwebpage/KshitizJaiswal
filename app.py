@@ -126,9 +126,24 @@ with app.app_context():
 # Add context processor for Clerk publishable key and footer data
 @app.context_processor
 def inject_global_context():
-    from models import Opinion, SocialLink
+    from models import Opinion, SocialLink, SiteContent
     from utils import slugify, is_column_visible
-    
+    from forms import NewsletterForm
+    import json
+
+    # Newsletter form for footer (available on every page)
+    footer_newsletter_form = NewsletterForm()
+
+    # WhatsApp support phone from DB settings
+    whatsapp_support_phone = ''
+    try:
+        wa_rec = SiteContent.query.filter_by(content_key='whatsapp_settings').first()
+        if wa_rec:
+            wa_data = json.loads(wa_rec.content_data)
+            whatsapp_support_phone = wa_data.get('support_phone', '')
+    except Exception:
+        pass
+
     # Get top 5 archives for footer
     footer_archives = []
     try:
@@ -163,7 +178,9 @@ def inject_global_context():
         'clerk_domain': 'your-domain.com',
         'footer_archives': footer_archives,
         'social_links': social_links,
-        'is_column_visible': is_column_visible
+        'is_column_visible': is_column_visible,
+        'footer_newsletter_form': footer_newsletter_form,
+        'whatsapp_support_phone': whatsapp_support_phone,
     }
 
 # Import routes after app and db creation

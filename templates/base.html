@@ -224,8 +224,58 @@
 
     <!-- Footer -->
     {% if section_vis.footer %}
-    <footer class="footer-section">
+    <footer class="footer-section" id="newsletter">
         <div class="container">
+
+            <!-- Newsletter + WhatsApp Row -->
+            <div class="footer-newsletter-row">
+                <div class="row align-items-center g-4">
+                    <!-- Newsletter -->
+                    <div class="col-lg-7">
+                        <div class="footer-newsletter-block">
+                            <h5 class="footer-newsletter-title">
+                                <i class="fas fa-envelope-open-text me-2"></i>Join the Inner Circle
+                            </h5>
+                            <p class="footer-newsletter-sub">Get unfiltered commentary and exclusive updates straight to your inbox. No spam, ever.</p>
+                            <div id="footerNewsletterSuccess" class="footer-nl-success d-none">
+                                <i class="fas fa-check-circle me-2"></i>You're in! Welcome to the circle.
+                            </div>
+                            <form method="POST" action="{{ url_for('newsletter_subscribe') }}" class="footer-nl-form" id="footerNewsletterForm">
+                                {% if footer_newsletter_form %}
+                                {{ footer_newsletter_form.hidden_tag() }}
+                                {% endif %}
+                                <div class="footer-nl-fields">
+                                    <input type="text" name="name" class="footer-nl-input" placeholder="Your name" required autocomplete="name">
+                                    <input type="email" name="email" class="footer-nl-input" placeholder="your@email.com" required autocomplete="email">
+                                    <button type="submit" class="footer-nl-btn">
+                                        <i class="fas fa-paper-plane me-1"></i>Subscribe
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <!-- WhatsApp Support -->
+                    <div class="col-lg-5 text-lg-end">
+                        <div class="footer-whatsapp-block">
+                            <p class="footer-whatsapp-label">Need help? Chat with us directly</p>
+                            {% if whatsapp_support_phone %}
+                            <a href="https://wa.me/{{ whatsapp_support_phone | replace('+','') | replace(' ','') | replace('-','') }}"
+                               target="_blank" rel="noopener noreferrer"
+                               class="footer-whatsapp-btn">
+                                <i class="fab fa-whatsapp me-2"></i>WhatsApp Support
+                            </a>
+                            {% else %}
+                            <a href="{{ url_for('contact') }}" class="footer-whatsapp-btn">
+                                <i class="fas fa-envelope me-2"></i>Contact Us
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="footer-divider">
+
             <div class="row g-4">
                 <!-- Brand Section -->
                 <div class="col-lg-3 col-md-6">
@@ -281,7 +331,7 @@
                         <h6 class="footer-column-title">The Circle</h6>
                         <ul class="footer-links">
                             <li><a href="{{ url_for('index') }}#support">Support Now</a></li>
-                            <li><a href="{{ url_for('index') }}#newsletter">Newsletter</a></li>
+                            <li><a href="#newsletter">Newsletter</a></li>
                             <li><a href="{{ url_for('contact') }}">Contact</a></li>
                             <li><a href="{{ url_for('my_courses') }}">My Courses</a></li>
                         </ul>
@@ -342,6 +392,124 @@
             </div>
         </div>
     </footer>
+
+    <style>
+    /* ── Footer Newsletter + WhatsApp ── */
+    .footer-newsletter-row {
+        padding: 2.5rem 0 2rem;
+    }
+    .footer-newsletter-title {
+        color: #fff;
+        font-weight: 700;
+        font-size: 1.1rem;
+        margin-bottom: .4rem;
+    }
+    .footer-newsletter-sub {
+        color: rgba(255,255,255,.6);
+        font-size: .88rem;
+        margin-bottom: 1rem;
+    }
+    .footer-nl-success {
+        background: rgba(67,233,123,.15);
+        border: 1px solid rgba(67,233,123,.4);
+        color: #43e97b;
+        border-radius: 8px;
+        padding: .6rem 1rem;
+        font-size: .88rem;
+        margin-bottom: .75rem;
+    }
+    .footer-nl-form {}
+    .footer-nl-fields {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .5rem;
+        align-items: center;
+    }
+    .footer-nl-input {
+        flex: 1 1 160px;
+        min-width: 130px;
+        background: rgba(255,255,255,.08);
+        border: 1px solid rgba(255,255,255,.18);
+        color: #fff;
+        border-radius: 8px;
+        padding: .55rem .9rem;
+        font-size: .88rem;
+        outline: none;
+        transition: border-color .2s;
+    }
+    .footer-nl-input::placeholder { color: rgba(255,255,255,.45); }
+    .footer-nl-input:focus { border-color: #cc0000; background: rgba(255,255,255,.12); }
+    .footer-nl-btn {
+        background: #cc0000;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: .55rem 1.2rem;
+        font-size: .88rem;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: background .2s, transform .15s;
+    }
+    .footer-nl-btn:hover { background: #a80000; transform: translateY(-1px); }
+
+    .footer-whatsapp-block { text-align: right; }
+    .footer-whatsapp-label {
+        color: rgba(255,255,255,.55);
+        font-size: .82rem;
+        margin-bottom: .6rem;
+    }
+    .footer-whatsapp-btn {
+        display: inline-flex;
+        align-items: center;
+        background: #25D366;
+        color: #fff;
+        border-radius: 10px;
+        padding: .65rem 1.4rem;
+        font-size: .92rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition: background .2s, transform .15s, box-shadow .2s;
+        box-shadow: 0 4px 16px rgba(37,211,102,.25);
+    }
+    .footer-whatsapp-btn:hover {
+        background: #128C7E;
+        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(37,211,102,.35);
+        text-decoration: none;
+    }
+    .footer-divider {
+        border-color: rgba(255,255,255,.1);
+        margin: 0 0 2rem;
+    }
+
+    @media (max-width: 991.98px) {
+        .footer-whatsapp-block { text-align: left; }
+    }
+    @media (max-width: 575.98px) {
+        .footer-nl-fields { flex-direction: column; align-items: stretch; }
+        .footer-nl-input, .footer-nl-btn { width: 100%; }
+    }
+    </style>
+
+    <script>
+    (function() {
+        var form = document.getElementById('footerNewsletterForm');
+        var successBox = document.getElementById('footerNewsletterSuccess');
+        if (!form) return;
+        form.addEventListener('submit', function() {
+            var btn = form.querySelector('button[type=submit]');
+            if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Subscribing…'; }
+        });
+        {% if request.args.get('subscribed') == '1' %}
+        if (successBox) {
+            form.style.display = 'none';
+            successBox.classList.remove('d-none');
+        }
+        {% endif %}
+    })();
+    </script>
     {% endif %}
 
     <!-- Disclaimer Modal -->
