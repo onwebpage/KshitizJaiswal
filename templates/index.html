@@ -680,6 +680,42 @@
     .reel-card.layout-landscape { width: 240px; }
     .reel-carousel { animation-duration: 28s; }
 }
+
+/* ── Testimonial Infinite Scroll ───────────────────── */
+.testimonial-slider-wrap {
+    overflow: hidden;
+    mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%);
+}
+.testimonial-slider {
+    display: flex !important;
+    gap: 1.25rem;
+    width: max-content !important;
+    animation: testimonialScroll 22s linear infinite !important;
+    transition: none !important;
+    transform: none;
+    will-change: transform;
+}
+.testimonial-slider-wrap:hover .testimonial-slider {
+    animation-play-state: paused !important;
+}
+@keyframes testimonialScroll {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+.testimonial-slide {
+    flex: 0 0 320px !important;
+    min-width: 320px !important;
+    width: 320px !important;
+}
+@media (max-width: 767.98px) {
+    .testimonial-slide { flex: 0 0 270px !important; min-width: 270px !important; width: 270px !important; }
+    .testimonial-slider { animation-duration: 18s !important; }
+}
+@media (max-width: 480px) {
+    .testimonial-slide { flex: 0 0 240px !important; min-width: 240px !important; width: 240px !important; }
+}
+.tslider-dots { display: none !important; }
 </style>
 
 <!-- Support Payment Modal -->
