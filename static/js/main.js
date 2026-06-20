@@ -215,50 +215,30 @@
 
     // Initialize disclaimer popup
     function initDisclaimerPopup() {
-        // Don't show disclaimer popup on admin pages
-        if (window.location.pathname.startsWith('/admin')) {
-            return;
-        }
+        // Don't show on admin pages
+        if (window.location.pathname.startsWith('/admin')) return;
 
-        const disclaimerModalEl = document.getElementById('disclaimerModal');
-        if (!disclaimerModalEl) return;
-
-        // Check if already shown and accepted
-        if (localStorage.getItem('disclaimerAccepted') === 'true') {
-            disclaimerShown = true;
-            return;
-        }
+        // Already accepted
+        try {
+            if (localStorage.getItem('disclaimerAccepted') === 'true') {
+                disclaimerShown = true;
+                return;
+            }
+        } catch(e) {}
 
         if (disclaimerShown) return;
 
-        // Clean up any stale backdrop after modal hides
-        disclaimerModalEl.addEventListener('hidden.bs.modal', function () {
-            localStorage.setItem('disclaimerAccepted', 'true');
+        // Show custom popup after 7 seconds
+        setTimeout(function() {
+            if (disclaimerShown) return;
             disclaimerShown = true;
-
-            // Force-remove any lingering backdrops
-            document.querySelectorAll('.modal-backdrop').forEach(function(el) { el.remove(); });
-            document.body.classList.remove('modal-open');
-            document.body.style.overflow = '';
-            document.body.style.paddingRight = '';
-
+            if (typeof _showDisclaimerPopup === 'function') {
+                _showDisclaimerPopup();
+            }
             if (window.dataLayer) {
-                window.dataLayer.push({ 'event': 'disclaimer_accepted' });
+                window.dataLayer.push({ 'event': 'disclaimer_shown' });
             }
-        });
-
-        setTimeout(() => {
-            try {
-                const disclaimerModal = new bootstrap.Modal(disclaimerModalEl, { backdrop: true, keyboard: true });
-                disclaimerModal.show();
-                disclaimerShown = true;
-                if (window.dataLayer) {
-                    window.dataLayer.push({ 'event': 'disclaimer_shown' });
-                }
-            } catch(e) {
-                console.warn('Disclaimer modal error:', e);
-            }
-        }, 5000);
+        }, 7000);
     }
 
     // Initialize newsletter popup
