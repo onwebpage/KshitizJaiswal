@@ -434,6 +434,7 @@ class Course(db.Model):
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
     thumbnail = db.Column(db.String(500))
+    preview_video_url = db.Column(db.String(500))
     price = db.Column(db.Integer, nullable=False)  # Price in rupees
     is_active = db.Column(db.Boolean, default=True)
     sort_order = db.Column(db.Integer, default=0)
@@ -447,6 +448,7 @@ class Course(db.Model):
             'title': self.title,
             'description': self.description or '',
             'thumbnail': self.thumbnail or '',
+            'preview_video_url': self.preview_video_url or '',
             'price': self.price,
             'is_active': self.is_active,
             'sort_order': self.sort_order,

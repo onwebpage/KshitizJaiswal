@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, IntegerField, SelectField, PasswordField, FileField, SubmitField
-from wtforms.validators import DataRequired, Email, NumberRange, Length
+from wtforms.validators import DataRequired, Email, NumberRange, Length, Optional
 from flask_wtf.file import FileAllowed
 
 class NewsletterForm(FlaskForm):
@@ -106,6 +106,7 @@ class CourseForm(FlaskForm):
     title = StringField('Course Title', validators=[DataRequired(), Length(max=200)])
     description = TextAreaField('Course Description', validators=[DataRequired()])
     thumbnail = FileField('Course Thumbnail', validators=[FileAllowed(['jpg', 'jpeg', 'png', 'gif'])])
+    preview_video_url = StringField('Preview Video URL (YouTube)', validators=[Optional(), Length(max=500)])
     price = IntegerField('Price (₹)', validators=[DataRequired(), NumberRange(min=0)])
     is_active = SelectField('Active', choices=[('1', 'Yes'), ('0', 'No')], default='1')
     sort_order = IntegerField('Sort Order', validators=[NumberRange(min=0)], default=0)

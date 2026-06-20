@@ -59,6 +59,144 @@
     </div>
 </section>
 
+{% if course.preview_video_url %}
+{% set _pv = course.preview_video_url %}
+{% if 'youtu.be/' in _pv %}
+  {% set _vid = _pv.split('youtu.be/')[1].split('?')[0].split('&')[0] %}
+  {% set _embed = 'https://www.youtube.com/embed/' ~ _vid ~ '?rel=0&modestbranding=1' %}
+{% elif 'youtube.com/watch' in _pv %}
+  {% set _vid = _pv.split('v=')[1].split('&')[0] if 'v=' in _pv else '' %}
+  {% set _embed = 'https://www.youtube.com/embed/' ~ _vid ~ '?rel=0&modestbranding=1' if _vid else '' %}
+{% elif 'youtube.com/embed/' in _pv %}
+  {% set _embed = _pv %}
+{% else %}
+  {% set _embed = _pv %}
+{% endif %}
+<section class="py-5" style="background:linear-gradient(135deg,#0f0f0f 0%,#1a1a2e 50%,#16213e 100%);">
+    <div class="container">
+        <div class="text-center mb-4">
+            <span style="display:inline-flex;align-items:center;gap:8px;background:rgba(204,0,0,.15);
+                         border:1px solid rgba(204,0,0,.35);border-radius:50px;
+                         padding:6px 18px;color:#ff6b6b;font-size:.82rem;font-weight:600;letter-spacing:.5px;">
+                <i class="fas fa-play-circle"></i> FREE PREVIEW
+            </span>
+            <h2 style="color:#fff;font-size:clamp(1.4rem,3vw,2rem);font-weight:700;margin:14px 0 6px;">
+                Watch Before You Buy
+            </h2>
+            <p style="color:rgba(255,255,255,.6);font-size:.95rem;max-width:520px;margin:0 auto;">
+                Get a free look inside the course. No sign-up needed.
+            </p>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-9 col-xl-8">
+                <!-- Video player wrapper -->
+                <div style="position:relative;border-radius:18px;overflow:hidden;
+                             box-shadow:0 32px 80px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.06);">
+                    <!-- 16:9 aspect ratio box -->
+                    <div style="position:relative;padding-bottom:56.25%;height:0;background:#000;">
+                        {% if _embed %}
+                        <!-- Lazy-loaded iframe with click-to-play poster -->
+                        <div id="pvPoster" onclick="loadPreviewVideo()"
+                             style="position:absolute;inset:0;cursor:pointer;
+                                    background:#000 url('https://img.youtube.com/vi/{{ _vid if _vid is defined else '' }}/maxresdefault.jpg') center/cover no-repeat;">
+                            <!-- Dark overlay -->
+                            <div style="position:absolute;inset:0;background:rgba(0,0,0,.35);"></div>
+                            <!-- Play button -->
+                            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+                                <div id="pvPlayBtn"
+                                     style="width:72px;height:72px;background:linear-gradient(135deg,#cc0000,#8b0000);
+                                            border-radius:50%;display:flex;align-items:center;justify-content:center;
+                                            box-shadow:0 8px 32px rgba(204,0,0,.6),0 0 0 8px rgba(204,0,0,.15);
+                                            transition:transform .2s,box-shadow .2s;">
+                                    <i class="fas fa-play" style="color:#fff;font-size:1.5rem;margin-left:4px;"></i>
+                                </div>
+                            </div>
+                            <!-- "Watch Preview" label -->
+                            <div style="position:absolute;bottom:20px;left:50%;transform:translateX(-50%);
+                                        background:rgba(0,0,0,.7);backdrop-filter:blur(8px);
+                                        color:#fff;padding:6px 18px;border-radius:50px;
+                                        font-size:.82rem;font-weight:600;white-space:nowrap;
+                                        border:1px solid rgba(255,255,255,.15);">
+                                <i class="fas fa-eye me-1"></i>Preview Course
+                            </div>
+                        </div>
+                        <iframe id="pvIframe"
+                                src=""
+                                data-src="{{ _embed }}&autoplay=1"
+                                title="Course Preview"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowfullscreen
+                                style="position:absolute;inset:0;width:100%;height:100%;border:0;display:none;">
+                        </iframe>
+                        {% else %}
+                        <iframe src="{{ _embed }}"
+                                title="Course Preview"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowfullscreen
+                                style="position:absolute;inset:0;width:100%;height:100%;border:0;">
+                        </iframe>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- CTA row below video -->
+                {% if not course.has_access %}
+                <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;
+                             gap:14px;margin-top:22px;padding:18px 22px;
+                             background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+                             border-radius:14px;backdrop-filter:blur(8px);">
+                    <div>
+                        <p style="color:#fff;font-weight:600;margin:0 0 2px;font-size:1rem;">
+                            Like what you see?
+                        </p>
+                        <p style="color:rgba(255,255,255,.55);font-size:.85rem;margin:0;">
+                            Get full access to all {{ course.module_count }} modules.
+                        </p>
+                    </div>
+                    <button onclick="purchaseCourse({{ course.id }}, {{ course.price }})"
+                            style="background:linear-gradient(135deg,#cc0000,#8b0000);color:#fff;
+                                   border:none;border-radius:10px;padding:11px 26px;
+                                   font-weight:700;font-size:.95rem;cursor:pointer;
+                                   box-shadow:0 4px 18px rgba(204,0,0,.4);
+                                   white-space:nowrap;transition:transform .15s;"
+                            onmouseover="this.style.transform='translateY(-1px)'"
+                            onmouseout="this.style.transform=''">
+                        {% if course.price == 0 %}
+                        <i class="fas fa-unlock me-2"></i>Enrol Free
+                        {% else %}
+                        <i class="fas fa-shopping-cart me-2"></i>Buy Now — ₹{{ course.price }}
+                        {% endif %}
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+<script>
+function loadPreviewVideo() {
+    var poster = document.getElementById('pvPoster');
+    var iframe = document.getElementById('pvIframe');
+    if (!poster || !iframe) return;
+    iframe.src = iframe.dataset.src;
+    poster.style.display = 'none';
+    iframe.style.display = 'block';
+}
+var pvBtn = document.getElementById('pvPlayBtn');
+if (pvBtn) {
+    pvBtn.addEventListener('mouseover', function() {
+        this.style.transform = 'scale(1.12)';
+        this.style.boxShadow = '0 12px 40px rgba(204,0,0,.7),0 0 0 10px rgba(204,0,0,.2)';
+    });
+    pvBtn.addEventListener('mouseout', function() {
+        this.style.transform = '';
+        this.style.boxShadow = '0 8px 32px rgba(204,0,0,.6),0 0 0 8px rgba(204,0,0,.15)';
+    });
+}
+</script>
+{% endif %}
+
 <section class="py-5">
     <div class="container">
         <div class="row g-4">

@@ -112,6 +112,7 @@ with app.app_context():
             "ALTER TABLE lesson ADD COLUMN IF NOT EXISTS is_visible BOOLEAN NOT NULL DEFAULT TRUE",
             "ALTER TABLE lesson ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'published'",
             "ALTER TABLE user_activity ALTER COLUMN session_id TYPE TEXT",
+            "ALTER TABLE course ADD COLUMN IF NOT EXISTS preview_video_url VARCHAR(500)",
         ]
         for sql in migrations:
             try:

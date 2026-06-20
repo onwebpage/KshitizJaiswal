@@ -27,6 +27,14 @@
             current_image=course.thumbnail if course and course.thumbnail else None
         ) }}
     </div>
+
+    <div class="mb-3">
+        {{ form.preview_video_url.label(class="form-label fw-semibold") }}
+        {{ form.preview_video_url(class="form-control", placeholder="https://www.youtube.com/watch?v=...") }}
+        <small class="form-text text-muted">
+            <i class="fas fa-info-circle me-1"></i>Paste a YouTube URL — this will be shown as a free preview on the course page to help users decide before buying.
+        </small>
+    </div>
     
     <div class="mb-3">
         {{ form.price.label(class="form-label") }}
