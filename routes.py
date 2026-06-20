@@ -1509,11 +1509,18 @@ def admin_social_links():
     """Manage social media links"""
     if 'admin_logged_in' not in session:
         return redirect(url_for('admin_login'))
-    
+
     SocialLink.create_default_links()
+    SocialLink.seed_missing_platforms()
     links = SocialLink.query.order_by(SocialLink.sort_order).all()
-    
-    return render_template('admin/social_links.html', links=links)
+
+    # Brand colour map for the admin UI (keyed by lowercase platform name)
+    platform_colors = {
+        name.lower(): color
+        for name, _icon, color, _order in SocialLink.DEFAULT_PLATFORMS
+    }
+
+    return render_template('admin/social_links.html', links=links, platform_colors=platform_colors)
 
 @app.route('/admin/social-link/add', methods=['GET', 'POST'])
 def admin_add_social_link():
@@ -1596,8 +1603,22 @@ def admin_toggle_social_link(link_id):
     
     db.session.commit()
     
-    status = "activated" if link.is_active else "deactivated"
-    flash(f'Social link "{link.platform}" {status} successfully!', 'success')
+    status = "enabled" if link.is_active else "disabled"
+    flash(f'{link.platform} {status} — changes are live on the website.', 'success')
+    return redirect(url_for('admin_social_links'))
+
+@app.route('/admin/social-link/<int:link_id>/update-url', methods=['POST'])
+def admin_update_social_url(link_id):
+    """Inline URL update — no full edit form needed."""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+
+    link = SocialLink.query.get_or_404(link_id)
+    url = request.form.get('url', '').strip()
+    link.url = url
+    db.session.commit()
+
+    flash(f'{link.platform} URL saved successfully!', 'success')
     return redirect(url_for('admin_social_links'))
 
 @app.route('/admin/resources')

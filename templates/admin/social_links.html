@@ -1,11 +1,257 @@
 {% extends "base.html" %}
 
-{% block title %}Manage Social Links - Admin{% endblock %}
+{% block title %}Social Media Controls - Admin{% endblock %}
+
+{% block extra_head %}
+<style>
+/* ── Social Media Controls page ────────────────────────────── */
+.sm-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 28px;
+}
+.sm-page-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1a1a2e;
+}
+.sm-stats-bar {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+}
+.sm-stat-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 18px;
+    border-radius: 50px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+.sm-stat-pill.enabled  { background: #d1fae5; color: #065f46; }
+.sm-stat-pill.disabled { background: #f3f4f6; color: #6b7280; }
+.sm-stat-pill.total    { background: #ede9fe; color: #5b21b6; }
+
+/* ── Platform Cards ─────────────────────────────────────────── */
+.platform-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+}
+.platform-card {
+    background: #fff;
+    border: 2px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 20px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+.platform-card.is-enabled {
+    border-color: #bbf7d0;
+    box-shadow: 0 2px 12px rgba(34, 197, 94, 0.10);
+}
+.platform-card.is-disabled {
+    opacity: 0.78;
+}
+.platform-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--brand-color, #ccc);
+    border-radius: 16px 16px 0 0;
+}
+
+/* Card top row */
+.card-top {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 16px;
+}
+.platform-icon-wrap {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    color: #fff;
+    flex-shrink: 0;
+    background: var(--brand-color, #888);
+}
+.platform-meta {
+    flex: 1;
+    min-width: 0;
+}
+.platform-name {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #111827;
+    margin: 0 0 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.platform-icon-label {
+    font-size: 0.72rem;
+    color: #9ca3af;
+    font-family: monospace;
+}
+
+/* Toggle switch */
+.toggle-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+.toggle-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #6b7280;
+    min-width: 42px;
+    text-align: right;
+}
+.toggle-label.on  { color: #059669; }
+.toggle-label.off { color: #9ca3af; }
+
+/* Pure-CSS toggle button */
+.toggle-btn {
+    position: relative;
+    width: 48px;
+    height: 26px;
+    background: #d1d5db;
+    border: none;
+    border-radius: 13px;
+    cursor: pointer;
+    transition: background 0.25s;
+    padding: 0;
+    flex-shrink: 0;
+}
+.toggle-btn.on { background: #22c55e; }
+.toggle-btn::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    background: #fff;
+    border-radius: 50%;
+    transition: left 0.25s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+}
+.toggle-btn.on::after { left: 25px; }
+
+/* URL row */
+.url-row {
+    margin-top: 4px;
+}
+.url-row .input-group {
+    border-radius: 10px;
+    overflow: hidden;
+}
+.url-row input[type="url"] {
+    border-color: #e5e7eb;
+    font-size: 0.84rem;
+    padding: 7px 12px;
+    min-width: 0;
+}
+.url-row input[type="url"]:focus {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+.url-row .btn-save-url {
+    background: #6366f1;
+    color: #fff;
+    border: none;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 7px 14px;
+    white-space: nowrap;
+}
+.url-row .btn-save-url:hover { background: #4f46e5; }
+
+/* Card footer */
+.card-footer-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid #f3f4f6;
+}
+.visibility-badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+}
+.visibility-badge.visible  { background: #d1fae5; color: #065f46; }
+.visibility-badge.hidden   { background: #f3f4f6; color: #6b7280; }
+
+.card-action-btns {
+    display: flex;
+    gap: 6px;
+}
+.card-action-btns .btn {
+    padding: 4px 10px;
+    font-size: 0.78rem;
+    border-radius: 7px;
+}
+
+/* Add platform card */
+.add-platform-card {
+    background: #f9fafb;
+    border: 2px dashed #d1d5db;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 180px;
+    text-decoration: none !important;
+    color: #9ca3af;
+    transition: border-color 0.2s, color 0.2s, background 0.2s;
+    flex-direction: column;
+    gap: 10px;
+}
+.add-platform-card:hover {
+    border-color: #6366f1;
+    color: #6366f1;
+    background: #f0f0ff;
+}
+.add-platform-card i { font-size: 1.8rem; }
+.add-platform-card span { font-size: 0.9rem; font-weight: 600; }
+
+/* Tips box */
+.tips-card {
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-top: 28px;
+}
+.tips-card h6 { color: #0369a1; margin-bottom: 8px; }
+.tips-card ul { margin: 0; padding-left: 18px; color: #374151; font-size: 0.87rem; }
+.tips-card li { margin-bottom: 4px; }
+</style>
+{% endblock %}
 
 {% block content %}
 <div class="admin-section">
     <div class="container-fluid">
         <div class="row">
+
+            <!-- Sidebar -->
             <div class="col-lg-3 col-md-4">
                 <div class="admin-sidebar">
                     <div class="admin-header">
@@ -14,127 +260,145 @@
                             <i class="fas fa-sign-out-alt me-1"></i>Logout
                         </a>
                     </div>
-                    
                     <div class="admin-nav">
                         <a href="{{ url_for('admin_dashboard') }}" class="admin-nav-item">
                             <i class="fas fa-home me-2"></i>Dashboard
                         </a>
-                        <a href="#" class="admin-nav-item" onclick="history.back()">
-                            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
-                        </a>
                         <a href="{{ url_for('admin_social_links') }}" class="admin-nav-item active">
-                            <i class="fas fa-share-alt me-2"></i>Social Links
+                            <i class="fas fa-share-alt me-2"></i>Social Media Controls
                         </a>
                     </div>
                 </div>
             </div>
-            
+
+            <!-- Main content -->
             <div class="col-lg-9 col-md-8">
                 <div class="admin-content">
-                    <div class="admin-header">
-                        <h2><i class="fas fa-share-alt me-2"></i>Manage Social Media Links</h2>
+
+                    <!-- Page header -->
+                    <div class="sm-page-header">
+                        <h2><i class="fas fa-share-alt me-2 text-primary"></i>Social Media Controls</h2>
                         <a href="{{ url_for('admin_add_social_link') }}" class="btn btn-primary">
-                            <i class="fas fa-plus me-1"></i>Add New Link
+                            <i class="fas fa-plus me-1"></i>Add Custom Platform
                         </a>
                     </div>
-                    
-                    <div class="admin-card">
-                        {% if links %}
-                        <div class="table-responsive">
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Order</th>
-                                        <th>Platform</th>
-                                        <th>URL</th>
-                                        <th>Icon</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for link in links %}
-                                    <tr>
-                                        <td>
-                                            <span class="badge bg-secondary">{{ link.sort_order }}</span>
-                                        </td>
-                                        <td>
-                                            <strong>{{ link.platform }}</strong>
-                                        </td>
-                                        <td>
-                                            {% if link.url %}
-                                                <a href="{{ link.url }}" target="_blank" class="text-primary">
-                                                    {{ link.url[:40] }}{% if link.url|length > 40 %}...{% endif %}
-                                                </a>
-                                            {% else %}
-                                                <span class="text-muted">Not set</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            <i class="{{ link.icon_class }}" style="font-size: 1.5em;"></i>
-                                            <br>
-                                            <small class="text-muted">{{ link.icon_class }}</small>
-                                        </td>
-                                        <td>
-                                            {% if link.is_active %}
-                                                <span class="badge bg-success">Active</span>
-                                            {% else %}
-                                                <span class="badge bg-secondary">Inactive</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            <div class="btn-group">
-                                                <a href="{{ url_for('admin_edit_social_link', link_id=link.id) }}" 
-                                                   class="btn btn-sm btn-outline-primary" title="Edit">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-                                                
-                                                <form method="POST" action="{{ url_for('admin_toggle_social_link', link_id=link.id) }}" 
-                                                      style="display: inline-block;">
-                                                    <button type="submit" 
-                                                            class="btn btn-sm btn-outline-{{ 'warning' if link.is_active else 'success' }}" 
-                                                            title="{{ 'Deactivate' if link.is_active else 'Activate' }}">
-                                                        <i class="fas fa-{{ 'pause' if link.is_active else 'play' }}"></i>
-                                                    </button>
-                                                </form>
-                                                
-                                                <form method="POST" action="{{ url_for('admin_delete_social_link', link_id=link.id) }}" 
-                                                      style="display: inline-block;" 
-                                                      onsubmit="return confirm('Are you sure you want to delete this social link?')">
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
+
+                    <!-- Stats bar -->
+                    {% set enabled_count  = links | selectattr('is_active') | list | length %}
+                    {% set disabled_count = links | rejectattr('is_active') | list | length %}
+                    <div class="sm-stats-bar">
+                        <div class="sm-stat-pill total">
+                            <i class="fas fa-layer-group"></i>{{ links|length }} Platforms
                         </div>
-                        {% else %}
-                        <div class="text-center py-5">
-                            <i class="fas fa-share-alt fa-3x text-muted mb-3"></i>
-                            <h5>No Social Links Yet</h5>
-                            <p class="text-muted">Add your first social media link to get started.</p>
-                            <a href="{{ url_for('admin_add_social_link') }}" class="btn btn-primary mt-3">
-                                <i class="fas fa-plus me-1"></i>Add Social Link
-                            </a>
+                        <div class="sm-stat-pill enabled">
+                            <i class="fas fa-eye"></i>{{ enabled_count }} Visible on site
                         </div>
-                        {% endif %}
-                    </div>
-                    
-                    <div class="mt-4">
-                        <div class="alert alert-info">
-                            <h6><i class="fas fa-info-circle me-2"></i>Tips:</h6>
-                            <ul class="mb-0">
-                                <li>Use Font Awesome icon classes (e.g., "fab fa-youtube", "fab fa-instagram")</li>
-                                <li>Leave URL empty if the social account is not yet set up</li>
-                                <li>Use Sort Order to arrange links (lower numbers appear first)</li>
-                                <li>Inactive links won't be displayed on the website footer</li>
-                            </ul>
+                        <div class="sm-stat-pill disabled">
+                            <i class="fas fa-eye-slash"></i>{{ disabled_count }} Hidden
                         </div>
                     </div>
+
+                    <!-- Platform cards grid -->
+                    <div class="platform-grid">
+
+                        {% for link in links %}
+                        {% set pl = link.platform.lower() %}
+                        {% set brand = platform_colors.get(pl, platform_colors.get(pl.split(' ')[0], '#6366f1')) %}
+                        <div class="platform-card {{ 'is-enabled' if link.is_active else 'is-disabled' }}"
+                             style="--brand-color: {{ brand }}">
+
+                            <!-- Top row: icon + name + toggle -->
+                            <div class="card-top">
+                                <div class="platform-icon-wrap" style="background: {{ brand }}">
+                                    <i class="{{ link.icon_class }}"></i>
+                                </div>
+                                <div class="platform-meta">
+                                    <p class="platform-name">{{ link.platform }}</p>
+                                    <span class="platform-icon-label">{{ link.icon_class }}</span>
+                                </div>
+                                <!-- Toggle -->
+                                <div class="toggle-wrap">
+                                    <span class="toggle-label {{ 'on' if link.is_active else 'off' }}">
+                                        {{ 'ON' if link.is_active else 'OFF' }}
+                                    </span>
+                                    <form method="POST"
+                                          action="{{ url_for('admin_toggle_social_link', link_id=link.id) }}"
+                                          style="display:inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit"
+                                                class="toggle-btn {{ 'on' if link.is_active else '' }}"
+                                                title="{{ 'Disable' if link.is_active else 'Enable' }} {{ link.platform }}">
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <!-- URL row -->
+                            <div class="url-row">
+                                <form method="POST"
+                                      action="{{ url_for('admin_update_social_url', link_id=link.id) }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <div class="input-group">
+                                        <input type="url"
+                                               class="form-control"
+                                               name="url"
+                                               value="{{ link.url or '' }}"
+                                               placeholder="https://…">
+                                        <button type="submit" class="btn btn-save-url">
+                                            <i class="fas fa-save me-1"></i>Save URL
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- Footer: badge + action buttons -->
+                            <div class="card-footer-actions">
+                                <span class="visibility-badge {{ 'visible' if link.is_active else 'hidden' }}">
+                                    <i class="fas fa-{{ 'eye' if link.is_active else 'eye-slash' }} me-1"></i>
+                                    {{ 'Visible to users' if link.is_active else 'Hidden from users' }}
+                                </span>
+                                <div class="card-action-btns">
+                                    <a href="{{ url_for('admin_edit_social_link', link_id=link.id) }}"
+                                       class="btn btn-outline-secondary btn-sm"
+                                       title="Advanced edit">
+                                        <i class="fas fa-sliders-h me-1"></i>Advanced
+                                    </a>
+                                    <form method="POST"
+                                          action="{{ url_for('admin_delete_social_link', link_id=link.id) }}"
+                                          style="display:inline"
+                                          onsubmit="return confirm('Delete {{ link.platform }}? This cannot be undone.')">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+
+                        </div>
+                        {% endfor %}
+
+                        <!-- Add custom platform card -->
+                        <a href="{{ url_for('admin_add_social_link') }}" class="add-platform-card">
+                            <i class="fas fa-plus-circle"></i>
+                            <span>Add Custom Platform</span>
+                            <small class="text-muted" style="font-size:0.78rem">Pinterest, Snapchat, etc.</small>
+                        </a>
+
+                    </div>
+
+                    <!-- Tips -->
+                    <div class="tips-card">
+                        <h6><i class="fas fa-lightbulb me-2"></i>How it works</h6>
+                        <ul>
+                            <li><strong>Toggle ON/OFF</strong> to instantly show or hide any platform on the website — no code changes needed.</li>
+                            <li>Paste a full profile URL (e.g. <code>https://youtube.com/@kshitizjaiswal</code>) and click <strong>Save URL</strong>.</li>
+                            <li>Only <strong>enabled</strong> platforms with a valid URL are displayed in the website footer.</li>
+                            <li>Use <strong>Advanced</strong> to change the icon class or display order.</li>
+                            <li>For new platforms, use any <a href="https://fontawesome.com/icons?d=gallery&p=2&s=brands" target="_blank">Font Awesome brand icon</a> (e.g. <code>fab fa-pinterest</code>).</li>
+                        </ul>
+                    </div>
+
                 </div>
             </div>
         </div>

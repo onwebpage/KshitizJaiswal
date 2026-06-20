@@ -2,6 +2,49 @@
 
 {% block title %}{{ title }} - Admin{% endblock %}
 
+{% block extra_head %}
+<style>
+.preset-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
+    margin-bottom: 8px;
+}
+.preset-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 8px;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    background: #fff;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #374151;
+    transition: border-color 0.2s, background 0.2s, transform 0.1s;
+}
+.preset-btn i { font-size: 1.4rem; }
+.preset-btn:hover  { border-color: #6366f1; background: #f5f3ff; }
+.preset-btn:active { transform: scale(0.97); }
+.preset-btn.selected { border-color: #6366f1; background: #eef2ff; color: #4338ca; }
+
+.icon-preview {
+    font-size: 2rem;
+    text-align: center;
+    padding: 10px;
+    background: #f9fafb;
+    border-radius: 10px;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #e5e7eb;
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="admin-section">
     <div class="container-fluid">
@@ -14,69 +57,95 @@
                             <i class="fas fa-sign-out-alt me-1"></i>Logout
                         </a>
                     </div>
-                    
                     <div class="admin-nav">
                         <a href="{{ url_for('admin_dashboard') }}" class="admin-nav-item">
                             <i class="fas fa-home me-2"></i>Dashboard
                         </a>
                         <a href="{{ url_for('admin_social_links') }}" class="admin-nav-item">
-                            <i class="fas fa-arrow-left me-2"></i>Back to Social Links
+                            <i class="fas fa-arrow-left me-2"></i>Back to Social Controls
                         </a>
                         <a href="{{ url_for('admin_social_links') }}" class="admin-nav-item active">
-                            <i class="fas fa-share-alt me-2"></i>Social Links
+                            <i class="fas fa-share-alt me-2"></i>Social Media Controls
                         </a>
                     </div>
                 </div>
             </div>
-            
+
             <div class="col-lg-9 col-md-8">
                 <div class="admin-content">
                     <div class="admin-header">
                         <h2><i class="fas fa-share-alt me-2"></i>{{ title }}</h2>
                     </div>
-                    
+
                     <div class="admin-card">
-                        <form method="POST" class="admin-form">
+                        <form method="POST" class="admin-form" id="socialLinkForm">
                             {{ form.hidden_tag() }}
-                            
+
+                            <!-- Platform presets -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Quick-select a platform</label>
+                                <div class="preset-grid" id="presetGrid">
+                                    <button type="button" class="preset-btn" data-platform="YouTube"     data-icon="fab fa-youtube"    style="color:#FF0000"><i class="fab fa-youtube"></i>YouTube</button>
+                                    <button type="button" class="preset-btn" data-platform="Instagram"   data-icon="fab fa-instagram"  style="color:#E1306C"><i class="fab fa-instagram"></i>Instagram</button>
+                                    <button type="button" class="preset-btn" data-platform="X (Twitter)" data-icon="fab fa-x-twitter"  style="color:#000"><i class="fab fa-x-twitter"></i>X / Twitter</button>
+                                    <button type="button" class="preset-btn" data-platform="Facebook"    data-icon="fab fa-facebook"   style="color:#1877F2"><i class="fab fa-facebook"></i>Facebook</button>
+                                    <button type="button" class="preset-btn" data-platform="LinkedIn"    data-icon="fab fa-linkedin"   style="color:#0A66C2"><i class="fab fa-linkedin"></i>LinkedIn</button>
+                                    <button type="button" class="preset-btn" data-platform="TikTok"      data-icon="fab fa-tiktok"     style="color:#010101"><i class="fab fa-tiktok"></i>TikTok</button>
+                                    <button type="button" class="preset-btn" data-platform="WhatsApp"    data-icon="fab fa-whatsapp"   style="color:#25D366"><i class="fab fa-whatsapp"></i>WhatsApp</button>
+                                    <button type="button" class="preset-btn" data-platform="Telegram"    data-icon="fab fa-telegram"   style="color:#0088CC"><i class="fab fa-telegram"></i>Telegram</button>
+                                    <button type="button" class="preset-btn" data-platform="Pinterest"   data-icon="fab fa-pinterest"  style="color:#E60023"><i class="fab fa-pinterest"></i>Pinterest</button>
+                                    <button type="button" class="preset-btn" data-platform="Snapchat"    data-icon="fab fa-snapchat"   style="color:#FFFC00; border-color:#ccc"><i class="fab fa-snapchat" style="color:#FFFC00;-webkit-text-stroke:1px #aaa"></i>Snapchat</button>
+                                </div>
+                                <small class="text-muted">Clicking a preset fills the Platform Name and Icon fields automatically.</small>
+                            </div>
+
+                            <hr class="my-3">
+
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">{{ form.platform.label }}</label>
-                                    {{ form.platform(class="form-control", placeholder="e.g., YouTube, Instagram, Twitter") }}
-                                    <small class="form-text text-muted">Display name for this social media platform</small>
+                                    {{ form.platform(class="form-control", placeholder="e.g., YouTube, Pinterest…", id="platformInput") }}
+                                    <small class="text-muted">Display name shown in the admin panel</small>
                                 </div>
-                                
+
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">{{ form.icon_class.label }}</label>
-                                    {{ form.icon_class(class="form-control", placeholder="e.g., fab fa-youtube") }}
-                                    <small class="form-text text-muted">
-                                        Font Awesome icon class. 
-                                        <a href="https://fontawesome.com/icons" target="_blank">Browse icons</a>
+                                    <div class="input-group">
+                                        {{ form.icon_class(class="form-control", placeholder="e.g., fab fa-youtube", id="iconInput") }}
+                                        <span class="input-group-text bg-white" style="min-width:50px">
+                                            <div class="icon-preview p-0" style="background:none;border:none;font-size:1.4rem" id="iconPreview">
+                                                <i id="iconPreviewEl" class="{{ form.icon_class.data or 'fas fa-link' }}"></i>
+                                            </div>
+                                        </span>
+                                    </div>
+                                    <small class="text-muted">
+                                        Font Awesome brand icon class.
+                                        <a href="https://fontawesome.com/icons?d=gallery&s=brands" target="_blank">Browse icons</a>
                                     </small>
                                 </div>
                             </div>
-                            
+
                             <div class="mb-3">
                                 <label class="form-label">{{ form.url.label }}</label>
                                 {{ form.url(class="form-control", placeholder="https://youtube.com/@yourhandle") }}
-                                <small class="form-text text-muted">Full URL to your social media profile (leave empty if not ready)</small>
+                                <small class="text-muted">Full URL to your profile (leave empty if not ready)</small>
                             </div>
-                            
+
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">{{ form.sort_order.label }}</label>
                                     {{ form.sort_order(class="form-control") }}
-                                    <small class="form-text text-muted">Lower numbers appear first</small>
+                                    <small class="text-muted">Lower numbers appear first in the footer</small>
                                 </div>
-                                
+
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">{{ form.is_active.label }}</label>
                                     {{ form.is_active(class="form-select") }}
-                                    <small class="form-text text-muted">Inactive links won't appear on the website</small>
+                                    <small class="text-muted">Only active platforms appear on the website</small>
                                 </div>
                             </div>
-                            
-                            <div class="mt-4">
+
+                            <div class="mt-4 d-flex gap-2">
                                 <button type="submit" class="btn btn-primary">
                                     <i class="fas fa-save me-1"></i>{{ form.submit.label.text }}
                                 </button>
@@ -86,35 +155,43 @@
                             </div>
                         </form>
                     </div>
-                    
-                    <div class="mt-4">
-                        <div class="alert alert-info">
-                            <h6><i class="fas fa-info-circle me-2"></i>Common Social Media Icons:</h6>
-                            <div class="row mt-3">
-                                <div class="col-md-4">
-                                    <strong>YouTube:</strong> <code>fab fa-youtube</code>
-                                </div>
-                                <div class="col-md-4">
-                                    <strong>Instagram:</strong> <code>fab fa-instagram</code>
-                                </div>
-                                <div class="col-md-4">
-                                    <strong>Twitter/X:</strong> <code>fab fa-twitter</code>
-                                </div>
-                                <div class="col-md-4 mt-2">
-                                    <strong>Facebook:</strong> <code>fab fa-facebook</code>
-                                </div>
-                                <div class="col-md-4 mt-2">
-                                    <strong>LinkedIn:</strong> <code>fab fa-linkedin</code>
-                                </div>
-                                <div class="col-md-4 mt-2">
-                                    <strong>TikTok:</strong> <code>fab fa-tiktok</code>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+(function () {
+    var platformInput = document.getElementById('platformInput');
+    var iconInput     = document.getElementById('iconInput');
+    var iconPreviewEl = document.getElementById('iconPreviewEl');
+
+    // Live icon preview
+    iconInput.addEventListener('input', function () {
+        iconPreviewEl.className = this.value.trim() || 'fas fa-link';
+    });
+
+    // Preset buttons
+    document.getElementById('presetGrid').addEventListener('click', function (e) {
+        var btn = e.target.closest('.preset-btn');
+        if (!btn) return;
+        platformInput.value = btn.dataset.platform;
+        iconInput.value     = btn.dataset.icon;
+        iconPreviewEl.className = btn.dataset.icon;
+        document.querySelectorAll('.preset-btn').forEach(function (b) { b.classList.remove('selected'); });
+        btn.classList.add('selected');
+    });
+
+    // Pre-select the correct preset if editing
+    var currentPlatform = (platformInput.value || '').toLowerCase().trim();
+    if (currentPlatform) {
+        document.querySelectorAll('.preset-btn').forEach(function (btn) {
+            if (btn.dataset.platform.toLowerCase() === currentPlatform) {
+                btn.classList.add('selected');
+            }
+        });
+    }
+})();
+</script>
 {% endblock %}

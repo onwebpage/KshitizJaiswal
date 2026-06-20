@@ -823,21 +823,49 @@ class SocialLink(db.Model):
         """Get all active social links ordered by sort_order"""
         return SocialLink.query.filter_by(is_active=True).order_by(SocialLink.sort_order).all()
     
+    # Master list of all supported platforms (order, icon, brand colour)
+    DEFAULT_PLATFORMS = [
+        ('YouTube',     'fab fa-youtube',    '#FF0000', 1),
+        ('Instagram',   'fab fa-instagram',  '#E1306C', 2),
+        ('X (Twitter)', 'fab fa-x-twitter',  '#000000', 3),
+        ('Facebook',    'fab fa-facebook',   '#1877F2', 4),
+        ('LinkedIn',    'fab fa-linkedin',   '#0A66C2', 5),
+        ('TikTok',      'fab fa-tiktok',     '#010101', 6),
+        ('WhatsApp',    'fab fa-whatsapp',   '#25D366', 7),
+        ('Telegram',    'fab fa-telegram',   '#0088CC', 8),
+    ]
+
     @staticmethod
     def create_default_links():
-        """Create default social media links if none exist"""
+        """Create all default social media links if the table is empty."""
         if SocialLink.query.count() == 0:
             links = [
-                SocialLink(platform='YouTube', url='', icon_class='fab fa-youtube', sort_order=1),
-                SocialLink(platform='Instagram', url='', icon_class='fab fa-instagram', sort_order=2),
-                SocialLink(platform='Twitter', url='', icon_class='fab fa-twitter', sort_order=3),
-                SocialLink(platform='LinkedIn', url='', icon_class='fab fa-linkedin', sort_order=4),
-                SocialLink(platform='Facebook', url='', icon_class='fab fa-facebook', sort_order=5),
+                SocialLink(
+                    platform=name, url='', icon_class=icon,
+                    is_active=False, sort_order=order
+                )
+                for name, icon, _color, order in SocialLink.DEFAULT_PLATFORMS
             ]
             db.session.add_all(links)
             db.session.commit()
             return True
         return False
+
+    @staticmethod
+    def seed_missing_platforms():
+        """Add any default platforms that don't yet exist in the DB."""
+        existing = {lnk.platform.lower() for lnk in SocialLink.query.all()}
+        added = False
+        for name, icon, _color, order in SocialLink.DEFAULT_PLATFORMS:
+            if name.lower() not in existing:
+                db.session.add(SocialLink(
+                    platform=name, url='', icon_class=icon,
+                    is_active=False, sort_order=order
+                ))
+                added = True
+        if added:
+            db.session.commit()
+        return added
 
 class UserActivity(db.Model):
     """Track user activity and data usage across the website"""
