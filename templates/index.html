@@ -33,7 +33,7 @@
 <section id="beyond-reel" class="section-padding reels-section">
     <div class="container">
         <!-- Section Header -->
-        <div class="text-center mb-5">
+        <div class="text-center mb-4">
             <h2 class="section-title">{{ page_content.reels_section_title }}</h2>
             <p class="section-subtitle">{{ page_content.reels_section_subtitle }}</p>
             <a href="{{ url_for('reels_library') }}" class="btn btn-outline-primary btn-sm mt-2 rounded-pill px-4">
@@ -248,17 +248,19 @@
 {% if section_vis.statistics %}
 <section class="section-padding statistics-section">
     <div class="container">
-        <div class="text-center mb-5">
+        <div class="text-center mb-4">
             <h2 class="section-title">{{ stats_data.title or 'By the Numbers' }}</h2>
             <p class="section-subtitle">{{ stats_data.subtitle or 'The reach keeps growing — thanks to you.' }}</p>
         </div>
         {% if stats_data.stats %}
-        <div class="row g-4 text-center justify-content-center">
+        <div class="row g-3 text-center justify-content-center">
             {% for stat in stats_data.stats %}
+            {% set raw_val = (stat.resolved_value or stat.value or '') | string %}
+            {% set num_val = raw_val | replace('K','000') | replace('M','000000') | replace('+','') | replace(',','') %}
             <div class="col-6 col-md-3 col-lg-2">
                 <div class="stat-block">
                     <div class="stat-block-icon"><i class="{{ stat.icon or 'fas fa-chart-bar' }}"></i></div>
-                    <div class="stat-block-number">{{ stat.resolved_value or stat.value or '—' }}</div>
+                    <div class="stat-block-number" data-count="{{ raw_val }}">{{ raw_val }}</div>
                     <div class="stat-block-label">{{ stat.label }}</div>
                 </div>
             </div>
@@ -273,7 +275,7 @@
 {% if section_vis.testimonials %}
 <section class="section-padding testimonials-section">
     <div class="container">
-        <div class="text-center mb-5">
+        <div class="text-center mb-4">
             <h2 class="section-title">{{ page_content.testimonials_section_title or 'What People Say' }}</h2>
             <p class="section-subtitle">{{ page_content.testimonials_section_subtitle or 'Real voices from the community.' }}</p>
         </div>
@@ -317,6 +319,12 @@
                     </div>
                 </div>
             </div>
+        </div>
+        <!-- Dot indicators -->
+        <div class="d-flex justify-content-center gap-2 mt-4">
+            <span style="width:8px;height:8px;border-radius:50%;background:#cc0000;display:inline-block;"></span>
+            <span style="width:8px;height:8px;border-radius:50%;background:#ddd;display:inline-block;"></span>
+            <span style="width:8px;height:8px;border-radius:50%;background:#ddd;display:inline-block;"></span>
         </div>
     </div>
 </section>
@@ -373,18 +381,24 @@
 <section id="newsletter" class="section-padding newsletter-cta-section">
     <div class="container">
         <div class="row justify-content-center">
-            <div class="col-lg-7 text-center">
-                <div class="newsletter-cta-icon mb-3"><i class="fas fa-envelope-open-text"></i></div>
+            <div class="col-lg-6 text-center">
+                <div class="newsletter-cta-icon mb-2"><i class="fas fa-envelope-open-text"></i></div>
                 <h2 class="section-title">{{ page_content.newsletter_section_title or 'Join the Inner Circle' }}</h2>
-                <p class="section-subtitle mb-4">{{ page_content.newsletter_section_subtitle or 'Get unfiltered commentary, behind-the-reel insights, and exclusive updates straight to your inbox.' }}</p>
+                <p class="section-subtitle">{{ page_content.newsletter_section_subtitle or 'Get unfiltered commentary, behind-the-reel insights, and exclusive updates straight to your inbox.' }}</p>
+
+                <div class="newsletter-success-msg" id="newsletterSuccess">
+                    <i class="fas fa-check-circle text-white"></i>
+                    <strong>You're in!</strong> Welcome to the Inner Circle.
+                </div>
+
                 <form method="POST" action="{{ url_for('newsletter_subscribe') }}" class="newsletter-cta-form" id="newsletterCTAForm">
                     {{ newsletter_form.hidden_tag() }}
-                    <div class="row g-3 mb-3">
+                    <div class="row g-2 mb-3">
                         <div class="col-sm-6">
-                            <input type="text" name="name" class="form-control form-control-lg" placeholder="Your name" required>
+                            <input type="text" name="name" class="form-control" placeholder="Your name" required>
                         </div>
                         <div class="col-sm-6">
-                            <input type="email" name="email" class="form-control form-control-lg" placeholder="your@email.com" required>
+                            <input type="email" name="email" class="form-control" placeholder="your@email.com" required>
                         </div>
                     </div>
                     <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5">
@@ -629,6 +643,72 @@
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
+/* ── Count-up animation for statistics ────────────────── */
+(function() {
+    function parseCountValue(str) {
+        if (!str || str === '—') return null;
+        str = str.toString().trim();
+        var suffix = '';
+        var multiplier = 1;
+        if (str.endsWith('M') || str.endsWith('m')) { multiplier = 1000000; suffix = 'M'; str = str.slice(0,-1); }
+        else if (str.endsWith('K') || str.endsWith('k')) { multiplier = 1000; suffix = 'K'; str = str.slice(0,-1); }
+        var plus = str.endsWith('+');
+        if (plus) str = str.slice(0,-1);
+        var num = parseFloat(str.replace(/,/g,''));
+        if (isNaN(num)) return null;
+        return { value: num * multiplier, suffix: suffix, plus: plus, raw: num };
+    }
+
+    function animateCount(el, parsed, duration) {
+        var start = null;
+        var startVal = 0;
+        var endVal = parsed.raw;
+        function step(ts) {
+            if (!start) start = ts;
+            var progress = Math.min((ts - start) / duration, 1);
+            var ease = 1 - Math.pow(1 - progress, 3);
+            var current = Math.floor(startVal + (endVal - startVal) * ease);
+            var display = current.toLocaleString('en-IN') + (parsed.suffix || '') + (parsed.plus ? '+' : '');
+            el.textContent = display;
+            if (progress < 1) { requestAnimationFrame(step); }
+            else {
+                el.textContent = el.getAttribute('data-count');
+                el.classList.add('stat-counted');
+            }
+        }
+        requestAnimationFrame(step);
+    }
+
+    var observed = new Set();
+    var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+            if (entry.isIntersecting && !observed.has(entry.target)) {
+                observed.add(entry.target);
+                var parsed = parseCountValue(entry.target.getAttribute('data-count'));
+                if (parsed) { animateCount(entry.target, parsed, 1600); }
+            }
+        });
+    }, { threshold: 0.3 });
+
+    document.querySelectorAll('[data-count]').forEach(function(el) {
+        observer.observe(el);
+    });
+})();
+
+/* ── Newsletter AJAX success animation ─────────────────── */
+(function() {
+    var form = document.getElementById('newsletterCTAForm');
+    var successBox = document.getElementById('newsletterSuccess');
+    if (!form || !successBox) return;
+    form.addEventListener('submit', function(e) {
+        var btn = form.querySelector('button[type=submit]');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Subscribing…';
+        }
+    });
+})();
+
 const RAZORPAY_KEY = "{{ razorpay_key }}";
 window.razorpayKey = RAZORPAY_KEY;
 
