@@ -5,3 +5,4 @@
 - [site_settings context processor](template-context.md) — site_settings must be injected via context processor to be available in base.html for tracking scripts and other global settings.
 - [Support payment verification](payment-flows.md) — Support/donation payments need server-side Razorpay signature verification at /support/payment/verify (course payments already had this, support did not).
 - [Thumbnail fallback pattern](thumbnail-fallback.md) — All img tags for user-uploaded/external thumbnails need onerror fallback to static/img/reel-placeholder.svg or resource-placeholder.svg.
+- [Admin new features pattern](admin-new-features.md) — SEO, Testimonials, Announcement, Account Settings — each backed by SiteConfig/SiteContent; context processor injects announcement+seo_config globally; no Jinja2 md5 filter (use Python hash instead).

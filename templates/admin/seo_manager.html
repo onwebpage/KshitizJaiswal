@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}SEO Manager - Admin{% endblock %}
+
+{% block extra_head %}
+<style>
+.seo-page-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    background: #fff;
+    transition: border-color .2s;
+}
+.seo-page-card:focus-within { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.08); }
+.seo-page-label {
+    font-size: .8rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    color: #6366f1;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+}
+.seo-char-count { font-size: .75rem; float: right; }
+.seo-char-ok    { color: #10b981; }
+.seo-char-warn  { color: #f59e0b; }
+.seo-char-bad   { color: #ef4444; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-section">
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-xl-9 col-lg-10">
+                <div class="admin-card">
+                    <div class="admin-header">
+                        <h2><i class="fas fa-search me-2 text-primary"></i>SEO Manager</h2>
+                        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Dashboard
+                        </a>
+                    </div>
+
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}{% for cat, msg in messages %}
+                        <div class="alert alert-{{ 'danger' if cat == 'error' else cat }} alert-dismissible fade show mt-3">
+                            {{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endfor %}{% endif %}
+                    {% endwith %}
+
+                    <p class="text-muted mt-3">
+                        Set page titles and meta descriptions for each key page. These influence how your site appears in Google and social media previews.
+                        <strong>Titles</strong>: 50–60 chars &nbsp;|&nbsp; <strong>Descriptions</strong>: 120–160 chars.
+                    </p>
+
+                    <form method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                        <!-- Per-page SEO -->
+                        {% for page in pages %}
+                        <div class="seo-page-card">
+                            <div class="seo-page-label">
+                                <i class="fas fa-file-alt me-1"></i>{{ page.label }}
+                                <span class="text-muted fw-normal ms-2" style="text-transform:none;letter-spacing:0;font-size:.75rem;">{{ page.url }}</span>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label class="form-label fw-semibold d-flex justify-content-between">
+                                        Page Title
+                                        <span class="seo-char-count" id="tc_{{ page.key }}">0 / 60</span>
+                                    </label>
+                                    <input type="text" name="seo_{{ page.key }}_title" id="t_{{ page.key }}"
+                                           class="form-control"
+                                           value="{{ seo_data.get('seo_' + page.key + '_title', '') }}"
+                                           placeholder="e.g. Kshitiz Jaiswal - Unfiltered Commentator"
+                                           maxlength="100">
+                                    <small class="text-muted">Leave blank to use the page's default title.</small>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-semibold d-flex justify-content-between">
+                                        Meta Description
+                                        <span class="seo-char-count" id="dc_{{ page.key }}">0 / 160</span>
+                                    </label>
+                                    <textarea name="seo_{{ page.key }}_description" id="d_{{ page.key }}"
+                                              class="form-control" rows="2"
+                                              placeholder="Brief page description shown in Google results (120–160 characters recommended)"
+                                              maxlength="300">{{ seo_data.get('seo_' + page.key + '_description', '') }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+
+                        <!-- Global Settings -->
+                        <div class="seo-page-card">
+                            <div class="seo-page-label"><i class="fas fa-globe me-1"></i>Global Settings</div>
+                            <div class="row g-3">
+                                <div class="col-md-8">
+                                    <label class="form-label fw-semibold">Default OG / Social Share Image URL</label>
+                                    <input type="text" name="seo_og_image" class="form-control"
+                                           value="{{ seo_data.get('seo_og_image', '') }}"
+                                           placeholder="https://your-domain.com/static/images/og-default.jpg">
+                                    <small class="text-muted">Used when a page doesn't have its own social image. Recommended: 1200×630 px.</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-semibold">Twitter Handle</label>
+                                    <input type="text" name="seo_twitter_handle" class="form-control"
+                                           value="{{ seo_data.get('seo_twitter_handle', '') }}"
+                                           placeholder="@KshitizJaiswal">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="fas fa-save me-1"></i>Save SEO Settings
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+<script>
+const pages = {{ pages | tojson }};
+function colorCount(el, count, max) {
+    if (count === 0) el.textContent = `0 / ${max}`;
+    else el.textContent = `${count} / ${max}`;
+    el.className = 'seo-char-count ';
+    if (count > max) el.className += 'seo-char-bad';
+    else if (count >= max * 0.8) el.className += 'seo-char-ok';
+    else if (count > 0) el.className += 'seo-char-warn';
+}
+pages.forEach(function(p) {
+    const ti = document.getElementById('t_' + p.key);
+    const di = document.getElementById('d_' + p.key);
+    const tc = document.getElementById('tc_' + p.key);
+    const dc = document.getElementById('dc_' + p.key);
+    if (ti && tc) {
+        colorCount(tc, ti.value.length, 60);
+        ti.addEventListener('input', () => colorCount(tc, ti.value.length, 60));
+    }
+    if (di && dc) {
+        colorCount(dc, di.value.length, 160);
+        di.addEventListener('input', () => colorCount(dc, di.value.length, 160));
+    }
+});
+</script>
+{% endblock %}

@@ -280,6 +280,7 @@
 
 <!-- Testimonials Section — Premium Slider -->
 {% if section_vis.testimonials %}
+{%- set _vis_testimonials = testimonials_list | selectattr('is_visible', 'equalto', true) | list if testimonials_list else [] -%}
 <section class="section-padding testimonials-section">
     <div class="container">
         <!-- Header row: title left, controls right -->
@@ -302,97 +303,80 @@
         <div class="testimonial-slider-wrap">
             <div class="testimonial-slider" id="testimonialSlider">
 
-                <div class="testimonial-slide">
-                    <div class="testimonial-card-premium">
-                        <div class="tc-stars">★★★★★</div>
-                        <p class="tc-text">"{{ page_content.testimonial1_text or 'Kshitiz speaks what others are afraid to say. Finally, someone who cuts through the noise.' }}"</p>
-                        <div class="tc-author">
-                            <div class="tc-avatar">{{ (page_content.testimonial1_name or 'Rahul S.')[0] | upper }}</div>
-                            <div class="tc-info">
-                                <div class="tc-name">
-                                    {{ page_content.testimonial1_name or 'Rahul S.' }}
-                                    <span class="tc-verified"><i class="fas fa-check-circle"></i></span>
+                {% if _vis_testimonials %}
+                    {#- Primary slides from new CRUD system -#}
+                    {% for t in _vis_testimonials %}
+                    <div class="testimonial-slide">
+                        <div class="testimonial-card-premium">
+                            <div class="tc-stars">{{ '★' * t.get('rating', 5) }}</div>
+                            <p class="tc-text">"{{ t.text }}"</p>
+                            <div class="tc-author">
+                                <div class="tc-avatar">{{ t.name[0] | upper }}</div>
+                                <div class="tc-info">
+                                    <div class="tc-name">
+                                        {{ t.name }}
+                                        <span class="tc-verified"><i class="fas fa-check-circle"></i></span>
+                                    </div>
+                                    <div class="tc-role">{{ t.role }}</div>
                                 </div>
-                                <div class="tc-role">{{ page_content.testimonial1_role or 'Viewer, Mumbai' }}</div>
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <div class="testimonial-slide">
-                    <div class="testimonial-card-premium">
-                        <div class="tc-stars">★★★★★</div>
-                        <p class="tc-text">"{{ page_content.testimonial2_text or 'The analysis is always backed by facts. I trust this commentary more than mainstream media.' }}"</p>
-                        <div class="tc-author">
-                            <div class="tc-avatar">{{ (page_content.testimonial2_name or 'Priya M.')[0] | upper }}</div>
-                            <div class="tc-info">
-                                <div class="tc-name">
-                                    {{ page_content.testimonial2_name or 'Priya M.' }}
-                                    <span class="tc-verified"><i class="fas fa-check-circle"></i></span>
+                    {% endfor %}
+                    {#- Duplicate set for seamless infinite scroll -#}
+                    {% for t in _vis_testimonials %}
+                    <div class="testimonial-slide" aria-hidden="true">
+                        <div class="testimonial-card-premium">
+                            <div class="tc-stars">{{ '★' * t.get('rating', 5) }}</div>
+                            <p class="tc-text">"{{ t.text }}"</p>
+                            <div class="tc-author">
+                                <div class="tc-avatar">{{ t.name[0] | upper }}</div>
+                                <div class="tc-info">
+                                    <div class="tc-name">{{ t.name }} <span class="tc-verified"><i class="fas fa-check-circle"></i></span></div>
+                                    <div class="tc-role">{{ t.role }}</div>
                                 </div>
-                                <div class="tc-role">{{ page_content.testimonial2_role or 'Subscriber, Delhi' }}</div>
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <div class="testimonial-slide">
-                    <div class="testimonial-card-premium">
-                        <div class="tc-stars">★★★★★</div>
-                        <p class="tc-text">"{{ page_content.testimonial3_text or 'Every reel leaves me thinking. This is the kind of content India needs right now.' }}"</p>
-                        <div class="tc-author">
-                            <div class="tc-avatar">{{ (page_content.testimonial3_name or 'Ankit V.')[0] | upper }}</div>
-                            <div class="tc-info">
-                                <div class="tc-name">
-                                    {{ page_content.testimonial3_name or 'Ankit V.' }}
-                                    <span class="tc-verified"><i class="fas fa-check-circle"></i></span>
+                    {% endfor %}
+                {% else %}
+                    {#- Fallback to old page_content-based testimonials -#}
+                    {% set _fallback = [
+                        {'text': page_content.testimonial1_text or 'Kshitiz speaks what others are afraid to say. Finally, someone who cuts through the noise.', 'name': page_content.testimonial1_name or 'Rahul S.', 'role': page_content.testimonial1_role or 'Viewer, Mumbai'},
+                        {'text': page_content.testimonial2_text or 'The analysis is always backed by facts. I trust this commentary more than mainstream media.', 'name': page_content.testimonial2_name or 'Priya M.', 'role': page_content.testimonial2_role or 'Subscriber, Delhi'},
+                        {'text': page_content.testimonial3_text or 'Every reel leaves me thinking. This is the kind of content India needs right now.', 'name': page_content.testimonial3_name or 'Ankit V.', 'role': page_content.testimonial3_role or 'Supporter, Pune'},
+                    ] %}
+                    {% for t in _fallback %}
+                    <div class="testimonial-slide">
+                        <div class="testimonial-card-premium">
+                            <div class="tc-stars">★★★★★</div>
+                            <p class="tc-text">"{{ t.text }}"</p>
+                            <div class="tc-author">
+                                <div class="tc-avatar">{{ t.name[0] | upper }}</div>
+                                <div class="tc-info">
+                                    <div class="tc-name">{{ t.name }} <span class="tc-verified"><i class="fas fa-check-circle"></i></span></div>
+                                    <div class="tc-role">{{ t.role }}</div>
                                 </div>
-                                <div class="tc-role">{{ page_content.testimonial3_role or 'Supporter, Pune' }}</div>
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <!-- Duplicate set for seamless infinite scroll -->
-                <div class="testimonial-slide" aria-hidden="true">
-                    <div class="testimonial-card-premium">
-                        <div class="tc-stars">★★★★★</div>
-                        <p class="tc-text">"{{ page_content.testimonial1_text or 'Kshitiz speaks what others are afraid to say. Finally, someone who cuts through the noise.' }}"</p>
-                        <div class="tc-author">
-                            <div class="tc-avatar">{{ (page_content.testimonial1_name or 'Rahul S.')[0] | upper }}</div>
-                            <div class="tc-info">
-                                <div class="tc-name">{{ page_content.testimonial1_name or 'Rahul S.' }} <span class="tc-verified"><i class="fas fa-check-circle"></i></span></div>
-                                <div class="tc-role">{{ page_content.testimonial1_role or 'Viewer, Mumbai' }}</div>
+                    {% endfor %}
+                    {% for t in _fallback %}
+                    <div class="testimonial-slide" aria-hidden="true">
+                        <div class="testimonial-card-premium">
+                            <div class="tc-stars">★★★★★</div>
+                            <p class="tc-text">"{{ t.text }}"</p>
+                            <div class="tc-author">
+                                <div class="tc-avatar">{{ t.name[0] | upper }}</div>
+                                <div class="tc-info">
+                                    <div class="tc-name">{{ t.name }} <span class="tc-verified"><i class="fas fa-check-circle"></i></span></div>
+                                    <div class="tc-role">{{ t.role }}</div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="testimonial-slide" aria-hidden="true">
-                    <div class="testimonial-card-premium">
-                        <div class="tc-stars">★★★★★</div>
-                        <p class="tc-text">"{{ page_content.testimonial2_text or 'The analysis is always backed by facts. I trust this commentary more than mainstream media.' }}"</p>
-                        <div class="tc-author">
-                            <div class="tc-avatar">{{ (page_content.testimonial2_name or 'Priya M.')[0] | upper }}</div>
-                            <div class="tc-info">
-                                <div class="tc-name">{{ page_content.testimonial2_name or 'Priya M.' }} <span class="tc-verified"><i class="fas fa-check-circle"></i></span></div>
-                                <div class="tc-role">{{ page_content.testimonial2_role or 'Subscriber, Delhi' }}</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="testimonial-slide" aria-hidden="true">
-                    <div class="testimonial-card-premium">
-                        <div class="tc-stars">★★★★★</div>
-                        <p class="tc-text">"{{ page_content.testimonial3_text or 'Every reel leaves me thinking. This is the kind of content India needs right now.' }}"</p>
-                        <div class="tc-author">
-                            <div class="tc-avatar">{{ (page_content.testimonial3_name or 'Ankit V.')[0] | upper }}</div>
-                            <div class="tc-info">
-                                <div class="tc-name">{{ page_content.testimonial3_name or 'Ankit V.' }} <span class="tc-verified"><i class="fas fa-check-circle"></i></span></div>
-                                <div class="tc-role">{{ page_content.testimonial3_role or 'Supporter, Pune' }}</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                    {% endfor %}
+                {% endif %}
 
             </div>
         </div>

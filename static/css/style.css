@@ -5182,3 +5182,32 @@ h1, h2, h3, h4, h5, h6 {
 }
 /* Dots hidden — not applicable for infinite scroll */
 .tslider-dots { display: none; }
+
+/* ── Announcement Banner ───────────────────────────────────────────────────── */
+.site-announcement {
+    position: relative;
+    z-index: 1050;
+    width: 100%;
+    padding: 10px 16px;
+    text-align: center;
+    font-size: .92rem;
+    font-weight: 500;
+}
+.site-announcement--info    { background:#dbeafe;color:#1e40af;border-bottom:1px solid #93c5fd; }
+.site-announcement--warning { background:#fef3c7;color:#92400e;border-bottom:1px solid #fcd34d; }
+.site-announcement--danger  { background:#fee2e2;color:#991b1b;border-bottom:1px solid #fca5a5; }
+.site-announcement--success { background:#d1fae5;color:#065f46;border-bottom:1px solid #6ee7b7; }
+.site-announcement--dark    { background:#1f2937;color:#f9fafb;border-bottom:1px solid #374151; }
+.site-announcement__inner   { display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap; }
+.site-announcement__btn     { flex-shrink:0;font-weight:600;font-size:.82rem;white-space:nowrap; }
+.site-announcement--info    .site-announcement__btn { background:#1e40af;color:#fff;border-color:#1e40af; }
+.site-announcement--warning .site-announcement__btn { background:#92400e;color:#fff;border-color:#92400e; }
+.site-announcement--danger  .site-announcement__btn { background:#991b1b;color:#fff;border-color:#991b1b; }
+.site-announcement--success .site-announcement__btn { background:#065f46;color:#fff;border-color:#065f46; }
+.site-announcement--dark    .site-announcement__btn { background:#f9fafb;color:#1f2937;border-color:#e5e7eb; }
+.site-announcement__close   {
+    position:absolute;right:12px;top:50%;transform:translateY(-50%);
+    background:none;border:none;cursor:pointer;font-size:.9rem;opacity:.7;
+    padding:4px 6px;line-height:1;
+}
+.site-announcement__close:hover { opacity:1; }

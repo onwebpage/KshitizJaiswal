@@ -128,6 +128,36 @@ class LessonForm(FlaskForm):
     sort_order = IntegerField('Sort Order', validators=[NumberRange(min=0)], default=0)
     submit = SubmitField('Save Lesson')
 
+class TestimonialForm(FlaskForm):
+    name = StringField('Name', validators=[DataRequired(), Length(max=100)])
+    role = StringField('Role / Location', validators=[DataRequired(), Length(max=100)])
+    text = TextAreaField('Testimonial Text', validators=[DataRequired(), Length(max=500)])
+    rating = SelectField('Rating', choices=[('5','★★★★★  5 Stars'), ('4','★★★★  4 Stars'), ('3','★★★  3 Stars')], default='5')
+    is_visible = SelectField('Visible on Site?', choices=[('1','Yes — Show'), ('0','No — Hide')], default='1')
+    sort_order = IntegerField('Sort Order (lower = first)', validators=[NumberRange(min=0)], default=0)
+    submit = SubmitField('Save Testimonial')
+
+class AnnouncementForm(FlaskForm):
+    is_active = SelectField('Status', choices=[('1','Active — Show Banner'), ('0','Inactive — Hide Banner')], default='0')
+    text = StringField('Announcement Text', validators=[DataRequired(), Length(max=200)])
+    link_url = StringField('Link URL (optional)', validators=[Length(max=500)])
+    link_text = StringField('Link Button Text', validators=[Length(max=50)], default='Learn More')
+    style = SelectField('Banner Style', choices=[
+        ('info',    '🔵 Info (Blue)'),
+        ('warning', '🟡 Warning (Yellow)'),
+        ('danger',  '🔴 Alert (Red)'),
+        ('success', '🟢 Success (Green)'),
+        ('dark',    '⚫ Dark'),
+    ], default='info')
+    submit = SubmitField('Save Announcement')
+
+class AdminAccountForm(FlaskForm):
+    current_password = PasswordField('Current Password', validators=[DataRequired()])
+    new_username = StringField('New Username', validators=[DataRequired(), Length(min=3, max=50)])
+    new_password = PasswordField('New Password (leave blank to keep current)', validators=[Length(min=0, max=100)])
+    confirm_password = PasswordField('Confirm New Password')
+    submit = SubmitField('Update Account')
+
 class SocialLinkForm(FlaskForm):
     platform = StringField('Platform Name', validators=[DataRequired(), Length(max=50)])
     url = StringField('URL', validators=[Length(max=500)])

@@ -83,6 +83,37 @@ def inject_section_visibility():
         chatbot_greeting = ''
         chatbot_quick_replies = []
 
+    # Announcement banner
+    try:
+        announcement_active = SiteConfig.get('announcement_active', '0') == '1'
+        if announcement_active:
+            _ann_text = SiteConfig.get('announcement_text', '')
+            _ann_id   = str(abs(hash(_ann_text)) % 1000000) if _ann_text else 'x'
+            announcement = {
+                'active':    True,
+                'text':      _ann_text,
+                'link_url':  SiteConfig.get('announcement_link_url', ''),
+                'link_text': SiteConfig.get('announcement_link_text', 'Learn More'),
+                'style':     SiteConfig.get('announcement_style', 'info'),
+                'id':        _ann_id,
+            }
+        else:
+            announcement = None
+    except Exception:
+        announcement = None
+
+    # SEO config — keyed by Flask endpoint name
+    try:
+        _seo_pages = ['index', 'reels_library', 'polls_archive', 'courses', 'upcoming_shows', 'contact']
+        seo_config = {p: {
+            'title':       SiteConfig.get(f'seo_{p}_title', ''),
+            'description': SiteConfig.get(f'seo_{p}_description', ''),
+        } for p in _seo_pages}
+        seo_config['og_image']        = SiteConfig.get('seo_og_image', '')
+        seo_config['twitter_handle']  = SiteConfig.get('seo_twitter_handle', '')
+    except Exception:
+        seo_config = {}
+
     return {
         'section_vis': section_vis,
         'site_settings': site_settings,
@@ -92,6 +123,8 @@ def inject_section_visibility():
         'chatbot_name': chatbot_name,
         'chatbot_greeting': chatbot_greeting,
         'chatbot_quick_replies': chatbot_quick_replies,
+        'announcement': announcement,
+        'seo_config': seo_config,
     }
 
 
@@ -214,7 +247,8 @@ def index():
                          razorpay_key=razorpay_key,
                          page_content=page_content,
                          homepage_courses=homepage_courses,
-                         stats_data=stats_data)
+                         stats_data=stats_data,
+                         testimonials_list=_get_testimonials_list())
 
 @app.route('/reels')
 def reels_library():
@@ -3789,6 +3823,238 @@ def admin_chatbot():
 
         flash('Unknown action.', 'error')
         return redirect(url_for('admin_chatbot'))
+
+
+# ── SEO MANAGER ────────────────────────────────────────────────────────────────
+
+@app.route('/admin/seo', methods=['GET', 'POST'])
+def admin_seo():
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+
+    pages = [
+        {'key': 'index',          'label': 'Home Page',              'url': '/'},
+        {'key': 'reels_library',  'label': 'Beyond the Reels',       'url': '/reels'},
+        {'key': 'polls_archive',  'label': 'Kshitiz Ki Rai (Polls)', 'url': '/polls'},
+        {'key': 'courses',        'label': 'Courses',                'url': '/courses'},
+        {'key': 'upcoming_shows', 'label': 'Upcoming Shows',         'url': '/upcoming-shows'},
+        {'key': 'contact',        'label': 'Contact',                'url': '/contact'},
+    ]
+
+    if request.method == 'POST':
+        for page in pages:
+            key   = page['key']
+            title = request.form.get(f'seo_{key}_title', '').strip()
+            desc  = request.form.get(f'seo_{key}_description', '').strip()
+            if title:
+                SiteConfig.set(f'seo_{key}_title', title)
+            if desc:
+                SiteConfig.set(f'seo_{key}_description', desc)
+
+        og_image       = request.form.get('seo_og_image', '').strip()
+        twitter_handle = request.form.get('seo_twitter_handle', '').strip()
+        if og_image:
+            SiteConfig.set('seo_og_image', og_image)
+        if twitter_handle:
+            SiteConfig.set('seo_twitter_handle', twitter_handle)
+
+        flash('SEO settings saved successfully!', 'success')
+        return redirect(url_for('admin_seo'))
+
+    seo_data = {}
+    for page in pages:
+        key = page['key']
+        seo_data[f'seo_{key}_title']       = SiteConfig.get(f'seo_{key}_title', '')
+        seo_data[f'seo_{key}_description'] = SiteConfig.get(f'seo_{key}_description', '')
+    seo_data['seo_og_image']       = SiteConfig.get('seo_og_image', '')
+    seo_data['seo_twitter_handle'] = SiteConfig.get('seo_twitter_handle', '')
+
+    return render_template('admin/seo_manager.html', pages=pages, seo_data=seo_data, title='SEO Manager')
+
+
+# ── TESTIMONIALS MANAGER ───────────────────────────────────────────────────────
+
+def _get_testimonials_list():
+    import json
+    rec = SiteContent.query.filter_by(content_key='testimonials_list').first()
+    try:
+        return json.loads(rec.content_data) if rec else []
+    except Exception:
+        return []
+
+def _save_testimonials_list(testimonials):
+    import json
+    rec = SiteContent.query.filter_by(content_key='testimonials_list').first()
+    data = json.dumps(testimonials)
+    if rec:
+        rec.content_data = data
+    else:
+        db.session.add(SiteContent(content_key='testimonials_list', content_data=data))
+    db.session.commit()
+
+@app.route('/admin/testimonials')
+def admin_testimonials():
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    return render_template('admin/testimonials.html',
+                           testimonials=_get_testimonials_list(),
+                           title='Testimonials Manager')
+
+@app.route('/admin/testimonial/add', methods=['GET', 'POST'])
+def admin_add_testimonial():
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    from forms import TestimonialForm
+    form = TestimonialForm()
+    if form.validate_on_submit():
+        testimonials = _get_testimonials_list()
+        testimonials.append({
+            'name':       form.name.data.strip(),
+            'role':       form.role.data.strip(),
+            'text':       form.text.data.strip(),
+            'rating':     int(form.rating.data),
+            'is_visible': form.is_visible.data == '1',
+            'sort_order': form.sort_order.data or 0,
+        })
+        testimonials.sort(key=lambda x: x.get('sort_order', 0))
+        _save_testimonials_list(testimonials)
+        flash(f'Testimonial by "{form.name.data}" added!', 'success')
+        return redirect(url_for('admin_testimonials'))
+    return render_template('admin/testimonial_form.html', form=form, title='Add Testimonial')
+
+@app.route('/admin/testimonial/<int:idx>/edit', methods=['GET', 'POST'])
+def admin_edit_testimonial(idx):
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    from forms import TestimonialForm
+    testimonials = _get_testimonials_list()
+    if idx >= len(testimonials):
+        flash('Testimonial not found.', 'error')
+        return redirect(url_for('admin_testimonials'))
+    t = testimonials[idx]
+    form = TestimonialForm()
+    if form.validate_on_submit():
+        testimonials[idx] = {
+            'name':       form.name.data.strip(),
+            'role':       form.role.data.strip(),
+            'text':       form.text.data.strip(),
+            'rating':     int(form.rating.data),
+            'is_visible': form.is_visible.data == '1',
+            'sort_order': form.sort_order.data or 0,
+        }
+        _save_testimonials_list(testimonials)
+        flash('Testimonial updated!', 'success')
+        return redirect(url_for('admin_testimonials'))
+    # Pre-populate
+    if not form.is_submitted():
+        form.name.data       = t.get('name', '')
+        form.role.data       = t.get('role', '')
+        form.text.data       = t.get('text', '')
+        form.rating.data     = str(t.get('rating', 5))
+        form.is_visible.data = '1' if t.get('is_visible', True) else '0'
+        form.sort_order.data = t.get('sort_order', 0)
+    return render_template('admin/testimonial_form.html', form=form, title='Edit Testimonial', idx=idx)
+
+@app.route('/admin/testimonial/<int:idx>/delete', methods=['POST'])
+def admin_delete_testimonial(idx):
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    testimonials = _get_testimonials_list()
+    if idx < len(testimonials):
+        name = testimonials[idx].get('name', 'Testimonial')
+        del testimonials[idx]
+        _save_testimonials_list(testimonials)
+        flash(f'Testimonial by "{name}" deleted.', 'success')
+    else:
+        flash('Testimonial not found.', 'error')
+    return redirect(url_for('admin_testimonials'))
+
+@app.route('/admin/testimonial/<int:idx>/toggle', methods=['POST'])
+def admin_toggle_testimonial(idx):
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    testimonials = _get_testimonials_list()
+    if idx < len(testimonials):
+        testimonials[idx]['is_visible'] = not testimonials[idx].get('is_visible', True)
+        _save_testimonials_list(testimonials)
+        status = 'visible' if testimonials[idx]['is_visible'] else 'hidden'
+        flash(f'Testimonial is now {status}.', 'success')
+    return redirect(url_for('admin_testimonials'))
+
+
+# ── ANNOUNCEMENT BANNER ────────────────────────────────────────────────────────
+
+@app.route('/admin/announcement', methods=['GET', 'POST'])
+def admin_announcement():
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    from forms import AnnouncementForm
+    form = AnnouncementForm()
+    if form.validate_on_submit():
+        SiteConfig.set('announcement_active',   form.is_active.data)
+        SiteConfig.set('announcement_text',     form.text.data.strip())
+        SiteConfig.set('announcement_link_url', form.link_url.data.strip() if form.link_url.data else '')
+        SiteConfig.set('announcement_link_text', form.link_text.data.strip() or 'Learn More')
+        SiteConfig.set('announcement_style',    form.style.data)
+        status = 'activated and saved' if form.is_active.data == '1' else 'saved (inactive)'
+        flash(f'Announcement banner {status}!', 'success')
+        return redirect(url_for('admin_announcement'))
+    if not form.is_submitted():
+        form.is_active.data  = SiteConfig.get('announcement_active', '0')
+        form.text.data       = SiteConfig.get('announcement_text', '')
+        form.link_url.data   = SiteConfig.get('announcement_link_url', '')
+        form.link_text.data  = SiteConfig.get('announcement_link_text', 'Learn More')
+        form.style.data      = SiteConfig.get('announcement_style', 'info')
+    return render_template('admin/announcement.html', form=form, title='Announcement Banner')
+
+
+# ── ADMIN ACCOUNT SETTINGS ─────────────────────────────────────────────────────
+
+@app.route('/admin/account', methods=['GET', 'POST'])
+def admin_account():
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    from forms import AdminAccountForm
+    from werkzeug.security import check_password_hash, generate_password_hash
+    form = AdminAccountForm()
+
+    stored_username = SiteConfig.get('admin_username_override') or os.environ.get('ADMIN_USERNAME', 'admin')
+
+    if form.validate_on_submit():
+        # Verify current password against whichever credential store is active
+        stored_hash = SiteConfig.get('admin_password_hash')
+        if stored_hash:
+            try:
+                valid = check_password_hash(stored_hash, form.current_password.data)
+            except Exception:
+                valid = False
+        else:
+            valid = form.current_password.data == os.environ.get('ADMIN_PASSWORD', 'kshitiz2025')
+
+        if not valid:
+            flash('Current password is incorrect.', 'error')
+            return render_template('admin/account_settings.html', form=form,
+                                   title='Account Settings', current_username=stored_username)
+
+        # Validate password confirmation
+        if form.new_password.data and form.new_password.data != form.confirm_password.data:
+            flash('New passwords do not match.', 'error')
+            return render_template('admin/account_settings.html', form=form,
+                                   title='Account Settings', current_username=stored_username)
+
+        SiteConfig.set('admin_username_override', form.new_username.data.strip())
+        if form.new_password.data:
+            SiteConfig.set('admin_password_hash', generate_password_hash(form.new_password.data))
+            flash('Username and password updated successfully! Use your new credentials next time you log in.', 'success')
+        else:
+            flash('Username updated. Password unchanged.', 'success')
+        return redirect(url_for('admin_account'))
+
+    if not form.is_submitted():
+        form.new_username.data = stored_username
+
+    return render_template('admin/account_settings.html', form=form,
+                           title='Account Settings', current_username=stored_username)
 
     # GET
     faqs      = ChatbotFAQ.query.order_by(ChatbotFAQ.priority.desc(), ChatbotFAQ.id.desc()).all()

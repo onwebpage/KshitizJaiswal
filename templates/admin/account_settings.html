@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block title %}Account Settings - Admin{% endblock %}
+
+{% block content %}
+<div class="admin-section">
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-xl-6 col-lg-7 col-md-9">
+                <div class="admin-card">
+                    <div class="admin-header">
+                        <h2><i class="fas fa-user-shield me-2 text-primary"></i>Admin Account Settings</h2>
+                        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Dashboard
+                        </a>
+                    </div>
+
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}{% for cat, msg in messages %}
+                        <div class="alert alert-{{ 'danger' if cat == 'error' else cat }} alert-dismissible fade show mt-3">
+                            {{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endfor %}{% endif %}
+                    {% endwith %}
+
+                    <div class="alert alert-info mt-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Current username:</strong> <code>{{ current_username }}</code> &nbsp;|&nbsp;
+                        Changes take effect immediately on next login.
+                    </div>
+
+                    <form method="POST" class="mt-4" autocomplete="off">
+                        {{ form.hidden_tag() }}
+
+                        <div class="row g-4">
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">
+                                    <i class="fas fa-lock me-1 text-danger"></i>{{ form.current_password.label.text }} <span class="text-danger">*</span>
+                                </label>
+                                {{ form.current_password(class="form-control", autocomplete="current-password", placeholder="Enter your current password") }}
+                                {% for err in form.current_password.errors %}<div class="invalid-feedback d-block">{{ err }}</div>{% endfor %}
+                                <small class="text-muted">Required to verify your identity before making changes.</small>
+                            </div>
+
+                            <div class="col-12">
+                                <hr class="my-1">
+                                <h6 class="text-muted mt-2">Change Credentials</h6>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">{{ form.new_username.label.text }} <span class="text-danger">*</span></label>
+                                {{ form.new_username(class="form-control", autocomplete="username", placeholder="Enter new admin username") }}
+                                {% for err in form.new_username.errors %}<div class="invalid-feedback d-block">{{ err }}</div>{% endfor %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">{{ form.new_password.label.text }}</label>
+                                {{ form.new_password(class="form-control", id="newPass", autocomplete="new-password", placeholder="Leave blank to keep current") }}
+                                {% for err in form.new_password.errors %}<div class="invalid-feedback d-block">{{ err }}</div>{% endfor %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">{{ form.confirm_password.label.text }}</label>
+                                {{ form.confirm_password(class="form-control", id="confirmPass", autocomplete="new-password", placeholder="Repeat new password") }}
+                                <div id="passMatchMsg" class="small mt-1"></div>
+                            </div>
+
+                            <div class="col-12">
+                                <hr class="my-2">
+                                {{ form.submit(class="btn btn-primary px-4") }}
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Security tips -->
+                <div class="admin-card mt-4">
+                    <h6><i class="fas fa-shield-alt me-2 text-success"></i>Security Tips</h6>
+                    <ul class="text-muted small mb-0">
+                        <li>Use a strong password with uppercase, lowercase, numbers and symbols.</li>
+                        <li>Never share your admin credentials with anyone.</li>
+                        <li>Log out of admin sessions when using shared devices.</li>
+                        <li>If you forget your password, update the <code>ADMIN_PASSWORD</code> environment variable directly.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+<script>
+const np = document.getElementById('newPass');
+const cp = document.getElementById('confirmPass');
+const msg = document.getElementById('passMatchMsg');
+function checkMatch() {
+    if (!cp.value) { msg.textContent = ''; return; }
+    if (np.value === cp.value) {
+        msg.innerHTML = '<span class="text-success"><i class="fas fa-check me-1"></i>Passwords match</span>';
+    } else {
+        msg.innerHTML = '<span class="text-danger"><i class="fas fa-times me-1"></i>Passwords do not match</span>';
+    }
+}
+if (np) np.addEventListener('input', checkMatch);
+if (cp) cp.addEventListener('input', checkMatch);
+</script>
+{% endblock %}

@@ -684,12 +684,27 @@ class AdminUser:
     
     @staticmethod
     def verify_admin(username, password):
-        """Verify admin credentials"""
-        # In production, use proper authentication
-        admin_username = os.environ.get('ADMIN_USERNAME', 'admin')
-        admin_password = os.environ.get('ADMIN_PASSWORD', 'kshitiz2025')
-        
-        return username == admin_username and password == admin_password
+        """Verify admin credentials — checks SiteConfig overrides first, then env vars."""
+        from werkzeug.security import check_password_hash
+        try:
+            stored_username = SiteConfig.get('admin_username_override')
+            stored_hash     = SiteConfig.get('admin_password_hash')
+        except Exception:
+            stored_username = None
+            stored_hash     = None
+
+        actual_username = stored_username or os.environ.get('ADMIN_USERNAME', 'admin')
+        if username != actual_username:
+            return False
+
+        if stored_hash:
+            try:
+                return check_password_hash(stored_hash, password)
+            except Exception:
+                pass
+
+        actual_password = os.environ.get('ADMIN_PASSWORD', 'kshitiz2025')
+        return password == actual_password
     
     @staticmethod
     def get_subscription_tiers():

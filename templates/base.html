@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>{% block title %}Kshitiz Jaiswal - Unfiltered Commentator{% endblock %}</title>
+    <title>{% block title %}{% if seo_config and seo_config.get(request.endpoint, {}).get('title') %}{{ seo_config[request.endpoint]['title'] }}{% else %}Kshitiz Jaiswal - Unfiltered Commentator{% endif %}{% endblock %}</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -30,22 +30,29 @@
     ></script>
     
     <!-- Meta Tags -->
-    <meta name="description" content="{% block meta_description %}Kshitiz Jaiswal - Unfiltered Commentator. The content here is selective, but the truth is never biased.{% endblock %}">
+    {%- set _ep = request.endpoint -%}
+    {%- set _seo_ep = seo_config.get(_ep, {}) if seo_config else {} -%}
+    {%- set _default_desc = 'Kshitiz Jaiswal - Unfiltered Commentator. The content here is selective, but the truth is never biased.' -%}
+    {%- set _default_title = 'Kshitiz Jaiswal - Unfiltered Commentator' -%}
+    <meta name="description" content="{% block meta_description %}{{ _seo_ep.get('description', _default_desc) or _default_desc }}{% endblock %}">
     <meta name="keywords" content="{% block meta_keywords %}Kshitiz Jaiswal, commentator, truth, unfiltered, social commentary{% endblock %}">
     <meta name="author" content="Kshitiz Jaiswal">
     <meta name="robots" content="index, follow">
     
     <!-- Open Graph -->
-    <meta property="og:title" content="{% block og_title %}Kshitiz Jaiswal - Unfiltered Commentator{% endblock %}">
-    <meta property="og:description" content="{% block og_description %}The content here is selective, but the truth is never biased.{% endblock %}">
+    <meta property="og:title" content="{% block og_title %}{{ _seo_ep.get('title', _default_title) or _default_title }}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}{{ _seo_ep.get('description', _default_desc) or _default_desc }}{% endblock %}">
     <meta property="og:type" content="{% block og_type %}website{% endblock %}">
-    <meta property="og:image" content="{% block og_image %}{{ url_for('static', filename='images/og-default.jpg', _external=True) }}{% endblock %}">
+    {%- set _og_img = seo_config.get('og_image', '') if seo_config else '' %}
+    <meta property="og:image" content="{% block og_image %}{{ _og_img if _og_img else url_for('static', filename='images/og-default.jpg', _external=True) }}{% endblock %}">
     <meta property="og:url" content="{{ request.url }}">
     
     <!-- Twitter Card -->
+    {%- set _tw = seo_config.get('twitter_handle', '') if seo_config else '' %}
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="{% block twitter_title %}Kshitiz Jaiswal - Unfiltered Commentator{% endblock %}">
-    <meta name="twitter:description" content="{% block twitter_description %}The content here is selective, but the truth is never biased.{% endblock %}">
+    <meta name="twitter:title" content="{% block twitter_title %}{{ _seo_ep.get('title', _default_title) or _default_title }}{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}{{ _seo_ep.get('description', _default_desc) or _default_desc }}{% endblock %}">
+    {% if _tw %}<meta name="twitter:site" content="{{ _tw }}">{% endif %}
     
     <!-- Canonical URL -->
     <link rel="canonical" href="{{ request.url }}">
@@ -100,7 +107,36 @@
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     {% endif %}
     <!-- End Google Tag Manager (noscript) -->
-    
+
+    <!-- Announcement Banner -->
+    {% if announcement and announcement.active and announcement.text %}
+    <div class="site-announcement site-announcement--{{ announcement.style }}" id="siteAnnouncement" role="alert"
+         style="display:none;">
+        <div class="site-announcement__inner container">
+            <span class="site-announcement__text">{{ announcement.text }}</span>
+            {% if announcement.link_url %}
+            <a href="{{ announcement.link_url }}" class="site-announcement__btn btn btn-sm ms-2">{{ announcement.link_text or 'Learn More' }}</a>
+            {% endif %}
+        </div>
+        <button class="site-announcement__close" onclick="dismissAnnouncement()" aria-label="Dismiss">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+    <script>
+    (function(){
+        var key = 'ann_dismissed_{{ announcement.id }}';
+        try { if (!localStorage.getItem(key)) { document.getElementById('siteAnnouncement').style.display=''; } }
+        catch(e) { document.getElementById('siteAnnouncement').style.display=''; }
+    })();
+    function dismissAnnouncement(){
+        var el = document.getElementById('siteAnnouncement');
+        if (el) { el.style.display='none'; }
+        try { localStorage.setItem('ann_dismissed_{{ announcement.id }}', '1'); } catch(e){}
+    }
+    </script>
+    {% endif %}
+    <!-- End Announcement Banner -->
+
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark fixed-top custom-navbar" id="mainNavbar">
         <div class="container">

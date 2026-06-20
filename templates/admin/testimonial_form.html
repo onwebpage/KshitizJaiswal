@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Admin{% endblock %}
+
+{% block content %}
+<div class="admin-section">
+    <div class="container-fluid">
+        <div class="row justify-content-center">
+            <div class="col-xl-7 col-lg-8 col-md-10">
+                <div class="admin-card">
+                    <div class="admin-header">
+                        <h2><i class="fas fa-quote-right me-2 text-primary"></i>{{ title }}</h2>
+                        <a href="{{ url_for('admin_testimonials') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>Back
+                        </a>
+                    </div>
+
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}{% for cat, msg in messages %}
+                        <div class="alert alert-{{ 'danger' if cat == 'error' else cat }} alert-dismissible fade show mt-3">
+                            {{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endfor %}{% endif %}
+                    {% endwith %}
+
+                    <form method="POST" class="mt-4">
+                        {{ form.hidden_tag() }}
+
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">{{ form.name.label.text }} <span class="text-danger">*</span></label>
+                                {{ form.name(class="form-control", placeholder="e.g. Rahul Sharma") }}
+                                {% for err in form.name.errors %}<div class="invalid-feedback d-block">{{ err }}</div>{% endfor %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">{{ form.role.label.text }} <span class="text-danger">*</span></label>
+                                {{ form.role(class="form-control", placeholder="e.g. Viewer, Mumbai") }}
+                                {% for err in form.role.errors %}<div class="invalid-feedback d-block">{{ err }}</div>{% endfor %}
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">{{ form.text.label.text }} <span class="text-danger">*</span></label>
+                                {{ form.text(class="form-control", rows="4", placeholder="Write the testimonial text here (without quotes)...") }}
+                                <small class="text-muted">Quotes will be added automatically on display.</small>
+                                {% for err in form.text.errors %}<div class="invalid-feedback d-block">{{ err }}</div>{% endfor %}
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">{{ form.rating.label.text }}</label>
+                                {{ form.rating(class="form-select") }}
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">{{ form.is_visible.label.text }}</label>
+                                {{ form.is_visible(class="form-select") }}
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">{{ form.sort_order.label.text }}</label>
+                                {{ form.sort_order(class="form-control", type="number", min="0") }}
+                                <small class="text-muted">0 = shown first</small>
+                            </div>
+
+                            <!-- Live preview -->
+                            <div class="col-12">
+                                <div class="card border-0 bg-light">
+                                    <div class="card-body">
+                                        <h6 class="text-muted mb-3"><i class="fas fa-eye me-1"></i>Live Preview</h6>
+                                        <div class="testimonial-card-premium" style="max-width:420px;margin:0 auto;">
+                                            <div class="tc-stars" id="prev-stars">★★★★★</div>
+                                            <p class="tc-text" id="prev-text">"Your testimonial text will appear here."</p>
+                                            <div class="tc-author">
+                                                <div class="tc-avatar" id="prev-avatar">?</div>
+                                                <div class="tc-info">
+                                                    <div class="tc-name" id="prev-name">Name
+                                                        <span class="tc-verified"><i class="fas fa-check-circle"></i></span>
+                                                    </div>
+                                                    <div class="tc-role" id="prev-role">Role, Location</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <hr class="my-2">
+                                <div class="d-flex gap-2 flex-wrap">
+                                    {{ form.submit(class="btn btn-primary px-4") }}
+                                    <a href="{{ url_for('admin_testimonials') }}" class="btn btn-secondary px-4">Cancel</a>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+<script>
+const nameEl   = document.getElementById('name');
+const roleEl   = document.getElementById('role');
+const textEl   = document.getElementById('text');
+const ratingEl = document.getElementById('rating');
+
+function updatePreview() {
+    const name   = nameEl.value.trim() || 'Name';
+    const role   = roleEl.value.trim() || 'Role, Location';
+    const text   = textEl.value.trim() || 'Your testimonial text will appear here.';
+    const rating = parseInt(ratingEl.value) || 5;
+    document.getElementById('prev-name').innerHTML = name + ' <span class="tc-verified"><i class="fas fa-check-circle"></i></span>';
+    document.getElementById('prev-role').textContent = role;
+    document.getElementById('prev-text').textContent = '"' + text + '"';
+    document.getElementById('prev-avatar').textContent = name[0].toUpperCase();
+    document.getElementById('prev-stars').textContent = '★'.repeat(rating);
+}
+
+[nameEl, roleEl, textEl, ratingEl].forEach(el => { if (el) el.addEventListener('input', updatePreview); });
+updatePreview();
+</script>
+{% endblock %}
