@@ -501,5 +501,48 @@
     </script>
     
     {% block scripts %}{% endblock %}
+
+    {# ── Chatbot Widget ─────────────────────────────────────────────── #}
+    {% if chatbot_enabled %}
+    <div id="chatbot-widget">
+        <button id="chatbot-toggle-btn" aria-label="Open chat assistant" title="Chat with Kshitiz Assistant">
+            <i class="fas fa-comments"></i>
+            <span id="chatbot-notif"></span>
+        </button>
+        <div id="chatbot-window" role="dialog" aria-label="Chat with Kshitiz Assistant">
+            <div id="chatbot-header">
+                <div class="cb-hdr-avatar"><i class="fas fa-user-tie"></i></div>
+                <div class="cb-hdr-info">
+                    <strong>{{ chatbot_name or 'Kshitiz Assistant' }}</strong>
+                    <small><span class="cb-online-dot"></span>Online &mdash; Usually replies instantly</small>
+                </div>
+                <button id="chatbot-close-btn" aria-label="Close chat"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="chatbot-messages" aria-live="polite"></div>
+            <div id="chatbot-typing">
+                <div class="cb-avatar-icon"><i class="fas fa-user-tie"></i></div>
+                <div class="cb-typing-bubble">
+                    <div class="cb-typing-dot"></div>
+                    <div class="cb-typing-dot"></div>
+                    <div class="cb-typing-dot"></div>
+                </div>
+            </div>
+            <div id="chatbot-quick-replies"></div>
+            <div id="chatbot-input-row">
+                <input type="text" id="chatbot-input" placeholder="Type a message&hellip;" autocomplete="off" maxlength="500">
+                <button id="chatbot-send-btn" aria-label="Send message"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+    <script>
+    window.chatbotConfig = {
+        name: {{ (chatbot_name or 'Kshitiz Assistant') | tojson }},
+        greeting: {{ (chatbot_greeting or '') | tojson }},
+        quickReplies: {{ (chatbot_quick_replies if chatbot_quick_replies else ['\U0001f4da View Courses', '\U0001f4b0 Course Pricing', '\U0001f3ac Watch Reels', '\U0001f4e9 Subscribe', '\U0001f4ac Get Support']) | tojson }}
+    };
+    </script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot.css') }}">
+    <script src="{{ url_for('static', filename='js/chatbot.js') }}" defer></script>
+    {% endif %}
 </body>
 </html>

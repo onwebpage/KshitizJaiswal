@@ -1,0 +1,619 @@
+{% extends "base.html" %}
+{% block title %}Chatbot Manager — Admin Panel{% endblock %}
+
+{% block content %}
+<div class="admin-section">
+    <!-- Sidebar -->
+    <div class="admin-sidebar">
+        <div class="admin-header">
+            <h4><i class="fas fa-cog me-2"></i>Admin Panel</h4>
+            <a href="{{ url_for('admin_logout') }}" class="btn btn-sm btn-outline-danger">
+                <i class="fas fa-sign-out-alt me-1"></i>Logout
+            </a>
+        </div>
+        <div class="admin-nav">
+            <a href="{{ url_for('admin_dashboard') }}" class="admin-nav-item">
+                <i class="fas fa-home me-2"></i>Dashboard
+            </a>
+            <hr class="my-2">
+            <div class="admin-nav-section-title"><small class="text-muted">CONTENT MANAGEMENT</small></div>
+            <a href="{{ url_for('admin_content_manager') }}" class="admin-nav-item">
+                <i class="fas fa-layer-group me-2"></i>Content Manager
+            </a>
+            <a href="{{ url_for('admin_page_content') }}" class="admin-nav-item">
+                <i class="fas fa-file-alt me-2"></i>Page Content
+            </a>
+            <a href="{{ url_for('admin_hero_content') }}" class="admin-nav-item">
+                <i class="fas fa-image me-2"></i>Hero Section
+            </a>
+            <a href="{{ url_for('admin_site_settings') }}" class="admin-nav-item">
+                <i class="fas fa-cogs me-2"></i>Site Settings
+            </a>
+            <a href="{{ url_for('admin_section_visibility') }}" class="admin-nav-item">
+                <i class="fas fa-toggle-on me-2"></i>Section Visibility
+            </a>
+            <a href="{{ url_for('admin_chatbot') }}" class="admin-nav-item active">
+                <i class="fas fa-robot me-2"></i>Chatbot Manager
+            </a>
+            <a href="{{ url_for('admin_statistics_section') }}" class="admin-nav-item">
+                <i class="fas fa-chart-bar me-2"></i>Statistics Section
+            </a>
+            <a href="{{ url_for('admin_social_links') }}" class="admin-nav-item">
+                <i class="fas fa-share-alt me-2"></i>Social Links
+            </a>
+            <hr class="my-2">
+            <div class="admin-nav-section-title"><small class="text-muted">MEDIA & POSTS</small></div>
+            <a href="{{ url_for('admin_dashboard') }}#reels" class="admin-nav-item">
+                <i class="fas fa-video me-2"></i>Manage Reels
+            </a>
+            <a href="{{ url_for('admin_dashboard') }}#opinions" class="admin-nav-item">
+                <i class="fas fa-poll me-2"></i>Manage Opinions
+            </a>
+            <a href="{{ url_for('admin_media_library') }}" class="admin-nav-item">
+                <i class="fas fa-images me-2"></i>Media Library
+            </a>
+            <hr class="my-2">
+            <div class="admin-nav-section-title"><small class="text-muted">REVENUE & COURSES</small></div>
+            <a href="{{ url_for('admin_subscription_tiers') }}" class="admin-nav-item">
+                <i class="fas fa-crown me-2"></i>Subscription Tiers
+            </a>
+            <a href="{{ url_for('admin_courses') }}" class="admin-nav-item">
+                <i class="fas fa-book me-2"></i>Courses
+            </a>
+            <hr class="my-2">
+            <div class="admin-nav-section-title"><small class="text-muted">USERS & ANALYTICS</small></div>
+            <a href="{{ url_for('admin_users') }}" class="admin-nav-item">
+                <i class="fas fa-user-shield me-2"></i>User Management
+            </a>
+            <a href="{{ url_for('admin_analytics') }}" class="admin-nav-item">
+                <i class="fas fa-chart-line me-2"></i>Analytics
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="admin-content">
+        <div class="admin-header">
+            <div>
+                <h2><i class="fas fa-robot me-2 text-primary"></i>Chatbot Manager</h2>
+                <p class="text-muted mb-0 small">Manage the AI assistant — no external API needed.</p>
+            </div>
+            <a href="{{ url_for('index') }}" target="_blank" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-external-link-alt me-1"></i>View Website
+            </a>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}{% for category, message in messages %}
+            <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show mb-4">
+                <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-triangle' }} me-2"></i>{{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}{% endif %}
+        {% endwith %}
+
+        <!-- Stats Row -->
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="card border-0 shadow-sm text-center py-3" style="border-radius:12px;">
+                    <div style="font-size:2rem;font-weight:800;color:{{ '#22c55e' if settings.enabled else '#94a3b8' }};">
+                        {{ 'ON' if settings.enabled else 'OFF' }}
+                    </div>
+                    <div class="text-muted small mt-1">Chatbot Status</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card border-0 shadow-sm text-center py-3" style="border-radius:12px;">
+                    <div style="font-size:2rem;font-weight:800;color:#3b82f6;">{{ faqs | length }}</div>
+                    <div class="text-muted small mt-1">Knowledge Base FAQs</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card border-0 shadow-sm text-center py-3" style="border-radius:12px;">
+                    <div style="font-size:2rem;font-weight:800;color:#cc0000;">{{ total_inq }}</div>
+                    <div class="text-muted small mt-1">Total Inquiries</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card border-0 shadow-sm text-center py-3" style="border-radius:12px;{{ 'border-left:3px solid #f59e0b!important;' if unread else '' }}">
+                    <div style="font-size:2rem;font-weight:800;color:{{ '#f59e0b' if unread else '#94a3b8' }};">{{ unread }}</div>
+                    <div class="text-muted small mt-1">Unread Inquiries</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="cb-admin-tabs mb-4">
+            <ul class="nav nav-pills gap-2" id="cbAdminNav">
+                <li class="nav-item">
+                    <button class="nav-link cb-admin-tab-btn" id="tab-settings" data-bs-toggle="pill" data-bs-target="#pane-settings" data-hash="settings">
+                        <i class="fas fa-sliders-h me-1"></i>Settings
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link cb-admin-tab-btn" id="tab-faqs" data-bs-toggle="pill" data-bs-target="#pane-faqs" data-hash="faqs">
+                        <i class="fas fa-brain me-1"></i>Knowledge Base
+                        <span class="badge bg-primary ms-1">{{ faqs | length }}</span>
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link cb-admin-tab-btn" id="tab-inquiries" data-bs-toggle="pill" data-bs-target="#pane-inquiries" data-hash="inquiries">
+                        <i class="fas fa-inbox me-1"></i>Inquiries
+                        {% if unread %}<span class="badge bg-danger ms-1">{{ unread }} new</span>{% endif %}
+                    </button>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="cbAdminTabContent">
+
+            <!-- ══════════════ SETTINGS ══════════════ -->
+            <div class="tab-pane fade" id="pane-settings">
+                <form method="POST" action="{{ url_for('admin_chatbot') }}#settings">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="action" value="settings">
+
+                    <div class="row g-4">
+                        <!-- Enable/Disable Card -->
+                        <div class="col-12">
+                            <div class="card border-0 shadow-sm p-4" style="border-radius:14px;border-left:4px solid {{ '#22c55e' if settings.enabled else '#94a3b8' }}!important;">
+                                <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#cc0000,#8b0000);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.4rem;">
+                                            <i class="fas fa-robot"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="fw-bold mb-0">Chatbot is currently <span class="{{ 'text-success' if settings.enabled else 'text-secondary' }}">{{ 'Enabled' if settings.enabled else 'Disabled' }}</span></h5>
+                                            <p class="text-muted small mb-0">When enabled, the chat widget appears on every page of the website.</p>
+                                        </div>
+                                    </div>
+                                    <div class="form-check form-switch mb-0">
+                                        <input class="form-check-input" type="checkbox" name="chatbot_enabled" id="cbEnable" role="switch" style="width:3rem;height:1.5rem;" {{ 'checked' if settings.enabled }}>
+                                        <label class="form-check-label fw-semibold ms-2" for="cbEnable">
+                                            {{ 'Enabled' if settings.enabled else 'Disabled' }}
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Identity -->
+                        <div class="col-12"><h6 class="cb-group-label">Identity &amp; Appearance</h6></div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Chatbot Name</label>
+                            <input type="text" class="form-control" name="chatbot_name" value="{{ settings.name }}" placeholder="Kshitiz Assistant" maxlength="60">
+                            <div class="form-text">Shown in the chat widget header.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">WhatsApp Support Number</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fab fa-whatsapp text-success"></i></span>
+                                <input type="text" class="form-control" name="chatbot_whatsapp" value="{{ settings.whatsapp }}" placeholder="919876543210 (country code + number)">
+                            </div>
+                            <div class="form-text">Used for the "Chat on WhatsApp" button inside the chatbot. Include country code, no spaces or +.</div>
+                        </div>
+
+                        <!-- Messages -->
+                        <div class="col-12 mt-2"><h6 class="cb-group-label">Messages</h6></div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Welcome / Greeting Message</label>
+                            <textarea class="form-control" name="chatbot_greeting" rows="3" placeholder="Namaste! 🙏 I'm Kshitiz's assistant. Ask me anything about courses, content, or how to support Kshitiz!">{{ settings.greeting }}</textarea>
+                            <div class="form-text">Shown when the user opens the chat for the first time. Supports **bold** formatting.</div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Fallback Response</label>
+                            <textarea class="form-control" name="chatbot_fallback" rows="2" placeholder="I'm not sure about that. You can reach Kshitiz's team on WhatsApp or browse the website!">{{ settings.fallback }}</textarea>
+                            <div class="form-text">Shown when the chatbot cannot find an answer. Keep it friendly and actionable.</div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Default Quick Reply Buttons</label>
+                            <textarea class="form-control" name="chatbot_quick_replies" rows="5" placeholder="📚 View Courses&#10;💰 Course Pricing&#10;🎬 Watch Reels&#10;📩 Subscribe&#10;💬 Get Support">{{ settings.quick_replies }}</textarea>
+                            <div class="form-text">One button per line. These appear as quick-tap shortcuts in the chat. Use emoji for visual appeal. Max 6 recommended.</div>
+                        </div>
+
+                        <div class="col-12 d-flex justify-content-end pt-2 border-top">
+                            <button type="submit" class="btn btn-primary rounded-pill px-4">
+                                <i class="fas fa-save me-2"></i>Save Settings
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- ══════════════ KNOWLEDGE BASE / FAQs ══════════════ -->
+            <div class="tab-pane fade" id="pane-faqs">
+                <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+                    <div>
+                        <h5 class="fw-bold mb-0">Knowledge Base</h5>
+                        <p class="text-muted small mb-0">Custom FAQs the chatbot uses to answer user questions. Higher priority = matched first.</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <form method="POST" action="{{ url_for('admin_chatbot') }}#faqs" class="d-inline" onsubmit="return confirm('This will add the default starter FAQs. Continue?')">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="action" value="seed_faqs">
+                            <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-seedling me-1"></i>Add Default FAQs
+                            </button>
+                        </form>
+                        <button class="btn btn-primary btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#addFaqModal">
+                            <i class="fas fa-plus me-1"></i>Add FAQ
+                        </button>
+                    </div>
+                </div>
+
+                {% if faqs %}
+                <div class="card border-0 shadow-sm" style="border-radius:14px;overflow:hidden;">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead style="background:#f8fafc;">
+                                <tr>
+                                    <th class="ps-4 py-3">Question / Pattern</th>
+                                    <th>Category</th>
+                                    <th>Keywords</th>
+                                    <th class="text-center">Priority</th>
+                                    <th class="text-center">Active</th>
+                                    <th class="text-end pe-4">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for faq in faqs %}
+                                <tr>
+                                    <td class="ps-4 py-3" style="max-width:260px;">
+                                        <strong class="d-block text-truncate" style="max-width:240px;" title="{{ faq.question_pattern }}">{{ faq.question_pattern }}</strong>
+                                        <small class="text-muted text-truncate d-block" style="max-width:240px;">{{ faq.answer[:80] }}{% if faq.answer|length > 80 %}…{% endif %}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge rounded-pill" style="background:{{ {'courses':'#3b82f6','pricing':'#22c55e','support':'#f59e0b','navigation':'#8b5cf6','technical':'#06b6d4','general':'#64748b'}.get(faq.category,'#64748b') }};">
+                                            {{ faq.category }}
+                                        </span>
+                                    </td>
+                                    <td style="max-width:160px;">
+                                        <small class="text-muted text-truncate d-block" style="max-width:150px;">
+                                            {% for kw in faq.kw_list()[:4] %}<span class="badge bg-light text-dark border me-1">{{ kw }}</span>{% endfor %}
+                                            {% if faq.kw_list()|length > 4 %}<span class="text-muted">+{{ faq.kw_list()|length - 4 }}</span>{% endif %}
+                                        </small>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-secondary rounded-pill">{{ faq.priority }}</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge rounded-pill {{ 'bg-success' if faq.is_active else 'bg-secondary' }}">
+                                            {{ 'Yes' if faq.is_active else 'No' }}
+                                        </span>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <button class="btn btn-sm btn-outline-primary rounded-pill me-1"
+                                                onclick="openEditModal({{ faq.id }}, {{ faq.question_pattern | tojson }}, {{ faq.answer | tojson }}, {{ faq.keywords | tojson }}, {{ faq.quick_replies | tojson }}, {{ faq.category | tojson }}, {{ faq.priority }}, {{ 'true' if faq.is_active else 'false' }})">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <form method="POST" action="{{ url_for('admin_chatbot') }}#faqs" class="d-inline" onsubmit="return confirm('Delete this FAQ?')">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <input type="hidden" name="action" value="delete_faq">
+                                            <input type="hidden" name="faq_id" value="{{ faq.id }}">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center py-5" style="background:#f8fafc;border-radius:14px;border:2px dashed #e2e8f0;">
+                    <i class="fas fa-brain fa-3x mb-3 text-muted opacity-50"></i>
+                    <h5 class="text-muted">No FAQs yet</h5>
+                    <p class="text-muted">Add FAQs to teach the chatbot how to answer common questions.</p>
+                    <button class="btn btn-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#addFaqModal">
+                        <i class="fas fa-plus me-2"></i>Add First FAQ
+                    </button>
+                    <span class="mx-2 text-muted">or</span>
+                    <form method="POST" action="{{ url_for('admin_chatbot') }}#faqs" class="d-inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="action" value="seed_faqs">
+                        <button type="submit" class="btn btn-outline-secondary rounded-pill px-4">
+                            <i class="fas fa-seedling me-2"></i>Add Default FAQs
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+
+                <!-- FAQ Format Help -->
+                <div class="mt-4 p-3 rounded-3" style="background:#f0f9ff;border:1px solid #bae6fd;">
+                    <h6 class="fw-bold mb-2"><i class="fas fa-lightbulb me-2 text-info"></i>How the chatbot matches FAQs</h6>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <strong>Question Pattern</strong>
+                            <p class="small text-muted mb-0">A human-readable description of the question this FAQ answers. Used for exact phrase matching (+8 score).</p>
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Keywords</strong>
+                            <p class="small text-muted mb-0">Comma-separated words that trigger this FAQ. Substring match = +3 score, word match = +1 score each.</p>
+                        </div>
+                        <div class="col-md-4">
+                            <strong>Priority</strong>
+                            <p class="small text-muted mb-0">Higher priority FAQs are preferred when multiple FAQs have similar scores. Range: 0–10.</p>
+                        </div>
+                    </div>
+                    <p class="small text-muted mt-2 mb-0"><strong>Bold formatting:</strong> Use <code>**text**</code> in your answer for bold text. Use <code>\n</code> or actual line breaks for new lines.</p>
+                </div>
+            </div>
+
+            <!-- ══════════════ INQUIRIES ══════════════ -->
+            <div class="tab-pane fade" id="pane-inquiries">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <div>
+                        <h5 class="fw-bold mb-0">User Inquiries</h5>
+                        <p class="text-muted small mb-0">Leads collected when users fill in the contact form inside the chatbot.</p>
+                    </div>
+                    {% if unread %}
+                    <span class="badge bg-danger fs-6 rounded-pill"><i class="fas fa-envelope me-1"></i>{{ unread }} unread</span>
+                    {% endif %}
+                </div>
+
+                {% if inquiries %}
+                <div class="card border-0 shadow-sm" style="border-radius:14px;overflow:hidden;">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead style="background:#f8fafc;">
+                                <tr>
+                                    <th class="ps-4 py-3">Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Date</th>
+                                    <th class="text-center">Status</th>
+                                    <th class="text-end pe-4">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for inq in inquiries %}
+                                <tr class="{{ '' if inq.is_read else 'table-warning' }}">
+                                    <td class="ps-4 py-3 fw-semibold">{{ inq.name or '—' }}</td>
+                                    <td>
+                                        {% if inq.email %}
+                                        <a href="mailto:{{ inq.email }}" class="text-decoration-none">{{ inq.email }}</a>
+                                        {% else %}—{% endif %}
+                                    </td>
+                                    <td>{{ inq.phone or '—' }}</td>
+                                    <td><small class="text-muted">{{ inq.created_at.strftime('%d %b %Y, %H:%M') if inq.created_at else '—' }}</small></td>
+                                    <td class="text-center">
+                                        <span class="badge rounded-pill {{ 'bg-secondary' if inq.is_read else 'bg-warning text-dark' }}">
+                                            {{ 'Read' if inq.is_read else 'New' }}
+                                        </span>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        {% if not inq.is_read %}
+                                        <form method="POST" action="{{ url_for('admin_chatbot') }}#inquiries" class="d-inline">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <input type="hidden" name="action" value="mark_read">
+                                            <input type="hidden" name="inquiry_id" value="{{ inq.id }}">
+                                            <button type="submit" class="btn btn-sm btn-outline-secondary rounded-pill me-1" title="Mark as read">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                        {% if inq.email %}
+                                        <a href="mailto:{{ inq.email }}" class="btn btn-sm btn-outline-primary rounded-pill me-1" title="Send email">
+                                            <i class="fas fa-envelope"></i>
+                                        </a>
+                                        {% endif %}
+                                        {% if inq.phone %}
+                                        <a href="https://wa.me/91{{ inq.phone | replace(' ','') | replace('+','') | replace('-','') }}" target="_blank" class="btn btn-sm btn-outline-success rounded-pill me-1" title="WhatsApp">
+                                            <i class="fab fa-whatsapp"></i>
+                                        </a>
+                                        {% endif %}
+                                        <form method="POST" action="{{ url_for('admin_chatbot') }}#inquiries" class="d-inline" onsubmit="return confirm('Delete this inquiry?')">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <input type="hidden" name="action" value="delete_inquiry">
+                                            <input type="hidden" name="inquiry_id" value="{{ inq.id }}">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill" title="Delete">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center py-5" style="background:#f8fafc;border-radius:14px;border:2px dashed #e2e8f0;">
+                    <i class="fas fa-inbox fa-3x mb-3 text-muted opacity-50"></i>
+                    <h5 class="text-muted">No inquiries yet</h5>
+                    <p class="text-muted">When users fill in their details in the chatbot, they'll appear here.</p>
+                </div>
+                {% endif %}
+            </div>
+
+        </div><!-- /tab-content -->
+    </div><!-- /admin-content -->
+</div>
+
+<!-- ══════════════ ADD FAQ MODAL ══════════════ -->
+<div class="modal fade" id="addFaqModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content" style="border-radius:16px;">
+            <div class="modal-header" style="background:linear-gradient(135deg,#cc0000,#8b0000);color:#fff;border-radius:16px 16px 0 0;">
+                <h5 class="modal-title fw-bold"><i class="fas fa-plus me-2"></i>Add New FAQ</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin_chatbot') }}#faqs">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="add_faq">
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label fw-semibold">Question Pattern <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="question_pattern" required placeholder="e.g. How do I enroll in a course?">
+                            <div class="form-text">A readable description of what this FAQ answers. Used for exact phrase matching.</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Category</label>
+                            <select class="form-select" name="category">
+                                {% for cat in categories %}
+                                <option value="{{ cat }}">{{ cat | capitalize }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Answer <span class="text-danger">*</span></label>
+                            <textarea class="form-control" name="answer" rows="5" required placeholder="Type the chatbot's answer here. Use **bold** for bold text and line breaks for new lines."></textarea>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label fw-semibold">Keywords</label>
+                            <input type="text" class="form-control" name="keywords" placeholder="enroll, join, register, sign up, how to buy">
+                            <div class="form-text">Comma-separated keywords that trigger this FAQ.</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Priority (0–10)</label>
+                            <input type="number" class="form-control" name="priority" value="0" min="0" max="10">
+                            <div class="form-text">Higher = matched first.</div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Quick Reply Buttons</label>
+                            <textarea class="form-control" name="quick_replies" rows="3" placeholder="📚 View Courses&#10;💰 Course Pricing&#10;💬 Get Support"></textarea>
+                            <div class="form-text">One button per line. Shown to user after this answer. Max 5 recommended.</div>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="is_active" id="addActive" checked>
+                                <label class="form-check-label" for="addActive">Active (chatbot will use this FAQ)</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4"><i class="fas fa-save me-2"></i>Add FAQ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════ EDIT FAQ MODAL ══════════════ -->
+<div class="modal fade" id="editFaqModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content" style="border-radius:16px;">
+            <div class="modal-header" style="background:linear-gradient(135deg,#0ea5e9,#0284c7);color:#fff;border-radius:16px 16px 0 0;">
+                <h5 class="modal-title fw-bold"><i class="fas fa-edit me-2"></i>Edit FAQ</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin_chatbot') }}#faqs">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="edit_faq">
+                <input type="hidden" name="faq_id" id="editFaqId">
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label fw-semibold">Question Pattern <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="question_pattern" id="editPattern" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Category</label>
+                            <select class="form-select" name="category" id="editCategory">
+                                {% for cat in categories %}
+                                <option value="{{ cat }}">{{ cat | capitalize }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Answer <span class="text-danger">*</span></label>
+                            <textarea class="form-control" name="answer" id="editAnswer" rows="5" required></textarea>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label fw-semibold">Keywords</label>
+                            <input type="text" class="form-control" name="keywords" id="editKeywords">
+                            <div class="form-text">Comma-separated.</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Priority (0–10)</label>
+                            <input type="number" class="form-control" name="priority" id="editPriority" min="0" max="10">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Quick Reply Buttons</label>
+                            <textarea class="form-control" name="quick_replies" id="editQR" rows="3"></textarea>
+                            <div class="form-text">One button per line.</div>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" name="is_active" id="editActive">
+                                <label class="form-check-label" for="editActive">Active</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4"><i class="fas fa-save me-2"></i>Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.cb-admin-tabs { background:#fff; border-radius:12px; padding:16px; box-shadow:0 1px 4px rgba(0,0,0,.07); border:1px solid #e2e8f0; }
+.cb-admin-tab-btn {
+    border-radius:8px!important; font-weight:600; font-size:.88rem;
+    color:#475569; background:#f1f5f9; border:1px solid #e2e8f0; padding:8px 16px;
+    transition:all .2s;
+}
+.cb-admin-tab-btn:hover { background:#e2e8f0; color:#1e293b; }
+.cb-admin-tab-btn.active { background:linear-gradient(135deg,#cc0000,#8b0000)!important; color:#fff!important; border-color:transparent!important; box-shadow:0 4px 12px rgba(204,0,0,.3); }
+.tab-pane { background:#fff; border-radius:14px; padding:24px; box-shadow:0 1px 4px rgba(0,0,0,.07); border:1px solid #e2e8f0; }
+.cb-group-label { font-weight:700; font-size:.8rem; text-transform:uppercase; letter-spacing:.06em; color:#1e293b; border-bottom:2px solid #e2e8f0; padding-bottom:6px; }
+</style>
+
+{% block scripts %}
+<script>
+// ── Tab persistence ──────────────────────────────────────
+(function() {
+    var hash = window.location.hash.replace('#', '');
+    var valid = ['settings','faqs','inquiries'];
+    var t = valid.includes(hash) ? hash : 'settings';
+    var btn = document.querySelector('[data-hash="' + t + '"]');
+    if (btn) btn.click();
+    else document.getElementById('tab-settings').click();
+    document.querySelectorAll('.cb-admin-tab-btn').forEach(function(b) {
+        b.addEventListener('shown.bs.tab', function() {
+            history.replaceState(null, null, '#' + b.dataset.hash);
+        });
+    });
+})();
+
+// ── Edit FAQ modal ───────────────────────────────────────
+function openEditModal(id, pattern, answer, kwJson, qrJson, category, priority, isActive) {
+    document.getElementById('editFaqId').value    = id;
+    document.getElementById('editPattern').value  = pattern;
+    document.getElementById('editAnswer').value   = answer;
+    document.getElementById('editPriority').value = priority;
+    document.getElementById('editActive').checked = isActive;
+
+    try {
+        var kws = JSON.parse(kwJson);
+        document.getElementById('editKeywords').value = kws.join(', ');
+    } catch(e) {
+        document.getElementById('editKeywords').value = '';
+    }
+    try {
+        var qrs = JSON.parse(qrJson);
+        document.getElementById('editQR').value = qrs.join('\n');
+    } catch(e) {
+        document.getElementById('editQR').value = '';
+    }
+
+    var catSel = document.getElementById('editCategory');
+    for (var i = 0; i < catSel.options.length; i++) {
+        catSel.options[i].selected = (catSel.options[i].value === category);
+    }
+
+    new bootstrap.Modal(document.getElementById('editFaqModal')).show();
+}
+</script>
+{% endblock %}
+{% endblock %}

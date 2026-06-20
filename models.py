@@ -921,3 +921,48 @@ class UserActivity(db.Model):
             'activity_type': activity.activity_type,
             'count': activity.count
         } for activity in activities]
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Chatbot Models
+# ─────────────────────────────────────────────────────────────────────────────
+
+class ChatbotFAQ(db.Model):
+    """Custom FAQ / knowledge-base entry for the chatbot."""
+    __tablename__ = 'chatbot_faq'
+
+    id               = db.Column(db.Integer, primary_key=True)
+    category         = db.Column(db.String(50), default='general')
+    question_pattern = db.Column(db.Text, nullable=False)
+    answer           = db.Column(db.Text, nullable=False)
+    keywords         = db.Column(db.Text, default='[]')   # JSON list of strings
+    quick_replies    = db.Column(db.Text, default='[]')   # JSON list of strings
+    priority         = db.Column(db.Integer, default=0)
+    is_active        = db.Column(db.Boolean, default=True)
+    created_at       = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at       = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def kw_list(self):
+        try:
+            return json.loads(self.keywords or '[]')
+        except Exception:
+            return []
+
+    def qr_list(self):
+        try:
+            return json.loads(self.quick_replies or '[]')
+        except Exception:
+            return []
+
+
+class ChatbotInquiry(db.Model):
+    """Lead / inquiry captured via the chatbot contact form."""
+    __tablename__ = 'chatbot_inquiry'
+
+    id         = db.Column(db.Integer, primary_key=True)
+    name       = db.Column(db.String(120))
+    email      = db.Column(db.String(200))
+    phone      = db.Column(db.String(30))
+    message    = db.Column(db.Text)
+    is_read    = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
