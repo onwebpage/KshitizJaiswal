@@ -250,6 +250,91 @@
 </section>
 {% endif %}
 
+<!-- By The Numbers Section -->
+{% if section_vis.statistics and stats_data.stats %}
+<section id="statistics" class="numbers-section section-padding">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="section-title">{{ stats_data.title or 'By the Numbers' }}</h2>
+            <p class="section-subtitle text-muted">{{ stats_data.subtitle or '' }}</p>
+        </div>
+        <div class="row g-4 justify-content-center">
+            {% for stat in stats_data.stats %}
+            <div class="col-6 col-md-4 col-lg-3 col-xl-2">
+                <div class="number-card text-center">
+                    <div class="number-icon-wrap">
+                        <i class="{{ stat.icon }}"></i>
+                    </div>
+                    <div class="number-value">{{ stat.resolved_value }}</div>
+                    <div class="number-label">{{ stat.label }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<style>
+/* ── By The Numbers ───────────────────────────────── */
+.numbers-section {
+    background: linear-gradient(135deg, #1a0000 0%, #2d0505 40%, #1a0000 100%);
+    position: relative;
+    overflow: hidden;
+}
+.numbers-section::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    pointer-events: none;
+}
+.numbers-section .section-title { color: #fff; }
+.numbers-section .section-subtitle { color: rgba(255,255,255,0.65) !important; }
+
+.number-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 18px;
+    padding: 28px 16px 22px;
+    backdrop-filter: blur(8px);
+    transition: transform 0.25s, background 0.25s, box-shadow 0.25s;
+}
+.number-card:hover {
+    transform: translateY(-6px);
+    background: rgba(255,255,255,0.10);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.3);
+}
+.number-icon-wrap {
+    width: 54px;
+    height: 54px;
+    background: linear-gradient(135deg, #cc0000 0%, #8b0000 100%);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 14px;
+    font-size: 1.3rem;
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(204,0,0,0.35);
+}
+.number-value {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1;
+    margin-bottom: 6px;
+    letter-spacing: -0.5px;
+}
+.number-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: rgba(255,255,255,0.60);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+</style>
+{% endif %}
+
 <!-- Reel Card CSS -->
 <style>
 /* ── Carousel wrapper ──────────────────────────────── */

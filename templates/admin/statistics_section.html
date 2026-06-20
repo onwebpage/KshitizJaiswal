@@ -1,335 +1,616 @@
 {% extends "base.html" %}
 
-{% block title %}Statistics Section — Admin Panel{% endblock %}
+{% block title %}By The Numbers — Admin{% endblock %}
 
-{% block content %}
-<div class="admin-section">
-    <!-- Sidebar -->
-    <div class="admin-sidebar">
-        <div class="admin-header">
-            <h4><i class="fas fa-cog me-2"></i>Admin Panel</h4>
-            <a href="{{ url_for('admin_logout') }}" class="btn btn-sm btn-outline-danger">
-                <i class="fas fa-sign-out-alt me-1"></i>Logout
-            </a>
-        </div>
-        <div class="admin-nav">
-            <a href="{{ url_for('admin_dashboard') }}" class="admin-nav-item">
-                <i class="fas fa-home me-2"></i>Dashboard
-            </a>
-            <hr class="my-2">
-            <div class="admin-nav-section-title"><small class="text-muted">CONTENT MANAGEMENT</small></div>
-            <a href="{{ url_for('admin_page_content') }}" class="admin-nav-item">
-                <i class="fas fa-file-alt me-2"></i>Page Content
-            </a>
-            <a href="{{ url_for('admin_hero_content') }}" class="admin-nav-item">
-                <i class="fas fa-image me-2"></i>Hero Section
-            </a>
-            <a href="{{ url_for('admin_site_settings') }}" class="admin-nav-item">
-                <i class="fas fa-cogs me-2"></i>Site Settings
-            </a>
-            <a href="{{ url_for('admin_section_visibility') }}" class="admin-nav-item">
-                <i class="fas fa-toggle-on me-2"></i>Section Visibility
-            </a>
-            <a href="{{ url_for('admin_statistics_section') }}" class="admin-nav-item active">
-                <i class="fas fa-chart-bar me-2"></i>Statistics Section
-            </a>
-            <a href="{{ url_for('admin_social_links') }}" class="admin-nav-item">
-                <i class="fas fa-share-alt me-2"></i>Social Links
-            </a>
-            <hr class="my-2">
-            <div class="admin-nav-section-title"><small class="text-muted">MEDIA & POSTS</small></div>
-            <a href="{{ url_for('admin_dashboard') }}#reels" class="admin-nav-item">
-                <i class="fas fa-video me-2"></i>Manage Reels
-            </a>
-            <a href="{{ url_for('admin_dashboard') }}#opinions" class="admin-nav-item">
-                <i class="fas fa-poll me-2"></i>Manage Opinions
-            </a>
-            <hr class="my-2">
-            <div class="admin-nav-section-title"><small class="text-muted">REVENUE & COURSES</small></div>
-            <a href="{{ url_for('admin_subscription_tiers') }}" class="admin-nav-item">
-                <i class="fas fa-crown me-2"></i>Subscription Tiers
-            </a>
-            <a href="{{ url_for('admin_payment_settings') }}" class="admin-nav-item">
-                <i class="fas fa-credit-card me-2"></i>Payment Settings
-            </a>
-        </div>
-    </div>
-
-    <!-- Main Content -->
-    <div class="admin-content">
-        <div class="admin-header">
-            <h2><i class="fas fa-chart-bar me-2 text-primary"></i>Statistics Section</h2>
-            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary btn-sm">
-                <i class="fas fa-arrow-left me-1"></i>Dashboard
-            </a>
-        </div>
-
-        <!-- Flash Messages -->
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show mb-4">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-
-        <div class="row g-4">
-
-            <!-- Visibility Status Card -->
-            <div class="col-12">
-                <div class="card border-0 shadow-sm" style="border-radius:14px; border-left: 4px solid {{ '#198754' if is_visible else '#6c757d' }} !important;">
-                    <div class="card-body d-flex align-items-center justify-content-between flex-wrap gap-3 p-4">
-                        <div class="d-flex align-items-center gap-3">
-                            <div style="width:48px;height:48px;border-radius:12px;background:{{ 'linear-gradient(135deg,#198754,#157347)' if is_visible else 'linear-gradient(135deg,#6c757d,#495057)' }};display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.3rem;">
-                                <i class="fas fa-{{ 'eye' if is_visible else 'eye-slash' }}"></i>
-                            </div>
-                            <div>
-                                <h5 class="mb-0 fw-bold">Section is currently <span class="{{ 'text-success' if is_visible else 'text-secondary' }}">{{ 'Visible' if is_visible else 'Hidden' }}</span></h5>
-                                <p class="text-muted small mb-0">Changes to visibility take effect instantly on the live website.</p>
-                            </div>
-                        </div>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-sm btn-outline-{{ 'danger' if is_visible else 'success' }}" id="visToggleBtn" onclick="toggleVisibility()">
-                                <i class="fas fa-{{ 'eye-slash' if is_visible else 'eye' }} me-1"></i>
-                                {{ 'Hide Section' if is_visible else 'Show Section' }}
-                            </button>
-                            <a href="{{ url_for('admin_section_visibility') }}" class="btn btn-sm btn-outline-secondary">
-                                <i class="fas fa-toggle-on me-1"></i>All Sections
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Live Data Preview Card -->
-            <div class="col-lg-4">
-                <div class="card border-0 shadow-sm h-100" style="border-radius:14px;">
-                    <div class="card-header bg-transparent border-0 pt-4 px-4 pb-0">
-                        <h5 class="fw-bold mb-0"><i class="fas fa-database me-2 text-info"></i>Live Database Values</h5>
-                        <p class="text-muted small mt-1 mb-0">Auto-synced stats pull these values at page load.</p>
-                    </div>
-                    <div class="card-body px-4">
-                        <div class="live-stat-item">
-                            <span class="live-stat-label"><i class="fas fa-users me-2 text-primary"></i>Subscriber Count</span>
-                            <span class="live-stat-value badge bg-primary fs-6">{{ live_subscriber_count }}</span>
-                        </div>
-                        <div class="live-stat-item">
-                            <span class="live-stat-label"><i class="fas fa-film me-2 text-danger"></i>Visible Reels</span>
-                            <span class="live-stat-value badge bg-danger fs-6">{{ live_reel_count }}</span>
-                        </div>
-                        <hr class="my-3">
-                        <p class="small text-muted mb-0">
-                            <i class="fas fa-info-circle me-1"></i>
-                            Set a stat's <strong>Auto Source</strong> to "Live Subscriber Count" or "Live Reel Count" to automatically display these values without manual updates.
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Edit Form -->
-            <div class="col-lg-8">
-                <form method="POST" id="statsForm">
-                    <!-- Section Title & Subtitle -->
-                    <div class="card border-0 shadow-sm mb-4" style="border-radius:14px;">
-                        <div class="card-header bg-transparent border-0 pt-4 px-4 pb-0">
-                            <h5 class="fw-bold mb-0"><i class="fas fa-heading me-2 text-secondary"></i>Section Header</h5>
-                        </div>
-                        <div class="card-body px-4 pb-4">
-                            <div class="mb-3">
-                                <label class="form-label fw-semibold">Section Title</label>
-                                <input type="text" class="form-control" name="title" value="{{ data.title or 'By the Numbers' }}" placeholder="By the Numbers">
-                            </div>
-                            <div class="mb-0">
-                                <label class="form-label fw-semibold">Section Subtitle</label>
-                                <input type="text" class="form-control" name="subtitle" value="{{ data.subtitle or '' }}" placeholder="The reach keeps growing — thanks to you.">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Stat Items Table -->
-                    <div class="card border-0 shadow-sm" style="border-radius:14px;">
-                        <div class="card-header bg-transparent border-0 pt-4 px-4 pb-2 d-flex align-items-center justify-content-between">
-                            <div>
-                                <h5 class="fw-bold mb-0"><i class="fas fa-list me-2 text-secondary"></i>Stat Cards</h5>
-                                <p class="text-muted small mb-0 mt-1">Each card shows one statistic. Add, edit, or remove as needed.</p>
-                            </div>
-                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="addStatRow()">
-                                <i class="fas fa-plus me-1"></i>Add Stat
-                            </button>
-                        </div>
-                        <div class="card-body px-4 pb-4">
-
-                            <!-- Column Headers -->
-                            <div class="row g-2 mb-2 d-none d-md-flex">
-                                <div class="col-md-2"><small class="text-muted fw-semibold text-uppercase">Icon</small></div>
-                                <div class="col-md-3"><small class="text-muted fw-semibold text-uppercase">Label</small></div>
-                                <div class="col-md-3"><small class="text-muted fw-semibold text-uppercase">Value</small></div>
-                                <div class="col-md-3"><small class="text-muted fw-semibold text-uppercase">Auto Source</small></div>
-                                <div class="col-md-1"></div>
-                            </div>
-
-                            <!-- Stat Rows -->
-                            <div id="statsRows">
-                                {% for stat in data.stats %}
-                                {% set i = loop.index0 %}
-                                <div class="stat-row row g-2 mb-2 align-items-center" id="row-{{ i }}">
-                                    <div class="col-md-2">
-                                        <div class="input-group input-group-sm">
-                                            <span class="input-group-text stat-icon-preview"><i class="{{ stat.icon or 'fas fa-chart-bar' }}"></i></span>
-                                            <input type="text" class="form-control form-control-sm" name="stat_icon_{{ i }}" value="{{ stat.icon or '' }}" placeholder="fas fa-..." oninput="previewIcon(this)">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <input type="text" class="form-control form-control-sm" name="stat_label_{{ i }}" value="{{ stat.label or '' }}" placeholder="e.g. Total Support">
-                                    </div>
-                                    <div class="col-md-3">
-                                        <input type="text" class="form-control form-control-sm stat-value-input" name="stat_value_{{ i }}" value="{{ stat.value or '' }}" placeholder="e.g. ₹12,450" {% if stat.auto %}disabled{% endif %}>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <select class="form-select form-select-sm" name="stat_auto_{{ i }}" onchange="handleAutoChange(this)">
-                                            <option value="" {% if not stat.auto %}selected{% endif %}>Manual (use value above)</option>
-                                            <option value="subscriber_count" {% if stat.auto == 'subscriber_count' %}selected{% endif %}>Live Subscriber Count ({{ live_subscriber_count }})</option>
-                                            <option value="reel_count" {% if stat.auto == 'reel_count' %}selected{% endif %}>Live Reel Count ({{ live_reel_count }})</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-1 text-end">
-                                        <button type="button" class="btn btn-sm btn-outline-danger rounded-circle" onclick="removeStatRow(this)" title="Remove">
-                                            <i class="fas fa-times"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
-
-                            <!-- Empty state -->
-                            <div id="emptyState" class="{{ 'd-none' if data.stats else '' }} text-center py-4 text-muted">
-                                <i class="fas fa-chart-bar fa-2x mb-2 opacity-25"></i>
-                                <p class="mb-0">No stats yet. Click <strong>Add Stat</strong> to create one.</p>
-                            </div>
-
-                            <div class="mt-4 pt-3 border-top d-flex gap-3 justify-content-between align-items-center">
-                                <p class="text-muted small mb-0">
-                                    <i class="fas fa-info-circle me-1"></i>
-                                    Icon must be a valid <a href="https://fontawesome.com/search?m=free" target="_blank">Font Awesome</a> class (e.g. <code>fas fa-heart</code>).
-                                </p>
-                                <button type="submit" class="btn btn-primary rounded-pill px-4">
-                                    <i class="fas fa-save me-2"></i>Save Changes
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
-
-        </div><!-- /row -->
-    </div><!-- /admin-content -->
-</div>
-
+{% block extra_head %}
 <style>
-.live-stat-item {
+/* ── Page layout ─────────────────────────────────── */
+.stats-page-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: .6rem 0;
-    border-bottom: 1px solid #f0f0f0;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 24px;
 }
-.live-stat-item:last-child { border-bottom: none; }
-.live-stat-label { font-size: .9rem; color: #444; }
-.stat-icon-preview i { color: #cc0000; font-size: .95rem; }
+.stats-page-header h2 { margin: 0; font-size: 1.5rem; font-weight: 700; color: #1a1a2e; }
+
+/* ── Summary pills ───────────────────────────────── */
+.sm-stats-bar { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 26px; }
+.sm-stat-pill { display: flex; align-items: center; gap: 8px; padding: 7px 16px; border-radius: 50px; font-size: .84rem; font-weight: 600; }
+.sm-stat-pill.total    { background: #ede9fe; color: #5b21b6; }
+.sm-stat-pill.enabled  { background: #d1fae5; color: #065f46; }
+.sm-stat-pill.disabled { background: #f3f4f6; color: #6b7280; }
+
+/* ── Stat Cards ──────────────────────────────────── */
+.stat-cards-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 24px;
+}
+.stat-card {
+    background: #fff;
+    border: 2px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 16px 18px;
+    transition: border-color .2s, box-shadow .2s;
+    position: relative;
+}
+.stat-card.is-enabled  { border-color: #bbf7d0; box-shadow: 0 2px 10px rgba(34,197,94,.09); }
+.stat-card.is-disabled { opacity: .72; }
+
+/* Card header row */
+.card-header-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+.drag-handle {
+    cursor: grab;
+    color: #d1d5db;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    padding: 0 2px;
+}
+.drag-handle:active { cursor: grabbing; }
+.stat-order-badge {
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    background: #f3f4f6;
+    color: #6b7280;
+    font-size: .75rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.stat-icon-preview-wrap {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #cc0000, #8b0000);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+.stat-title-col { flex: 1; min-width: 0; }
+.stat-card-label { font-weight: 700; font-size: .95rem; color: #111827; margin: 0; }
+.stat-card-value { font-size: .82rem; color: #6b7280; margin: 0; }
+
+/* Toggle */
+.toggle-wrap { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.toggle-label { font-size: .78rem; font-weight: 600; min-width: 38px; text-align: right; }
+.toggle-label.on  { color: #059669; }
+.toggle-label.off { color: #9ca3af; }
+.toggle-btn {
+    position: relative; width: 46px; height: 25px;
+    background: #d1d5db; border: none; border-radius: 13px;
+    cursor: pointer; padding: 0; transition: background .25s; flex-shrink: 0;
+}
+.toggle-btn.on { background: #22c55e; }
+.toggle-btn::after {
+    content: ''; position: absolute; top: 2px; left: 2px;
+    width: 21px; height: 21px; background: #fff; border-radius: 50%;
+    transition: left .25s; box-shadow: 0 1px 3px rgba(0,0,0,.2);
+}
+.toggle-btn.on::after { left: 23px; }
+
+/* Visibility badge */
+.vis-badge { font-size: .72rem; font-weight: 600; padding: 3px 9px; border-radius: 20px; }
+.vis-badge.visible { background: #d1fae5; color: #065f46; }
+.vis-badge.hidden  { background: #f3f4f6; color: #9ca3af; }
+
+/* Fields row */
+.fields-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr auto;
+    gap: 10px;
+    align-items: end;
+}
+@media (max-width: 768px) {
+    .fields-row { grid-template-columns: 1fr 1fr; }
+    .fields-row .auto-select-col { grid-column: 1/-1; }
+    .fields-row .del-col { grid-column: 1/-1; text-align: right; }
+}
+.field-group label { font-size: .75rem; font-weight: 600; color: #6b7280; margin-bottom: 4px; display: block; }
+.field-group input, .field-group select {
+    border: 1.5px solid #e5e7eb; border-radius: 9px;
+    padding: 7px 10px; font-size: .84rem; width: 100%;
+    transition: border-color .2s;
+}
+.field-group input:focus, .field-group select:focus {
+    outline: none; border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99,102,241,.12);
+}
+
+/* Section header card */
+.section-header-card {
+    background: #fff;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-bottom: 22px;
+}
+.section-header-card h6 { font-size: .95rem; font-weight: 700; color: #1a1a2e; margin-bottom: 14px; }
+
+/* Visibility banner */
+.vis-banner {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px;
+    padding: 14px 20px; border-radius: 12px; margin-bottom: 22px;
+    border: 2px solid;
+}
+.vis-banner.showing  { background: #f0fdf4; border-color: #bbf7d0; }
+.vis-banner.hiding   { background: #f9fafb; border-color: #e5e7eb; }
+
+/* Add button row */
+.add-stat-row {
+    border: 2px dashed #d1d5db; border-radius: 14px;
+    padding: 18px; text-align: center;
+    cursor: pointer; transition: border-color .2s, background .2s; color: #9ca3af;
+}
+.add-stat-row:hover { border-color: #6366f1; background: #f0f0ff; color: #6366f1; }
+
+/* Live DB card */
+.live-db-card {
+    background: #f0f9ff; border: 1.5px solid #bae6fd;
+    border-radius: 12px; padding: 16px 18px; margin-bottom: 22px;
+}
+.live-db-card h6 { color: #0369a1; font-size: .9rem; font-weight: 700; margin-bottom: 10px; }
+.live-db-row { display: flex; align-items: center; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #e0f2fe; font-size: .85rem; }
+.live-db-row:last-child { border-bottom: none; }
 </style>
+{% endblock %}
 
-{% block scripts %}
-<script>
-let rowCount = {{ data.stats | length }};
+{% block content %}
+<div class="admin-section">
+    <div class="container-fluid">
+        <div class="row">
 
-function addStatRow() {
-    const container = document.getElementById('statsRows');
-    const emptyState = document.getElementById('emptyState');
-    emptyState.classList.add('d-none');
+            <!-- Sidebar -->
+            <div class="col-lg-3 col-md-4">
+                <div class="admin-sidebar">
+                    <div class="admin-header">
+                        <h4><i class="fas fa-cog me-2"></i>Admin Panel</h4>
+                        <a href="{{ url_for('admin_logout') }}" class="btn btn-sm btn-outline-danger">
+                            <i class="fas fa-sign-out-alt me-1"></i>Logout
+                        </a>
+                    </div>
+                    <div class="admin-nav">
+                        <a href="{{ url_for('admin_dashboard') }}" class="admin-nav-item">
+                            <i class="fas fa-home me-2"></i>Dashboard
+                        </a>
+                        <a href="{{ url_for('admin_statistics_section') }}" class="admin-nav-item active">
+                            <i class="fas fa-chart-bar me-2"></i>By The Numbers
+                        </a>
+                        <a href="{{ url_for('admin_section_visibility') }}" class="admin-nav-item">
+                            <i class="fas fa-toggle-on me-2"></i>Section Visibility
+                        </a>
+                    </div>
+                </div>
+            </div>
 
-    const idx = rowCount++;
-    const row = document.createElement('div');
-    row.className = 'stat-row row g-2 mb-2 align-items-center';
-    row.id = `row-${idx}`;
-    row.innerHTML = `
-        <div class="col-md-2">
-            <div class="input-group input-group-sm">
-                <span class="input-group-text stat-icon-preview"><i class="fas fa-chart-bar"></i></span>
-                <input type="text" class="form-control form-control-sm" name="stat_icon_${idx}" value="fas fa-chart-bar" placeholder="fas fa-..." oninput="previewIcon(this)">
+            <!-- Main content -->
+            <div class="col-lg-9 col-md-8">
+                <div class="admin-content">
+
+                    <!-- Flash messages -->
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                            <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show mb-4">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <!-- Page header -->
+                    <div class="stats-page-header">
+                        <h2><i class="fas fa-chart-bar me-2 text-primary"></i>By The Numbers</h2>
+                    </div>
+
+                    <!-- Summary pills -->
+                    <div class="sm-stats-bar">
+                        <div class="sm-stat-pill total">
+                            <i class="fas fa-layer-group"></i>{{ data.stats|length }} Stats
+                        </div>
+                        <div class="sm-stat-pill enabled">
+                            <i class="fas fa-eye"></i>{{ enabled_count }} Visible on site
+                        </div>
+                        <div class="sm-stat-pill disabled">
+                            <i class="fas fa-eye-slash"></i>{{ disabled_count }} Hidden
+                        </div>
+                    </div>
+
+                    <!-- Section visibility banner -->
+                    <div class="vis-banner {{ 'showing' if is_visible else 'hiding' }}">
+                        <div class="d-flex align-items: center; gap: 12px;">
+                            <i class="fas fa-{{ 'eye' if is_visible else 'eye-slash' }} me-2 {{ 'text-success' if is_visible else 'text-muted' }}"></i>
+                            <strong>Section is {{ 'visible' if is_visible else 'hidden' }} on the website.</strong>
+                            <span class="text-muted small ms-2">Individual stats below control what appears when the section is visible.</span>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-outline-{{ 'danger' if is_visible else 'success' }}" onclick="toggleSectionVisibility()">
+                                <i class="fas fa-{{ 'eye-slash' if is_visible else 'eye' }} me-1"></i>
+                                {{ 'Hide Section' if is_visible else 'Show Section' }}
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Live DB values -->
+                    <div class="live-db-card">
+                        <h6><i class="fas fa-database me-2"></i>Live Database Values</h6>
+                        <div class="live-db-row">
+                            <span><i class="fas fa-users me-2 text-primary"></i>Newsletter Subscribers</span>
+                            <span class="badge bg-primary">{{ live_subscriber_count }}</span>
+                        </div>
+                        <div class="live-db-row">
+                            <span><i class="fas fa-film me-2 text-danger"></i>Visible Reels</span>
+                            <span class="badge bg-danger">{{ live_reel_count }}</span>
+                        </div>
+                        <p class="small text-muted mb-0 mt-2">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Set a stat's <strong>Source</strong> to "Auto: Subscribers" or "Auto: Reels" to pull these numbers automatically.
+                        </p>
+                    </div>
+
+                    <!-- Main edit form -->
+                    <form method="POST" id="statsForm">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                        <!-- Section title & subtitle -->
+                        <div class="section-header-card">
+                            <h6><i class="fas fa-heading me-2 text-secondary"></i>Section Header</h6>
+                            <div class="row g-3">
+                                <div class="col-md-5">
+                                    <label class="form-label fw-semibold small">Section Title</label>
+                                    <input type="text" class="form-control" name="title"
+                                           value="{{ data.title or 'By the Numbers' }}"
+                                           placeholder="By the Numbers">
+                                </div>
+                                <div class="col-md-7">
+                                    <label class="form-label fw-semibold small">Section Subtitle</label>
+                                    <input type="text" class="form-control" name="subtitle"
+                                           value="{{ data.subtitle or '' }}"
+                                           placeholder="The reach keeps growing — thanks to you.">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Stat cards -->
+                        <div class="stat-cards-grid" id="statCardsGrid">
+                            {% for stat in data.stats %}
+                            {% set i = loop.index0 %}
+                            <div class="stat-card {{ 'is-enabled' if stat.is_active else 'is-disabled' }}"
+                                 id="stat-card-{{ i }}" data-index="{{ i }}">
+
+                                <!-- Hidden fields -->
+                                <input type="hidden" name="stat_active_{{ i }}"
+                                       id="active_field_{{ i }}"
+                                       value="{{ '1' if stat.is_active else '0' }}">
+
+                                <!-- Header row -->
+                                <div class="card-header-row">
+                                    <span class="drag-handle" title="Drag to reorder">
+                                        <i class="fas fa-grip-vertical"></i>
+                                    </span>
+                                    <div class="stat-order-badge" id="order-badge-{{ i }}">{{ loop.index }}</div>
+                                    <div class="stat-icon-preview-wrap" id="icon-preview-{{ i }}">
+                                        <i class="{{ stat.icon or 'fas fa-chart-bar' }}" id="icon-el-{{ i }}"></i>
+                                    </div>
+                                    <div class="stat-title-col">
+                                        <p class="stat-card-label" id="label-preview-{{ i }}">{{ stat.label or 'Untitled Stat' }}</p>
+                                        <p class="stat-card-value" id="value-preview-{{ i }}">
+                                            {{ stat.value if not stat.auto else '(auto-synced from DB)' }}
+                                        </p>
+                                    </div>
+                                    <!-- Per-stat toggle -->
+                                    <div class="toggle-wrap">
+                                        <span class="toggle-label {{ 'on' if stat.is_active else 'off' }}" id="toggle-label-{{ i }}">
+                                            {{ 'ON' if stat.is_active else 'OFF' }}
+                                        </span>
+                                        <form method="POST" action="{{ url_for('admin_toggle_stat') }}"
+                                              style="display:inline">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <input type="hidden" name="stat_idx" value="{{ i }}">
+                                            <button type="submit"
+                                                    class="toggle-btn {{ 'on' if stat.is_active else '' }}"
+                                                    title="{{ 'Disable' if stat.is_active else 'Enable' }}">
+                                            </button>
+                                        </form>
+                                    </div>
+                                    <span class="vis-badge {{ 'visible' if stat.is_active else 'hidden' }}">
+                                        <i class="fas fa-{{ 'eye' if stat.is_active else 'eye-slash' }} me-1"></i>
+                                        {{ 'Visible' if stat.is_active else 'Hidden' }}
+                                    </span>
+                                </div>
+
+                                <!-- Fields row -->
+                                <div class="fields-row">
+                                    <div class="field-group">
+                                        <label>Label</label>
+                                        <input type="text"
+                                               name="stat_label_{{ i }}"
+                                               value="{{ stat.label or '' }}"
+                                               placeholder="e.g. Followers"
+                                               oninput="updateLabelPreview({{ i }}, this.value)">
+                                    </div>
+                                    <div class="field-group">
+                                        <label>Value <span class="text-muted fw-normal">(manual)</span></label>
+                                        <input type="text"
+                                               name="stat_value_{{ i }}"
+                                               id="value-input-{{ i }}"
+                                               value="{{ stat.value or '' }}"
+                                               placeholder="e.g. 50K+"
+                                               {{ 'disabled' if stat.auto else '' }}
+                                               oninput="updateValuePreview({{ i }}, this.value, '{{ stat.auto }}')">
+                                    </div>
+                                    <div class="field-group auto-select-col">
+                                        <label>Source</label>
+                                        <select name="stat_auto_{{ i }}"
+                                                onchange="handleAutoChange({{ i }}, this)">
+                                            <option value="" {{ 'selected' if not stat.auto else '' }}>
+                                                Manual (use value above)
+                                            </option>
+                                            <option value="subscriber_count"
+                                                    {{ 'selected' if stat.auto == 'subscriber_count' else '' }}>
+                                                Auto: Newsletter Subscribers ({{ live_subscriber_count }})
+                                            </option>
+                                            <option value="reel_count"
+                                                    {{ 'selected' if stat.auto == 'reel_count' else '' }}>
+                                                Auto: Published Reels ({{ live_reel_count }})
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div class="field-group">
+                                        <label>Icon <a href="https://fontawesome.com/search?m=free" target="_blank" class="text-muted" style="font-weight:400">(FA class)</a></label>
+                                        <input type="text"
+                                               name="stat_icon_{{ i }}"
+                                               value="{{ stat.icon or '' }}"
+                                               placeholder="fas fa-users"
+                                               oninput="updateIconPreview({{ i }}, this.value)">
+                                    </div>
+                                    <div class="field-group del-col" style="justify-self:end">
+                                        <label>&nbsp;</label>
+                                        <button type="button"
+                                                class="btn btn-outline-danger btn-sm"
+                                                style="border-radius:9px; padding:7px 12px;"
+                                                onclick="removeStatCard(this)"
+                                                title="Remove stat">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Add stat button -->
+                        <div class="add-stat-row mb-4" onclick="addStatCard()">
+                            <i class="fas fa-plus-circle me-2"></i>
+                            <strong>Add New Stat</strong>
+                            <span class="ms-2 text-muted" style="font-size:.85rem">Followers, Likes, YouTube views, etc.</span>
+                        </div>
+
+                        <!-- Save button -->
+                        <div class="d-flex justify-content-end gap-3 align-items-center">
+                            <span class="text-muted small">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Use the toggle switches above to instantly show/hide individual stats.
+                            </span>
+                            <button type="submit" class="btn btn-primary px-4" style="border-radius: 10px;">
+                                <i class="fas fa-save me-2"></i>Save All Changes
+                            </button>
+                        </div>
+                    </form>
+
+                </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <input type="text" class="form-control form-control-sm" name="stat_label_${idx}" value="" placeholder="e.g. Total Support">
-        </div>
-        <div class="col-md-3">
-            <input type="text" class="form-control form-control-sm stat-value-input" name="stat_value_${idx}" value="" placeholder="e.g. ₹12,450">
-        </div>
-        <div class="col-md-3">
-            <select class="form-select form-select-sm" name="stat_auto_${idx}" onchange="handleAutoChange(this)">
-                <option value="" selected>Manual (use value above)</option>
-                <option value="subscriber_count">Live Subscriber Count ({{ live_subscriber_count }})</option>
-                <option value="reel_count">Live Reel Count ({{ live_reel_count }})</option>
-            </select>
-        </div>
-        <div class="col-md-1 text-end">
-            <button type="button" class="btn btn-sm btn-outline-danger rounded-circle" onclick="removeStatRow(this)" title="Remove">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>`;
-    container.appendChild(row);
-}
+    </div>
+</div>
 
-function removeStatRow(btn) {
-    const row = btn.closest('.stat-row');
-    row.remove();
-    // Renumber all rows
-    document.querySelectorAll('.stat-row').forEach((r, i) => {
-        r.id = `row-${i}`;
-        r.querySelectorAll('[name]').forEach(el => {
-            el.name = el.name.replace(/_\d+$/, `_${i}`);
-        });
-    });
-    rowCount = document.querySelectorAll('.stat-row').length;
-    document.getElementById('emptyState').classList.toggle('d-none', rowCount > 0);
-}
+<script>
+let cardCount = {{ data.stats | length }};
 
-function previewIcon(input) {
-    const preview = input.closest('.input-group').querySelector('.stat-icon-preview i');
-    if (preview) {
-        preview.className = input.value.trim() || 'fas fa-chart-bar';
-    }
+// ── Live preview helpers ─────────────────────────────────────────
+function updateLabelPreview(i, val) {
+    const el = document.getElementById('label-preview-' + i);
+    if (el) el.textContent = val || 'Untitled Stat';
 }
-
-function handleAutoChange(select) {
-    const row = select.closest('.stat-row');
-    const valueInput = row.querySelector('.stat-value-input');
+function updateValuePreview(i, val, auto) {
+    const el = document.getElementById('value-preview-' + i);
+    if (el) el.textContent = auto ? '(auto-synced from DB)' : (val || '—');
+}
+function updateIconPreview(i, cls) {
+    const el = document.getElementById('icon-el-' + i);
+    if (el) el.className = cls.trim() || 'fas fa-chart-bar';
+}
+function handleAutoChange(i, select) {
+    const valueInput = document.getElementById('value-input-' + i);
+    const valPreview = document.getElementById('value-preview-' + i);
     if (select.value) {
-        valueInput.disabled = true;
-        valueInput.placeholder = 'Auto-synced from database';
+        if (valueInput) valueInput.disabled = true;
+        if (valPreview) valPreview.textContent = '(auto-synced from DB)';
     } else {
-        valueInput.disabled = false;
-        valueInput.placeholder = 'e.g. ₹12,450';
+        if (valueInput) valueInput.disabled = false;
+        if (valPreview) valPreview.textContent = valueInput ? valueInput.value : '—';
     }
 }
 
-async function toggleVisibility() {
-    const btn = document.getElementById('visToggleBtn');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Saving...';
+// ── Add stat card ────────────────────────────────────────────────
+function addStatCard() {
+    const grid = document.getElementById('statCardsGrid');
+    const i    = cardCount++;
+    const card = document.createElement('div');
+    card.className = 'stat-card is-enabled';
+    card.id = 'stat-card-' + i;
+    card.dataset.index = i;
+    card.innerHTML = `
+        <input type="hidden" name="stat_active_${i}" id="active_field_${i}" value="1">
+        <div class="card-header-row">
+            <span class="drag-handle" title="Drag to reorder"><i class="fas fa-grip-vertical"></i></span>
+            <div class="stat-order-badge">${i+1}</div>
+            <div class="stat-icon-preview-wrap" id="icon-preview-${i}">
+                <i class="fas fa-chart-bar" id="icon-el-${i}"></i>
+            </div>
+            <div class="stat-title-col">
+                <p class="stat-card-label" id="label-preview-${i}">New Stat</p>
+                <p class="stat-card-value" id="value-preview-${i}">—</p>
+            </div>
+            <div class="toggle-wrap">
+                <span class="toggle-label on" id="toggle-label-${i}">ON</span>
+                <button type="button" class="toggle-btn on"
+                        onclick="toggleLocalActive(${i}, this)"
+                        title="Disable">
+                </button>
+            </div>
+            <span class="vis-badge visible">
+                <i class="fas fa-eye me-1"></i>Visible
+            </span>
+        </div>
+        <div class="fields-row">
+            <div class="field-group">
+                <label>Label</label>
+                <input type="text" name="stat_label_${i}" value="" placeholder="e.g. Followers"
+                       oninput="updateLabelPreview(${i}, this.value)">
+            </div>
+            <div class="field-group">
+                <label>Value <span class="text-muted fw-normal">(manual)</span></label>
+                <input type="text" name="stat_value_${i}" id="value-input-${i}" value=""
+                       placeholder="e.g. 50K+"
+                       oninput="updateValuePreview(${i}, this.value, '')">
+            </div>
+            <div class="field-group auto-select-col">
+                <label>Source</label>
+                <select name="stat_auto_${i}" onchange="handleAutoChange(${i}, this)">
+                    <option value="" selected>Manual (use value above)</option>
+                    <option value="subscriber_count">Auto: Newsletter Subscribers</option>
+                    <option value="reel_count">Auto: Published Reels</option>
+                </select>
+            </div>
+            <div class="field-group">
+                <label>Icon</label>
+                <input type="text" name="stat_icon_${i}" value="fas fa-chart-bar"
+                       placeholder="fas fa-users"
+                       oninput="updateIconPreview(${i}, this.value)">
+            </div>
+            <div class="field-group del-col" style="justify-self:end">
+                <label>&nbsp;</label>
+                <button type="button" class="btn btn-outline-danger btn-sm"
+                        style="border-radius:9px; padding:7px 12px;"
+                        onclick="removeStatCard(this)" title="Remove stat">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>`;
+    grid.appendChild(card);
+    renumberCards();
+}
+
+// ── Remove stat card ─────────────────────────────────────────────
+function removeStatCard(btn) {
+    const card = btn.closest('.stat-card');
+    if (document.querySelectorAll('.stat-card').length <= 1) {
+        alert('You must have at least one stat.');
+        return;
+    }
+    if (!confirm('Remove this stat?')) return;
+    card.remove();
+    renumberCards();
+}
+
+// ── Renumber all cards after add/remove ──────────────────────────
+function renumberCards() {
+    document.querySelectorAll('.stat-card').forEach(function(card, idx) {
+        card.querySelectorAll('[name]').forEach(function(el) {
+            el.name = el.name.replace(/_\d+$/, '_' + idx);
+        });
+        card.querySelectorAll('[id]').forEach(function(el) {
+            el.id = el.id.replace(/_\d+$/, '_' + idx);
+        });
+        const badge = card.querySelector('.stat-order-badge');
+        if (badge) badge.textContent = idx + 1;
+        card.dataset.index = idx;
+    });
+}
+
+// ── Local toggle for newly-added cards (no DB yet) ───────────────
+function toggleLocalActive(i, btn) {
+    const field = document.getElementById('active_field_' + i);
+    const card  = btn.closest('.stat-card');
+    const label = document.getElementById('toggle-label-' + i);
+    const badge = card.querySelector('.vis-badge');
+    if (!field) return;
+    const newVal = field.value === '1' ? '0' : '1';
+    field.value = newVal;
+    btn.classList.toggle('on', newVal === '1');
+    if (label) { label.textContent = newVal === '1' ? 'ON' : 'OFF'; label.className = 'toggle-label ' + (newVal === '1' ? 'on' : 'off'); }
+    card.classList.toggle('is-enabled', newVal === '1');
+    card.classList.toggle('is-disabled', newVal === '0');
+    if (badge) { badge.className = 'vis-badge ' + (newVal === '1' ? 'visible' : 'hidden'); badge.innerHTML = '<i class="fas fa-' + (newVal === '1' ? 'eye' : 'eye-slash') + ' me-1"></i>' + (newVal === '1' ? 'Visible' : 'Hidden'); }
+}
+
+// ── Section visibility toggle ────────────────────────────────────
+async function toggleSectionVisibility() {
     try {
-        const res = await fetch('/admin/section-visibility/toggle/statistics', { method: 'POST' });
-        const data = await res.json();
-        // Reload to reflect updated state cleanly
+        await fetch('/admin/section-visibility/toggle/statistics', { method: 'POST' });
         window.location.reload();
     } catch(e) {
         alert('Error toggling visibility. Please try again.');
-        btn.disabled = false;
     }
 }
-</script>
-{% endblock %}
 
+// ── Drag-to-reorder (SortableJS-free, using HTML5 drag) ──────────
+(function initDrag() {
+    const grid = document.getElementById('statCardsGrid');
+    if (!grid) return;
+    let dragged = null;
+    grid.addEventListener('dragstart', function(e) {
+        const card = e.target.closest('.stat-card');
+        if (!card) return;
+        dragged = card;
+        card.style.opacity = '.5';
+        e.dataTransfer.effectAllowed = 'move';
+    });
+    grid.addEventListener('dragend', function(e) {
+        if (dragged) { dragged.style.opacity = ''; dragged = null; }
+    });
+    grid.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        const card = e.target.closest('.stat-card');
+        if (card && card !== dragged) {
+            const rect = card.getBoundingClientRect();
+            const after = e.clientY > rect.top + rect.height / 2;
+            grid.insertBefore(dragged, after ? card.nextSibling : card);
+            renumberCards();
+        }
+    });
+    // Make each card draggable via the handle
+    grid.querySelectorAll('.drag-handle').forEach(function(handle) {
+        handle.closest('.stat-card').setAttribute('draggable', 'true');
+    });
+    // Observe new cards
+    new MutationObserver(function(mutations) {
+        mutations.forEach(function(m) {
+            m.addedNodes.forEach(function(node) {
+                if (node.nodeType === 1 && node.classList.contains('stat-card')) {
+                    const h = node.querySelector('.drag-handle');
+                    if (h) node.setAttribute('draggable', 'true');
+                }
+            });
+        });
+    }).observe(grid, { childList: true });
+})();
+</script>
 {% endblock %}

@@ -235,12 +235,13 @@ def index():
         'title': 'By the Numbers',
         'subtitle': 'The reach keeps growing — thanks to you.',
         'stats': [
-            {'icon': 'fas fa-rupee-sign', 'label': 'Total Support',   'value': '₹0',   'auto': ''},
-            {'icon': 'fas fa-receipt',    'label': 'Donations',        'value': '0',    'auto': ''},
-            {'icon': 'fas fa-users',      'label': 'Supporters',       'value': '0',    'auto': 'subscriber_count'},
-            {'icon': 'fas fa-film',       'label': 'Reels Published',  'value': '0',    'auto': 'reel_count'},
-            {'icon': 'fas fa-eye',        'label': 'Total Views',      'value': '1.2M+','auto': ''},
-            {'icon': 'fas fa-heart',      'label': 'Followers',        'value': '50K+', 'auto': ''},
+            {'icon': 'fas fa-users',      'label': 'Followers',        'value': '0',     'auto': '',                 'is_active': True,  'sort_order': 1},
+            {'icon': 'fas fa-bell',       'label': 'Subscribers',      'value': '0',     'auto': 'subscriber_count', 'is_active': True,  'sort_order': 2},
+            {'icon': 'fas fa-eye',        'label': 'Total Views',      'value': '0',     'auto': '',                 'is_active': True,  'sort_order': 3},
+            {'icon': 'fas fa-heart',      'label': 'Likes',            'value': '0',     'auto': '',                 'is_active': True,  'sort_order': 4},
+            {'icon': 'fas fa-film',       'label': 'Reels Published',  'value': '0',     'auto': 'reel_count',       'is_active': True,  'sort_order': 5},
+            {'icon': 'fas fa-percentage', 'label': 'Engagement Rate',  'value': '0%',    'auto': '',                 'is_active': False, 'sort_order': 6},
+            {'icon': 'fas fa-rupee-sign', 'label': 'Total Support',    'value': '₹0',    'auto': '',                 'is_active': False, 'sort_order': 7},
         ]
     }
     try:
@@ -248,14 +249,20 @@ def index():
         stats_data = json.loads(stats_record.content_data) if stats_record else DEFAULT_STATS_DATA
         if 'stats' not in stats_data:
             stats_data['stats'] = DEFAULT_STATS_DATA['stats']
-        # Resolve auto values at render time
-        for stat in stats_data['stats']:
+        # Resolve auto values and filter to only active stats for frontend display
+        active_stats = []
+        for idx, stat in enumerate(sorted(stats_data['stats'], key=lambda s: s.get('sort_order', idx))):
+            if not stat.get('is_active', True):
+                continue
             if stat.get('auto') == 'subscriber_count':
                 stat['resolved_value'] = str(Subscriber.query.count())
             elif stat.get('auto') == 'reel_count':
                 stat['resolved_value'] = str(Reel.query.filter_by(is_visible=True).count())
             else:
                 stat['resolved_value'] = stat.get('value', '')
+            active_stats.append(stat)
+        stats_data = dict(stats_data)
+        stats_data['stats'] = active_stats
     except Exception:
         stats_data = DEFAULT_STATS_DATA
         for stat in stats_data['stats']:
@@ -1090,12 +1097,13 @@ def admin_statistics_section():
         'title': 'By the Numbers',
         'subtitle': 'The reach keeps growing — thanks to you.',
         'stats': [
-            {'icon': 'fas fa-rupee-sign',          'label': 'Total Support',   'value': '₹0',   'auto': ''},
-            {'icon': 'fas fa-receipt',              'label': 'Donations',       'value': '0',    'auto': ''},
-            {'icon': 'fas fa-users',               'label': 'Supporters',       'value': '0',    'auto': 'subscriber_count'},
-            {'icon': 'fas fa-film',                'label': 'Reels Published',  'value': '0',    'auto': 'reel_count'},
-            {'icon': 'fas fa-eye',                 'label': 'Total Views',      'value': '1.2M+','auto': ''},
-            {'icon': 'fas fa-heart',               'label': 'Followers',        'value': '50K+', 'auto': ''},
+            {'icon': 'fas fa-users',      'label': 'Followers',       'value': '0',   'auto': '',                 'is_active': True,  'sort_order': 1},
+            {'icon': 'fas fa-bell',       'label': 'Subscribers',     'value': '0',   'auto': 'subscriber_count', 'is_active': True,  'sort_order': 2},
+            {'icon': 'fas fa-eye',        'label': 'Total Views',     'value': '0',   'auto': '',                 'is_active': True,  'sort_order': 3},
+            {'icon': 'fas fa-heart',      'label': 'Likes',           'value': '0',   'auto': '',                 'is_active': True,  'sort_order': 4},
+            {'icon': 'fas fa-film',       'label': 'Reels Published', 'value': '0',   'auto': 'reel_count',       'is_active': True,  'sort_order': 5},
+            {'icon': 'fas fa-percentage', 'label': 'Engagement Rate', 'value': '0%',  'auto': '',                 'is_active': False, 'sort_order': 6},
+            {'icon': 'fas fa-rupee-sign', 'label': 'Total Support',   'value': '₹0',  'auto': '',                 'is_active': False, 'sort_order': 7},
         ]
     }
 
@@ -1119,12 +1127,19 @@ def admin_statistics_section():
             icon = request.form.get(f'stat_icon_{idx}')
             if icon is None:
                 break
-            label = request.form.get(f'stat_label_{idx}', '').strip()
-            value = request.form.get(f'stat_value_{idx}', '').strip()
-            auto  = request.form.get(f'stat_auto_{idx}', '')
-            # keep rows that have at least an icon or label
+            label  = request.form.get(f'stat_label_{idx}', '').strip()
+            value  = request.form.get(f'stat_value_{idx}', '').strip()
+            auto   = request.form.get(f'stat_auto_{idx}', '')
+            active = request.form.get(f'stat_active_{idx}', '0') == '1'
             if icon.strip() or label:
-                stats.append({'icon': icon.strip(), 'label': label, 'value': value, 'auto': auto})
+                stats.append({
+                    'icon': icon.strip(),
+                    'label': label,
+                    'value': value,
+                    'auto': auto,
+                    'is_active': active,
+                    'sort_order': idx + 1,
+                })
             idx += 1
 
         data = {'title': title, 'subtitle': subtitle, 'stats': stats}
@@ -1136,7 +1151,7 @@ def admin_statistics_section():
             record = SiteContent(content_key='statistics_data', content_data=json.dumps(data))
             db.session.add(record)
         db.session.commit()
-        flash('Statistics section saved successfully!', 'success')
+        flash('Statistics section saved — changes are now live on the website.', 'success')
         return redirect(url_for('admin_statistics_section'))
 
     record = SiteContent.query.filter_by(content_key='statistics_data').first()
@@ -1144,13 +1159,49 @@ def admin_statistics_section():
     if 'stats' not in data:
         data['stats'] = DEFAULT_STATS['stats']
 
+    # Sort by sort_order for admin display
+    data['stats'] = sorted(data['stats'], key=lambda s: s.get('sort_order', 999))
+
+    # Back-fill missing fields on old records
+    for i, s in enumerate(data['stats']):
+        s.setdefault('is_active', True)
+        s.setdefault('sort_order', i + 1)
+
     is_visible = SiteConfig.get('section_statistics_visible', 'true').lower() != 'false'
+
+    enabled_count  = sum(1 for s in data['stats'] if s.get('is_active', True))
+    disabled_count = len(data['stats']) - enabled_count
 
     return render_template('admin/statistics_section.html',
                            data=data,
                            is_visible=is_visible,
                            live_subscriber_count=live_subscriber_count,
-                           live_reel_count=live_reel_count)
+                           live_reel_count=live_reel_count,
+                           enabled_count=enabled_count,
+                           disabled_count=disabled_count)
+
+
+@app.route('/admin/stat/toggle', methods=['POST'])
+def admin_toggle_stat():
+    """Toggle a single stat item's is_active flag."""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+
+    from datetime import datetime as _dt
+    stat_idx = request.form.get('stat_idx', type=int)
+    record = SiteContent.query.filter_by(content_key='statistics_data').first()
+    if record and stat_idx is not None:
+        data  = json.loads(record.content_data)
+        stats = data.get('stats', [])
+        if 0 <= stat_idx < len(stats):
+            stats[stat_idx]['is_active'] = not stats[stat_idx].get('is_active', True)
+            record.content_data = json.dumps(data)
+            record.updated_at   = _dt.utcnow()
+            db.session.commit()
+            label  = stats[stat_idx].get('label', 'Stat')
+            status = 'enabled' if stats[stat_idx]['is_active'] else 'disabled'
+            flash(f'"{label}" {status} — changes are live on the website.', 'success')
+    return redirect(url_for('admin_statistics_section'))
 
 
 @app.route('/admin/opinion/<int:opinion_id>/edit', methods=['GET', 'POST'])

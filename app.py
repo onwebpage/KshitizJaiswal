@@ -174,7 +174,30 @@ def inject_global_context():
     except Exception as e:
         logging.debug(f"Database not available for social links: {e}")
         pass  # If DB not ready, just skip
-    
+
+    # Get footer stats (top 2 active stats for the footer bar)
+    footer_stats = []
+    try:
+        from models import Subscriber, Reel
+        stats_rec = SiteContent.query.filter_by(content_key='statistics_data').first()
+        if stats_rec:
+            import json as _json
+            _sd = _json.loads(stats_rec.content_data)
+            _active = sorted(
+                [s for s in _sd.get('stats', []) if s.get('is_active', True)],
+                key=lambda s: s.get('sort_order', 999)
+            )
+            for s in _active:
+                if s.get('auto') == 'subscriber_count':
+                    s['resolved_value'] = str(Subscriber.query.count())
+                elif s.get('auto') == 'reel_count':
+                    s['resolved_value'] = str(Reel.query.filter_by(is_visible=True).count())
+                else:
+                    s['resolved_value'] = s.get('value', '')
+            footer_stats = _active[:2]
+    except Exception as e:
+        logging.debug(f"Could not load footer stats: {e}")
+
     return {
         'clerk_publishable_key': os.environ.get('CLERK_PUBLISHABLE_KEY', ''),
         'clerk_domain': 'your-domain.com',
@@ -183,6 +206,7 @@ def inject_global_context():
         'is_column_visible': is_column_visible,
         'footer_newsletter_form': footer_newsletter_form,
         'whatsapp_support_phone': whatsapp_support_phone,
+        'footer_stats': footer_stats,
     }
 
 # Import routes after app and db creation
