@@ -592,52 +592,111 @@
     });
     </script>
 
-    <!-- Newsletter Modal -->
-    <div class="modal fade" id="newsletterModal" tabindex="-1" aria-labelledby="newsletterModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content newsletter-modal-content">
-                <div class="modal-header border-0">
-                    <h5 class="modal-title" id="newsletterModalLabel">
-                        <i class="fas fa-envelope text-primary me-2"></i>Stay Updated with Kshitiz
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <!-- Newsletter Popup (custom — session-only, no Bootstrap modal) -->
+    <div id="newsletterPopup" role="dialog" aria-modal="true" aria-labelledby="nlPopupTitle"
+         style="display:none; position:fixed; inset:0; z-index:10400;
+                background:rgba(0,0,0,0.5); backdrop-filter:blur(2px);
+                align-items:center; justify-content:center; padding:16px;">
+        <div style="background:#fff; border-radius:18px; max-width:460px; width:100%;
+                    box-shadow:0 24px 64px rgba(0,0,0,0.3); overflow:hidden;
+                    animation:nlSlideIn .38s cubic-bezier(.22,1,.36,1) both;">
+            <!-- Header -->
+            <div style="background:linear-gradient(135deg,#cc0000 0%,#8b0000 100%);
+                        padding:22px 24px 18px; position:relative; text-align:center;">
+                <button onclick="dismissNewsletterPopup()" aria-label="Close"
+                        style="position:absolute; top:12px; right:14px; background:none; border:none;
+                               color:rgba(255,255,255,0.7); font-size:1.1rem; cursor:pointer;
+                               padding:4px 6px; border-radius:6px; line-height:1; transition:color .15s;"
+                        onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.7)'">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div style="width:52px; height:52px; background:rgba(255,255,255,0.15); border-radius:50%;
+                            display:flex; align-items:center; justify-content:center; margin:0 auto 12px;">
+                    <i class="fas fa-envelope-open-text" style="color:#fff; font-size:1.3rem;"></i>
                 </div>
-                <div class="modal-body px-4 pb-4">
-                    <p class="text-muted mb-3">Get weekly insights, exclusive content, and unfiltered updates straight to your inbox.</p>
-                    <div id="newsletterPopupSuccess" class="d-none text-center py-3">
-                        <i class="fas fa-check-circle text-success fa-3x mb-3"></i>
-                        <h5 class="fw-bold">You're in! 🎉</h5>
-                        <p class="text-muted">Welcome to the circle. Expect great things.</p>
+                <h5 id="nlPopupTitle" style="color:#fff; margin:0 0 4px; font-size:1.1rem; font-weight:700;">
+                    Join the Inner Circle
+                </h5>
+                <p style="color:rgba(255,255,255,0.8); margin:0; font-size:.85rem;">
+                    Weekly insights, exclusive content, zero spam.
+                </p>
+            </div>
+            <!-- Body -->
+            <div style="padding:24px 24px 20px;">
+                <!-- Success state -->
+                <div id="newsletterPopupSuccess" style="display:none; text-align:center; padding:12px 0 8px;">
+                    <i class="fas fa-check-circle" style="color:#22c55e; font-size:2.8rem; margin-bottom:12px; display:block;"></i>
+                    <h5 style="font-weight:700; margin-bottom:6px;">You're in!</h5>
+                    <p style="color:#666; margin:0;">Welcome to the circle. Expect great things.</p>
+                </div>
+                <!-- Form -->
+                <form id="newsletterPopupForm" novalidate style="margin:0;">
+                    <div style="margin-bottom:12px;">
+                        <input type="text" name="name" id="popupName" placeholder="Your Name"
+                               required autocomplete="name"
+                               style="width:100%; border:1.5px solid #e0e0e0; border-radius:9px;
+                                      padding:10px 14px; font-size:.9rem; outline:none; transition:border-color .2s; box-sizing:border-box;"
+                               onfocus="this.style.borderColor='#cc0000'" onblur="this.style.borderColor='#e0e0e0'">
                     </div>
-                    <form id="newsletterPopupForm" novalidate>
-                        <div class="mb-3">
-                            <input type="text" name="name" id="popupName" class="form-control" placeholder="Your Name" required autocomplete="name">
-                            <div class="invalid-feedback">Please enter your name</div>
-                        </div>
-                        <div class="mb-3">
-                            <input type="email" name="email" id="popupEmail" class="form-control" placeholder="your@email.com" required autocomplete="email">
-                            <div class="invalid-feedback">Please enter a valid email</div>
-                        </div>
-                        <div class="row g-2 mb-3">
-                            <div class="col-7">
-                                <input type="text" name="place" id="popupPlace" class="form-control" placeholder="Your City" required>
-                                <div class="invalid-feedback">Required</div>
-                            </div>
-                            <div class="col-5">
-                                <input type="number" name="age" id="popupAge" class="form-control" placeholder="Age" min="13" max="100" required>
-                                <div class="invalid-feedback">Required</div>
-                            </div>
-                        </div>
-                        <div id="newsletterPopupError" class="alert alert-danger py-2 d-none small"></div>
-                        <button type="submit" class="btn btn-primary w-100 fw-semibold" id="newsletterPopupSubmit">
-                            <i class="fas fa-paper-plane me-2"></i>Subscribe Free
-                        </button>
-                        <p class="text-center text-muted mt-2 mb-0"><small><i class="fas fa-lock me-1"></i>No spam. Unsubscribe anytime.</small></p>
-                    </form>
-                </div>
+                    <div style="margin-bottom:12px;">
+                        <input type="email" name="email" id="popupEmail" placeholder="your@email.com"
+                               required autocomplete="email"
+                               style="width:100%; border:1.5px solid #e0e0e0; border-radius:9px;
+                                      padding:10px 14px; font-size:.9rem; outline:none; transition:border-color .2s; box-sizing:border-box;"
+                               onfocus="this.style.borderColor='#cc0000'" onblur="this.style.borderColor='#e0e0e0'">
+                    </div>
+                    <div style="display:flex; gap:10px; margin-bottom:12px;">
+                        <input type="text" name="place" id="popupPlace" placeholder="Your City"
+                               required
+                               style="flex:1.4; border:1.5px solid #e0e0e0; border-radius:9px;
+                                      padding:10px 14px; font-size:.9rem; outline:none; transition:border-color .2s; min-width:0; box-sizing:border-box;"
+                               onfocus="this.style.borderColor='#cc0000'" onblur="this.style.borderColor='#e0e0e0'">
+                        <input type="number" name="age" id="popupAge" placeholder="Age" min="13" max="100"
+                               required
+                               style="flex:1; border:1.5px solid #e0e0e0; border-radius:9px;
+                                      padding:10px 14px; font-size:.9rem; outline:none; transition:border-color .2s; min-width:0; box-sizing:border-box;"
+                               onfocus="this.style.borderColor='#cc0000'" onblur="this.style.borderColor='#e0e0e0'">
+                    </div>
+                    <div id="newsletterPopupError"
+                         style="display:none; background:#fff0f0; border:1px solid #fca5a5;
+                                color:#dc2626; border-radius:8px; padding:8px 12px;
+                                font-size:.82rem; margin-bottom:10px;"></div>
+                    <button type="submit" id="newsletterPopupSubmit"
+                            style="width:100%; background:linear-gradient(135deg,#cc0000 0%,#8b0000 100%);
+                                   color:#fff; border:none; border-radius:9px; padding:11px;
+                                   font-size:.95rem; font-weight:700; cursor:pointer;
+                                   box-shadow:0 4px 14px rgba(204,0,0,.3); transition:transform .15s, box-shadow .15s;"
+                            onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 18px rgba(204,0,0,.4)'"
+                            onmouseout="this.style.transform='';this.style.boxShadow='0 4px 14px rgba(204,0,0,.3)'">
+                        <i class="fas fa-paper-plane" style="margin-right:6px;"></i>Subscribe Free
+                    </button>
+                    <p style="text-align:center; color:#999; font-size:.78rem; margin:10px 0 0;">
+                        <i class="fas fa-lock" style="margin-right:4px;"></i>No spam. Unsubscribe anytime.
+                    </p>
+                </form>
             </div>
         </div>
     </div>
+    <style>
+    @keyframes nlSlideIn {
+        from { opacity:0; transform:translateY(20px) scale(.97); }
+        to   { opacity:1; transform:translateY(0)    scale(1);   }
+    }
+    </style>
+    <script>
+    function _showNewsletterPopup() {
+        var el = document.getElementById('newsletterPopup');
+        if (el) el.style.display = 'flex';
+    }
+    function dismissNewsletterPopup() {
+        var el = document.getElementById('newsletterPopup');
+        if (el) el.style.display = 'none';
+        try { sessionStorage.setItem('nlDismissed', '1'); } catch(e) {}
+    }
+    document.getElementById('newsletterPopup').addEventListener('click', function(e) {
+        if (e.target === this) dismissNewsletterPopup();
+    });
+    </script>
 
 
     <!-- Bootstrap JS -->

@@ -244,60 +244,40 @@
     // Initialize newsletter popup
     function initNewsletterPopup() {
         // Don't show newsletter popup on admin pages
-        if (window.location.pathname.startsWith('/admin')) {
-            return;
-        }
-        
-        // Check if already subscribed or dismissed
-        if (localStorage.getItem('newsletterSubscribed') === 'true' || 
-            localStorage.getItem('newsletterDismissed') === 'true') {
-            newsletterShown = true;
-            return;
-        }
-        
+        if (window.location.pathname.startsWith('/admin')) return;
+
+        // Session-only: don't show again if already dismissed or subscribed this session
+        try {
+            if (sessionStorage.getItem('nlDismissed') === '1' ||
+                sessionStorage.getItem('nlSubscribed') === '1') {
+                newsletterShown = true;
+                return;
+            }
+        } catch(e) {}
+
+        // Also respect permanent subscription flag
+        try {
+            if (localStorage.getItem('newsletterSubscribed') === 'true') {
+                newsletterShown = true;
+                return;
+            }
+        } catch(e) {}
+
         if (newsletterShown) return;
-        
-        setTimeout(() => {
-            const newsletterModal = new bootstrap.Modal(document.getElementById('newsletterModal'));
-            newsletterModal.show();
+
+        // Show after 45 seconds
+        setTimeout(function() {
+            if (newsletterShown) return;
             newsletterShown = true;
-            
-            // Track newsletter popup view with GTM
-            if (window.dataLayer) {
-                window.dataLayer.push({
-                    'event': 'newsletter_popup_shown'
-                });
+            if (typeof _showNewsletterPopup === 'function') {
+                _showNewsletterPopup();
             }
-            
-            // Track with Microsoft Clarity
-            if (window.clarity) {
-                window.clarity('event', 'newsletter_popup_shown');
-            }
-            
-            // Track with Meta Pixel
-            if (window.fbq) {
-                window.fbq('trackCustom', 'NewsletterPopupShown');
-            }
-        }, 40000);
+            if (window.dataLayer) window.dataLayer.push({ 'event': 'newsletter_popup_shown' });
+            if (window.clarity) window.clarity('event', 'newsletter_popup_shown');
+            if (window.fbq) window.fbq('trackCustom', 'NewsletterPopupShown');
+        }, 45000);
 
-        // Add event listener for when modal is dismissed
-        const newsletterModalEl = document.getElementById('newsletterModal');
-        if (newsletterModalEl) {
-            newsletterModalEl.addEventListener('hidden.bs.modal', function () {
-                if (!localStorage.getItem('newsletterSubscribed')) {
-                    localStorage.setItem('newsletterDismissed', 'true');
-                    
-                    // Track dismissal with GTM
-                    if (window.dataLayer) {
-                        window.dataLayer.push({
-                            'event': 'newsletter_popup_dismissed'
-                        });
-                    }
-                }
-            });
-        }
-
-        // AJAX newsletter popup form submission
+        // AJAX form submission
         const newsletterForm = document.getElementById('newsletterPopupForm');
         if (newsletterForm) {
             newsletterForm.addEventListener('submit', async function(e) {
@@ -310,15 +290,14 @@
                 const errDiv = document.getElementById('newsletterPopupError');
                 const submitBtn = document.getElementById('newsletterPopupSubmit');
 
-                // Basic validation
                 if (!name || !email || !place || !age) {
-                    if (errDiv) { errDiv.textContent = 'Please fill in all fields.'; errDiv.classList.remove('d-none'); }
+                    if (errDiv) { errDiv.textContent = 'Please fill in all fields.'; errDiv.style.display = 'block'; }
                     return;
                 }
 
                 submitBtn.disabled = true;
-                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Subscribing…';
-                if (errDiv) errDiv.classList.add('d-none');
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:6px;"></i>Subscribing…';
+                if (errDiv) errDiv.style.display = 'none';
 
                 const formData = new FormData();
                 formData.append('name', name);
@@ -326,7 +305,6 @@
                 formData.append('place', place);
                 formData.append('age', age);
 
-                // Get CSRF token from hidden input or cookie
                 const csrfToken = document.querySelector('[name=csrf_token]')?.value ||
                                   document.cookie.split(';').map(c => c.trim()).find(c => c.startsWith('csrf_token='))?.split('=')[1] || '';
                 if (csrfToken) formData.append('csrf_token', csrfToken);
@@ -340,23 +318,25 @@
                     const data = await resp.json();
 
                     if (data.success) {
-                        localStorage.setItem('newsletterSubscribed', 'true');
-                        newsletterForm.classList.add('d-none');
+                        try { localStorage.setItem('newsletterSubscribed', 'true'); } catch(e) {}
+                        try { sessionStorage.setItem('nlSubscribed', '1'); } catch(e) {}
+                        newsletterForm.style.display = 'none';
                         const successEl = document.getElementById('newsletterPopupSuccess');
-                        if (successEl) successEl.classList.remove('d-none');
-
+                        if (successEl) successEl.style.display = 'block';
+                        // Auto-close after 3s
+                        setTimeout(function() { dismissNewsletterPopup(); }, 3000);
                         if (window.dataLayer) window.dataLayer.push({ 'event': 'newsletter_subscribed', 'subscription_source': 'popup' });
                         if (window.clarity) window.clarity('event', 'newsletter_subscribed');
                         if (window.fbq) window.fbq('track', 'Lead');
                     } else {
-                        if (errDiv) { errDiv.textContent = data.message || 'Something went wrong. Please try again.'; errDiv.classList.remove('d-none'); }
+                        if (errDiv) { errDiv.textContent = data.message || 'Something went wrong. Please try again.'; errDiv.style.display = 'block'; }
                         submitBtn.disabled = false;
-                        submitBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Subscribe Free';
+                        submitBtn.innerHTML = '<i class="fas fa-paper-plane" style="margin-right:6px;"></i>Subscribe Free';
                     }
                 } catch (err) {
-                    if (errDiv) { errDiv.textContent = 'Connection error. Please try again.'; errDiv.classList.remove('d-none'); }
+                    if (errDiv) { errDiv.textContent = 'Connection error. Please try again.'; errDiv.style.display = 'block'; }
                     submitBtn.disabled = false;
-                    submitBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>Subscribe Free';
+                    submitBtn.innerHTML = '<i class="fas fa-paper-plane" style="margin-right:6px;"></i>Subscribe Free';
                 }
             });
         }
