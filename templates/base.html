@@ -532,24 +532,33 @@
                     <i class="fas fa-shield-alt" style="margin-right:4px;"></i>By continuing, you acknowledge that you are accessing this content voluntarily and agree to the above terms.
                 </p>
             </div>
+            <!-- Agreement checkbox -->
+            <div style="padding:0 24px 16px;">
+                <label id="disclaimerAgreeLabel"
+                       style="display:flex; align-items:flex-start; gap:10px; cursor:pointer;
+                              background:#fef9f0; border:1.5px solid #f5a623; border-radius:10px;
+                              padding:12px 14px; user-select:none;">
+                    <input type="checkbox" id="disclaimerAgreeCheck"
+                           onchange="onDisclaimerCheckChange()"
+                           style="width:18px; height:18px; min-width:18px; margin-top:1px;
+                                  accent-color:#cc0000; cursor:pointer;">
+                    <span style="font-size:.875rem; color:#333; line-height:1.45;">
+                        I have read and understood the above disclaimer. I agree that all content
+                        represents personal opinions only and I will form my own independent judgement.
+                    </span>
+                </label>
+            </div>
             <!-- Footer -->
-            <div style="padding:16px 24px 20px; display:flex; gap:10px; justify-content:flex-end; border-top:1px solid #f0f0f0;">
-                <button onclick="dismissDisclaimer()"
-                        style="background:none; border:1px solid #ccc; color:#666; border-radius:8px;
-                               padding:8px 18px; font-size:.88rem; cursor:pointer; transition:all .15s;"
-                        onmouseover="this.style.borderColor='#999';this.style.color='#333'"
-                        onmouseout="this.style.borderColor='#ccc';this.style.color='#666'">
-                    Dismiss
-                </button>
-                <button onclick="acceptDisclaimer()"
-                        style="background:linear-gradient(135deg,#cc0000 0%,#8b0000 100%);
-                               color:#fff; border:none; border-radius:8px;
+            <div style="padding:0 24px 20px; display:flex; gap:10px; justify-content:flex-end; border-top:1px solid #f0f0f0; padding-top:16px;">
+                <button id="disclaimerAcceptBtn"
+                        onclick="acceptDisclaimer()"
+                        disabled
+                        style="background:#d1d5db; color:#9ca3af; border:none; border-radius:8px;
                                padding:9px 22px; font-size:.92rem; font-weight:700;
-                               cursor:pointer; display:flex; align-items:center; gap:6px;
-                               box-shadow:0 4px 14px rgba(204,0,0,.35); transition:transform .15s, box-shadow .15s;"
-                        onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 18px rgba(204,0,0,.45)'"
-                        onmouseout="this.style.transform='';this.style.boxShadow='0 4px 14px rgba(204,0,0,.35)'">
-                    <i class="fas fa-check"></i> Accept
+                               cursor:not-allowed; display:flex; align-items:center; gap:6px;
+                               box-shadow:none; transition:background .2s, color .2s, box-shadow .2s, transform .15s;
+                               pointer-events:none;">
+                    <i class="fas fa-check"></i> I Accept
                 </button>
             </div>
         </div>
@@ -559,25 +568,88 @@
         from { opacity:0; transform:translateY(-18px) scale(.97); }
         to   { opacity:1; transform:translateY(0)    scale(1);    }
     }
+    /* Prevent any click on the backdrop from bypassing the checkbox */
+    #disclaimerPopup { pointer-events:auto; }
     </style>
     <script>
     function _showDisclaimerPopup() {
         var el = document.getElementById('disclaimerPopup');
         if (!el) return;
+        /* Reset checkbox + button state each time the popup is shown */
+        var cb  = document.getElementById('disclaimerAgreeCheck');
+        var btn = document.getElementById('disclaimerAcceptBtn');
+        if (cb)  cb.checked = false;
+        if (btn) _setAcceptBtnState(false);
         el.style.display = 'flex';
     }
+    function _setAcceptBtnState(enabled) {
+        var btn = document.getElementById('disclaimerAcceptBtn');
+        if (!btn) return;
+        btn.disabled = !enabled;
+        if (enabled) {
+            btn.style.background    = 'linear-gradient(135deg,#cc0000 0%,#8b0000 100%)';
+            btn.style.color         = '#fff';
+            btn.style.cursor        = 'pointer';
+            btn.style.boxShadow     = '0 4px 14px rgba(204,0,0,.35)';
+            btn.style.pointerEvents = 'auto';
+            btn.onmouseover = function() {
+                this.style.transform  = 'translateY(-1px)';
+                this.style.boxShadow  = '0 6px 18px rgba(204,0,0,.45)';
+            };
+            btn.onmouseout = function() {
+                this.style.transform  = '';
+                this.style.boxShadow  = '0 4px 14px rgba(204,0,0,.35)';
+            };
+        } else {
+            btn.style.background    = '#d1d5db';
+            btn.style.color         = '#9ca3af';
+            btn.style.cursor        = 'not-allowed';
+            btn.style.boxShadow     = 'none';
+            btn.style.transform     = '';
+            btn.style.pointerEvents = 'none';
+            btn.onmouseover = null;
+            btn.onmouseout  = null;
+        }
+    }
+    function onDisclaimerCheckChange() {
+        var cb = document.getElementById('disclaimerAgreeCheck');
+        _setAcceptBtnState(cb && cb.checked);
+    }
     function dismissDisclaimer() {
+        /* Closing via ✕ or backdrop — only allowed if already accepted */
+        var cb = document.getElementById('disclaimerAgreeCheck');
+        if (cb && !cb.checked) {
+            /* Shake the label to signal the user must agree first */
+            var label = document.getElementById('disclaimerAgreeLabel');
+            if (label) {
+                label.style.animation = 'none';
+                label.offsetHeight;   /* force reflow */
+                label.style.animation = 'dpShake .35s ease';
+            }
+            return;
+        }
         var el = document.getElementById('disclaimerPopup');
         if (el) el.style.display = 'none';
         try { localStorage.setItem('disclaimerAccepted', 'true'); } catch(e) {}
     }
     function acceptDisclaimer() {
-        dismissDisclaimer();
+        var cb = document.getElementById('disclaimerAgreeCheck');
+        if (!cb || !cb.checked) return;   /* hard guard — cannot bypass */
+        var el = document.getElementById('disclaimerPopup');
+        if (el) el.style.display = 'none';
+        try { localStorage.setItem('disclaimerAccepted', 'true'); } catch(e) {}
         if (window.dataLayer) { window.dataLayer.push({'event':'disclaimer_accepted'}); }
     }
+    /* Backdrop click: shake instead of dismiss (user must agree first) */
     document.getElementById('disclaimerPopup').addEventListener('click', function(e) {
         if (e.target === this) dismissDisclaimer();
     });
+    /* Shake animation for the checkbox label */
+    (function() {
+        var s = document.createElement('style');
+        s.textContent = '@keyframes dpShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}';
+        document.head.appendChild(s);
+    })();
     </script>
 
     <!-- Newsletter Popup (custom — session-only, no Bootstrap modal) -->
