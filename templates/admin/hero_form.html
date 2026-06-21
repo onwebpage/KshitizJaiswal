@@ -1,118 +1,108 @@
-{% extends "base.html" %}
+{% extends "admin/admin_base.html" %}
 {% from 'admin/_image_upload.html' import image_upload_field, image_upload_css, image_upload_js %}
 
 {% block title %}{{ title }} - Admin{% endblock %}
 
 {% block extra_head %}{{ image_upload_css() }}{% endblock %}
 
-{% block content %}
-<div class="admin-section">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <div class="admin-card">
-                    <div class="admin-header">
-                        <h2>{{ title }}</h2>
-                        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
-                            <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
-                        </a>
-                    </div>
-                    
-                    <!-- Current Hero Preview -->
-                    {% if current_hero.banner_url %}
-                    <div class="hero-preview mb-4">
-                        <h5>Current Hero Section Preview:</h5>
-                        <div class="hero-preview-container" style="height: 200px; background-image: url('{% if current_hero.banner_url.startswith('http') %}{{ current_hero.banner_url }}{% else %}{{ url_for('static', filename=current_hero.banner_url) }}{% endif %}'); background-size: cover; background-position: center; border-radius: 8px; position: relative;">
-                            <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(99, 102, 241, 0.7) 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; color: white;">
-                                <div>
-                                    <h3>{{ current_hero.name }}</h3>
-                                    <p>{{ current_hero.tagline }}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    {% endif %}
-                    
-                    <form method="POST" enctype="multipart/form-data">
-                        {{ form.hidden_tag() }}
-                        
-                        <div class="row g-4">
-                            <div class="col-12">
-                                <label for="{{ form.name.id }}" class="form-label">{{ form.name.label.text }}</label>
-                                {{ form.name(class="form-control") }}
-                                {% if form.name.errors %}
-                                    <div class="text-danger">
-                                        {% for error in form.name.errors %}
-                                            <small>{{ error }}</small>
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            
-                            <div class="col-12">
-                                <label for="{{ form.tagline.id }}" class="form-label">{{ form.tagline.label.text }}</label>
-                                {{ form.tagline(class="form-control", rows="3") }}
-                                {% if form.tagline.errors %}
-                                    <div class="text-danger">
-                                        {% for error in form.tagline.errors %}
-                                            <small>{{ error }}</small>
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            
-                            <!-- Desktop Image Section -->
-                            <div class="col-12">
-                                <h6 class="mb-3"><i class="fas fa-desktop me-2 text-primary"></i>Desktop Hero Image</h6>
-                                {{ image_upload_field(
-                                    field=form.desktop_image,
-                                    label="Desktop Image",
-                                    hint="JPG / PNG · Recommended 1920×1080 px",
-                                    current_image=current_hero.desktop_url if current_hero.desktop_url else None
-                                ) }}
-                            </div>
-                            
-                            <!-- Mobile Image Section -->
-                            <div class="col-12">
-                                <h6 class="mb-3"><i class="fas fa-mobile-alt me-2 text-primary"></i>Mobile Hero Image</h6>
-                                {{ image_upload_field(
-                                    field=form.mobile_image,
-                                    label="Mobile Image",
-                                    hint="JPG / PNG · Recommended 768×1024 px",
-                                    current_image=current_hero.mobile_url if current_hero.mobile_url else None
-                                ) }}
-                            </div>
-                            
-                            <!-- Legacy Section -->
-                            <div class="col-12">
-                                <details>
-                                    <summary><h6 class="text-muted"><i class="fas fa-history me-2"></i>Fallback / Legacy Image (Optional)</h6></summary>
-                                    <div class="mt-3">
-                                        {{ image_upload_field(
-                                            field=form.banner_image,
-                                            label="Fallback Hero Image",
-                                            hint="Used if no desktop/mobile image is set",
-                                            current_image=current_hero.banner_url if current_hero.banner_url else None
-                                        ) }}
-                                    </div>
-                                </details>
-                            </div>
-                            
-                            <div class="col-12">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save me-1"></i>Save Changes
-                                </button>
-                                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary ms-2">Cancel</a>
-                            </div>
-                        </div>
-                    </form>
+{% block admin_content %}
+<div class="container-fluid p-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="admin-card">
+                <div class="admin-header">
+                    <h2>{{ title }}</h2>
+                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                    </a>
                 </div>
+
+                <!-- Current Hero Preview -->
+                {% if current_hero.banner_url %}
+                <div class="hero-preview mb-4">
+                    <h5>Current Hero Section Preview:</h5>
+                    <div class="hero-preview-container" style="height: 200px; background-image: url('{% if current_hero.banner_url.startswith('http') %}{{ current_hero.banner_url }}{% else %}{{ url_for('static', filename=current_hero.banner_url) }}{% endif %}'); background-size: cover; background-position: center; border-radius: 8px; position: relative;">
+                        <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(99, 102, 241, 0.7) 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; color: white;">
+                            <div>
+                                <h3>{{ current_hero.name }}</h3>
+                                <p>{{ current_hero.tagline }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <form method="POST" enctype="multipart/form-data">
+                    {{ form.hidden_tag() }}
+
+                    <div class="row g-4">
+                        <div class="col-12">
+                            <label for="{{ form.name.id }}" class="form-label">{{ form.name.label.text }}</label>
+                            {{ form.name(class="form-control") }}
+                            {% if form.name.errors %}
+                                <div class="text-danger">{% for error in form.name.errors %}<small>{{ error }}</small>{% endfor %}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-12">
+                            <label for="{{ form.tagline.id }}" class="form-label">{{ form.tagline.label.text }}</label>
+                            {{ form.tagline(class="form-control", rows="3") }}
+                            {% if form.tagline.errors %}
+                                <div class="text-danger">{% for error in form.tagline.errors %}<small>{{ error }}</small>{% endfor %}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Desktop Image Section -->
+                        <div class="col-12">
+                            <h6 class="mb-3"><i class="fas fa-desktop me-2 text-primary"></i>Desktop Hero Image</h6>
+                            {{ image_upload_field(
+                                field=form.desktop_image,
+                                label="Desktop Image",
+                                hint="JPG / PNG · Recommended 1920×1080 px",
+                                current_image=current_hero.desktop_url if current_hero.desktop_url else None
+                            ) }}
+                        </div>
+
+                        <!-- Mobile Image Section -->
+                        <div class="col-12">
+                            <h6 class="mb-3"><i class="fas fa-mobile-alt me-2 text-primary"></i>Mobile Hero Image</h6>
+                            {{ image_upload_field(
+                                field=form.mobile_image,
+                                label="Mobile Image",
+                                hint="JPG / PNG · Recommended 768×1024 px",
+                                current_image=current_hero.mobile_url if current_hero.mobile_url else None
+                            ) }}
+                        </div>
+
+                        <!-- Legacy Section -->
+                        <div class="col-12">
+                            <details>
+                                <summary><h6 class="text-muted"><i class="fas fa-history me-2"></i>Fallback / Legacy Image (Optional)</h6></summary>
+                                <div class="mt-3">
+                                    {{ image_upload_field(
+                                        field=form.banner_image,
+                                        label="Fallback Hero Image",
+                                        hint="Used if no desktop/mobile image is set",
+                                        current_image=current_hero.banner_url if current_hero.banner_url else None
+                                    ) }}
+                                </div>
+                            </details>
+                        </div>
+
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>Save Changes
+                            </button>
+                            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary ms-2">Cancel</a>
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
 
 {% block scripts %}
 {{ image_upload_js() }}
-{% endblock %}
 {% endblock %}

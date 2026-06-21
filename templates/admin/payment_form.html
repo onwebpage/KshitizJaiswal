@@ -1,109 +1,8 @@
-{% extends "base.html" %}
+{% extends "admin/admin_base.html" %}
 
 {% block title %}{{ title }} - Admin{% endblock %}
 
-{% block content %}
-<div class="admin-section">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <div class="admin-card">
-                    <div class="admin-header">
-                        <h2>{{ title }}</h2>
-                        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
-                            <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
-                        </a>
-                    </div>
-                    
-                    <div class="alert alert-info">
-                        <i class="fas fa-info-circle me-2"></i>
-                        <strong>Razorpay Integration</strong><br>
-                        Enter your Razorpay API credentials to enable automatic payment processing. 
-                        You can find these in your Razorpay Dashboard under API Keys section.
-                    </div>
-                    
-                    <form method="POST">
-                        {{ form.hidden_tag() }}
-                        
-                        <div class="row g-4">
-                            <div class="col-12">
-                                <label for="{{ form.razorpay_key_id.id }}" class="form-label">
-                                    <i class="fas fa-key me-1"></i>{{ form.razorpay_key_id.label.text }}
-                                </label>
-                                {{ form.razorpay_key_id(class="form-control", placeholder="rzp_test_xxxxxxxxxxxxx or rzp_live_xxxxxxxxxxxxx") }}
-                                {% if form.razorpay_key_id.errors %}
-                                    <div class="text-danger">
-                                        {% for error in form.razorpay_key_id.errors %}
-                                            <small>{{ error }}</small>
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
-                                <small class="form-text text-muted">Your Razorpay Key ID (starts with rzp_test_ or rzp_live_)</small>
-                            </div>
-                            
-                            <div class="col-12">
-                                <label for="{{ form.razorpay_key_secret.id }}" class="form-label">
-                                    <i class="fas fa-lock me-1"></i>{{ form.razorpay_key_secret.label.text }}
-                                </label>
-                                {{ form.razorpay_key_secret(class="form-control", type="password", placeholder="Enter your Razorpay Key Secret") }}
-                                {% if form.razorpay_key_secret.errors %}
-                                    <div class="text-danger">
-                                        {% for error in form.razorpay_key_secret.errors %}
-                                            <small>{{ error }}</small>
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
-                                <small class="form-text text-muted">Your Razorpay Key Secret (keep this confidential)</small>
-                            </div>
-                            
-                            <div class="col-12">
-                                <div class="alert alert-warning">
-                                    <i class="fas fa-exclamation-triangle me-2"></i>
-                                    <strong>Security Note:</strong> Your payment credentials are stored securely and encrypted. 
-                                    Make sure you're using the correct credentials for your environment (test/live).
-                                </div>
-                            </div>
-                            
-                            <div class="col-12">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save me-1"></i>Save Payment Settings
-                                </button>
-                                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary ms-2">Cancel</a>
-                            </div>
-                        </div>
-                    </form>
-                    
-                    <hr class="my-5">
-                    
-                    <div class="payment-help">
-                        <h5><i class="fas fa-question-circle me-2"></i>Need Help?</h5>
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <div class="help-card">
-                                    <h6>Getting Started with Razorpay</h6>
-                                    <p class="text-muted">Create an account at razorpay.com and complete KYC verification.</p>
-                                    <a href="https://razorpay.com" target="_blank" class="btn btn-sm btn-outline-primary">
-                                        <i class="fas fa-external-link-alt me-1"></i>Visit Razorpay
-                                    </a>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="help-card">
-                                    <h6>Find Your API Keys</h6>
-                                    <p class="text-muted">Log into your Razorpay Dashboard and navigate to Settings > API Keys.</p>
-                                    <a href="https://dashboard.razorpay.com/#/app/keys" target="_blank" class="btn btn-sm btn-outline-primary">
-                                        <i class="fas fa-external-link-alt me-1"></i>API Keys
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
+{% block extra_head %}
 <style>
 .help-card {
     padding: 1rem;
@@ -112,4 +11,97 @@
     height: 100%;
 }
 </style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid p-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="admin-card">
+                <div class="admin-header">
+                    <h2>{{ title }}</h2>
+                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                    </a>
+                </div>
+
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong>Razorpay Integration</strong><br>
+                    Enter your Razorpay API credentials to enable automatic payment processing.
+                    You can find these in your Razorpay Dashboard under API Keys section.
+                </div>
+
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+
+                    <div class="row g-4">
+                        <div class="col-12">
+                            <label for="{{ form.razorpay_key_id.id }}" class="form-label">
+                                <i class="fas fa-key me-1"></i>{{ form.razorpay_key_id.label.text }}
+                            </label>
+                            {{ form.razorpay_key_id(class="form-control", placeholder="rzp_test_xxxxxxxxxxxxx or rzp_live_xxxxxxxxxxxxx") }}
+                            {% if form.razorpay_key_id.errors %}
+                                <div class="text-danger">{% for error in form.razorpay_key_id.errors %}<small>{{ error }}</small>{% endfor %}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">Your Razorpay Key ID (starts with rzp_test_ or rzp_live_)</small>
+                        </div>
+
+                        <div class="col-12">
+                            <label for="{{ form.razorpay_key_secret.id }}" class="form-label">
+                                <i class="fas fa-lock me-1"></i>{{ form.razorpay_key_secret.label.text }}
+                            </label>
+                            {{ form.razorpay_key_secret(class="form-control", type="password", placeholder="Enter your Razorpay Key Secret") }}
+                            {% if form.razorpay_key_secret.errors %}
+                                <div class="text-danger">{% for error in form.razorpay_key_secret.errors %}<small>{{ error }}</small>{% endfor %}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">Your Razorpay Key Secret (keep this confidential)</small>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Security Note:</strong> Your payment credentials are stored securely and encrypted.
+                                Make sure you're using the correct credentials for your environment (test/live).
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>Save Payment Settings
+                            </button>
+                            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary ms-2">Cancel</a>
+                        </div>
+                    </div>
+                </form>
+
+                <hr class="my-5">
+
+                <div class="payment-help">
+                    <h5><i class="fas fa-question-circle me-2"></i>Need Help?</h5>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="help-card">
+                                <h6>Getting Started with Razorpay</h6>
+                                <p class="text-muted">Create an account at razorpay.com and complete KYC verification.</p>
+                                <a href="https://razorpay.com" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-external-link-alt me-1"></i>Visit Razorpay
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="help-card">
+                                <h6>Find Your API Keys</h6>
+                                <p class="text-muted">Log into your Razorpay Dashboard and navigate to Settings > API Keys.</p>
+                                <a href="https://dashboard.razorpay.com/#/app/keys" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-external-link-alt me-1"></i>API Keys
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

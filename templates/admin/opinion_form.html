@@ -1,149 +1,129 @@
-{% extends "base.html" %}
+{% extends "admin/admin_base.html" %}
 
 {% block title %}{{ title }} - Admin Panel - Kshitiz Jaiswal{% endblock %}
 
-{% block content %}
-<div class="admin-section">
-    <div class="container-fluid">
-        <div class="row justify-content-center">
-            <div class="col-lg-8 col-md-10">
-                <div class="admin-card">
-                    <div class="admin-header">
-                        <h2>{{ title }}</h2>
-                        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
-                            <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
-                        </a>
-                    </div>
-                    
-                    <form method="POST">
-                        {{ form.hidden_tag() }}
-                        
-                        <div class="row g-4">
-                            <div class="col-12">
-                                <label class="form-label">{{ form.title.label.text }}</label>
-                                {{ form.title(class="form-control", placeholder="Enter opinion title") }}
-                                {% if form.title.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {% for error in form.title.errors %}
-                                            {{ error }}
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            
-                            <div class="col-12">
-                                <label class="form-label">{{ form.position.label.text }}</label>
-                                {{ form.position(class="form-control", placeholder="Your stance or position on this topic") }}
-                                {% if form.position.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {% for error in form.position.errors %}
-                                            {{ error }}
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            
-                            <div class="col-12">
-                                <label class="form-label">{{ form.description.label.text }}</label>
-                                {{ form.description(class="form-control", rows="4", placeholder="Detailed description or explanation (optional)") }}
-                                {% if form.description.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {% for error in form.description.errors %}
-                                            {{ error }}
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            
-                            <div class="col-12">
-                                <label class="form-label">{{ form.topic_tag.label.text }} <small class="text-muted">(Optional)</small></label>
-                                {{ form.topic_tag(class="form-control") }}
-                                {% if form.topic_tag.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {% for error in form.topic_tag.errors %}
-                                            {{ error }}
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
-                                <small class="form-text text-muted">
-                                    <i class="fas fa-tag me-1"></i>Add a topic tag to group related polls together (e.g., Politics, Social Issues, Economics)
-                                </small>
-                            </div>
-                            
-                            <div class="col-12">
-                                <h5 class="mb-3">
-                                    <i class="fas fa-poll me-2"></i>Poll Configuration
-                                </h5>
-                            </div>
-                            
-                            <div class="col-12">
-                                <label class="form-label">{{ form.poll_question.label.text }}</label>
-                                {{ form.poll_question(class="form-control", placeholder="What question do you want to ask your audience?") }}
-                                {% if form.poll_question.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {% for error in form.poll_question.errors %}
-                                            {{ error }}
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <label class="form-label">{{ form.poll_option1.label.text }} <span class="text-danger">*</span></label>
-                                {{ form.poll_option1(class="form-control", placeholder="First option") }}
-                                {% if form.poll_option1.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {% for error in form.poll_option1.errors %}
-                                            {{ error }}
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            
-                            <div class="col-md-6">
-                                <label class="form-label">{{ form.poll_option2.label.text }} <span class="text-danger">*</span></label>
-                                {{ form.poll_option2(class="form-control", placeholder="Second option") }}
-                                {% if form.poll_option2.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {% for error in form.poll_option2.errors %}
-                                            {{ error }}
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            
-                            <div class="col-12">
-                                <label class="form-label">{{ form.poll_option3.label.text }} <small class="text-muted">(Optional)</small></label>
-                                {{ form.poll_option3(class="form-control", placeholder="Third option (optional)") }}
-                                {% if form.poll_option3.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {% for error in form.poll_option3.errors %}
-                                            {{ error }}
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            
-                            <div class="col-12">
-                                <div class="alert alert-info">
-                                    <i class="fas fa-info-circle me-2"></i>
-                                    <strong>Poll Preview:</strong> Your audience will see the poll question with the options you provide above. Make sure the options are clear and distinct.
+{% block admin_content %}
+<div class="container-fluid p-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <div class="admin-card">
+                <div class="admin-header">
+                    <h2>{{ title }}</h2>
+                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                    </a>
+                </div>
+
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+
+                    <div class="row g-4">
+                        <div class="col-12">
+                            <label class="form-label">{{ form.title.label.text }}</label>
+                            {{ form.title(class="form-control", placeholder="Enter opinion title") }}
+                            {% if form.title.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.title.errors %}{{ error }}{% endfor %}
                                 </div>
-                            </div>
-                            
-                            <div class="col-12">
-                                <div class="d-flex gap-2">
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-save me-1"></i>Save Opinion & Poll
-                                    </button>
-                                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">
-                                        <i class="fas fa-times me-1"></i>Cancel
-                                    </a>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">{{ form.position.label.text }}</label>
+                            {{ form.position(class="form-control", placeholder="Your stance or position on this topic") }}
+                            {% if form.position.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.position.errors %}{{ error }}{% endfor %}
                                 </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">{{ form.description.label.text }}</label>
+                            {{ form.description(class="form-control", rows="4", placeholder="Detailed description or explanation (optional)") }}
+                            {% if form.description.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.description.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">{{ form.topic_tag.label.text }} <small class="text-muted">(Optional)</small></label>
+                            {{ form.topic_tag(class="form-control") }}
+                            {% if form.topic_tag.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.topic_tag.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                <i class="fas fa-tag me-1"></i>Add a topic tag to group related polls (e.g., Politics, Social Issues, Economics)
+                            </small>
+                        </div>
+
+                        <div class="col-12">
+                            <h5 class="mb-3"><i class="fas fa-poll me-2"></i>Poll Configuration</h5>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">{{ form.poll_question.label.text }}</label>
+                            {{ form.poll_question(class="form-control", placeholder="What question do you want to ask your audience?") }}
+                            {% if form.poll_question.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.poll_question.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.poll_option1.label.text }} <span class="text-danger">*</span></label>
+                            {{ form.poll_option1(class="form-control", placeholder="First option") }}
+                            {% if form.poll_option1.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.poll_option1.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.poll_option2.label.text }} <span class="text-danger">*</span></label>
+                            {{ form.poll_option2(class="form-control", placeholder="Second option") }}
+                            {% if form.poll_option2.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.poll_option2.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">{{ form.poll_option3.label.text }} <small class="text-muted">(Optional)</small></label>
+                            {{ form.poll_option3(class="form-control", placeholder="Third option (optional)") }}
+                            {% if form.poll_option3.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.poll_option3.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Poll Preview:</strong> Your audience will see the poll question with the options you provide above. Make sure the options are clear and distinct.
                             </div>
                         </div>
-                    </form>
-                </div>
+
+                        <div class="col-12">
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-1"></i>Save Opinion & Poll
+                                </button>
+                                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">
+                                    <i class="fas fa-times me-1"></i>Cancel
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -153,17 +133,15 @@
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Auto-hide flash messages after 5 seconds
-        const flashAlerts = document.querySelectorAll('.alert.alert-dismissible');
-        flashAlerts.forEach(function(alert) {
-            setTimeout(function() {
-                if (alert && alert.parentNode) {
-                    const alertInstance = new bootstrap.Alert(alert);
-                    alertInstance.close();
-                }
-            }, 5000);
-        });
+document.addEventListener('DOMContentLoaded', function() {
+    const flashAlerts = document.querySelectorAll('.alert.alert-dismissible');
+    flashAlerts.forEach(function(alert) {
+        setTimeout(function() {
+            if (alert && alert.parentNode) {
+                try { new bootstrap.Alert(alert).close(); } catch(e) {}
+            }
+        }, 5000);
     });
+});
 </script>
 {% endblock %}

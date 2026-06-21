@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "admin/admin_base.html" %}
 
 {% block title %}Announcement Banner - Admin{% endblock %}
 
@@ -22,84 +22,82 @@
 </style>
 {% endblock %}
 
-{% block content %}
-<div class="admin-section">
-    <div class="container-fluid">
-        <div class="row justify-content-center">
-            <div class="col-xl-8 col-lg-9 col-md-10">
-                <div class="admin-card">
-                    <div class="admin-header">
-                        <h2><i class="fas fa-bullhorn me-2 text-warning"></i>Announcement Banner</h2>
-                        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
-                            <i class="fas fa-arrow-left me-1"></i>Dashboard
-                        </a>
-                    </div>
-
-                    {% with messages = get_flashed_messages(with_categories=true) %}
-                        {% if messages %}{% for cat, msg in messages %}
-                        <div class="alert alert-{{ 'danger' if cat == 'error' else cat }} alert-dismissible fade show mt-3">
-                            {{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-                        {% endfor %}{% endif %}
-                    {% endwith %}
-
-                    <p class="text-muted mt-3">Display a dismissable banner at the top of every page to highlight announcements, new releases, or events.</p>
-
-                    <!-- Live Preview -->
-                    <div class="mb-4">
-                        <label class="form-label fw-semibold text-muted small">LIVE PREVIEW</label>
-                        <div class="announcement-preview-bar preview-info" id="announcementPreview">
-                            <span id="prevText">Your announcement message will appear here.</span>
-                            <a href="#" id="prevLink" class="btn btn-sm btn-primary">Learn More</a>
-                        </div>
-                    </div>
-
-                    <form method="POST">
-                        {{ form.hidden_tag() }}
-
-                        <div class="row g-4">
-                            <div class="col-md-4">
-                                <label class="form-label fw-semibold">Status</label>
-                                {{ form.is_active(class="form-select", id="isActive") }}
-                                <small class="text-muted">Inactive banners are not shown to users.</small>
-                            </div>
-
-                            <div class="col-md-8">
-                                <label class="form-label fw-semibold">{{ form.text.label.text }} <span class="text-danger">*</span></label>
-                                {{ form.text(class="form-control", id="annText", placeholder="🎉 New reel dropping this Friday — don't miss it!") }}
-                                {% for err in form.text.errors %}<div class="invalid-feedback d-block">{{ err }}</div>{% endfor %}
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">{{ form.link_url.label.text }}</label>
-                                {{ form.link_url(class="form-control", id="annLink", placeholder="https://...") }}
-                                <small class="text-muted">Leave blank to show text only (no button).</small>
-                            </div>
-
-                            <div class="col-md-3">
-                                <label class="form-label fw-semibold">{{ form.link_text.label.text }}</label>
-                                {{ form.link_text(class="form-control", id="annLinkText", placeholder="Watch Now") }}
-                            </div>
-
-                            <div class="col-md-3">
-                                <label class="form-label fw-semibold">{{ form.style.label.text }}</label>
-                                {{ form.style(class="form-select", id="annStyle") }}
-                            </div>
-
-                            <div class="col-12">
-                                <hr class="my-2">
-                                {{ form.submit(class="btn btn-primary px-4") }}
-                                {% if form.is_active.data == '1' %}
-                                <form action="{{ url_for('admin_announcement') }}" method="POST" class="d-inline ms-2">
-                                    {{ form.hidden_tag() }}
-                                    <input type="hidden" name="is_active" value="0">
-                                    <button type="submit" class="btn btn-outline-secondary px-4">Deactivate Banner</button>
-                                </form>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </form>
+{% block admin_content %}
+<div class="container-fluid p-4">
+    <div class="row justify-content-center">
+        <div class="col-xl-8 col-lg-9 col-md-10">
+            <div class="admin-card">
+                <div class="admin-header">
+                    <h2><i class="fas fa-bullhorn me-2 text-warning"></i>Announcement Banner</h2>
+                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Dashboard
+                    </a>
                 </div>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}{% for cat, msg in messages %}
+                    <div class="alert alert-{{ 'danger' if cat == 'error' else cat }} alert-dismissible fade show mt-3">
+                        {{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endfor %}{% endif %}
+                {% endwith %}
+
+                <p class="text-muted mt-3">Display a dismissable banner at the top of every page to highlight announcements, new releases, or events.</p>
+
+                <!-- Live Preview -->
+                <div class="mb-4">
+                    <label class="form-label fw-semibold text-muted small">LIVE PREVIEW</label>
+                    <div class="announcement-preview-bar preview-info" id="announcementPreview">
+                        <span id="prevText">Your announcement message will appear here.</span>
+                        <a href="#" id="prevLink" class="btn btn-sm btn-primary">Learn More</a>
+                    </div>
+                </div>
+
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Status</label>
+                            {{ form.is_active(class="form-select", id="isActive") }}
+                            <small class="text-muted">Inactive banners are not shown to users.</small>
+                        </div>
+
+                        <div class="col-md-8">
+                            <label class="form-label fw-semibold">{{ form.text.label.text }} <span class="text-danger">*</span></label>
+                            {{ form.text(class="form-control", id="annText", placeholder="🎉 New reel dropping this Friday — don't miss it!") }}
+                            {% for err in form.text.errors %}<div class="invalid-feedback d-block">{{ err }}</div>{% endfor %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">{{ form.link_url.label.text }}</label>
+                            {{ form.link_url(class="form-control", id="annLink", placeholder="https://...") }}
+                            <small class="text-muted">Leave blank to show text only (no button).</small>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.link_text.label.text }}</label>
+                            {{ form.link_text(class="form-control", id="annLinkText", placeholder="Watch Now") }}
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.style.label.text }}</label>
+                            {{ form.style(class="form-select", id="annStyle") }}
+                        </div>
+
+                        <div class="col-12">
+                            <hr class="my-2">
+                            {{ form.submit(class="btn btn-primary px-4") }}
+                            {% if form.is_active.data == '1' %}
+                            <form action="{{ url_for('admin_announcement') }}" method="POST" class="d-inline ms-2">
+                                {{ form.hidden_tag() }}
+                                <input type="hidden" name="is_active" value="0">
+                                <button type="submit" class="btn btn-outline-secondary px-4">Deactivate Banner</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

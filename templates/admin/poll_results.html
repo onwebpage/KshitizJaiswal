@@ -1,102 +1,28 @@
-{% extends "base.html" %}
+{% extends "admin/admin_base.html" %}
 
 {% block title %}Poll Results - {{ opinion.title }} - Admin Panel{% endblock %}
 
-{% block content %}
-<div class="admin-section">
-    <div class="container">
-        <div class="row">
-            <div class="col-12">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h2><i class="fas fa-chart-bar me-2"></i>Poll Results</h2>
-                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
-                        <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
-                    </a>
-                </div>
-                
-                <div class="admin-card">
-                    <div class="row">
-                        <div class="col-lg-8">
-                            <h3>{{ opinion.title }}</h3>
-                            <p class="text-muted mb-3">{{ opinion.position }}</p>
-                            <h5 class="mb-4">{{ opinion.poll_question }}</h5>
-                            
-                            <div class="poll-results-detailed">
-                                {% for result in results %}
-                                <div class="poll-option-result mb-4">
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <strong>{{ result.option }}</strong>
-                                        <span class="badge bg-primary">{{ result.votes }} votes ({{ result.percentage }}%)</span>
-                                    </div>
-                                    <div class="progress" style="height: 10px;">
-                                        <div class="progress-bar bg-gradient" role="progressbar" 
-                                             style="width: {{ result.percentage }}%; background: var(--gradient-primary);"
-                                             aria-valuenow="{{ result.percentage }}" 
-                                             aria-valuemin="0" 
-                                             aria-valuemax="100">
-                                        </div>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        
-                        <div class="col-lg-4">
-                            <div class="stats-summary">
-                                <div class="stat-box text-center p-4 bg-light rounded">
-                                    <h2 class="text-primary mb-2">{{ total_votes }}</h2>
-                                    <p class="mb-0">Total Votes</p>
-                                </div>
-                                
-                                <div class="mt-4">
-                                    <a href="{{ url_for('admin_edit_opinion', opinion_id=opinion.id) }}" class="btn btn-success btn-block mb-2">
-                                        <i class="fas fa-edit me-1"></i>Edit Opinion
-                                    </a>
-                                    
-                                    <a href="{{ url_for('index') }}#opinions" class="btn btn-outline-primary btn-block" target="_blank">
-                                        <i class="fas fa-external-link-alt me-1"></i>View Public Page
-                                    </a>
-                                </div>
-                                
-                                {% if opinion.description %}
-                                <div class="mt-4">
-                                    <h6>Description</h6>
-                                    <p class="text-muted small">{{ opinion.description }}</p>
-                                </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
+{% block extra_head %}
 <style>
 .poll-results-detailed .progress {
     border-radius: 50px;
     background-color: #e9ecef;
 }
-
 .poll-results-detailed .progress-bar {
     border-radius: 50px;
     transition: width 1s ease-in-out;
 }
-
 .poll-option-result {
     padding: 1rem;
     background: rgba(248, 250, 252, 0.8);
     border-radius: 12px;
     border-left: 4px solid var(--primary-color);
 }
-
 .stats-summary .stat-box {
     background: rgba(255, 255, 255, 0.9) !important;
     border: 1px solid rgba(99, 102, 241, 0.2);
     box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
 }
-
 .stats-summary .stat-box h2 {
     font-size: 3rem;
     font-weight: 800;
@@ -105,10 +31,75 @@
     -webkit-text-fill-color: transparent;
     background-clip: text;
 }
-
-.btn-block {
-    width: 100%;
-    margin-bottom: 0.5rem;
-}
+.btn-block { width: 100%; margin-bottom: 0.5rem; }
 </style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid p-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-chart-bar me-2"></i>Poll Results</h2>
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                </a>
+            </div>
+
+            <div class="admin-card">
+                <div class="row">
+                    <div class="col-lg-8">
+                        <h3>{{ opinion.title }}</h3>
+                        <p class="text-muted mb-3">{{ opinion.position }}</p>
+                        <h5 class="mb-4">{{ opinion.poll_question }}</h5>
+
+                        <div class="poll-results-detailed">
+                            {% for result in results %}
+                            <div class="poll-option-result mb-4">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <strong>{{ result.option }}</strong>
+                                    <span class="badge bg-primary">{{ result.votes }} votes ({{ result.percentage }}%)</span>
+                                </div>
+                                <div class="progress" style="height: 10px;">
+                                    <div class="progress-bar bg-gradient" role="progressbar"
+                                         style="width: {{ result.percentage }}%; background: var(--gradient-primary);"
+                                         aria-valuenow="{{ result.percentage }}"
+                                         aria-valuemin="0"
+                                         aria-valuemax="100">
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="stats-summary">
+                            <div class="stat-box text-center p-4 bg-light rounded">
+                                <h2 class="text-primary mb-2">{{ total_votes }}</h2>
+                                <p class="mb-0">Total Votes</p>
+                            </div>
+
+                            <div class="mt-4">
+                                <a href="{{ url_for('admin_edit_opinion', opinion_id=opinion.id) }}" class="btn btn-success btn-block mb-2">
+                                    <i class="fas fa-edit me-1"></i>Edit Opinion
+                                </a>
+                                <a href="{{ url_for('index') }}#opinions" class="btn btn-outline-primary btn-block" target="_blank">
+                                    <i class="fas fa-external-link-alt me-1"></i>View Public Page
+                                </a>
+                            </div>
+
+                            {% if opinion.description %}
+                            <div class="mt-4">
+                                <h6>Description</h6>
+                                <p class="text-muted small">{{ opinion.description }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

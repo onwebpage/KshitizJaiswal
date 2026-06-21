@@ -703,10 +703,12 @@ def admin_dashboard():
     # already imported - Subscriber
     content = DataManager.get_content()
     subscribers = [s.to_dict() for s in Subscriber.query.all()]
-    
-    return render_template('admin/dashboard.html', 
-                         content=content, 
-                         subscribers=subscribers)
+    reels_section_visible = SiteConfig.get('reels_section_visible', 'true') == 'true'
+
+    return render_template('admin/dashboard.html',
+                         content=content,
+                         subscribers=subscribers,
+                         reels_section_visible=reels_section_visible)
 
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():

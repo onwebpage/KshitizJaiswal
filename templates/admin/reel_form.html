@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "admin/admin_base.html" %}
 {% from 'admin/_image_upload.html' import image_upload_field, image_upload_css, image_upload_js %}
 
 {% block title %}{{ title }} - Admin Panel - Kshitiz Jaiswal{% endblock %}
@@ -48,11 +48,10 @@
 </style>
 {% endblock %}
 
-{% block content %}
-<div class="admin-section">
-    <div class="container-fluid">
-        <div class="row justify-content-center">
-            <div class="col-xl-9 col-lg-10 col-md-12">
+{% block admin_content %}
+<div class="container-fluid p-4">
+    <div class="row justify-content-center">
+        <div class="col-xl-9 col-lg-10 col-md-12">
                 <div class="admin-card">
                     <div class="admin-header">
                         <h2>{{ title }}</h2>
@@ -268,7 +267,6 @@
             </div>
         </div>
     </div>
-</div>
 {% endblock %}
 
 {% block scripts %}
@@ -415,6 +413,32 @@ function setStatus(html, cls) {
     el.className   = 'fetch-status ' + cls;
 }
 
+// ── Auto-fetch on URL paste / input (debounced 1.2 s) ────────────
+(function () {
+    const urlInput = document.getElementById('videoUrl');
+    if (!urlInput) return;
+    let _timer = null;
+    const DELAY = 1200;
+
+    function isVideoUrl(url) {
+        return /(?:youtube\.com\/(?:watch|shorts)|youtu\.be\/|instagram\.com\/(?:p|reel)\/)/.test(url);
+    }
+
+    function scheduleAutoFetch() {
+        clearTimeout(_timer);
+        const url = urlInput.value.trim();
+        if (!isVideoUrl(url)) return;
+        // Don't re-fetch if we already have data for this session
+        if (_fetchedData.thumbnail || _fetchedData.title) return;
+        setStatus('<i class="fas fa-magic me-1"></i>URL detected — fetching info…', 'text-muted');
+        _timer = setTimeout(() => doFetchMeta(), DELAY);
+    }
+
+    urlInput.addEventListener('input', scheduleAutoFetch);
+    urlInput.addEventListener('paste', function () { setTimeout(scheduleAutoFetch, 10); });
+    urlInput.addEventListener('change', scheduleAutoFetch);
+})();
+
 // ── Flash auto-close ──────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.alert.alert-dismissible').forEach(function(el) {
@@ -425,6 +449,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const hiddenThumb = document.getElementById('thumbnailUrlHidden');
     if (hiddenThumb && hiddenThumb.value && hiddenThumb.value.startsWith('http')) {
         setAutoThumb(hiddenThumb.value);
+        // Mark as already-fetched so auto-trigger doesn't re-fetch on edit page
+        _fetchedData.thumbnail = hiddenThumb.value;
     }
 });
 </script>

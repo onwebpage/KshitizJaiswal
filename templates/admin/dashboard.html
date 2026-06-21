@@ -492,35 +492,93 @@
                     <!-- Content Tab -->
                     <div class="admin-tab" id="content">
                         <div class="admin-header">
-                            <h2>Edit Website Content</h2>
+                            <h2>Content Quick Access</h2>
                         </div>
-                        
-                        <div class="admin-card">
-                            <form id="contentForm">
-                                <div class="row g-4">
-                                    <div class="col-md-6">
-                                        <label class="form-label">Hero Title</label>
-                                        <input type="text" class="form-control" value="{{ content.hero.name }}" name="hero_name">
+
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <a href="{{ url_for('admin_hero_content') }}" class="card text-decoration-none h-100 border-0 shadow-sm hover-card">
+                                    <div class="card-body text-center py-4">
+                                        <i class="fas fa-image fa-2x text-primary mb-3"></i>
+                                        <h6 class="fw-bold mb-1">Hero Section</h6>
+                                        <small class="text-muted">Edit banner, title & tagline</small>
                                     </div>
-                                    
-                                    <div class="col-md-6">
-                                        <label class="form-label">Banner URL</label>
-                                        <input type="url" class="form-control" value="{{ content.hero.banner_url }}" name="hero_banner">
+                                </a>
+                            </div>
+                            <div class="col-md-4">
+                                <a href="{{ url_for('admin_page_content') }}" class="card text-decoration-none h-100 border-0 shadow-sm hover-card">
+                                    <div class="card-body text-center py-4">
+                                        <i class="fas fa-file-alt fa-2x text-success mb-3"></i>
+                                        <h6 class="fw-bold mb-1">Page Content</h6>
+                                        <small class="text-muted">About, mission & other text</small>
                                     </div>
-                                    
-                                    <div class="col-12">
-                                        <label class="form-label">Hero Tagline</label>
-                                        <textarea class="form-control" rows="2" name="hero_tagline">{{ content.hero.tagline }}</textarea>
+                                </a>
+                            </div>
+                            <div class="col-md-4">
+                                <a href="{{ url_for('admin_content_manager') }}" class="card text-decoration-none h-100 border-0 shadow-sm hover-card">
+                                    <div class="card-body text-center py-4">
+                                        <i class="fas fa-layer-group fa-2x text-info mb-3"></i>
+                                        <h6 class="fw-bold mb-1">Content Manager</h6>
+                                        <small class="text-muted">Manage all site content blocks</small>
                                     </div>
-                                    
-                                    <div class="col-12">
-                                        <button type="submit" class="btn btn-primary">
-                                            <i class="fas fa-save me-1"></i>Save Changes
-                                        </button>
+                                </a>
+                            </div>
+                            <div class="col-md-4">
+                                <a href="{{ url_for('admin_testimonials') }}" class="card text-decoration-none h-100 border-0 shadow-sm hover-card">
+                                    <div class="card-body text-center py-4">
+                                        <i class="fas fa-quote-right fa-2x text-warning mb-3"></i>
+                                        <h6 class="fw-bold mb-1">Testimonials</h6>
+                                        <small class="text-muted">Manage audience testimonials</small>
                                     </div>
-                                </div>
-                            </form>
+                                </a>
+                            </div>
+                            <div class="col-md-4">
+                                <a href="{{ url_for('admin_announcement') }}" class="card text-decoration-none h-100 border-0 shadow-sm hover-card">
+                                    <div class="card-body text-center py-4">
+                                        <i class="fas fa-bullhorn fa-2x text-danger mb-3"></i>
+                                        <h6 class="fw-bold mb-1">Announcement Banner</h6>
+                                        <small class="text-muted">Site-wide announcement bar</small>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-md-4">
+                                <a href="{{ url_for('admin_seo') }}" class="card text-decoration-none h-100 border-0 shadow-sm hover-card">
+                                    <div class="card-body text-center py-4">
+                                        <i class="fas fa-search fa-2x text-secondary mb-3"></i>
+                                        <h6 class="fw-bold mb-1">SEO Manager</h6>
+                                        <small class="text-muted">Meta tags, titles & descriptions</small>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-md-4">
+                                <a href="{{ url_for('admin_statistics_section') }}" class="card text-decoration-none h-100 border-0 shadow-sm hover-card">
+                                    <div class="card-body text-center py-4">
+                                        <i class="fas fa-chart-bar fa-2x text-primary mb-3"></i>
+                                        <h6 class="fw-bold mb-1">Statistics Section</h6>
+                                        <small class="text-muted">Edit homepage stats numbers</small>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-md-4">
+                                <a href="{{ url_for('admin_social_links') }}" class="card text-decoration-none h-100 border-0 shadow-sm hover-card">
+                                    <div class="card-body text-center py-4">
+                                        <i class="fas fa-share-alt fa-2x text-info mb-3"></i>
+                                        <h6 class="fw-bold mb-1">Social Media Links</h6>
+                                        <small class="text-muted">Manage platform links</small>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-md-4">
+                                <a href="{{ url_for('admin_section_visibility') }}" class="card text-decoration-none h-100 border-0 shadow-sm hover-card">
+                                    <div class="card-body text-center py-4">
+                                        <i class="fas fa-toggle-on fa-2x text-success mb-3"></i>
+                                        <h6 class="fw-bold mb-1">Section Visibility</h6>
+                                        <small class="text-muted">Show/hide homepage sections</small>
+                                    </div>
+                                </a>
+                            </div>
                         </div>
+
                     </div>
         {% endblock %}
     </div>
@@ -619,6 +677,19 @@ function toggleReelsSection() {
     })
     .catch(() => showToast('Could not toggle section.', 'danger'));
 }
+
+// ── Section visibility init (server-side state) ───────────────────────
+(function () {
+    const visible = {{ 'true' if reels_section_visible else 'false' }};
+    if (visible) return;
+    const btn  = document.getElementById('toggleSectionBtn');
+    const icon = document.getElementById('toggleSectionIcon');
+    const text = document.getElementById('toggleSectionText');
+    if (!btn) return;
+    btn.className  = btn.className.replace('btn-outline-secondary', 'btn-danger');
+    if (icon) icon.className = 'fas fa-eye-slash me-1';
+    if (text) text.textContent = 'Section: Off';
+})();
 
 // ── Helpers ───────────────────────────────────────────────────────────
 function getCsrfToken() {

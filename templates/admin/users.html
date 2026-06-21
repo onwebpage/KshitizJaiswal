@@ -1,65 +1,63 @@
-{% extends "base.html" %}
+{% extends "admin/admin_base.html" %}
 
 {% block title %}User Management - Admin Panel{% endblock %}
 
-{% block content %}
-<div class="admin-section">
-    <div class="container mt-5">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2><i class="fas fa-user-shield me-2"></i>User Management</h2>
-            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
-            </a>
-        </div>
+{% block admin_content %}
+<div class="container-fluid p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-user-shield me-2"></i>User Management</h2>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
 
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-graduation-cap me-2"></i>Course Enrollments</h5>
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-graduation-cap me-2"></i>Course Enrollments</h5>
+        </div>
+        <div class="card-body">
+            {% if enrollments %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>User ID</th>
+                            <th>Course</th>
+                            <th>Amount Paid</th>
+                            <th>Payment ID</th>
+                            <th>Enrolled At</th>
+                            <th>Expires At</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for enrollment in enrollments %}
+                        <tr>
+                            <td><code>{{ enrollment.clerk_user_id[:16] }}...</code></td>
+                            <td>{{ enrollment.course_title }}</td>
+                            <td>₹{{ enrollment.amount_paid or 0 }}</td>
+                            <td>
+                                {% if enrollment.payment_id %}
+                                <small class="text-muted">{{ enrollment.payment_id[:20] }}...</small>
+                                {% else %}
+                                <span class="badge bg-success">Free</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ enrollment.granted_at }}</td>
+                            <td>
+                                {% if enrollment.expires_at == 'Never' %}
+                                <span class="badge bg-info">Lifetime</span>
+                                {% else %}
+                                {{ enrollment.expires_at }}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
-            <div class="card-body">
-                {% if enrollments %}
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>User ID</th>
-                                <th>Course</th>
-                                <th>Amount Paid</th>
-                                <th>Payment ID</th>
-                                <th>Enrolled At</th>
-                                <th>Expires At</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for enrollment in enrollments %}
-                            <tr>
-                                <td><code>{{ enrollment.clerk_user_id[:16] }}...</code></td>
-                                <td>{{ enrollment.course_title }}</td>
-                                <td>₹{{ enrollment.amount_paid or 0 }}</td>
-                                <td>
-                                    {% if enrollment.payment_id %}
-                                    <small class="text-muted">{{ enrollment.payment_id[:20] }}...</small>
-                                    {% else %}
-                                    <span class="badge bg-success">Free</span>
-                                    {% endif %}
-                                </td>
-                                <td>{{ enrollment.granted_at }}</td>
-                                <td>
-                                    {% if enrollment.expires_at == 'Never' %}
-                                    <span class="badge bg-info">Lifetime</span>
-                                    {% else %}
-                                    {{ enrollment.expires_at }}
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                {% else %}
-                <p class="text-muted text-center py-4">No course enrollments yet</p>
-                {% endif %}
-            </div>
+            {% else %}
+            <p class="text-muted text-center py-4">No course enrollments yet</p>
+            {% endif %}
         </div>
     </div>
 </div>

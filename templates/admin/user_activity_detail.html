@@ -1,143 +1,129 @@
-{% extends "base.html" %}
+{% extends "admin/admin_base.html" %}
 
 {% block title %}User Activity Detail - Admin{% endblock %}
 
-{% block content %}
-<div class="admin-section">
-    <div class="container-fluid">
-        <div class="admin-header">
-            <h2><i class="fas fa-user me-2"></i>User Activity Detail</h2>
-            <a href="{{ url_for('admin_user_data_usage') }}" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-1"></i>Back to User Data Usage
-            </a>
-        </div>
-        
-        <div class="row mb-4">
-            <div class="col-md-12">
-                <div class="admin-card">
-                    <h4>User Information</h4>
-                    <dl class="row">
-                        <dt class="col-sm-3">User ID:</dt>
-                        <dd class="col-sm-9"><code>{{ user_id }}</code></dd>
-                        
-                        <dt class="col-sm-3">Email:</dt>
-                        <dd class="col-sm-9">{{ user_email }}</dd>
-                    </dl>
-                </div>
+{% block admin_content %}
+<div class="container-fluid p-4">
+    <div class="admin-header">
+        <h2><i class="fas fa-user me-2"></i>User Activity Detail</h2>
+        <a href="{{ url_for('admin_user_data_usage') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Back to User Data Usage
+        </a>
+    </div>
+
+    <div class="row mb-4 mt-3">
+        <div class="col-md-12">
+            <div class="admin-card">
+                <h4>User Information</h4>
+                <dl class="row">
+                    <dt class="col-sm-3">User ID:</dt>
+                    <dd class="col-sm-9"><code>{{ user_id }}</code></dd>
+                    <dt class="col-sm-3">Email:</dt>
+                    <dd class="col-sm-9">{{ user_email }}</dd>
+                </dl>
             </div>
         </div>
-        
-        <div class="row mb-4">
-            <div class="col-md-12">
-                <div class="btn-group" role="group">
-                    <a href="?days=7" class="btn btn-outline-primary {% if days == 7 %}active{% endif %}">Last 7 Days</a>
-                    <a href="?days=30" class="btn btn-outline-primary {% if days == 30 %}active{% endif %}">Last 30 Days</a>
-                    <a href="?days=90" class="btn btn-outline-primary {% if days == 90 %}active{% endif %}">Last 90 Days</a>
-                </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="btn-group" role="group">
+                <a href="?days=7" class="btn btn-outline-primary {% if days == 7 %}active{% endif %}">Last 7 Days</a>
+                <a href="?days=30" class="btn btn-outline-primary {% if days == 30 %}active{% endif %}">Last 30 Days</a>
+                <a href="?days=90" class="btn btn-outline-primary {% if days == 90 %}active{% endif %}">Last 90 Days</a>
             </div>
         </div>
-        
-        <div class="row g-4 mb-4">
-            <div class="col-lg-3 col-md-6">
-                <div class="stat-card">
-                    <div class="stat-icon bg-primary">
-                        <i class="fas fa-chart-line"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3>{{ user_stats.total_activities }}</h3>
-                        <p>Total Activities</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-lg-3 col-md-6">
-                <div class="stat-card">
-                    <div class="stat-icon bg-success">
-                        <i class="fas fa-eye"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3>{{ user_stats.page_views }}</h3>
-                        <p>Page Views</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-lg-3 col-md-6">
-                <div class="stat-card">
-                    <div class="stat-icon bg-info">
-                        <i class="fas fa-video"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3>{{ user_stats.reel_views }}</h3>
-                        <p>Reel Views</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-lg-3 col-md-6">
-                <div class="stat-card">
-                    <div class="stat-icon bg-warning">
-                        <i class="fas fa-poll"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h3>{{ user_stats.poll_votes }}</h3>
-                        <p>Poll Votes</p>
-                    </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card">
+                <div class="stat-icon bg-primary"><i class="fas fa-chart-line"></i></div>
+                <div class="stat-content">
+                    <h3>{{ user_stats.total_activities }}</h3>
+                    <p>Total Activities</p>
                 </div>
             </div>
         </div>
-        
-        <div class="row">
-            <div class="col-md-12">
-                <div class="admin-card">
-                    <h4>Recent Activity (Last {{ days }} Days)</h4>
-                    <div class="table-responsive">
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Date & Time</th>
-                                    <th>Activity Type</th>
-                                    <th>Resource</th>
-                                    <th>Page URL</th>
-                                    <th>IP Address</th>
-                                    <th>Data Size</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for activity in activities %}
-                                <tr>
-                                    <td>{{ activity.created_at[:19] }}</td>
-                                    <td>
-                                        {% if activity.activity_type == 'page_view' %}
-                                            <span class="badge bg-primary">{{ activity.activity_type }}</span>
-                                        {% elif activity.activity_type == 'reel_view' %}
-                                            <span class="badge bg-success">{{ activity.activity_type }}</span>
-                                        {% elif activity.activity_type == 'poll_vote' %}
-                                            <span class="badge bg-info">{{ activity.activity_type }}</span>
-                                        {% else %}
-                                            <span class="badge bg-secondary">{{ activity.activity_type }}</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if activity.resource_type != 'N/A' %}
-                                            {{ activity.resource_type }} #{{ activity.resource_id }}
-                                        {% else %}
-                                            -
-                                        {% endif %}
-                                    </td>
-                                    <td><small>{{ activity.page_url[:50] }}...</small></td>
-                                    <td><code>{{ activity.ip_address }}</code></td>
-                                    <td>{{ activity.data_size }} B</td>
-                                </tr>
-                                {% endfor %}
-                                {% if not activities %}
-                                <tr>
-                                    <td colspan="6" class="text-center text-muted">No activities found for this user in the selected period</td>
-                                </tr>
-                                {% endif %}
-                            </tbody>
-                        </table>
-                    </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card">
+                <div class="stat-icon bg-success"><i class="fas fa-eye"></i></div>
+                <div class="stat-content">
+                    <h3>{{ user_stats.page_views }}</h3>
+                    <p>Page Views</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card">
+                <div class="stat-icon bg-info"><i class="fas fa-video"></i></div>
+                <div class="stat-content">
+                    <h3>{{ user_stats.reel_views }}</h3>
+                    <p>Reel Views</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card">
+                <div class="stat-icon bg-warning"><i class="fas fa-poll"></i></div>
+                <div class="stat-content">
+                    <h3>{{ user_stats.poll_votes }}</h3>
+                    <p>Poll Votes</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="admin-card">
+                <h4>Recent Activity (Last {{ days }} Days)</h4>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Date &amp; Time</th>
+                                <th>Activity Type</th>
+                                <th>Resource</th>
+                                <th>Page URL</th>
+                                <th>IP Address</th>
+                                <th>Data Size</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for activity in activities %}
+                            <tr>
+                                <td>{{ activity.created_at[:19] }}</td>
+                                <td>
+                                    {% if activity.activity_type == 'page_view' %}
+                                        <span class="badge bg-primary">{{ activity.activity_type }}</span>
+                                    {% elif activity.activity_type == 'reel_view' %}
+                                        <span class="badge bg-success">{{ activity.activity_type }}</span>
+                                    {% elif activity.activity_type == 'poll_vote' %}
+                                        <span class="badge bg-info">{{ activity.activity_type }}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ activity.activity_type }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if activity.resource_type != 'N/A' %}
+                                        {{ activity.resource_type }} #{{ activity.resource_id }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td><small>{{ activity.page_url[:50] if activity.page_url else '-' }}</small></td>
+                                <td><code>{{ activity.ip_address }}</code></td>
+                                <td>{{ activity.data_size }} B</td>
+                            </tr>
+                            {% endfor %}
+                            {% if not activities %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">No activities found for this user in the selected period</td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>

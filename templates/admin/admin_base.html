@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="admin-section">
+    <!-- Sidebar -->
+    <div class="admin-sidebar">
+        <div class="admin-header">
+            <h4><i class="fas fa-cog me-2"></i>Admin Panel</h4>
+            <a href="{{ url_for('admin_logout') }}" class="btn btn-sm btn-outline-danger">
+                <i class="fas fa-sign-out-alt me-1"></i>Logout
+            </a>
+        </div>
+
+        <div class="admin-nav">
+            <a href="{{ url_for('admin_dashboard') }}" class="admin-nav-item {{ 'active' if request.endpoint == 'admin_dashboard' else '' }}">
+                <i class="fas fa-home me-2"></i>Dashboard
+            </a>
+            <hr class="my-2">
+            <div class="admin-nav-section-title">
+                <small class="text-muted">CONTENT MANAGEMENT</small>
+            </div>
+            <a href="{{ url_for('admin_content_manager') }}" class="admin-nav-item {{ 'active' if request.endpoint == 'admin_content_manager' else '' }}">
+                <i class="fas fa-layer-group me-2"></i>Content Manager
+            </a>
+            <a href="{{ url_for('admin_page_content') }}" class="admin-nav-item {{ 'active' if request.endpoint == 'admin_page_content' else '' }}">
+                <i class="fas fa-file-alt me-2"></i>Page Content
+            </a>
+            <a href="{{ url_for('admin_hero_content') }}" class="admin-nav-item {{ 'active' if request.endpoint == 'admin_hero_content' else '' }}">
+                <i class="fas fa-image me-2"></i>Hero Section
+            </a>
+            <a href="{{ url_for('admin_resources') }}" class="admin-nav-item {{ 'active' if request.endpoint in ['admin_resources', 'admin_add_resource', 'admin_edit_resource'] else '' }}">
+                <i class="fas fa-graduation-cap me-2"></i>Learning Resources
+            </a>
+            <a href="{{ url_for('admin_shows') }}" class="admin-nav-item {{ 'active' if request.endpoint in ['admin_shows', 'admin_add_show', 'admin_edit_show'] else '' }}">
+                <i class="fas fa-calendar-alt me-2"></i>Upcoming Shows
+            </a>
+            <a href="{{ url_for('admin_site_settings') }}" class="admin-nav-item {{ 'active' if request.endpoint == 'admin_site_settings' else '' }}">
+                <i class="fas fa-cogs me-2"></i>Site Settings
+            </a>
+            <a href="{{ url_for('admin_section_visibility') }}" class="admin-nav-item {{ 'active' if request.endpoint == 'admin_section_visibility' else '' }}">
+                <i class="fas fa-toggle-on me-2"></i>Section Visibility
+            </a>
+            <a href="{{ url_for('admin_chatbot') }}" class="admin-nav-item {{ 'active' if request.endpoint == 'admin_chatbot' else '' }}">
+                <i class="fas fa-robot me-2"></i>Chatbot Manager
+            </a>
+            <a href="{{ url_for('admin_statistics_section') }}" class="admin-nav-item {{ 'active' if request.endpoint == 'admin_statistics_section' else '' }}">
+                <i class="fas fa-chart-bar me-2"></i>Statistics Section
+            </a>
+            <a href="{{ url_for('admin_social_links') }}" class="admin-nav-item {{ 'active' if request.endpoint in ['admin_social_links', 'admin_add_social_link', 'admin_edit_social_link'] else '' }}">
+                <i class="fas fa-share-alt me-2"></i>Social Media Controls
+            </a>
+            <a href="{{ url_for('admin_testimonials') }}" class="admin-nav-item {{ 'active' if request.endpoint in ['admin_testimonials', 'admin_add_testimonial', 'admin_edit_testimonial'] else '' }}">
+                <i class="fas fa-quote-right me-2"></i>Testimonials
+            </a>
+            <a href="{{ url_for('admin_announcement') }}" class="admin-nav-item {{ 'active' if request.endpoint == 'admin_announcement' else '' }}">
+                <i class="fas fa-bullhorn me-2"></i>Announcement Banner
+            </a>
+            <a href="{{ url_for('admin_seo') }}" class="admin-nav-item {{ 'active' if request.endpoint == 'admin_seo' else '' }}">
+                <i class="fas fa-search me-2"></i>SEO Manager
+            </a>
+            <hr class="my-2">
+            <div class="admin-nav-section-title">
+                <small class="text-muted">MEDIA & POSTS</small>
+            </div>
+            <a href="{{ url_for('admin_add_reel') }}" class="admin-nav-item {{ 'active' if request.endpoint in ['admin_add_reel', 'admin_edit_reel'] else '' }}">
+                <i class="fas fa-video me-2"></i>Add / Edit Reel
+            </a>
+            <a href="{{ url_for('admin_add_opinion') }}" class="admin-nav-item {{ 'active' if request.endpoint in ['admin_add_opinion', 'admin_edit_opinion'] else '' }}">
+                <i class="fas fa-poll me-2"></i>Add / Edit Opinion
+            </a>
+            <a href="{{ url_for('admin_media_library') }}" class="admin-nav-item {{ 'active' if request.endpoint == 'admin_media_library' else '' }}">
+                <i class="fas fa-images me-2"></i>Media Library
+            </a>
+            <hr class="my-2">
+            <div class="admin-nav-section-title">
+                <small class="text-muted">REVENUE & COURSES</small>
+            </div>
+            <a href="{{ url_for('admin_subscriptions') }}" class="admin-nav-item {{ 'active' if request.endpoint == 'admin_subscriptions' else '' }}">
+                <i class="fas fa-sync-alt me-2"></i>AutoPay Subscriptions
+            </a>
+            <a href="{{ url_for('admin_subscription_tiers') }}" class="admin-nav-item {{ 'active' if request.endpoint in ['admin_subscription_tiers', 'admin_add_subscription_tier', 'admin_edit_subscription_tier'] else '' }}">
+                <i class="fas fa-crown me-2"></i>Subscription Tiers
+            </a>
+            <a href="{{ url_for('admin_payment_settings') }}" class="admin-nav-item {{ 'active' if request.endpoint == 'admin_payment_settings' else '' }}">
+                <i class="fas fa-credit-card me-2"></i>Payment Settings
+            </a>
+            <a href="{{ url_for('admin_whatsapp_settings') }}" class="admin-nav-item {{ 'active' if request.endpoint == 'admin_whatsapp_settings' else '' }}">
+                <i class="fab fa-whatsapp me-2"></i>WhatsApp Settings
+            </a>
+            <a href="{{ url_for('admin_courses') }}" class="admin-nav-item {{ 'active' if request.endpoint in ['admin_courses', 'admin_add_course', 'admin_edit_course'] else '' }}">
+                <i class="fas fa-book me-2"></i>Courses
+            </a>
+            <a href="{{ url_for('admin_modules') }}" class="admin-nav-item {{ 'active' if request.endpoint in ['admin_modules', 'admin_add_module', 'admin_edit_module'] else '' }}">
+                <i class="fas fa-folder me-2"></i>Modules
+            </a>
+            <a href="{{ url_for('admin_lessons') }}" class="admin-nav-item {{ 'active' if request.endpoint in ['admin_lessons', 'admin_add_lesson', 'admin_edit_lesson'] else '' }}">
+                <i class="fas fa-play-circle me-2"></i>Lessons
+            </a>
+            <hr class="my-2">
+            <div class="admin-nav-section-title">
+                <small class="text-muted">USERS & ANALYTICS</small>
+            </div>
+            <a href="{{ url_for('admin_users') }}" class="admin-nav-item {{ 'active' if request.endpoint == 'admin_users' else '' }}">
+                <i class="fas fa-user-shield me-2"></i>User Management
+            </a>
+            <a href="{{ url_for('admin_user_data_usage') }}" class="admin-nav-item {{ 'active' if request.endpoint == 'admin_user_data_usage' else '' }}">
+                <i class="fas fa-database me-2"></i>User Data Usage
+            </a>
+            <a href="{{ url_for('admin_analytics') }}" class="admin-nav-item {{ 'active' if request.endpoint == 'admin_analytics' else '' }}">
+                <i class="fas fa-chart-line me-2"></i>Analytics
+            </a>
+            <hr class="my-2">
+            <div class="admin-nav-section-title">
+                <small class="text-muted">ADVANCED TOOLS</small>
+            </div>
+            <a href="{{ url_for('admin_bulk_operations') }}" class="admin-nav-item {{ 'active' if request.endpoint == 'admin_bulk_operations' else '' }}">
+                <i class="fas fa-tasks me-2"></i>Bulk Operations
+            </a>
+            <a href="{{ url_for('admin_column_visibility') }}" class="admin-nav-item {{ 'active' if request.endpoint == 'admin_column_visibility' else '' }}">
+                <i class="fas fa-columns me-2"></i>Column Visibility
+            </a>
+            <a href="{{ url_for('admin_email_broadcast') }}" class="admin-nav-item {{ 'active' if request.endpoint == 'admin_email_broadcast' else '' }}">
+                <i class="fas fa-envelope-open-text me-2"></i>Email Broadcast
+            </a>
+            <a href="{{ url_for('admin_activity_logs') }}" class="admin-nav-item {{ 'active' if request.endpoint == 'admin_activity_logs' else '' }}">
+                <i class="fas fa-history me-2"></i>Activity Logs
+            </a>
+            <a href="{{ url_for('admin_error_logs') }}" class="admin-nav-item {{ 'active' if request.endpoint == 'admin_error_logs' else '' }}">
+                <i class="fas fa-exclamation-circle me-2 text-danger"></i>Error Logs
+            </a>
+            <a href="{{ url_for('admin_database_export') }}" class="admin-nav-item {{ 'active' if request.endpoint == 'admin_database_export' else '' }}">
+                <i class="fas fa-download me-2"></i>Database Export
+            </a>
+            <hr class="my-2">
+            <div class="admin-nav-section-title">
+                <small class="text-muted">ACCOUNT</small>
+            </div>
+            <a href="{{ url_for('admin_account') }}" class="admin-nav-item {{ 'active' if request.endpoint == 'admin_account' else '' }}">
+                <i class="fas fa-user-cog me-2"></i>Account Settings
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="admin-content">
+        {% block admin_content %}{% endblock %}
+    </div>
+</div>
+{% endblock %}

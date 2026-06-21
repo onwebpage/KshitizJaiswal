@@ -1,73 +1,83 @@
-{% extends "base.html" %}
+{% extends "admin/admin_base.html" %}
 
 {% block title %}Email Broadcast - Admin Panel{% endblock %}
 
-{% block content %}
-<div class="admin-section">
-    <div class="container mt-5">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2><i class="fas fa-envelope-open-text me-2"></i>Email Broadcast</h2>
-            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
-            </a>
-        </div>
+{% block admin_content %}
+<div class="container-fluid p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-envelope-open-text me-2"></i>Email Broadcast</h2>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
 
-        <div class="alert alert-info">
-            <i class="fas fa-info-circle me-2"></i>Send emails to all <strong>{{ subscriber_count }}</strong> subscribers
-        </div>
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i>Send emails to all <strong>{{ subscriber_count }}</strong> subscribers
+    </div>
 
-        {% if preview_mode %}
-        <div class="alert alert-warning">
-            <i class="fas fa-exclamation-triangle me-2"></i>Email service integration required. This is a preview of what would be sent.
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}{% for cat, msg in messages %}
+        <div class="alert alert-{{ 'danger' if cat == 'error' else cat }} alert-dismissible fade show">
+            {{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
+        {% endfor %}{% endif %}
+    {% endwith %}
+
+    {% if preview_mode %}
+    <div class="alert alert-warning">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <strong>Preview Mode:</strong> No emails were sent yet. Configure SMTP in
+        <a href="{{ url_for('admin_site_settings') }}" class="alert-link">Site Settings</a> to enable actual sending.
+    </div>
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0"><i class="fas fa-eye me-2"></i>Email Preview</h5>
+        </div>
+        <div class="card-body">
+            <h4>{{ subject }}</h4>
+            <hr>
+            <div style="white-space: pre-wrap;">{{ message }}</div>
+        </div>
+    </div>
+    {% endif %}
+
+    <form method="POST">
+        <input type="hidden" name="csrf_token" value="{{ form.hidden_tag() if form is defined else '' }}">
         <div class="card mb-4">
-            <div class="card-header bg-success text-white">
-                <h5 class="mb-0"><i class="fas fa-eye me-2"></i>Email Preview</h5>
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-edit me-2"></i>Compose Email</h5>
             </div>
             <div class="card-body">
-                <h4>{{ subject }}</h4>
-                <hr>
-                <div style="white-space: pre-wrap;">{{ message }}</div>
-            </div>
-        </div>
-        {% endif %}
-
-        <form method="POST">
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-edit me-2"></i>Compose Email</h5>
+                <div class="mb-3">
+                    <label for="subject" class="form-label fw-semibold">Subject <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" id="subject" name="subject" required
+                           value="{{ subject or '' }}" placeholder="Enter email subject">
                 </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label for="subject" class="form-label">Subject</label>
-                        <input type="text" class="form-control" id="subject" name="subject" required
-                               value="{{ subject or '' }}" placeholder="Enter email subject">
-                    </div>
-                    <div class="mb-3">
-                        <label for="message" class="form-label">Message</label>
-                        <textarea class="form-control" id="message" name="message" rows="10" required
-                                  placeholder="Enter your message to subscribers">{{ message or '' }}</textarea>
-                    </div>
+                <div class="mb-3">
+                    <label for="message" class="form-label fw-semibold">Message <span class="text-danger">*</span></label>
+                    <textarea class="form-control" id="message" name="message" rows="12" required
+                              placeholder="Enter your message to subscribers...">{{ message or '' }}</textarea>
+                    <small class="text-muted">Plain text. Each subscriber will receive this message individually.</small>
                 </div>
             </div>
-
-            <div class="text-center">
-                <button type="submit" class="btn btn-primary btn-lg">
-                    <i class="fas fa-paper-plane me-2"></i>Preview Email
-                </button>
-            </div>
-        </form>
-
-        <div class="alert alert-warning mt-4">
-            <h6><i class="fas fa-wrench me-2"></i>Note for Developer:</h6>
-            <p class="mb-0">To enable actual email sending, integrate with an email service like:</p>
-            <ul class="mb-0 mt-2">
-                <li>SendGrid</li>
-                <li>Mailgun</li>
-                <li>AWS SES</li>
-                <li>Resend</li>
-            </ul>
         </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="fas fa-paper-plane me-2"></i>Preview Email
+            </button>
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary btn-lg">
+                <i class="fas fa-times me-1"></i>Cancel
+            </a>
+        </div>
+    </form>
+
+    <div class="alert alert-secondary mt-4">
+        <h6><i class="fas fa-wrench me-2"></i>To enable actual email delivery:</h6>
+        <p class="mb-1">Go to <a href="{{ url_for('admin_site_settings') }}">Site Settings</a> and configure SMTP credentials, or integrate with an email service:</p>
+        <ul class="mb-0">
+            <li>SendGrid · Mailgun · AWS SES · Resend</li>
+        </ul>
     </div>
 </div>
 {% endblock %}

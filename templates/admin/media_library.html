@@ -1,69 +1,80 @@
-{% extends "base.html" %}
+{% extends "admin/admin_base.html" %}
 
 {% block title %}Media Library - Admin Panel{% endblock %}
 
-{% block content %}
-<div class="admin-section">
-    <div class="container mt-5">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2><i class="fas fa-images me-2"></i>Media Library</h2>
-            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
-            </a>
-        </div>
+{% block admin_content %}
+<div class="container-fluid p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-images me-2"></i>Media Library</h2>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
 
-        <div class="alert alert-info">
-            <i class="fas fa-info-circle me-2"></i>Total media files: <strong>{{ media_files|length }}</strong>
-        </div>
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i>Total media files: <strong>{{ media_files|length }}</strong>
+        &nbsp;·&nbsp; Files are stored in <code>static/uploads/</code>
+    </div>
 
-        {% if media_files %}
-        <div class="row g-4">
-            {% for file in media_files %}
-            <div class="col-md-4 col-lg-3">
-                <div class="card">
-                    {% if file.type == 'image' %}
-                    <img src="{{ file.url }}" class="card-img-top" alt="{{ file.name }}" style="height: 200px; object-fit: cover;">
-                    {% else %}
-                    <div class="bg-dark text-white text-center" style="height: 200px; display: flex; align-items: center; justify-content: center;">
-                        <i class="fas fa-video fa-4x"></i>
-                    </div>
-                    {% endif %}
-                    <div class="card-body">
-                        <h6 class="card-title text-truncate" title="{{ file.name }}">{{ file.name }}</h6>
-                        <p class="card-text">
-                            <small class="text-muted">
-                                <i class="fas fa-weight-hanging me-1"></i>{{ file.size }} KB
-                            </small><br>
-                            <small class="text-muted">
-                                <i class="fas fa-{{ 'image' if file.type == 'image' else 'video' }} me-1"></i>{{ file.type }}
-                            </small>
-                        </p>
-                        <div class="btn-group btn-group-sm w-100" role="group">
-                            <a href="{{ file.url }}" target="_blank" class="btn btn-outline-primary">
-                                <i class="fas fa-eye"></i>
-                            </a>
-                            <button class="btn btn-outline-secondary" onclick="copyToClipboard('{{ file.path }}')">
-                                <i class="fas fa-copy"></i>
-                            </button>
-                        </div>
+    {% if media_files %}
+    <div class="row g-4">
+        {% for file in media_files %}
+        <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+            <div class="card h-100">
+                {% if file.type == 'image' %}
+                <img src="{{ file.url }}" class="card-img-top" alt="{{ file.name }}"
+                     style="height: 140px; object-fit: cover;"
+                     onerror="this.src='{{ url_for('static', filename='img/reel-placeholder.svg') }}'">
+                {% else %}
+                <div class="bg-dark text-white text-center" style="height: 140px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-video fa-3x"></i>
+                </div>
+                {% endif %}
+                <div class="card-body p-2">
+                    <h6 class="card-title text-truncate small mb-1" title="{{ file.name }}">{{ file.name }}</h6>
+                    <p class="card-text mb-2">
+                        <small class="text-muted">
+                            <i class="fas fa-weight-hanging me-1"></i>{{ file.size }} KB
+                            &nbsp;·&nbsp;
+                            <i class="fas fa-{{ 'image' if file.type == 'image' else 'video' }} me-1"></i>{{ file.type }}
+                        </small>
+                    </p>
+                    <div class="btn-group btn-group-sm w-100" role="group">
+                        <a href="{{ file.url }}" target="_blank" class="btn btn-outline-primary" title="View">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <button class="btn btn-outline-secondary" onclick="copyToClipboard('{{ file.url }}')" title="Copy URL">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                        <button class="btn btn-outline-dark" onclick="copyToClipboard('{{ file.path }}')" title="Copy path">
+                            <i class="fas fa-code"></i>
+                        </button>
                     </div>
                 </div>
             </div>
-            {% endfor %}
         </div>
-        {% else %}
-        <div class="alert alert-secondary text-center">
-            <i class="fas fa-folder-open fa-3x mb-3"></i>
-            <p class="mb-0">No media files found in the upload directory</p>
-        </div>
-        {% endif %}
+        {% endfor %}
     </div>
+    {% else %}
+    <div class="alert alert-secondary text-center py-5">
+        <i class="fas fa-folder-open fa-3x mb-3 d-block text-muted"></i>
+        <p class="mb-0">No media files found in the upload directory</p>
+        <small class="text-muted">Upload images via the Reel, Opinion, or Hero forms to see them here.</small>
+    </div>
+    {% endif %}
 </div>
+{% endblock %}
 
+{% block scripts %}
 <script>
 function copyToClipboard(text) {
     navigator.clipboard.writeText(text).then(() => {
-        alert('File path copied to clipboard!');
+        const btn = event.target.closest('button');
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check text-success"></i>';
+        setTimeout(() => btn.innerHTML = orig, 1500);
+    }).catch(() => {
+        prompt('Copy this:', text);
     });
 }
 </script>
