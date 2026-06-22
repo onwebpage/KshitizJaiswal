@@ -20,14 +20,22 @@
     <div class="container">
         <div class="row g-4">
             {% for show in shows %}
-            <div class="col-lg-4 col-md-6">
+            {% set btype = show.get('banner_type', 'youtube') %}
+            <div class="{% if btype == 'instagram' %}col-lg-3 col-md-5 col-sm-6{% else %}col-lg-4 col-md-6{% endif %}">
                 <div class="show-card">
-                    <div class="show-image">
+                    <div class="show-image show-image--{{ btype }}">
                         <img src="{{ url_for('static', filename=show.image) if show.image and not show.image.startswith('http') else show.image }}" alt="{{ show.title }}" class="img-fluid">
                         <div class="coming-soon-overlay">
                             <i class="fas fa-clock"></i>
                             <span>Coming Soon</span>
                         </div>
+                        <span class="show-banner-badge show-banner-badge--{{ btype }}">
+                            {% if btype == 'instagram' %}
+                                <i class="fab fa-instagram me-1"></i>9:16
+                            {% else %}
+                                <i class="fab fa-youtube me-1"></i>16:9
+                            {% endif %}
+                        </span>
                     </div>
                     <div class="show-content">
                         <h5>{{ show.title }}</h5>

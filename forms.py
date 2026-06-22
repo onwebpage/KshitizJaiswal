@@ -100,6 +100,10 @@ class ShowForm(FlaskForm):
     description = TextAreaField('Description', validators=[DataRequired(), Length(max=500)])
     image = FileField('Image', validators=[FileAllowed(['jpg', 'jpeg', 'png', 'gif', 'webp'])])
     coming_soon = SelectField('Status', choices=[('1', 'Coming Soon'), ('0', 'Available Now')], default='1')
+    banner_type = SelectField('Banner Type', choices=[
+        ('youtube', '📺 YouTube — 16:9 Landscape'),
+        ('instagram', '📸 Instagram — 9:16 Portrait'),
+    ], default='youtube')
     notify_link = StringField('Notification/Registration Link', validators=[Length(max=500)])
     submit = SubmitField('Save Show')
 

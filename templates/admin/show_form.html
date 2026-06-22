@@ -60,7 +60,7 @@
                                 {% endif %}
                             </div>
                             
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label for="{{ form.coming_soon.id }}" class="form-label">
                                     <i class="fas fa-clock me-1"></i>{{ form.coming_soon.label.text }}
                                 </label>
@@ -74,8 +74,25 @@
                                 {% endif %}
                                 <small class="form-text text-muted">Is this show available now or coming soon?</small>
                             </div>
-                            
-                            <div class="col-md-6">
+
+                            <div class="col-md-4">
+                                <label for="{{ form.banner_type.id }}" class="form-label">
+                                    <i class="fas fa-image me-1"></i>{{ form.banner_type.label.text }}
+                                </label>
+                                {{ form.banner_type(class="form-control") }}
+                                {% if form.banner_type.errors %}
+                                    <div class="text-danger">
+                                        {% for error in form.banner_type.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <small class="form-text text-muted">
+                                    📺 YouTube = wide 16:9 &nbsp;|&nbsp; 📸 Instagram = tall 9:16
+                                </small>
+                            </div>
+
+                            <div class="col-md-4">
                                 <label for="{{ form.notify_link.id }}" class="form-label">
                                     <i class="fas fa-bell me-1"></i>{{ form.notify_link.label.text }}
                                 </label>

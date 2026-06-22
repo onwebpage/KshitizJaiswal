@@ -1877,6 +1877,7 @@ def admin_add_show():
             'description': form.description.data,
             'image': uploaded_image or 'https://pixabay.com/get/g51d3a9b60f5b304d6d9a2109588df26fa955fdad29b549ed6f2d44cdb714ef5b54d4b04df2f46da1bd05dede83422e909ae5403a8c87771e7130a78714c2e5df_1280.jpg',
             'coming_soon': bool(int(form.coming_soon.data)),
+            'banner_type': form.banner_type.data or 'youtube',
             'notify_link': form.notify_link.data
         }
         shows.append(new_show)
@@ -1924,6 +1925,7 @@ def admin_edit_show(show_index):
             'description': form.description.data,
             'image': uploaded_image or show.get('image', ''),
             'coming_soon': bool(int(form.coming_soon.data)),
+            'banner_type': form.banner_type.data or 'youtube',
             'notify_link': form.notify_link.data
         }
         
@@ -1937,6 +1939,7 @@ def admin_edit_show(show_index):
     form.title.data = show.get('title', '')
     form.description.data = show.get('description', '')
     form.coming_soon.data = '1' if show.get('coming_soon', True) else '0'
+    form.banner_type.data = show.get('banner_type', 'youtube')
     form.notify_link.data = show.get('notify_link', '')
     current_image = show.get('image', '')
     
