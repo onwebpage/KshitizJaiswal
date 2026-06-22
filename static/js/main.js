@@ -285,6 +285,7 @@
 
                 const name = document.getElementById('popupName')?.value?.trim();
                 const email = document.getElementById('popupEmail')?.value?.trim();
+                const phone = document.getElementById('popupPhone')?.value?.trim() || '';
                 const place = document.getElementById('popupPlace')?.value?.trim();
                 const age = document.getElementById('popupAge')?.value?.trim();
                 const errDiv = document.getElementById('newsletterPopupError');
@@ -295,6 +296,11 @@
                     return;
                 }
 
+                if (phone && !/^[0-9+\-\s()]{7,20}$/.test(phone)) {
+                    if (errDiv) { errDiv.textContent = 'Please enter a valid phone number.'; errDiv.style.display = 'block'; }
+                    return;
+                }
+
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:6px;"></i>Subscribing…';
                 if (errDiv) errDiv.style.display = 'none';
@@ -302,6 +308,7 @@
                 const formData = new FormData();
                 formData.append('name', name);
                 formData.append('email', email);
+                formData.append('phone', phone);
                 formData.append('place', place);
                 formData.append('age', age);
 

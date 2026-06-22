@@ -453,16 +453,19 @@ def newsletter_subscribe():
 
     if form.validate_on_submit():
         try:
+            phone = request.form.get('phone', '').strip()
             DataManager.add_subscriber(
                 form.name.data,
                 form.email.data,
                 form.place.data or '',
-                form.age.data or 0
+                form.age.data or 0,
+                phone=phone
             )
             if is_ajax:
                 return jsonify({'success': True, 'message': 'Successfully subscribed to newsletter!'})
             flash('Successfully subscribed to newsletter!', 'success')
         except Exception as e:
+            logging.error(f"Newsletter subscribe error: {e}")
             if is_ajax:
                 return jsonify({'success': False, 'message': 'You may already be subscribed, or an error occurred.'})
             flash('Error subscribing to newsletter. Please try again.', 'error')
@@ -2389,6 +2392,81 @@ def admin_users():
         })
     
     return render_template('admin/users.html', enrollments=enrollment_data)
+
+@app.route('/admin/inner-circle')
+def admin_inner_circle():
+    """Inner Circle Members — view, search, filter"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+
+    search = request.args.get('search', '').strip()
+    sort = request.args.get('sort', 'newest')
+
+    query = Subscriber.query
+    if search:
+        like = f'%{search}%'
+        query = query.filter(
+            db.or_(
+                Subscriber.name.ilike(like),
+                Subscriber.email.ilike(like),
+                Subscriber.place.ilike(like),
+                Subscriber.phone.ilike(like)
+            )
+        )
+    if sort == 'oldest':
+        query = query.order_by(Subscriber.subscribed_at.asc())
+    elif sort == 'name':
+        query = query.order_by(Subscriber.name.asc())
+    else:
+        query = query.order_by(Subscriber.subscribed_at.desc())
+
+    members = query.all()
+    total = Subscriber.query.count()
+    return render_template('admin/inner_circle.html',
+                           members=members,
+                           total=total,
+                           search=search,
+                           sort=sort)
+
+
+@app.route('/admin/inner-circle/<int:member_id>/delete', methods=['POST'])
+def admin_inner_circle_delete(member_id):
+    """Delete an Inner Circle member"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    member = Subscriber.query.get_or_404(member_id)
+    db.session.delete(member)
+    db.session.commit()
+    flash(f'Member "{member.name}" has been removed.', 'success')
+    return redirect(url_for('admin_inner_circle'))
+
+
+@app.route('/admin/inner-circle/export')
+def admin_inner_circle_export():
+    """Export Inner Circle members as CSV"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    import csv, io
+    members = Subscriber.query.order_by(Subscriber.subscribed_at.desc()).all()
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['ID', 'Name', 'Email', 'Phone', 'City', 'Age', 'Joined At'])
+    for m in members:
+        writer.writerow([
+            m.id, m.name, m.email,
+            m.phone or '',
+            m.place or '',
+            m.age or '',
+            m.subscribed_at.strftime('%Y-%m-%d %H:%M:%S') if m.subscribed_at else ''
+        ])
+    output.seek(0)
+    from flask import Response
+    return Response(
+        output.getvalue(),
+        mimetype='text/csv',
+        headers={'Content-Disposition': 'attachment; filename=inner_circle_members.csv'}
+    )
+
 
 @app.route('/admin/bulk-operations')
 def admin_bulk_operations():

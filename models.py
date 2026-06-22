@@ -71,17 +71,20 @@ class Subscriber(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), nullable=False)
+    phone = db.Column(db.String(20))
     place = db.Column(db.String(100))
     age = db.Column(db.String(20))
     subscribed_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def to_dict(self):
         return {
+            'id': self.id,
             'name': self.name,
             'email': self.email,
+            'phone': self.phone or '',
             'place': self.place or '',
             'age': self.age or '',
-            'subscribed_at': self.subscribed_at.isoformat() if self.subscribed_at else ''
+            'subscribed_at': self.subscribed_at.strftime('%Y-%m-%d %H:%M:%S') if self.subscribed_at else ''
         }
 
 class SiteContent(db.Model):
@@ -397,11 +400,12 @@ class DataManager:
         db.session.commit()
     
     @staticmethod
-    def add_subscriber(name, email, place, age):
+    def add_subscriber(name, email, place, age, phone=''):
         """Add newsletter subscriber to database"""
         subscriber = Subscriber(
             name=name,
             email=email,
+            phone=phone or '',
             place=place,
             age=age
         )

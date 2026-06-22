@@ -100,6 +100,9 @@
             <div class="admin-nav-section-title">
                 <small class="text-muted">USERS & ANALYTICS</small>
             </div>
+            <a href="{{ url_for('admin_inner_circle') }}" class="admin-nav-item {{ 'active' if request.endpoint in ['admin_inner_circle', 'admin_inner_circle_delete'] else '' }}">
+                <i class="fas fa-envelope-open-text me-2"></i>Inner Circle Members
+            </a>
             <a href="{{ url_for('admin_users') }}" class="admin-nav-item {{ 'active' if request.endpoint == 'admin_users' else '' }}">
                 <i class="fas fa-user-shield me-2"></i>User Management
             </a>

@@ -114,6 +114,7 @@ with app.app_context():
             "ALTER TABLE user_activity ALTER COLUMN session_id TYPE TEXT",
             "ALTER TABLE course ADD COLUMN IF NOT EXISTS preview_video_url VARCHAR(500)",
             "ALTER TABLE subscription_tier ADD COLUMN IF NOT EXISTS razorpay_plan_id VARCHAR(100)",
+            "ALTER TABLE subscriber ADD COLUMN IF NOT EXISTS phone VARCHAR(20)",
         ]
         for sql in migrations:
             try:
