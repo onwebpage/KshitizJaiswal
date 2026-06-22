@@ -126,6 +126,14 @@ with app.app_context():
         logging.error(f"Failed to create database tables: {e}")
         logging.warning("App will continue but database operations may fail")
 
+# ── CSRF token available in all templates ────────────────────────────────────
+@app.context_processor
+def inject_csrf():
+    from flask_wtf.csrf import generate_csrf
+    def csrf_token():
+        return generate_csrf()
+    return dict(csrf_token=csrf_token)
+
 # Add context processor for Clerk publishable key and footer data
 @app.context_processor
 def inject_global_context():
