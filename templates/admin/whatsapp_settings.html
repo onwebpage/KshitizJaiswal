@@ -99,16 +99,28 @@
                                 </div>
                             </div>
 
-                            <div class="mb-4">
+                            <div class="mb-3">
                                 <label class="form-label fw-semibold small">
                                     <i class="fab fa-whatsapp me-1 text-success"></i>Support Phone Number
-                                    <span class="badge bg-info text-dark ms-1" style="font-size:0.65rem;">For support button</span>
+                                    <span class="badge bg-info text-dark ms-1" style="font-size:0.65rem;">Fallback</span>
                                 </label>
                                 <input type="text" name="support_phone" class="form-control"
                                     value="{{ settings.get('support_phone', '') }}"
                                     placeholder="e.g. 9876543210 (10-digit Indian number)"
                                     style="border-radius:10px;">
-                                <div class="form-text">Shown as a WhatsApp chat button inside the Course Dashboard for enrolled users.</div>
+                                <div class="form-text">Used to auto-build a wa.me link if no custom WhatsApp link is set below.</div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold small">
+                                    <i class="fas fa-link me-1 text-success"></i>WhatsApp Chat Link
+                                    <span class="badge bg-success ms-1" style="font-size:0.65rem;">Courses &amp; Footer buttons</span>
+                                </label>
+                                <input type="url" name="whatsapp_link" class="form-control"
+                                    value="{{ settings.get('whatsapp_link', '') }}"
+                                    placeholder="https://wa.me/919876543210 or WhatsApp group link"
+                                    style="border-radius:10px;">
+                                <div class="form-text">Full URL shown on the Courses page and Footer. Use <code>https://wa.me/91XXXXXXXXXX</code> for a direct chat, or paste a WhatsApp group/channel invite link.</div>
                             </div>
 
                             <button type="submit" class="btn btn-success px-4 fw-semibold" style="border-radius:10px;background:#25D366;border:none;">

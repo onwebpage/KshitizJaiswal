@@ -76,8 +76,9 @@ def inject_section_visibility():
     except Exception:
         site_settings = {}
 
-    # WhatsApp support phone for in-dashboard support button
+    # WhatsApp support phone and chat link for support buttons
     wa_support_phone = ''
+    whatsapp_link = ''
     try:
         import re as _re
         wa_rec = SiteContent.query.filter_by(content_key='whatsapp_settings').first()
@@ -88,6 +89,11 @@ def inject_section_visibility():
             if len(digits) == 10:
                 digits = '91' + digits
             wa_support_phone = digits
+            # Full WhatsApp chat link (takes priority over phone number)
+            whatsapp_link = wa_data.get('whatsapp_link', '').strip()
+            # Fall back to building wa.me link from phone if no custom link set
+            if not whatsapp_link and digits:
+                whatsapp_link = f'https://wa.me/{digits}'
     except Exception:
         pass
 
@@ -127,6 +133,7 @@ def inject_section_visibility():
         'site_settings': site_settings,
         'course_user': get_course_user(),
         'wa_support_phone': wa_support_phone,
+        'whatsapp_link': whatsapp_link,
         'announcement': announcement,
         'seo_config': seo_config,
     }
@@ -3747,6 +3754,7 @@ def admin_whatsapp_settings():
                 'phone_number_id': request.form.get('phone_number_id', '').strip(),
                 'access_token': new_token if new_token else current_wa.get('access_token', ''),
                 'support_phone': request.form.get('support_phone', '').strip(),
+                'whatsapp_link': request.form.get('whatsapp_link', '').strip(),
             }
             if wa_content:
                 wa_content.content_data = json.dumps(updated_wa)

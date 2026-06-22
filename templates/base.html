@@ -258,19 +258,11 @@
                     <div class="col-lg-5 text-lg-end">
                         <div class="footer-whatsapp-block">
                             <p class="footer-whatsapp-label">Need help? Chat with us directly</p>
-                            {% if whatsapp_support_phone %}
-                            <a href="https://wa.me/{{ whatsapp_support_phone | replace('+','') | replace(' ','') | replace('-','') }}"
+                            <a href="{{ whatsapp_link if whatsapp_link else 'https://wa.me/message/TYMT7KS4JVF7F1' }}"
                                target="_blank" rel="noopener noreferrer"
                                class="footer-whatsapp-btn">
                                 <i class="fab fa-whatsapp me-2"></i>WhatsApp Support
                             </a>
-                            {% else %}
-                            <a href="https://wa.me/message/TYMT7KS4JVF7F1"
-                               target="_blank" rel="noopener noreferrer"
-                               class="footer-whatsapp-btn">
-                                <i class="fab fa-whatsapp me-2"></i>WhatsApp Support
-                            </a>
-                            {% endif %}
                         </div>
                     </div>
                 </div>
