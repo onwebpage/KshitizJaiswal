@@ -7,7 +7,7 @@ class NewsletterForm(FlaskForm):
     name = StringField('Name', validators=[DataRequired(), Length(min=2, max=50)])
     email = StringField('Email', validators=[DataRequired(), Email()])
     place = StringField('Place', validators=[Length(max=50)])
-    age = IntegerField('Age', validators=[NumberRange(min=13, max=120)], default=0)
+    age = IntegerField('Age', validators=[Optional(), NumberRange(min=13, max=120)], default=None)
 
 class PollVoteForm(FlaskForm):
     opinion_id = IntegerField('Opinion ID', validators=[DataRequired()])
