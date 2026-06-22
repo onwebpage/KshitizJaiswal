@@ -4,7 +4,6 @@
 
 {% block content %}
 <div class="admin-section">
-    <!-- Sidebar from dashboard base -->
     <div class="admin-sidebar">
         <div class="admin-header">
             <h4><i class="fas fa-cog me-2"></i>Admin Panel</h4>
@@ -44,7 +43,6 @@
         </div>
     </div>
 
-    <!-- Main Content -->
     <div class="admin-content">
         <div class="admin-header">
             <h2><i class="fas fa-toggle-on me-2 text-primary"></i>Section Visibility</h2>
@@ -53,9 +51,8 @@
             </a>
         </div>
 
-        <p class="text-muted mb-4">Toggle sections on or off. Changes take effect instantly — no page rebuild needed.</p>
+        <p class="text-muted mb-4">Toggle sections on or off. Expand a section to show/hide individual items inside it.</p>
 
-        <!-- Flash Messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
@@ -67,8 +64,17 @@
             {% endif %}
         {% endwith %}
 
+        {# Define which sections have expandable sub-items #}
+        {% set sub_items_map = {
+            'reels':        sub_reels,
+            'support':      sub_tiers,
+            'testimonials': sub_testimonials,
+            'courses':      sub_courses
+        } %}
+
         <div class="row g-4">
             {% for s in sections %}
+            {% set items = sub_items_map.get(s.key, []) %}
             <div class="col-lg-6">
                 <div class="card sv-card {{ 'sv-visible' if visibility[s.key] else 'sv-hidden' }}" id="card-{{ s.key }}">
                     <div class="card-body d-flex align-items-center gap-3 p-4">
@@ -79,26 +85,83 @@
                             <h5 class="mb-1 fw-bold">{{ s.label }}</h5>
                             <p class="text-muted small mb-0">{{ s.desc }}</p>
                         </div>
-                        <div class="sv-toggle-wrap">
-                            <button
-                                class="sv-toggle-btn {{ 'active' if visibility[s.key] else '' }}"
-                                id="btn-{{ s.key }}"
-                                data-section="{{ s.key }}"
-                                onclick="toggleSection('{{ s.key }}')"
-                                title="{{ 'Click to hide' if visibility[s.key] else 'Click to show' }}">
-                                <span class="sv-toggle-knob"></span>
-                            </button>
-                            <div class="sv-status-label {{ 'text-success' if visibility[s.key] else 'text-muted' }}" id="label-{{ s.key }}">
-                                {{ 'Visible' if visibility[s.key] else 'Hidden' }}
+                        <div class="d-flex flex-column align-items-center gap-2">
+                            <div class="sv-toggle-wrap">
+                                <button
+                                    class="sv-toggle-btn {{ 'active' if visibility[s.key] else '' }}"
+                                    id="btn-{{ s.key }}"
+                                    data-section="{{ s.key }}"
+                                    onclick="toggleSection('{{ s.key }}')"
+                                    title="{{ 'Click to hide' if visibility[s.key] else 'Click to show' }}">
+                                    <span class="sv-toggle-knob"></span>
+                                </button>
+                                <div class="sv-status-label {{ 'text-success' if visibility[s.key] else 'text-muted' }}" id="label-{{ s.key }}">
+                                    {{ 'Visible' if visibility[s.key] else 'Hidden' }}
+                                </div>
                             </div>
+                            {% if items %}
+                            <button class="sv-expand-btn" onclick="toggleSubItems('{{ s.key }}')" id="expand-{{ s.key }}">
+                                <i class="fas fa-list-ul me-1"></i>Items ({{ items|length }})
+                                <i class="fas fa-chevron-down ms-1 sv-chevron" id="chev-{{ s.key }}"></i>
+                            </button>
+                            {% endif %}
                         </div>
                     </div>
+
+                    {% if items %}
+                    <div class="sv-subitems" id="subitems-{{ s.key }}" style="display:none;">
+                        <div class="sv-subitems-header">
+                            <small class="text-muted fw-semibold">
+                                <i class="fas fa-eye me-1"></i>Individual item visibility
+                            </small>
+                        </div>
+                        {% for item in items %}
+                        {% if s.key == 'reels' %}
+                            {% set item_id = item.id %}
+                            {% set item_label = item.title %}
+                            {% set item_on = item.is_visible %}
+                            {% set toggle_url = '/admin/reel/' ~ item.id ~ '/toggle-visible' %}
+                            {% set key_field = 'is_visible' %}
+                        {% elif s.key == 'support' %}
+                            {% set item_id = item.id %}
+                            {% set item_label = item.name %}
+                            {% set item_on = item.is_active %}
+                            {% set toggle_url = '/admin/sv/toggle/tier/' ~ item.id %}
+                            {% set key_field = 'is_active' %}
+                        {% elif s.key == 'testimonials' %}
+                            {% set item_id = item.idx %}
+                            {% set item_label = item.name %}
+                            {% set item_on = item.is_visible %}
+                            {% set toggle_url = '/admin/sv/toggle/testimonial/' ~ item.idx %}
+                            {% set key_field = 'is_visible' %}
+                        {% elif s.key == 'courses' %}
+                            {% set item_id = item.id %}
+                            {% set item_label = item.title %}
+                            {% set item_on = item.is_active %}
+                            {% set toggle_url = '/admin/sv/toggle/course/' ~ item.id %}
+                            {% set key_field = 'is_active' %}
+                        {% endif %}
+                        <div class="sv-subitem {{ 'sv-subitem--on' if item_on else 'sv-subitem--off' }}"
+                             id="si-{{ s.key }}-{{ item_id }}">
+                            <span class="sv-subitem-label" title="{{ item_label }}">
+                                <i class="fas fa-{{ 'eye' if item_on else 'eye-slash' }} sv-subitem-eye" id="si-eye-{{ s.key }}-{{ item_id }}"></i>
+                                {{ item_label }}
+                            </span>
+                            <button class="si-toggle {{ 'si-on' if item_on else '' }}"
+                                    id="si-btn-{{ s.key }}-{{ item_id }}"
+                                    onclick="toggleItem('{{ s.key }}', {{ item_id }}, '{{ toggle_url }}', '{{ key_field }}')"
+                                    title="{{ 'Hide' if item_on else 'Show' }}">
+                                <span class="si-knob"></span>
+                            </button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
                 </div>
             </div>
             {% endfor %}
         </div>
 
-        <!-- Bulk actions -->
         <div class="card mt-5">
             <div class="card-header"><h5 class="mb-0"><i class="fas fa-layer-group me-2"></i>Bulk Actions</h5></div>
             <div class="card-body d-flex gap-3 flex-wrap">
@@ -118,88 +181,96 @@
     border: 2px solid #e9ecef;
     border-radius: 14px;
     transition: border-color .25s, box-shadow .25s;
+    overflow: hidden;
 }
-.sv-card.sv-visible {
-    border-color: #198754;
-    box-shadow: 0 2px 12px rgba(25,135,84,.12);
-}
-.sv-card.sv-hidden {
-    border-color: #dee2e6;
-    opacity: .75;
-}
+.sv-card.sv-visible { border-color: #198754; box-shadow: 0 2px 12px rgba(25,135,84,.12); }
+.sv-card.sv-hidden  { border-color: #dee2e6; opacity: .75; }
+
 .sv-section-icon {
-    width: 52px;
-    height: 52px;
-    border-radius: 12px;
+    width: 52px; height: 52px; border-radius: 12px;
     background: linear-gradient(135deg, #cc0000, #8b0000);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    font-size: 1.3rem;
-    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 1.3rem; flex-shrink: 0;
 }
-.sv-toggle-wrap {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    flex-shrink: 0;
-}
+.sv-toggle-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; }
 .sv-toggle-btn {
-    position: relative;
-    width: 58px;
-    height: 30px;
-    background: #dee2e6;
-    border: none;
-    border-radius: 30px;
-    cursor: pointer;
-    transition: background .25s;
-    outline: none;
-    flex-shrink: 0;
+    position: relative; width: 58px; height: 30px;
+    background: #dee2e6; border: none; border-radius: 30px;
+    cursor: pointer; transition: background .25s; outline: none; flex-shrink: 0;
 }
-.sv-toggle-btn.active {
-    background: #198754;
-}
+.sv-toggle-btn.active { background: #198754; }
 .sv-toggle-knob {
-    position: absolute;
-    top: 3px;
-    left: 3px;
-    width: 24px;
-    height: 24px;
-    background: #fff;
-    border-radius: 50%;
-    box-shadow: 0 2px 4px rgba(0,0,0,.2);
-    transition: transform .25s;
-    display: block;
+    position: absolute; top: 3px; left: 3px; width: 24px; height: 24px;
+    background: #fff; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,.2);
+    transition: transform .25s; display: block;
 }
-.sv-toggle-btn.active .sv-toggle-knob {
-    transform: translateX(28px);
-}
+.sv-toggle-btn.active .sv-toggle-knob { transform: translateX(28px); }
 .sv-toggle-btn:hover { filter: brightness(.92); }
-.sv-status-label {
-    font-size: .75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: .04em;
+.sv-status-label { font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+
+.sv-expand-btn {
+    background: #f8f9fa; border: 1.5px solid #dee2e6; border-radius: 20px;
+    font-size: .72rem; font-weight: 600; color: #495057; padding: 3px 10px;
+    cursor: pointer; white-space: nowrap; transition: background .2s, border-color .2s;
 }
+.sv-expand-btn:hover { background: #e9ecef; border-color: #adb5bd; }
+.sv-chevron { transition: transform .25s; font-size: .65rem; }
+.sv-chevron.open { transform: rotate(180deg); }
+
+/* Sub-items panel */
+.sv-subitems { border-top: 1.5px solid #f0f0f0; }
+.sv-subitems-header {
+    padding: 8px 16px 4px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #f0f0f0;
+}
+.sv-subitem {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 16px;
+    border-bottom: 1px solid #f5f5f5;
+    transition: background .15s;
+}
+.sv-subitem:last-child { border-bottom: none; }
+.sv-subitem--on  { background: #fff; }
+.sv-subitem--off { background: #fafafa; opacity: .7; }
+.sv-subitem:hover { background: #f0f7ff; }
+
+.sv-subitem-label {
+    font-size: .83rem; color: #343a40; font-weight: 500;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 65%; display: flex; align-items: center; gap: 7px;
+}
+.sv-subitem-eye { font-size: .75rem; color: #adb5bd; flex-shrink: 0; }
+.sv-subitem--on .sv-subitem-eye  { color: #198754; }
+.sv-subitem--off .sv-subitem-eye { color: #adb5bd; }
+
+/* Mini toggle for sub-items */
+.si-toggle {
+    position: relative; width: 40px; height: 22px;
+    background: #ced4da; border: none; border-radius: 11px;
+    cursor: pointer; flex-shrink: 0; transition: background .2s;
+}
+.si-toggle.si-on { background: #198754; }
+.si-knob {
+    position: absolute; top: 2px; left: 2px; width: 18px; height: 18px;
+    background: #fff; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,.2);
+    transition: left .2s; display: block;
+}
+.si-toggle.si-on .si-knob { left: 20px; }
+.si-toggle:disabled { opacity: .5; cursor: not-allowed; }
 </style>
 
 {% block scripts %}
 <script>
 async function toggleSection(section) {
-    const btn = document.getElementById(`btn-${section}`);
+    const btn   = document.getElementById(`btn-${section}`);
     const label = document.getElementById(`label-${section}`);
-    const card = document.getElementById(`card-${section}`);
-
+    const card  = document.getElementById(`card-${section}`);
     btn.disabled = true;
-
     try {
-        const res = await fetch(`/admin/section-visibility/toggle/${section}`, { method: 'POST' });
+        const res  = await fetch(`/admin/section-visibility/toggle/${section}`, { method: 'POST' });
         const data = await res.json();
-
         if (data.error) { alert(data.error); return; }
-
         const visible = data.visible;
         btn.classList.toggle('active', visible);
         card.classList.toggle('sv-visible', visible);
@@ -207,10 +278,38 @@ async function toggleSection(section) {
         label.textContent = visible ? 'Visible' : 'Hidden';
         label.className = `sv-status-label ${visible ? 'text-success' : 'text-muted'}`;
         btn.title = visible ? 'Click to hide' : 'Click to show';
-    } catch (e) {
+    } catch(e) {
         alert('Error updating section. Please try again.');
     } finally {
         btn.disabled = false;
+    }
+}
+
+function toggleSubItems(key) {
+    const panel = document.getElementById(`subitems-${key}`);
+    const chev  = document.getElementById(`chev-${key}`);
+    if (!panel) return;
+    const open = panel.style.display !== 'none';
+    panel.style.display = open ? 'none' : 'block';
+    chev.classList.toggle('open', !open);
+}
+
+async function toggleItem(section, itemId, url, keyField) {
+    const btn  = document.getElementById(`si-btn-${section}-${itemId}`);
+    const row  = document.getElementById(`si-${section}-${itemId}`);
+    const eye  = document.getElementById(`si-eye-${section}-${itemId}`);
+    if (btn) btn.disabled = true;
+    try {
+        const res  = await fetch(url, { method: 'POST' });
+        const data = await res.json();
+        if (data.error) { alert(data.error); return; }
+        const on = data[keyField];
+        if (btn) { btn.classList.toggle('si-on', on); btn.disabled = false; }
+        if (row) { row.classList.toggle('sv-subitem--on', on); row.classList.toggle('sv-subitem--off', !on); }
+        if (eye) { eye.className = `fas fa-${on ? 'eye' : 'eye-slash'} sv-subitem-eye`; }
+    } catch(e) {
+        alert('Error updating item. Please try again.');
+        if (btn) btn.disabled = false;
     }
 }
 
@@ -219,9 +318,7 @@ async function setAll(visible) {
     for (const s of sections) {
         const btn = document.getElementById(`btn-${s}`);
         const isCurrentlyVisible = btn.classList.contains('active');
-        if (isCurrentlyVisible !== visible) {
-            await toggleSection(s);
-        }
+        if (isCurrentlyVisible !== visible) await toggleSection(s);
     }
 }
 </script>

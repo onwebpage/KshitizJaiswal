@@ -1088,7 +1088,28 @@ def admin_section_visibility():
     for s in SECTIONS:
         visibility[s['key']] = SiteConfig.get(f"section_{s['key']}_visible", 'true').lower() != 'false'
 
-    return render_template('admin/section_visibility.html', sections=SECTIONS, visibility=visibility)
+    # Sub-items for expandable panels
+    try:
+        sub_reels = [{'id': r.id, 'title': r.title, 'is_visible': r.is_visible} for r in Reel.query.order_by(Reel.sort_order).all()]
+    except Exception:
+        sub_reels = []
+    try:
+        sub_tiers = [{'id': t.id, 'name': t.name, 'is_active': t.is_active} for t in SubscriptionTier.query.order_by(SubscriptionTier.sort_order).all()]
+    except Exception:
+        sub_tiers = []
+    try:
+        sub_testimonials = [{'idx': i, 'name': t.get('name', 'Testimonial'), 'is_visible': t.get('is_visible', True)} for i, t in enumerate(_get_testimonials_list())]
+    except Exception:
+        sub_testimonials = []
+    try:
+        sub_courses = [{'id': c.id, 'title': c.title, 'is_active': c.is_active} for c in Course.query.order_by(Course.sort_order).all()]
+    except Exception:
+        sub_courses = []
+
+    return render_template('admin/section_visibility.html',
+                           sections=SECTIONS, visibility=visibility,
+                           sub_reels=sub_reels, sub_tiers=sub_tiers,
+                           sub_testimonials=sub_testimonials, sub_courses=sub_courses)
 
 
 @app.route('/admin/section-visibility/toggle/<section>', methods=['POST'])
@@ -4321,6 +4342,37 @@ def admin_toggle_testimonial(idx):
         flash(f'Testimonial is now {status}.', 'success')
     return redirect(url_for('admin_testimonials'))
 
+
+# ── SECTION VISIBILITY: JSON item-toggle endpoints ─────────────────────────────
+
+@app.route('/admin/sv/toggle/tier/<int:tier_id>', methods=['POST'])
+def sv_toggle_tier(tier_id):
+    if 'admin_logged_in' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    tier = SubscriptionTier.query.get_or_404(tier_id)
+    tier.is_active = not tier.is_active
+    db.session.commit()
+    return jsonify({'id': tier_id, 'is_active': tier.is_active})
+
+@app.route('/admin/sv/toggle/testimonial/<int:idx>', methods=['POST'])
+def sv_toggle_testimonial(idx):
+    if 'admin_logged_in' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    testimonials = _get_testimonials_list()
+    if idx >= len(testimonials):
+        return jsonify({'error': 'Not found'}), 404
+    testimonials[idx]['is_visible'] = not testimonials[idx].get('is_visible', True)
+    _save_testimonials_list(testimonials)
+    return jsonify({'idx': idx, 'is_visible': testimonials[idx]['is_visible']})
+
+@app.route('/admin/sv/toggle/course/<int:course_id>', methods=['POST'])
+def sv_toggle_course(course_id):
+    if 'admin_logged_in' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    course = Course.query.get_or_404(course_id)
+    course.is_active = not course.is_active
+    db.session.commit()
+    return jsonify({'id': course_id, 'is_active': course.is_active})
 
 # ── ANNOUNCEMENT BANNER ────────────────────────────────────────────────────────
 
