@@ -35,9 +35,16 @@
                         {% if show.get('date') %}
                         <p class="text-primary"><i class="fas fa-calendar-alt me-1"></i>{{ show.date }}</p>
                         {% endif %}
-                        <button class="btn btn-outline-primary btn-sm" disabled>
+                        {% if show.get('notify_link') %}
+                        <a href="{{ show.notify_link }}" target="_blank" rel="noopener noreferrer"
+                           class="btn btn-primary btn-sm">
+                            <i class="fas fa-bell me-1"></i>Notify Me
+                        </a>
+                        {% else %}
+                        <button class="btn btn-outline-secondary btn-sm" disabled title="No notification link set yet">
                             <i class="fas fa-bell me-1"></i>Notify Me
                         </button>
+                        {% endif %}
                     </div>
                 </div>
             </div>
