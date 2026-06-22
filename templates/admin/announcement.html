@@ -88,13 +88,10 @@
                         <div class="col-12">
                             <hr class="my-2">
                             {{ form.submit(class="btn btn-primary px-4") }}
-                            {% if form.is_active.data == '1' %}
-                            <form action="{{ url_for('admin_announcement') }}" method="POST" class="d-inline ms-2">
-                                {{ form.hidden_tag() }}
-                                <input type="hidden" name="is_active" value="0">
-                                <button type="submit" class="btn btn-outline-secondary px-4">Deactivate Banner</button>
-                            </form>
-                            {% endif %}
+                            <button type="button" class="btn btn-outline-secondary px-4 ms-2"
+                                    onclick="deactivateBanner()">
+                                Deactivate Banner
+                            </button>
                         </div>
                     </div>
                 </form>
@@ -135,5 +132,11 @@ function updatePreview() {
     if (el) el.addEventListener('input', updatePreview);
 });
 updatePreview();
+
+function deactivateBanner() {
+    const sel = document.getElementById('isActive');
+    if (sel) sel.value = '0';
+    sel.closest('form').submit();
+}
 </script>
 {% endblock %}
