@@ -2547,6 +2547,7 @@ def admin_site_settings():
         return redirect(url_for('admin_login'))
     
     if request.method == 'POST':
+        instagram_visible = request.form.get('instagram_visible') == 'on'
         settings = {
             'site_title': request.form.get('site_title', 'Kshitiz Jaiswal'),
             'site_tagline': request.form.get('site_tagline', 'Unfiltered Commentator'),
@@ -2555,13 +2556,27 @@ def admin_site_settings():
             'social_twitter': request.form.get('social_twitter', ''),
             'social_instagram': request.form.get('social_instagram', ''),
             'social_youtube': request.form.get('social_youtube', ''),
+            'instagram_visible': instagram_visible,
             'meta_description': request.form.get('meta_description', ''),
             'meta_keywords': request.form.get('meta_keywords', ''),
             'google_analytics_id': request.form.get('google_analytics_id', ''),
             'facebook_pixel_id': request.form.get('facebook_pixel_id', ''),
             'clarity_id': request.form.get('clarity_id', '')
         }
-        
+
+        # Sync the Instagram SocialLink is_active with the toggle
+        try:
+            ig_link = SocialLink.query.filter(
+                SocialLink.platform.ilike('instagram')
+            ).first()
+            if ig_link:
+                ig_link.is_active = instagram_visible
+                ig_instagram_url = request.form.get('social_instagram', '').strip()
+                if ig_instagram_url:
+                    ig_link.url = ig_instagram_url
+        except Exception as _e:
+            logging.warning(f"Could not update Instagram SocialLink: {_e}")
+
         settings_record = SiteContent.query.filter_by(content_key='site_settings').first()
         if settings_record:
             settings_record.content_data = json.dumps(settings)
@@ -2580,8 +2595,19 @@ def admin_site_settings():
         settings = json.loads(settings_record.content_data)
     else:
         settings = {}
-    
-    return render_template('admin/site_settings.html', settings=settings)
+
+    # Read Instagram visibility from SocialLink (source of truth)
+    instagram_visible = False
+    try:
+        ig_link = SocialLink.query.filter(
+            SocialLink.platform.ilike('instagram')
+        ).first()
+        instagram_visible = ig_link.is_active if ig_link else False
+    except Exception:
+        instagram_visible = settings.get('instagram_visible', False)
+
+    return render_template('admin/site_settings.html', settings=settings,
+                           instagram_visible=instagram_visible)
 
 @app.route('/admin/page-content', methods=['GET', 'POST'])
 def admin_page_content():
