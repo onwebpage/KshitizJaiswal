@@ -11,7 +11,7 @@ class NewsletterForm(FlaskForm):
 
 class PollVoteForm(FlaskForm):
     opinion_id = IntegerField('Opinion ID', validators=[DataRequired()])
-    option_index = IntegerField('Option Index', validators=[DataRequired()])
+    option_index = IntegerField('Option Index', validators=[NumberRange(min=0)])
 
 class AdminLoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired()])
