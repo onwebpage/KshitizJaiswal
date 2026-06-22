@@ -3566,8 +3566,10 @@ def course_detail(course_id):
                 razorpay_key = db_key
     
     curriculum_settings = _get_curriculum_settings()
-    
-    return render_template('course_detail.html', course=course_data, razorpay_key=razorpay_key, curriculum_settings=curriculum_settings)
+    testimonials = [t for t in _get_testimonials_list() if t.get('is_visible', True)]
+
+    return render_template('course_detail.html', course=course_data, razorpay_key=razorpay_key,
+                           curriculum_settings=curriculum_settings, testimonials=testimonials)
 
 @app.route('/course/<int:course_id>/lesson/<int:lesson_id>')
 def lesson_view(course_id, lesson_id):
