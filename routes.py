@@ -1193,6 +1193,19 @@ def admin_statistics_section():
                            disabled_count=disabled_count)
 
 
+@app.route('/admin/statistics-section/toggle-visibility', methods=['POST'])
+def admin_toggle_statistics_visibility():
+    """Toggle the entire statistics section visibility."""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    current = SiteConfig.get('section_statistics_visible', 'true')
+    new_val = 'false' if current.lower() == 'true' else 'true'
+    SiteConfig.set('section_statistics_visible', new_val)
+    status = 'visible' if new_val == 'true' else 'hidden'
+    flash(f'Statistics section is now {status} on the website.', 'success')
+    return redirect(url_for('admin_statistics_section'))
+
+
 @app.route('/admin/stat/toggle', methods=['POST'])
 def admin_toggle_stat():
     """Toggle a single stat item's is_active flag."""
