@@ -1088,28 +1088,45 @@ def admin_section_visibility():
     for s in SECTIONS:
         visibility[s['key']] = SiteConfig.get(f"section_{s['key']}_visible", 'true').lower() != 'false'
 
-    # Sub-items for expandable panels
+    # Sub-items for expandable panels — unified format {id, label, is_on, toggle_url, key_field}
+    def _norm(id_, label, is_on, url, key):
+        return {'id': id_, 'label': label, 'is_on': bool(is_on), 'toggle_url': url, 'key_field': key}
+
     try:
-        sub_reels = [{'id': r.id, 'title': r.title, 'is_visible': r.is_visible} for r in Reel.query.order_by(Reel.sort_order).all()]
+        sub_reels = [_norm(r.id, r.title, r.is_visible,
+                           f'/admin/reel/{r.id}/toggle-visible', 'is_visible')
+                     for r in Reel.query.order_by(Reel.sort_order).all()]
     except Exception:
         sub_reels = []
     try:
-        sub_tiers = [{'id': t.id, 'name': t.name, 'is_active': t.is_active} for t in SubscriptionTier.query.order_by(SubscriptionTier.sort_order).all()]
+        sub_tiers = [_norm(t.id, t.name, t.is_active,
+                           f'/admin/sv/toggle/tier/{t.id}', 'is_active')
+                     for t in SubscriptionTier.query.order_by(SubscriptionTier.sort_order).all()]
     except Exception:
         sub_tiers = []
     try:
-        sub_testimonials = [{'idx': i, 'name': t.get('name', 'Testimonial'), 'is_visible': t.get('is_visible', True)} for i, t in enumerate(_get_testimonials_list())]
+        sub_testimonials = [_norm(i, t.get('name', f'Testimonial {i+1}'), t.get('is_visible', True),
+                                  f'/admin/sv/toggle/testimonial/{i}', 'is_visible')
+                            for i, t in enumerate(_get_testimonials_list())]
     except Exception:
         sub_testimonials = []
     try:
-        sub_courses = [{'id': c.id, 'title': c.title, 'is_active': c.is_active} for c in Course.query.order_by(Course.sort_order).all()]
+        sub_courses = [_norm(c.id, c.title, c.is_active,
+                             f'/admin/sv/toggle/course/{c.id}', 'is_active')
+                       for c in Course.query.order_by(Course.sort_order).all()]
     except Exception:
         sub_courses = []
 
+    sub_items = {
+        'reels':        sub_reels,
+        'support':      sub_tiers,
+        'testimonials': sub_testimonials,
+        'courses':      sub_courses,
+    }
+
     return render_template('admin/section_visibility.html',
                            sections=SECTIONS, visibility=visibility,
-                           sub_reels=sub_reels, sub_tiers=sub_tiers,
-                           sub_testimonials=sub_testimonials, sub_courses=sub_courses)
+                           sub_items=sub_items)
 
 
 @app.route('/admin/section-visibility/toggle/<section>', methods=['POST'])
