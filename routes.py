@@ -2402,44 +2402,60 @@ def admin_analytics():
     
     from sqlalchemy import func
     from datetime import datetime, timedelta
-    
-    # Get statistics
-    total_reels = Reel.query.count()
-    total_opinions = Opinion.query.count()
-    total_subscribers = Subscriber.query.count()
-    total_courses = Course.query.count()
-    total_course_enrollments = UserCourseAccess.query.count()
-    
-    # Most viewed reels
-    top_reels = Reel.query.order_by(Reel.view_count.desc()).limit(10).all()
-    
-    # Recent subscribers (last 30 days)
-    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
-    recent_subscribers = Subscriber.query.filter(Subscriber.subscribed_at >= thirty_days_ago).count()
-    
-    # Poll engagement
-    opinions_with_votes = Opinion.query.all()
-    total_votes = sum([sum(json.loads(op.votes) if op.votes else []) for op in opinions_with_votes])
-    
-    # Topic distribution
-    topic_distribution = db.session.query(
-        Opinion.topic_tag,
-        func.count(Opinion.id).label('count')
-    ).filter(Opinion.topic_tag.isnot(None), Opinion.topic_tag != '').group_by(Opinion.topic_tag).all()
-    
-    # Category distribution for reels
-    category_distribution = db.session.query(
-        Reel.category_tag,
-        func.count(Reel.id).label('count')
-    ).filter(Reel.category_tag.isnot(None), Reel.category_tag != '').group_by(Reel.category_tag).all()
-    
+
+    def _safe(fn, default):
+        try:
+            return fn()
+        except Exception as _e:
+            logging.warning(f"Analytics query skipped: {_e}")
+            db.session.rollback()
+            return default
+
+    total_reels              = _safe(lambda: Reel.query.count(), 0)
+    total_opinions           = _safe(lambda: Opinion.query.count(), 0)
+    total_subscribers        = _safe(lambda: Subscriber.query.count(), 0)
+    total_courses            = _safe(lambda: Course.query.count(), 0)
+    total_course_enrollments = _safe(lambda: UserCourseAccess.query.count(), 0)
+
+    top_reels = _safe(
+        lambda: [r.to_dict() for r in Reel.query.order_by(Reel.view_count.desc()).limit(10).all()],
+        []
+    )
+
+    thirty_days_ago   = datetime.utcnow() - timedelta(days=30)
+    recent_subscribers = _safe(
+        lambda: Subscriber.query.filter(Subscriber.subscribed_at >= thirty_days_ago).count(),
+        0
+    )
+
+    def _total_votes():
+        opinions = Opinion.query.all()
+        return sum(sum(json.loads(op.votes) if op.votes else []) for op in opinions)
+    total_votes = _safe(_total_votes, 0)
+
+    topic_distribution = _safe(
+        lambda: db.session.query(
+            Opinion.topic_tag,
+            func.count(Opinion.id).label('count')
+        ).filter(Opinion.topic_tag.isnot(None), Opinion.topic_tag != '').group_by(Opinion.topic_tag).all(),
+        []
+    )
+
+    category_distribution = _safe(
+        lambda: db.session.query(
+            Reel.category_tag,
+            func.count(Reel.id).label('count')
+        ).filter(Reel.category_tag.isnot(None), Reel.category_tag != '').group_by(Reel.category_tag).all(),
+        []
+    )
+
     return render_template('admin/analytics.html',
                          total_reels=total_reels,
                          total_opinions=total_opinions,
                          total_subscribers=total_subscribers,
                          total_courses=total_courses,
                          total_course_enrollments=total_course_enrollments,
-                         top_reels=[r.to_dict() for r in top_reels],
+                         top_reels=top_reels,
                          recent_subscribers=recent_subscribers,
                          total_votes=total_votes,
                          topic_distribution=topic_distribution,

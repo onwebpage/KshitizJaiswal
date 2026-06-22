@@ -137,6 +137,14 @@ with app.app_context():
         _add_column("subscription_tier",  "razorpay_plan_id",     "VARCHAR(100)")
         _add_column("subscriber",         "phone",                "VARCHAR(20)")
         _add_column("reel",               "video_type",           "VARCHAR(20) DEFAULT 'auto'")
+        _add_column("reel",               "sort_order",           "INTEGER DEFAULT 0")
+        _add_column("reel",               "category_tag",         "VARCHAR(50)")
+        _add_column("reel",               "topic_tag",            "VARCHAR(100)")
+        _add_column("reel",               "view_count",           "INTEGER DEFAULT 0")
+        _add_column("reel",               "is_featured",          "BOOLEAN DEFAULT FALSE")
+        _add_column("opinion",            "topic_tag",            "VARCHAR(100)")
+        _add_column("subscriber",         "place",                "VARCHAR(100)")
+        _add_column("subscriber",         "age",                  "INTEGER")
 
         # PostgreSQL-only migrations (silently ignored on SQLite)
         pg_only = [
