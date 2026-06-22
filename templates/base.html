@@ -722,31 +722,14 @@
                          style="display:none; background:#fff0f0; border:1px solid #fca5a5;
                                 color:#dc2626; border-radius:8px; padding:8px 12px;
                                 font-size:.82rem; margin-bottom:10px;"></div>
-                    <!-- Agreement checkbox -->
-                    <label id="nlAgreeLabel"
-                           style="display:flex; align-items:flex-start; gap:9px; cursor:pointer;
-                                  background:#fef9f0; border:1.5px solid #f5a623; border-radius:9px;
-                                  padding:10px 12px; margin-bottom:12px; user-select:none;">
-                        <input type="checkbox" id="nlAgreeCheck"
-                               onchange="onNlCheckChange()"
-                               style="width:17px; height:17px; min-width:17px; margin-top:2px;
-                                      accent-color:#cc0000; cursor:pointer;">
-                        <span style="font-size:.82rem; color:#444; line-height:1.4;">
-                            I agree to receive newsletters and accept the
-                            <a href="{{ url_for('disclaimer') }}" target="_blank"
-                               style="color:#cc0000; text-decoration:underline;">disclaimer</a>
-                            and
-                            <a href="{{ url_for('privacy_policy') }}" target="_blank"
-               style="color:#cc0000; text-decoration:underline;">privacy policy</a>.
-                        </span>
-                    </label>
                     <button type="submit" id="newsletterPopupSubmit"
-                            disabled
-                            style="width:100%; background:#d1d5db; color:#9ca3af;
+                            style="width:100%; background:linear-gradient(135deg,#cc0000 0%,#8b0000 100%); color:#fff;
                                    border:none; border-radius:9px; padding:11px;
-                                   font-size:.95rem; font-weight:700; cursor:not-allowed;
-                                   box-shadow:none; transition:background .2s, color .2s, box-shadow .2s, transform .15s;
-                                   pointer-events:none;">
+                                   font-size:.95rem; font-weight:700; cursor:pointer;
+                                   box-shadow:0 4px 14px rgba(204,0,0,.3);
+                                   transition:background .2s, color .2s, box-shadow .2s, transform .15s;"
+                            onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 18px rgba(204,0,0,.4)'"
+                            onmouseout="this.style.transform='';this.style.boxShadow='0 4px 14px rgba(204,0,0,.3)'">
                         <i class="fas fa-paper-plane" style="margin-right:6px;"></i>Subscribe Free
                     </button>
                     <p style="text-align:center; color:#999; font-size:.78rem; margin:10px 0 0;">
@@ -763,40 +746,9 @@
     }
     </style>
     <script>
-    function _setNlSubmitState(enabled) {
-        var btn = document.getElementById('newsletterPopupSubmit');
-        if (!btn) return;
-        btn.disabled = !enabled;
-        if (enabled) {
-            btn.style.background    = 'linear-gradient(135deg,#cc0000 0%,#8b0000 100%)';
-            btn.style.color         = '#fff';
-            btn.style.cursor        = 'pointer';
-            btn.style.boxShadow     = '0 4px 14px rgba(204,0,0,.3)';
-            btn.style.pointerEvents = 'auto';
-            btn.onmouseover = function() { this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 18px rgba(204,0,0,.4)'; };
-            btn.onmouseout  = function() { this.style.transform=''; this.style.boxShadow='0 4px 14px rgba(204,0,0,.3)'; };
-        } else {
-            btn.style.background    = '#d1d5db';
-            btn.style.color         = '#9ca3af';
-            btn.style.cursor        = 'not-allowed';
-            btn.style.boxShadow     = 'none';
-            btn.style.transform     = '';
-            btn.style.pointerEvents = 'none';
-            btn.onmouseover = null;
-            btn.onmouseout  = null;
-        }
-    }
-    function onNlCheckChange() {
-        var cb = document.getElementById('nlAgreeCheck');
-        _setNlSubmitState(cb && cb.checked);
-    }
     function _showNewsletterPopup() {
         var el = document.getElementById('newsletterPopup');
         if (!el) return;
-        /* Reset checkbox + button state each time */
-        var cb = document.getElementById('nlAgreeCheck');
-        if (cb) cb.checked = false;
-        _setNlSubmitState(false);
         el.style.display = 'flex';
     }
     function dismissNewsletterPopup() {
