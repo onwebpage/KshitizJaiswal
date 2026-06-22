@@ -70,25 +70,26 @@
                             </div>
                         </div>
                         
+                        <div class="course-price mb-3">
+                            {% if course.price == 0 %}
+                            <span class="price-value text-success">FREE</span>
+                            {% else %}
+                            <span class="price-value">₹{{ course.price }}</span>
+                            {% endif %}
+                        </div>
                         <div class="course-footer">
-                            <div class="course-price">
-                                {% if course.price == 0 %}
-                                <span class="price-value text-success">FREE</span>
-                                {% else %}
-                                <span class="price-value">₹{{ course.price }}</span>
-                                {% endif %}
-                            </div>
                             {% if course.has_access %}
-                            <a href="{{ url_for('course_detail', course_id=course.id) }}" class="btn-course-action">
-                                Continue Learning
-                                <i class="fas fa-arrow-right ms-2"></i>
+                            <a href="{{ url_for('course_detail', course_id=course.id) }}" class="btn-course-action flex-fill justify-content-center">
+                                <i class="fas fa-play-circle me-1"></i>Continue Learning
                             </a>
                             {% elif course.price == 0 %}
-                            <a href="{{ url_for('course_detail', course_id=course.id) }}" class="btn-course-action">
-                                Enroll Free
-                                <i class="fas fa-arrow-right ms-2"></i>
+                            <a href="{{ url_for('course_detail', course_id=course.id) }}" class="btn-course-action flex-fill justify-content-center">
+                                <i class="fas fa-arrow-right me-1"></i>Enroll Free
                             </a>
                             {% else %}
+                            <a href="{{ url_for('course_detail', course_id=course.id) }}" class="btn-know-more">
+                                <i class="fas fa-info-circle me-1"></i>Know More
+                            </a>
                             <a href="{{ url_for('course_detail', course_id=course.id) }}?buy=1" class="btn-course-action btn-buy-now">
                                 <i class="fas fa-bolt me-1"></i>Buy Now
                             </a>
@@ -256,9 +257,9 @@
 
 .course-footer {
     display: flex;
-    justify-content: space-between;
+    gap: 10px;
     align-items: center;
-    margin-top: 20px;
+    margin-top: 8px;
 }
 
 .course-price {
@@ -268,6 +269,38 @@
 .price-value {
     font-size: 1.75rem;
     color: #667eea;
+}
+
+.btn-know-more {
+    flex: 1;
+    text-align: center;
+    background: transparent;
+    color: #667eea;
+    padding: 11px 16px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.88rem;
+    border: 2px solid #667eea;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.btn-know-more:hover {
+    background: #667eea;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.35);
+}
+
+.btn-buy-now.btn-course-action {
+    flex: 1;
+    text-align: center;
+    justify-content: center;
+    white-space: nowrap;
 }
 
 .btn-course-action {
