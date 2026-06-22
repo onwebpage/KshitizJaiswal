@@ -2935,58 +2935,46 @@ def admin_activity_logs():
     """Activity Logs - Track admin actions"""
     if 'admin_logged_in' not in session:
         return redirect(url_for('admin_login'))
-    
-    # Get recent database changes
-    recent_reels = Reel.query.order_by(Reel.created_at.desc()).limit(10).all()
-    recent_opinions = Opinion.query.order_by(Opinion.created_at.desc()).limit(10).all()
-    recent_subscribers = Subscriber.query.order_by(Subscriber.subscribed_at.desc()).limit(10).all()
-    recent_courses = Course.query.order_by(Course.created_at.desc()).limit(10).all()
-    
+
     activities = []
-    
-    for reel in recent_reels:
-        activities.append({
-            'type': 'reel',
-            'action': 'created',
-            'title': reel.title,
-            'timestamp': reel.created_at,
-            'icon': 'fa-video',
-            'color': 'primary'
-        })
-    
-    for opinion in recent_opinions:
-        activities.append({
-            'type': 'opinion',
-            'action': 'created',
-            'title': opinion.title,
-            'timestamp': opinion.created_at,
-            'icon': 'fa-poll',
-            'color': 'success'
-        })
-    
-    for subscriber in recent_subscribers:
-        activities.append({
-            'type': 'subscriber',
-            'action': 'joined',
-            'title': subscriber.name,
-            'timestamp': subscriber.subscribed_at,
-            'icon': 'fa-user-plus',
-            'color': 'info'
-        })
-    
-    for course in recent_courses:
-        activities.append({
-            'type': 'course',
-            'action': 'created',
-            'title': course.title,
-            'timestamp': course.created_at,
-            'icon': 'fa-book',
-            'color': 'warning'
-        })
-    
-    # Sort by timestamp
+
+    def _fetch(fn):
+        try:
+            return fn()
+        except Exception as _e:
+            logging.warning(f"Activity log query skipped: {_e}")
+            db.session.rollback()
+            return []
+
+    for reel in _fetch(lambda: Reel.query.order_by(Reel.created_at.desc()).limit(10).all()):
+        if reel.created_at:
+            activities.append({
+                'type': 'reel', 'action': 'created', 'title': reel.title,
+                'timestamp': reel.created_at, 'icon': 'fa-video', 'color': 'primary'
+            })
+
+    for opinion in _fetch(lambda: Opinion.query.order_by(Opinion.created_at.desc()).limit(10).all()):
+        if opinion.created_at:
+            activities.append({
+                'type': 'opinion', 'action': 'created', 'title': opinion.title,
+                'timestamp': opinion.created_at, 'icon': 'fa-poll', 'color': 'success'
+            })
+
+    for subscriber in _fetch(lambda: Subscriber.query.order_by(Subscriber.subscribed_at.desc()).limit(10).all()):
+        if subscriber.subscribed_at:
+            activities.append({
+                'type': 'subscriber', 'action': 'joined', 'title': subscriber.name,
+                'timestamp': subscriber.subscribed_at, 'icon': 'fa-user-plus', 'color': 'info'
+            })
+
+    for course in _fetch(lambda: Course.query.order_by(Course.created_at.desc()).limit(10).all()):
+        if course.created_at:
+            activities.append({
+                'type': 'course', 'action': 'created', 'title': course.title,
+                'timestamp': course.created_at, 'icon': 'fa-book', 'color': 'warning'
+            })
+
     activities.sort(key=lambda x: x['timestamp'], reverse=True)
-    
     return render_template('admin/activity_logs.html', activities=activities[:50])
 
 @app.route('/admin/error-logs')
