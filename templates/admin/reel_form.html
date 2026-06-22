@@ -343,16 +343,22 @@ async function doFetchMeta() {
                 description: data.description || '',
             };
 
-            // Show preview card
-            document.getElementById('fetchedThumb').src  = _fetchedData.thumbnail;
-            document.getElementById('fetchedTitle').textContent = _fetchedData.title;
-            document.getElementById('fetchedDesc').textContent  = _fetchedData.description;
-            previewRow.style.display = '';
+            // Show preview card only if we have a thumbnail
+            if (_fetchedData.thumbnail) {
+                document.getElementById('fetchedThumb').src  = _fetchedData.thumbnail;
+                document.getElementById('fetchedTitle').textContent = _fetchedData.title;
+                document.getElementById('fetchedDesc').textContent  = _fetchedData.description;
+                previewRow.style.display = '';
+            }
 
             // Auto-apply immediately
             applyFetchedData(false);
 
-            setStatus('✅ Metadata fetched — fields auto-filled. Edit freely.', 'text-success');
+            if (data.partial) {
+                setStatus('⚠️ Title auto-filled from URL. Instagram blocks thumbnail fetching — please upload a screenshot as the thumbnail.', 'text-warning');
+            } else {
+                setStatus('✅ Metadata fetched — fields auto-filled. Edit freely.', 'text-success');
+            }
         } else {
             setStatus('❌ ' + (data.error || 'Could not fetch metadata.'), 'text-danger');
         }

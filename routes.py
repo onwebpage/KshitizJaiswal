@@ -812,27 +812,51 @@ def admin_fetch_video_meta():
         # ── Instagram ────────────────────────────────────────────────
         elif 'instagram.com' in url:
             ig_m = _re.search(r'instagram\.com/(?:p|reel)/([A-Za-z0-9_-]+)', url)
+
+            # 1) Try noembed.com (aggregator — works without app token)
             try:
-                oembed = _req.get(
-                    f'https://www.instagram.com/oembed/?url={url}',
+                nb = _req.get(
+                    f'https://noembed.com/embed?url={url}',
                     headers=headers, timeout=8
                 )
-                if oembed.status_code == 200:
-                    od = oembed.json()
-                    title = od.get('title', '')
-                    thumbnail = od.get('thumbnail_url', '')
+                if nb.status_code == 200:
+                    nd = nb.json()
+                    if not nd.get('error'):
+                        title = nd.get('title', '')
+                        thumbnail = nd.get('thumbnail_url', '')
             except Exception:
                 pass
 
-            # Page scrape fallback
-            if not title or not description:
-                page = _req.get(url, headers=headers, timeout=8)
-                if page.status_code == 200:
-                    if not title:
+            # 2) Try official Instagram oEmbed
+            if not title:
+                try:
+                    oembed = _req.get(
+                        f'https://www.instagram.com/oembed/?url={url}',
+                        headers=headers, timeout=8
+                    )
+                    if oembed.status_code == 200:
+                        od = oembed.json()
+                        title = od.get('title', '')
+                        thumbnail = od.get('thumbnail_url', '')
+                except Exception:
+                    pass
+
+            # 3) Page scrape (best-effort — Instagram often 429s servers)
+            if not title:
+                try:
+                    page = _req.get(url, headers=headers, timeout=8)
+                    if page.status_code == 200:
                         title = _og(page.text, 'og:title')
-                    if not thumbnail:
-                        thumbnail = _og(page.text, 'og:image')
-                    description = _og(page.text, 'og:description')
+                        if not thumbnail:
+                            thumbnail = _og(page.text, 'og:image')
+                        description = _og(page.text, 'og:description')
+                except Exception:
+                    pass
+
+            # 4) Auto-fill title from shortcode so admin at least has a placeholder
+            if not title and ig_m:
+                shortcode = ig_m.group(1)
+                title = f'Instagram Reel ({shortcode})'
 
         # ── Generic fallback ─────────────────────────────────────────
         else:
@@ -843,13 +867,14 @@ def admin_fetch_video_meta():
                 description = _og(page.text, 'og:description')
 
         if not title and not thumbnail:
-            return jsonify({'success': False, 'error': 'Could not find metadata for this URL. The platform may block automated access.'})
+            return jsonify({'success': False, 'error': 'Could not fetch metadata. Instagram requires login — please enter the title manually and upload a thumbnail screenshot.'})
 
         return jsonify({
             'success': True,
             'title': title,
             'thumbnail': thumbnail,
             'description': description,
+            'partial': not thumbnail,
         })
 
     except Exception as exc:
