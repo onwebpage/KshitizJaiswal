@@ -168,70 +168,61 @@
             <p class="section-subtitle text-white">{{ page_content.support_section_subtitle }}</p>
         </div>
         
+        {% set rzp_links = {10: 'https://rzp.io/rzp/LLO9iRS1', 20: 'https://rzp.io/rzp/gmj65CKO', 50: 'https://rzp.io/rzp/ZdtxZUNI'} %}
         <div id="supportContent">
         <div class="row justify-content-center">
             <div class="col-lg-10">
                 <div class="support-tiers-container">
                     <div class="row g-4 justify-content-center">
 
-                        <!-- ₹10 -->
-                        <div class="col-lg-3 col-md-4 col-sm-6 col-6">
-                            <a href="https://rzp.io/rzp/LLO9iRS1" target="_blank" rel="noopener noreferrer"
-                               class="quick-support-card">
-                                <div class="qs-icon"><i class="fas fa-mug-hot"></i></div>
-                                <div class="qs-amount-wrap">
-                                    <span class="qs-currency">₹</span>
-                                    <span class="qs-amount">10</span>
+                        {% for tier in subscription_tiers %}
+                        <div class="col-lg-4 col-md-6">
+                            <div class="support-tier-card {% if tier.is_popular %}popular-tier{% endif %}">
+                                {% if tier.is_popular %}
+                                <div class="popular-badge">Most Popular</div>
+                                {% endif %}
+                                <div class="tier-icon">
+                                    <i class="{{ tier.icon }}"></i>
                                 </div>
-                                <div class="qs-label">Buy me a chai</div>
-                                <div class="qs-btn">
-                                    <i class="fas fa-heart me-1"></i>Support Now
+                                <h4 class="tier-title">{{ tier.name }}</h4>
+                                <div class="tier-price-container">
+                                    <span class="tier-currency">₹</span>
+                                    <span class="tier-amount">{{ tier.price }}</span>
+                                    <span class="tier-period">/{{ tier.period }}</span>
                                 </div>
-                            </a>
+                                <p class="tier-description">{{ tier.description }}</p>
+                                <ul class="tier-benefits">
+                                    {% for benefit in tier.benefits %}
+                                    <li><i class="fas fa-check"></i> {{ benefit }}</li>
+                                    {% endfor %}
+                                </ul>
+                                {% if tier.price in rzp_links %}
+                                <a href="{{ rzp_links[tier.price] }}" target="_blank" rel="noopener noreferrer"
+                                   class="btn tier-btn {% if tier.is_popular %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                                    <i class="fas fa-sync-alt me-1"></i>Support – ₹{{ tier.price }}/{{ tier.period }}
+                                </a>
+                                {% else %}
+                                <button class="btn tier-btn {% if tier.is_popular %}btn-primary{% else %}btn-outline-primary{% endif %}"
+                                        onclick="initiateSubscription({{ tier.id }}, '{{ tier.name | e }}', {{ tier.price }}, '{{ tier.period }}')">
+                                    <i class="fas fa-sync-alt me-1"></i>Support – ₹{{ tier.price }}/{{ tier.period }}
+                                </button>
+                                {% endif %}
+                            </div>
                         </div>
-
-                        <!-- ₹20 -->
-                        <div class="col-lg-3 col-md-4 col-sm-6 col-6">
-                            <a href="https://rzp.io/rzp/gmj65CKO" target="_blank" rel="noopener noreferrer"
-                               class="quick-support-card popular-qs">
-                                <div class="qs-popular-badge">Most Popular</div>
-                                <div class="qs-icon"><i class="fas fa-fire"></i></div>
-                                <div class="qs-amount-wrap">
-                                    <span class="qs-currency">₹</span>
-                                    <span class="qs-amount">20</span>
-                                </div>
-                                <div class="qs-label">Keep the fire burning</div>
-                                <div class="qs-btn popular-qs-btn">
-                                    <i class="fas fa-heart me-1"></i>Support Now
-                                </div>
-                            </a>
-                        </div>
-
-                        <!-- ₹50 -->
-                        <div class="col-lg-3 col-md-4 col-sm-6 col-6">
-                            <a href="https://rzp.io/rzp/ZdtxZUNI" target="_blank" rel="noopener noreferrer"
-                               class="quick-support-card">
-                                <div class="qs-icon"><i class="fas fa-star"></i></div>
-                                <div class="qs-amount-wrap">
-                                    <span class="qs-currency">₹</span>
-                                    <span class="qs-amount">50</span>
-                                </div>
-                                <div class="qs-label">Super Supporter</div>
-                                <div class="qs-btn">
-                                    <i class="fas fa-star me-1"></i>Support Now
-                                </div>
-                            </a>
-                        </div>
+                        {% endfor %}
 
                         <!-- Custom Amount Card -->
-                        <div class="col-lg-3 col-md-4 col-sm-6 col-6">
-                            <div class="quick-support-card custom-qs-card">
-                                <div class="qs-icon"><i class="fas fa-heart"></i></div>
-                                <div class="qs-label" style="margin-bottom:.5rem;">{{ page_content.custom_support_button_text or 'Custom Amount' }}</div>
-                                <div class="custom-amount-input-group mt-2">
+                        <div class="col-lg-4 col-md-6">
+                            <div class="support-tier-card custom-support-card">
+                                <div class="tier-icon">
+                                    <i class="fas fa-heart"></i>
+                                </div>
+                                <h4 class="tier-title">{{ page_content.custom_support_button_text or 'Custom Support' }}</h4>
+                                <p class="tier-description">{{ page_content.custom_support_subtitle or 'Choose your own amount' }}</p>
+                                <div class="custom-amount-input-group mt-3">
                                     <span class="currency-symbol">₹</span>
                                     <input type="number" id="customAmount" class="custom-amount-input form-control"
-                                           placeholder="Amount" min="1" step="1">
+                                           placeholder="Enter amount" min="1" step="1">
                                     <button class="btn btn-custom-support" onclick="initiateCustomPayment()">
                                         <i class="fas fa-heart me-1"></i>Support
                                     </button>
