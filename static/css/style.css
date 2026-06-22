@@ -5211,3 +5211,146 @@ h1, h2, h3, h4, h5, h6 {
     padding:4px 6px;line-height:1;
 }
 .site-announcement__close:hover { opacity:1; }
+
+/* ══ Quick Support Cards (Razorpay Payment Links) ═══════════ */
+.quick-support-label {
+    display: inline-block;
+    background: rgba(255,255,255,.12);
+    color: rgba(255,255,255,.9);
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: 6px 16px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,.2);
+}
+
+.quick-support-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,.97);
+    border-radius: 18px;
+    padding: 1.8rem 1.2rem 1.5rem;
+    text-align: center;
+    text-decoration: none !important;
+    border: 2px solid transparent;
+    box-shadow: 0 8px 24px rgba(0,0,0,.12);
+    transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+    position: relative;
+    cursor: pointer;
+    height: 100%;
+}
+.quick-support-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 18px 40px rgba(0,0,0,.22);
+    border-color: #cc0000;
+    text-decoration: none;
+}
+
+.popular-qs {
+    border-color: #f59e0b;
+    transform: scale(1.04);
+    box-shadow: 0 12px 32px rgba(0,0,0,.18);
+}
+.popular-qs:hover {
+    transform: scale(1.04) translateY(-8px);
+    border-color: #f59e0b;
+}
+
+.qs-popular-badge {
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg,#f59e0b,#d97706);
+    color: #fff;
+    font-size: .72rem;
+    font-weight: 700;
+    padding: 4px 14px;
+    border-radius: 12px;
+    white-space: nowrap;
+    box-shadow: 0 4px 10px rgba(245,158,11,.35);
+    letter-spacing: .04em;
+}
+
+.qs-amount-wrap {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    line-height: 1;
+    margin-bottom: .4rem;
+    color: #1a1a1a;
+}
+.qs-currency {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-top: .35rem;
+    color: #cc0000;
+}
+.qs-amount {
+    font-size: 3.2rem;
+    font-weight: 800;
+    letter-spacing: -.02em;
+    color: #1a1a1a;
+    line-height: 1;
+}
+
+.qs-label {
+    font-size: .78rem;
+    color: #888;
+    margin-bottom: 1.1rem;
+    font-weight: 500;
+}
+
+.qs-btn {
+    background: linear-gradient(135deg,#cc0000 0%,#8b0000 100%);
+    color: #fff;
+    font-size: .85rem;
+    font-weight: 700;
+    padding: 9px 22px;
+    border-radius: 30px;
+    box-shadow: 0 4px 14px rgba(204,0,0,.3);
+    transition: box-shadow .2s, transform .2s;
+    width: 100%;
+    white-space: nowrap;
+}
+.quick-support-card:hover .qs-btn {
+    box-shadow: 0 6px 20px rgba(204,0,0,.45);
+    transform: scale(1.03);
+}
+
+.popular-qs-btn {
+    background: linear-gradient(135deg,#f59e0b 0%,#d97706 100%);
+    box-shadow: 0 4px 14px rgba(245,158,11,.35);
+}
+.popular-qs:hover .popular-qs-btn {
+    box-shadow: 0 6px 20px rgba(245,158,11,.5);
+}
+
+.qs-divider {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 2rem 0 .5rem;
+    color: rgba(255,255,255,.45);
+    font-size: .78rem;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+}
+.qs-divider::before,
+.qs-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(255,255,255,.15);
+}
+
+@media (max-width: 576px) {
+    .qs-amount { font-size: 2.4rem; }
+    .quick-support-card { padding: 1.4rem .9rem 1.2rem; border-radius: 14px; }
+    .popular-qs { transform: none; }
+    .popular-qs:hover { transform: translateY(-6px); }
+}
