@@ -5276,6 +5276,23 @@ h1, h2, h3, h4, h5, h6 {
     letter-spacing: .04em;
 }
 
+.qs-icon {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg,#cc0000 0%,#8b0000 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto .9rem;
+    box-shadow: 0 6px 16px rgba(204,0,0,.25);
+}
+.qs-icon i { color:#fff; font-size:1.2rem; }
+.popular-qs .qs-icon { background: linear-gradient(135deg,#f59e0b,#d97706); box-shadow:0 6px 16px rgba(245,158,11,.3); }
+
+.custom-qs-card { justify-content: flex-start; }
+.custom-qs-card .qs-icon { background: linear-gradient(135deg,#cc0000 0%,#8b0000 100%); }
+
 .qs-amount-wrap {
     display: flex;
     align-items: flex-start;
