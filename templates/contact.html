@@ -84,40 +84,29 @@
                         <h3>Follow The Journey</h3>
                         <p class="text-muted">Stay updated with latest content</p>
                     </div>
-                    
+
+                    {% if social_links %}
                     <div class="social-links-large">
-                        <a href="#" class="social-link-large youtube">
-                            <i class="fab fa-youtube"></i>
+                        {% for link in social_links %}
+                        {% set pl = link.platform.lower() %}
+                        {% set brand = platform_colors.get(pl, platform_colors.get(pl.split(' ')[0], '#cc0000')) %}
+                        <a href="{{ link.url or '#' }}" target="_blank" rel="noopener"
+                           class="social-link-large"
+                           style="border-color:{{ brand }}20; background:{{ brand }}08;">
+                            <i class="{{ link.icon_class }}" style="color:{{ brand }};"></i>
                             <div>
-                                <h5>YouTube</h5>
-                                <small>Weekly Shows</small>
+                                <h5 style="color:#1a1a2e;">{{ link.platform }}</h5>
+                                <small class="text-muted">{{ link.url or 'Coming soon' }}</small>
                             </div>
                         </a>
-                        
-                        <a href="#" class="social-link-large instagram">
-                            <i class="fab fa-instagram"></i>
-                            <div>
-                                <h5>Instagram</h5>
-                                <small>Daily Reels</small>
-                            </div>
-                        </a>
-                        
-                        <a href="#" class="social-link-large twitter">
-                            <i class="fab fa-twitter"></i>
-                            <div>
-                                <h5>Twitter</h5>
-                                <small>Quick Takes</small>
-                            </div>
-                        </a>
-                        
-                        <a href="#" class="social-link-large linkedin">
-                            <i class="fab fa-linkedin"></i>
-                            <div>
-                                <h5>LinkedIn</h5>
-                                <small>Professional</small>
-                            </div>
-                        </a>
+                        {% endfor %}
                     </div>
+                    {% else %}
+                    <div class="text-center py-4 text-muted">
+                        <i class="fas fa-share-alt fa-2x mb-3 d-block"></i>
+                        <p>Social links coming soon! Admin se configure karo.</p>
+                    </div>
+                    {% endif %}
                 </div>
                 
                 <!-- Response Time -->

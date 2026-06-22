@@ -385,7 +385,13 @@ def contact():
         'collaborate': 'invite@kshitizjaiswal.in',
         'feedback': 'feedback@kshitizjaiswal.in'
     }
-    return render_template('contact.html', emails=contact_emails)
+    platform_colors = {
+        name.lower(): color
+        for name, _icon, color, _order in SocialLink.DEFAULT_PLATFORMS
+    }
+    social_links = SocialLink.get_active_links()
+    return render_template('contact.html', emails=contact_emails,
+                           social_links=social_links, platform_colors=platform_colors)
 
 @app.route('/resources')
 def resources():
