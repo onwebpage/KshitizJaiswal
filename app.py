@@ -100,28 +100,56 @@ with app.app_context():
     try:
         db.create_all()
         logging.info("Database tables created successfully")
-        # Run column migrations for existing tables
-        from sqlalchemy import text
-        migrations = [
+
+        # ── Safe column migrations ────────────────────────────────────────────
+        # Uses inspect() to check existence first — compatible with both
+        # PostgreSQL (supports IF NOT EXISTS) and SQLite (does not).
+        from sqlalchemy import text, inspect as sa_inspect
+
+        def _has_column(table, column):
+            try:
+                insp = sa_inspect(db.engine)
+                return column in [c['name'] for c in insp.get_columns(table)]
+            except Exception:
+                return False  # unknown → skip the migration
+
+        def _add_column(table, column, col_type):
+            """ADD COLUMN only if missing; silently skips on any error."""
+            if _has_column(table, column):
+                return
+            try:
+                db.session.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} {col_type}"))
+                db.session.commit()
+                logging.info(f"Migration: added {table}.{column}")
+            except Exception as _e:
+                db.session.rollback()
+                logging.warning(f"Migration skipped {table}.{column}: {_e}")
+
+        # Add missing columns (safe for both PostgreSQL and SQLite)
+        _add_column("user_course_access", "guest_name",           "VARCHAR(200)")
+        _add_column("user_course_access", "guest_email",          "VARCHAR(200)")
+        _add_column("user_course_access", "guest_phone",          "VARCHAR(20)")
+        _add_column("module",             "is_visible",           "BOOLEAN NOT NULL DEFAULT TRUE")
+        _add_column("module",             "status",               "VARCHAR(20) NOT NULL DEFAULT 'published'")
+        _add_column("lesson",             "is_visible",           "BOOLEAN NOT NULL DEFAULT TRUE")
+        _add_column("lesson",             "status",               "VARCHAR(20) NOT NULL DEFAULT 'published'")
+        _add_column("course",             "preview_video_url",    "VARCHAR(500)")
+        _add_column("subscription_tier",  "razorpay_plan_id",     "VARCHAR(100)")
+        _add_column("subscriber",         "phone",                "VARCHAR(20)")
+        _add_column("reel",               "video_type",           "VARCHAR(20) DEFAULT 'auto'")
+
+        # PostgreSQL-only migrations (silently ignored on SQLite)
+        pg_only = [
             "ALTER TABLE user_course_access ALTER COLUMN clerk_user_id DROP NOT NULL",
-            "ALTER TABLE user_course_access ADD COLUMN IF NOT EXISTS guest_name VARCHAR(200)",
-            "ALTER TABLE user_course_access ADD COLUMN IF NOT EXISTS guest_email VARCHAR(200)",
-            "ALTER TABLE user_course_access ADD COLUMN IF NOT EXISTS guest_phone VARCHAR(20)",
-            "ALTER TABLE module ADD COLUMN IF NOT EXISTS is_visible BOOLEAN NOT NULL DEFAULT TRUE",
-            "ALTER TABLE module ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'published'",
-            "ALTER TABLE lesson ADD COLUMN IF NOT EXISTS is_visible BOOLEAN NOT NULL DEFAULT TRUE",
-            "ALTER TABLE lesson ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'published'",
             "ALTER TABLE user_activity ALTER COLUMN session_id TYPE TEXT",
-            "ALTER TABLE course ADD COLUMN IF NOT EXISTS preview_video_url VARCHAR(500)",
-            "ALTER TABLE subscription_tier ADD COLUMN IF NOT EXISTS razorpay_plan_id VARCHAR(100)",
-            "ALTER TABLE subscriber ADD COLUMN IF NOT EXISTS phone VARCHAR(20)",
         ]
-        for sql in migrations:
+        for sql in pg_only:
             try:
                 db.session.execute(text(sql))
                 db.session.commit()
             except Exception:
                 db.session.rollback()
+
     except Exception as e:
         logging.error(f"Failed to create database tables: {e}")
         logging.warning("App will continue but database operations may fail")
