@@ -78,7 +78,11 @@ def get_video_info(url, video_type='auto'):
         return {'embed_url': None, 'original_url': url or '', 'video_type': 'unknown', 'video_id': None}
 
     # ── Instagram ────────────────────────────────────────────────
-    instagram_pattern = r'(?:https?://)?(?:www\.)?instagram\.com/(?:p|reel)/([A-Za-z0-9_-]+)'
+    # Matches both formats:
+    #   instagram.com/reel/ID
+    #   instagram.com/username/reel/ID  (with profile slug)
+    #   instagram.com/p/ID
+    instagram_pattern = r'(?:https?://)?(?:www\.)?instagram\.com/(?:[^/]+/)?(?:p|reel)/([A-Za-z0-9_-]+)'
     instagram_match = re.search(instagram_pattern, url)
 
     if instagram_match or video_type == 'instagram':
