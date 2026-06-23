@@ -236,8 +236,11 @@ def normalize_table_name(table_name):
     return legacy_mapping.get(table_name, table_name)
 
 def send_email_credentials(email, name, login_id, password, login_url=None):
-    """Send login credentials to user via email (SMTP). Reads settings from DB."""
+    """Send login credentials to user via email (SMTP).
+    Priority: DB settings (admin panel) → environment variables (SMTP_USER / SMTP_PASSWORD).
+    """
     import logging
+    import os
     import smtplib
     from email.mime.multipart import MIMEMultipart
     from email.mime.text import MIMEText
@@ -245,26 +248,40 @@ def send_email_credentials(email, name, login_id, password, login_url=None):
         from models import SiteContent
         import json
 
+        smtp_host     = 'smtp.gmail.com'
+        smtp_port     = 587
+        smtp_user     = ''
+        smtp_password = ''
+        from_email    = ''
+        from_name     = 'Kshitiz Jaiswal Courses'
+
         email_content = SiteContent.query.filter_by(content_key='email_settings').first()
-        if not email_content:
-            logging.info("Email settings not configured — skipping email delivery.")
+        if email_content:
+            settings = json.loads(email_content.content_data)
+            if settings.get('enabled'):
+                smtp_host     = settings.get('smtp_host', smtp_host).strip() or smtp_host
+                smtp_port     = int(settings.get('smtp_port', smtp_port))
+                smtp_user     = settings.get('smtp_user', '').strip()
+                smtp_password = settings.get('smtp_password', '').strip()
+                from_email    = settings.get('from_email', '').strip()
+                from_name     = settings.get('from_name', from_name).strip()
+
+        if not smtp_user or not smtp_password:
+            env_user = os.environ.get('SMTP_USER', '').strip()
+            env_pass = os.environ.get('SMTP_PASSWORD', '').strip()
+            if env_user and env_pass:
+                smtp_user     = env_user
+                smtp_password = env_pass
+                smtp_host     = os.environ.get('SMTP_HOST', 'smtp.gmail.com').strip()
+                smtp_port     = int(os.environ.get('SMTP_PORT', '587'))
+                from_email    = os.environ.get('SMTP_FROM_EMAIL', smtp_user).strip()
+                from_name     = os.environ.get('SMTP_FROM_NAME', 'Kshitiz Jaiswal Courses').strip()
+
+        if not smtp_user or not smtp_password:
+            logging.warning("Email SMTP credentials missing — skipping email delivery.")
             return False
 
-        settings = json.loads(email_content.content_data)
-        if not settings.get('enabled'):
-            logging.info("Email delivery disabled — skipping.")
-            return False
-
-        smtp_host = settings.get('smtp_host', '').strip()
-        smtp_port = int(settings.get('smtp_port', 587))
-        smtp_user = settings.get('smtp_user', '').strip()
-        smtp_password = settings.get('smtp_password', '').strip()
-        from_email = settings.get('from_email', smtp_user).strip()
-        from_name = settings.get('from_name', 'Kshitiz Jaiswal Courses').strip()
-
-        if not smtp_host or not smtp_user or not smtp_password:
-            logging.warning("Email SMTP credentials missing.")
-            return False
+        from_email = from_email or smtp_user
 
         login_url = login_url or 'https://your-site.com/user/login'
         first_name = (name or 'Student').split()[0]

@@ -640,15 +640,24 @@ class CourseUser(db.Model):
         return check_password_hash(self.password_hash, password)
 
     @staticmethod
-    def generate_password(name, phone):
-        """Format: Kshitiz@235 (Name + @ + last 3 digits of phone)"""
-        clean_name = (name or 'User').strip()
-        if not clean_name:
-            clean_name = 'User'
-        formatted = clean_name[0].upper() + clean_name[1:].lower()
-        digits = re.sub(r'[^0-9]', '', phone or '')
-        last3 = digits[-3:] if len(digits) >= 3 else digits.zfill(3)
-        return f"{formatted}@{last3}"
+    def generate_password(name=None, phone=None):
+        """Generate a cryptographically secure random password."""
+        import secrets as _sec
+        import string as _str
+        alphabet = _str.ascii_letters + _str.digits + '!@#$'
+        while True:
+            pwd = ''.join(_sec.choice(alphabet) for _ in range(10))
+            if (any(c.isupper() for c in pwd) and
+                    any(c.islower() for c in pwd) and
+                    any(c.isdigit() for c in pwd)):
+                return pwd
+
+    @staticmethod
+    def generate_username(email):
+        """Derive a clean username from the part before @ in the email."""
+        base = (email or '').split('@')[0]
+        base = re.sub(r'[^a-zA-Z0-9._]', '', base).lower()
+        return base or 'user'
 
     @staticmethod
     def get_by_identifier(identifier):

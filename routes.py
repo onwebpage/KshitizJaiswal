@@ -3683,31 +3683,25 @@ def lesson_view(course_id, lesson_id):
 
 @app.route('/course/<int:course_id>/purchase', methods=['POST'])
 def purchase_course(course_id):
-    """Initiate course purchase — login required"""
+    """Initiate course purchase — no login required"""
     course = Course.query.get_or_404(course_id)
 
     clerk_user_id = get_clerk_user_id()
     course_user   = get_course_user()
-
-    # Require authentication before purchase
-    if not clerk_user_id and not course_user:
-        return jsonify({
-            'success': False,
-            'login_required': True,
-            'message': 'Please sign in to purchase this course.',
-            'login_url': url_for('clerk_login')
-        }), 401
 
     data = request.get_json() or {}
     guest_name  = data.get('name',  '').strip()
     guest_email = data.get('email', '').strip()
     guest_phone = data.get('phone', '').strip()
 
+    if not guest_name or not guest_email:
+        return jsonify({'success': False, 'message': 'Please provide your name and email address.'}), 400
+
     # Fill in from CourseUser session if fields are missing
     if course_user:
-        if not guest_name  and course_user.name:          guest_name  = course_user.name
-        if not guest_email and course_user.email:         guest_email = course_user.email
-        if not guest_phone and course_user.phone:         guest_phone = course_user.phone
+        if not guest_name  and course_user.name:  guest_name  = course_user.name
+        if not guest_email and course_user.email: guest_email = course_user.email
+        if not guest_phone and course_user.phone: guest_phone = course_user.phone
 
     # Check for existing access
     if clerk_user_id and UserCourseAccess.has_access(clerk_user_id, course_id):
@@ -3715,7 +3709,7 @@ def purchase_course(course_id):
     if course_user and course_user.has_course_access(course_id):
         return jsonify({'success': False, 'message': 'You already have access to this course'}), 400
     if guest_email and UserCourseAccess.has_access_by_email(guest_email, course_id):
-        return jsonify({'success': False, 'message': 'This account already has access to this course'}), 400
+        return jsonify({'success': False, 'message': 'This email already has access to this course. Please log in.'}), 400
 
     try:
         amount = course.price * 100
@@ -3799,22 +3793,26 @@ def verify_course_payment():
                         existing_user = CourseUser.get_by_identifier(guest_phone)
 
                     if not existing_user:
-                        auto_password = CourseUser.generate_password(guest_name, guest_phone)
+                        auto_password = CourseUser.generate_password()
+                        username = CourseUser.generate_username(guest_email)
                         new_user = CourseUser(
                             name=guest_name or 'User',
                             email=guest_email or None,
                             phone=guest_phone or None,
-                            must_change_password=True
+                            must_change_password=False
                         )
                         new_user.set_password(auto_password)
                         db.session.add(new_user)
                         db.session.commit()
 
+                        # Auto-log the new user in so they can reach My Courses
+                        session['course_user_id'] = new_user.id
+
                         import logging as _log
                         _log.info(f"CourseUser created for {guest_email or guest_phone}")
 
                         from utils import send_whatsapp_credentials, send_email_credentials
-                        login_id  = guest_email or guest_phone
+                        login_id   = guest_email or guest_phone
                         _login_url = url_for('user_login', _external=True)
                         send_whatsapp_credentials(
                             phone=guest_phone,
@@ -3831,6 +3829,9 @@ def verify_course_payment():
                                 password=auto_password,
                                 login_url=_login_url
                             )
+                    else:
+                        # Returning buyer — log them in
+                        session['course_user_id'] = existing_user.id
             except Exception as _e:
                 import logging as _log
                 _log.error(f"CourseUser creation error after payment: {_e}")
