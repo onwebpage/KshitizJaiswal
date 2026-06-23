@@ -920,6 +920,60 @@
     
     {% block scripts %}{% endblock %}
 
+    <!-- Footer newsletter AJAX submission -->
+    <script>
+    (function() {
+        var form = document.getElementById('footerNewsletterForm');
+        if (!form) return;
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            var btn = form.querySelector('button[type="submit"]');
+            var successDiv = document.getElementById('footerNewsletterSuccess');
+            var originalHtml = btn.innerHTML;
+
+            // Loading state
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Subscribing...';
+            btn.disabled = true;
+
+            var data = new FormData(form);
+
+            fetch(form.action, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                body: data
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(json) {
+                if (json.success) {
+                    // Show inline success, hide form
+                    form.style.display = 'none';
+                    if (successDiv) {
+                        successDiv.classList.remove('d-none');
+                        successDiv.style.display = 'flex';
+                    }
+                } else {
+                    // Show error inline
+                    btn.innerHTML = '<i class="fas fa-exclamation-circle me-1"></i>' + (json.message || 'Please try again');
+                    btn.style.background = '#e53e3e';
+                    setTimeout(function() {
+                        btn.innerHTML = originalHtml;
+                        btn.style.background = '';
+                        btn.disabled = false;
+                    }, 3000);
+                }
+            })
+            .catch(function() {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+                // Fall back to normal form submit if fetch fails
+                form.removeEventListener('submit', arguments.callee);
+                form.submit();
+            });
+        });
+    })();
+    </script>
 
 {% block extra_scripts %}{% endblock %}
 </body>

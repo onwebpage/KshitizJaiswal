@@ -78,7 +78,7 @@ def inject_section_visibility():
 
     # WhatsApp support phone and chat link for support buttons
     wa_support_phone = ''
-    whatsapp_link = ''
+    whatsapp_link = 'https://wa.me/message/TYMT7KS4JVF7F1'  # default fallback
     try:
         import re as _re
         wa_rec = SiteContent.query.filter_by(content_key='whatsapp_settings').first()
