@@ -191,7 +191,7 @@
 
     <!-- Live DB values -->
     <div class="live-db-card">
-        <h6><i class="fas fa-database me-2"></i>Live Database Values</h6>
+        <h6><i class="fas fa-database me-2"></i>Live Database Values (auto-sync sources)</h6>
         <div class="live-db-row">
             <span><i class="fas fa-users me-2 text-primary"></i>Newsletter Subscribers</span>
             <span class="badge bg-primary">{{ live_subscriber_count }}</span>
@@ -200,9 +200,15 @@
             <span><i class="fas fa-film me-2 text-danger"></i>Visible Reels</span>
             <span class="badge bg-danger">{{ live_reel_count }}</span>
         </div>
+        <div class="live-db-row">
+            <span><i class="fas fa-rupee-sign me-2 text-success"></i>Total Support Collected
+                <small class="text-muted ms-1">({{ live_active_supporters }} active supporter{{ 's' if live_active_supporters != 1 else '' }})</small>
+            </span>
+            <span class="badge bg-success">{{ live_support_total }}</span>
+        </div>
         <p class="small text-muted mb-0 mt-2">
             <i class="fas fa-info-circle me-1"></i>
-            Set a stat's <strong>Source</strong> to "Auto: Subscribers" or "Auto: Reels" to pull live counts automatically.
+            Set a stat's <strong>Source</strong> to one of the Auto options to pull live data automatically — no manual updates needed.
         </p>
     </div>
 
@@ -305,6 +311,9 @@
                             </option>
                             <option value="reel_count" {{ 'selected' if stat.auto == 'reel_count' else '' }}>
                                 Auto: Published Reels ({{ live_reel_count }})
+                            </option>
+                            <option value="support_total" {{ 'selected' if stat.auto == 'support_total' else '' }}>
+                                Auto: Total Support Collected ({{ live_support_total }})
                             </option>
                         </select>
                     </div>
@@ -440,6 +449,7 @@ function addStatCard() {
                     <option value="" selected>Manual (use value above)</option>
                     <option value="subscriber_count">Auto: Newsletter Subscribers</option>
                     <option value="reel_count">Auto: Published Reels</option>
+                    <option value="support_total">Auto: Total Support Collected</option>
                 </select>
             </div>
             <div class="field-group">

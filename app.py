@@ -265,11 +265,22 @@ def inject_global_context():
                 [s for s in _sd.get('stats', []) if s.get('is_active', True)],
                 key=lambda s: s.get('sort_order', 999)
             )
+            _sup_cache = None
             for s in _active:
                 if s.get('auto') == 'subscriber_count':
                     s['resolved_value'] = str(Subscriber.query.count())
                 elif s.get('auto') == 'reel_count':
                     s['resolved_value'] = str(Reel.query.filter_by(is_visible=True).count())
+                elif s.get('auto') == 'support_total':
+                    if _sup_cache is None:
+                        try:
+                            from models import UserSubscription as _US
+                            _rows = db.session.query(_US.amount_paise, _US.paid_count).filter(_US.status == 'active').all()
+                            _tp = sum((r.amount_paise or 0) * (r.paid_count or 0) for r in _rows)
+                            _sup_cache = '₹{:,}'.format(_tp // 100)
+                        except Exception:
+                            _sup_cache = s.get('value', '₹0')
+                    s['resolved_value'] = _sup_cache
                 else:
                     s['resolved_value'] = s.get('value', '')
             footer_stats = _active[:2]

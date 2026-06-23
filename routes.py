@@ -229,8 +229,8 @@ def index():
             {'icon': 'fas fa-eye',        'label': 'Total Views',      'value': '0',     'auto': '',                 'is_active': True,  'sort_order': 3},
             {'icon': 'fas fa-heart',      'label': 'Likes',            'value': '0',     'auto': '',                 'is_active': True,  'sort_order': 4},
             {'icon': 'fas fa-film',       'label': 'Reels Published',  'value': '0',     'auto': 'reel_count',       'is_active': True,  'sort_order': 5},
-            {'icon': 'fas fa-percentage', 'label': 'Engagement Rate',  'value': '0%',    'auto': '',                 'is_active': False, 'sort_order': 6},
-            {'icon': 'fas fa-rupee-sign', 'label': 'Total Support',    'value': '₹0',    'auto': '',                 'is_active': False, 'sort_order': 7},
+            {'icon': 'fas fa-percentage', 'label': 'Engagement Rate',  'value': '0%',    'auto': '',                 'is_active': True,  'sort_order': 6},
+            {'icon': 'fas fa-rupee-sign', 'label': 'Total Support',    'value': '₹0',    'auto': 'support_total',    'is_active': True,  'sort_order': 7},
         ]
     }
     try:
@@ -239,6 +239,7 @@ def index():
         if 'stats' not in stats_data:
             stats_data['stats'] = DEFAULT_STATS_DATA['stats']
         # Resolve auto values and filter to only active stats for frontend display
+        _support_total_cache = None
         active_stats = []
         for idx, stat in enumerate(sorted(stats_data['stats'], key=lambda s: s.get('sort_order', idx))):
             if not stat.get('is_active', True):
@@ -247,6 +248,19 @@ def index():
                 stat['resolved_value'] = str(Subscriber.query.count())
             elif stat.get('auto') == 'reel_count':
                 stat['resolved_value'] = str(Reel.query.filter_by(is_visible=True).count())
+            elif stat.get('auto') == 'support_total':
+                if _support_total_cache is None:
+                    try:
+                        from sqlalchemy import func as _func
+                        rows = db.session.query(
+                            UserSubscription.amount_paise,
+                            UserSubscription.paid_count
+                        ).filter(UserSubscription.status == 'active').all()
+                        total_paise = sum((r.amount_paise or 0) * (r.paid_count or 0) for r in rows)
+                        _support_total_cache = '₹{:,}'.format(total_paise // 100)
+                    except Exception:
+                        _support_total_cache = stat.get('value', '₹0')
+                stat['resolved_value'] = _support_total_cache
             else:
                 stat['resolved_value'] = stat.get('value', '')
             active_stats.append(stat)
@@ -1166,8 +1180,8 @@ def admin_statistics_section():
             {'icon': 'fas fa-eye',        'label': 'Total Views',     'value': '0',   'auto': '',                 'is_active': True,  'sort_order': 3},
             {'icon': 'fas fa-heart',      'label': 'Likes',           'value': '0',   'auto': '',                 'is_active': True,  'sort_order': 4},
             {'icon': 'fas fa-film',       'label': 'Reels Published', 'value': '0',   'auto': 'reel_count',       'is_active': True,  'sort_order': 5},
-            {'icon': 'fas fa-percentage', 'label': 'Engagement Rate', 'value': '0%',  'auto': '',                 'is_active': False, 'sort_order': 6},
-            {'icon': 'fas fa-rupee-sign', 'label': 'Total Support',   'value': '₹0',  'auto': '',                 'is_active': False, 'sort_order': 7},
+            {'icon': 'fas fa-percentage', 'label': 'Engagement Rate', 'value': '0%',  'auto': '',                 'is_active': True,  'sort_order': 6},
+            {'icon': 'fas fa-rupee-sign', 'label': 'Total Support',   'value': '₹0',  'auto': 'support_total',    'is_active': True,  'sort_order': 7},
         ]
     }
 
@@ -1180,6 +1194,17 @@ def admin_statistics_section():
         live_reel_count = Reel.query.filter_by(is_visible=True).count()
     except Exception:
         live_reel_count = 0
+    try:
+        _rows = db.session.query(
+            UserSubscription.amount_paise,
+            UserSubscription.paid_count
+        ).filter(UserSubscription.status == 'active').all()
+        _total_paise = sum((r.amount_paise or 0) * (r.paid_count or 0) for r in _rows)
+        live_support_total = '₹{:,}'.format(_total_paise // 100)
+        live_active_supporters = len(_rows)
+    except Exception:
+        live_support_total = '₹0'
+        live_active_supporters = 0
 
     if request.method == 'POST':
         title    = request.form.get('title', 'By the Numbers').strip()
@@ -1241,6 +1266,8 @@ def admin_statistics_section():
                            is_visible=is_visible,
                            live_subscriber_count=live_subscriber_count,
                            live_reel_count=live_reel_count,
+                           live_support_total=live_support_total,
+                           live_active_supporters=live_active_supporters,
                            enabled_count=enabled_count,
                            disabled_count=disabled_count)
 
