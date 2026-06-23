@@ -4,127 +4,143 @@
 
 {% block extra_head %}
 <style>
-.sm-stats-bar { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 26px; }
-.sm-stat-pill { display: flex; align-items: center; gap: 8px; padding: 7px 16px; border-radius: 50px; font-size: .84rem; font-weight: 600; }
+/* ── Summary pills ─────────────────────────────────────── */
+.sm-stats-bar { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
+.sm-stat-pill { display: flex; align-items: center; gap: 7px; padding: 6px 14px;
+    border-radius: 50px; font-size: .83rem; font-weight: 600; }
 .sm-stat-pill.total    { background: #ede9fe; color: #5b21b6; }
 .sm-stat-pill.enabled  { background: #d1fae5; color: #065f46; }
 .sm-stat-pill.disabled { background: #f3f4f6; color: #6b7280; }
 
-.stat-cards-grid { display: flex; flex-direction: column; gap: 14px; margin-bottom: 24px; }
-.stat-card {
-    background: #fff;
-    border: 2px solid #e5e7eb;
-    border-radius: 14px;
-    padding: 16px 18px;
-    transition: border-color .2s, box-shadow .2s;
-}
-.stat-card.is-enabled  { border-color: #bbf7d0; box-shadow: 0 2px 10px rgba(34,197,94,.09); }
-.stat-card.is-disabled { opacity: .72; }
+/* ── Page header ───────────────────────────────────────── */
+.page-title-bar { display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
+.page-title-bar h2 { margin: 0; font-size: 1.5rem; font-weight: 700; color: #1a1a2e; }
 
-.card-header-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-.drag-handle { cursor: grab; color: #d1d5db; font-size: 1.1rem; flex-shrink: 0; padding: 0 2px; }
-.drag-handle:active { cursor: grabbing; }
-.stat-order-badge {
-    width: 26px; height: 26px; border-radius: 8px;
-    background: #f3f4f6; color: #6b7280;
-    font-size: .75rem; font-weight: 700;
-    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-}
-.stat-icon-preview-wrap {
-    width: 40px; height: 40px; border-radius: 10px;
-    background: linear-gradient(135deg, #cc0000, #8b0000);
-    display: flex; align-items: center; justify-content: center;
-    color: #fff; font-size: 1rem; flex-shrink: 0;
-}
-.stat-title-col { flex: 1; min-width: 0; }
-.stat-card-label { font-weight: 700; font-size: .95rem; color: #111827; margin: 0; }
-.stat-card-value { font-size: .82rem; color: #6b7280; margin: 0; }
-
-.toggle-wrap { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-.toggle-label { font-size: .78rem; font-weight: 600; min-width: 38px; text-align: right; }
-.toggle-label.on  { color: #059669; }
-.toggle-label.off { color: #9ca3af; }
-.toggle-btn {
-    position: relative; width: 46px; height: 25px;
-    background: #d1d5db; border: none; border-radius: 13px;
-    cursor: pointer; padding: 0; transition: background .25s; flex-shrink: 0;
-}
-.toggle-btn.on { background: #22c55e; }
-.toggle-btn::after {
-    content: ''; position: absolute; top: 2px; left: 2px;
-    width: 21px; height: 21px; background: #fff; border-radius: 50%;
-    transition: left .25s; box-shadow: 0 1px 3px rgba(0,0,0,.2);
-}
-.toggle-btn.on::after { left: 23px; }
-
-.vis-badge { font-size: .72rem; font-weight: 600; padding: 3px 9px; border-radius: 20px; }
-.vis-badge.visible { background: #d1fae5; color: #065f46; }
-.vis-badge.hidden  { background: #f3f4f6; color: #9ca3af; }
-
-.fields-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr auto;
-    gap: 10px;
-    align-items: end;
-}
-@media (max-width: 768px) {
-    .fields-row { grid-template-columns: 1fr 1fr; }
-    .fields-row .auto-select-col { grid-column: 1/-1; }
-    .fields-row .del-col { grid-column: 1/-1; text-align: right; }
-}
-.field-group label { font-size: .75rem; font-weight: 600; color: #6b7280; margin-bottom: 4px; display: block; }
-.field-group input, .field-group select {
-    border: 1.5px solid #e5e7eb; border-radius: 9px;
-    padding: 7px 10px; font-size: .84rem; width: 100%;
-    transition: border-color .2s;
-}
-.field-group input:focus, .field-group select:focus {
-    outline: none; border-color: #6366f1;
-    box-shadow: 0 0 0 3px rgba(99,102,241,.12);
-}
-
-.section-header-card {
-    background: #fff; border: 1.5px solid #e5e7eb;
-    border-radius: 14px; padding: 18px 20px; margin-bottom: 22px;
-}
-.section-header-card h6 { font-size: .95rem; font-weight: 700; color: #1a1a2e; margin-bottom: 14px; }
-
-.vis-banner {
-    display: flex; align-items: center; justify-content: space-between;
-    flex-wrap: wrap; gap: 12px;
-    padding: 14px 20px; border-radius: 12px; margin-bottom: 22px; border: 2px solid;
-}
+/* ── Section visibility banner ─────────────────────────── */
+.vis-banner { display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px; padding: 14px 20px; border-radius: 12px;
+    margin-bottom: 22px; border: 2px solid; }
 .vis-banner.showing { background: #f0fdf4; border-color: #bbf7d0; }
 .vis-banner.hiding  { background: #f9fafb; border-color: #e5e7eb; }
 
+/* ── Live DB card ──────────────────────────────────────── */
+.live-db-card { background: #f0f9ff; border: 1.5px solid #bae6fd;
+    border-radius: 12px; padding: 16px 18px; margin-bottom: 22px; }
+.live-db-card h6 { color: #0369a1; font-size: .9rem; font-weight: 700; margin-bottom: 10px; }
+.live-db-row { display: flex; align-items: center; justify-content: space-between;
+    padding: 5px 0; border-bottom: 1px solid #e0f2fe; font-size: .85rem; }
+.live-db-row:last-child { border-bottom: none; }
+
+/* ── Section header card ───────────────────────────────── */
+.section-header-card { background: #fff; border: 1.5px solid #e5e7eb;
+    border-radius: 14px; padding: 18px 20px; margin-bottom: 22px; }
+.section-header-card h6 { font-size: .95rem; font-weight: 700; color: #1a1a2e; margin-bottom: 14px; }
+
+/* ── Stat cards ────────────────────────────────────────── */
+.stat-cards-grid { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+.stat-card {
+    background: #fff; border: 2px solid #e5e7eb; border-radius: 14px;
+    padding: 14px 16px; transition: border-color .2s, box-shadow .2s;
+    position: relative;
+}
+.stat-card.is-enabled  { border-color: #bbf7d0; box-shadow: 0 2px 10px rgba(34,197,94,.08); }
+.stat-card.is-disabled { opacity: .65; }
+
+/* ── Card header row ───────────────────────────────────── */
+.card-header-row {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+    flex-wrap: nowrap;
+}
+.drag-handle { cursor: grab; color: #d1d5db; font-size: 1.05rem; flex-shrink: 0; padding: 0 2px; }
+.drag-handle:active { cursor: grabbing; }
+.stat-order-badge {
+    width: 24px; height: 24px; border-radius: 7px;
+    background: #f3f4f6; color: #6b7280;
+    font-size: .72rem; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.stat-icon-preview-wrap {
+    width: 38px; height: 38px; border-radius: 9px;
+    background: linear-gradient(135deg, #cc0000, #8b0000);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: .95rem; flex-shrink: 0;
+}
+.stat-title-col { flex: 1; min-width: 0; }
+.stat-card-label { font-weight: 700; font-size: .93rem; color: #111827; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stat-card-value { font-size: .79rem; color: #6b7280; margin: 0; }
+
+/* ── Visibility toggle button (replaces separate toggle + badge) ── */
+.stat-vis-btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: .78rem; font-weight: 700; padding: 5px 11px;
+    border-radius: 20px; border: none; cursor: pointer;
+    transition: background .18s, color .18s, transform .1s;
+    flex-shrink: 0; white-space: nowrap;
+}
+.stat-vis-btn.enabled {
+    background: #d1fae5; color: #065f46;
+}
+.stat-vis-btn.enabled:hover { background: #a7f3d0; transform: scale(1.03); }
+.stat-vis-btn.disabled {
+    background: #f3f4f6; color: #9ca3af;
+}
+.stat-vis-btn.disabled:hover { background: #e5e7eb; transform: scale(1.03); }
+
+/* ── Delete button ─────────────────────────────────────── */
+.stat-del-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px; border-radius: 8px; border: 1.5px solid #fca5a5;
+    background: #fff; color: #ef4444; cursor: pointer; flex-shrink: 0;
+    transition: background .15s, border-color .15s, transform .1s;
+}
+.stat-del-btn:hover { background: #fee2e2; border-color: #ef4444; transform: scale(1.07); }
+
+/* ── Fields row ────────────────────────────────────────── */
+.fields-row {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr 1.3fr 1fr;
+    gap: 10px; align-items: end;
+}
+@media (max-width: 900px) {
+    .fields-row { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 600px) {
+    .fields-row { grid-template-columns: 1fr; }
+    .card-header-row { flex-wrap: wrap; }
+}
+.field-group label { font-size: .73rem; font-weight: 600; color: #6b7280; margin-bottom: 3px; display: block; }
+.field-group input, .field-group select {
+    border: 1.5px solid #e5e7eb; border-radius: 8px;
+    padding: 7px 10px; font-size: .83rem; width: 100%;
+    transition: border-color .2s; background: #fff;
+}
+.field-group input:focus, .field-group select:focus {
+    outline: none; border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99,102,241,.1);
+}
+
+/* ── Add new stat row ──────────────────────────────────── */
 .add-stat-row {
     border: 2px dashed #d1d5db; border-radius: 14px;
-    padding: 18px; text-align: center;
+    padding: 16px; text-align: center;
     cursor: pointer; transition: border-color .2s, background .2s; color: #9ca3af;
+    background: transparent; width: 100%; font-size: .9rem; font-weight: 600;
+    display: block;
 }
 .add-stat-row:hover { border-color: #6366f1; background: #f0f0ff; color: #6366f1; }
 
-.live-db-card {
-    background: #f0f9ff; border: 1.5px solid #bae6fd;
-    border-radius: 12px; padding: 16px 18px; margin-bottom: 22px;
-}
-.live-db-card h6 { color: #0369a1; font-size: .9rem; font-weight: 700; margin-bottom: 10px; }
-.live-db-row {
+/* ── Save area ─────────────────────────────────────────── */
+.save-bar {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 5px 0; border-bottom: 1px solid #e0f2fe; font-size: .85rem;
+    gap: 12px; padding: 14px 18px; background: #f8fafc;
+    border: 1.5px solid #e5e7eb; border-radius: 12px; margin-bottom: 24px;
 }
-.live-db-row:last-child { border-bottom: none; }
-
-.page-title-bar {
-    display: flex; align-items: center; justify-content: space-between;
-    flex-wrap: wrap; gap: 12px; margin-bottom: 24px;
-}
-.page-title-bar h2 { margin: 0; font-size: 1.5rem; font-weight: 700; color: #1a1a2e; }
+.save-bar .hint { color: #9ca3af; font-size: .82rem; }
 </style>
 {% endblock %}
 
 {% block admin_content %}
-    <!-- Flash messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
@@ -147,26 +163,26 @@
     <!-- Summary pills -->
     <div class="sm-stats-bar">
         <div class="sm-stat-pill total">
-            <i class="fas fa-layer-group"></i>{{ data.stats|length }} Stats
+            <i class="fas fa-layer-group"></i>{{ data.stats|length }} Stats Total
         </div>
         <div class="sm-stat-pill enabled">
-            <i class="fas fa-eye"></i>{{ enabled_count }} Visible on site
+            <i class="fas fa-eye"></i>{{ enabled_count }} Visible
         </div>
         <div class="sm-stat-pill disabled">
             <i class="fas fa-eye-slash"></i>{{ disabled_count }} Hidden
         </div>
     </div>
 
-    <!-- Section visibility banner — standalone form, outside the main form -->
+    <!-- Section visibility banner — its own form, outside statsForm -->
     <div class="vis-banner {{ 'showing' if is_visible else 'hiding' }}">
         <div class="d-flex align-items-center gap-2">
             <i class="fas fa-{{ 'eye' if is_visible else 'eye-slash' }} {{ 'text-success' if is_visible else 'text-muted' }}"></i>
-            <strong>Section is {{ 'visible' if is_visible else 'hidden' }} on the website.</strong>
-            <span class="text-muted small">Individual stat toggles below control what shows within the section.</span>
+            <strong>Statistics section is {{ 'visible' if is_visible else 'hidden' }} on the website.</strong>
+            <span class="text-muted small ms-1">Individual stat toggles below control what shows within the section.</span>
         </div>
-        <form method="POST" action="{{ url_for('admin_toggle_statistics_visibility') }}" style="display:inline;">
+        <form method="POST" action="{{ url_for('admin_toggle_statistics_visibility') }}" style="margin:0;">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <button type="submit" class="btn btn-sm btn-outline-{{ 'danger' if is_visible else 'success' }}">
+            <button type="submit" class="btn btn-sm btn-{{ 'outline-danger' if is_visible else 'outline-success' }}">
                 <i class="fas fa-{{ 'eye-slash' if is_visible else 'eye' }} me-1"></i>
                 {{ 'Hide Section' if is_visible else 'Show Section' }}
             </button>
@@ -186,15 +202,15 @@
         </div>
         <p class="small text-muted mb-0 mt-2">
             <i class="fas fa-info-circle me-1"></i>
-            Set a stat's <strong>Source</strong> to "Auto: Subscribers" or "Auto: Reels" to pull these values automatically.
+            Set a stat's <strong>Source</strong> to "Auto: Subscribers" or "Auto: Reels" to pull live counts automatically.
         </p>
     </div>
 
-    <!-- Main edit form -->
+    <!-- Main form -->
     <form method="POST" id="statsForm" action="{{ url_for('admin_statistics_section') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-        <!-- Section title & subtitle -->
+        <!-- Section header fields -->
         <div class="section-header-card">
             <h6><i class="fas fa-heading me-2 text-secondary"></i>Section Header</h6>
             <div class="row g-3">
@@ -213,7 +229,7 @@
             </div>
         </div>
 
-        <!-- Stat cards -->
+        <!-- Stat cards grid -->
         <div class="stat-cards-grid" id="statCardsGrid">
             {% for stat in data.stats %}
             {% set i = loop.index0 %}
@@ -225,40 +241,38 @@
                        value="{{ '1' if stat.is_active else '0' }}">
 
                 <div class="card-header-row">
+                    <!-- Drag handle -->
                     <span class="drag-handle" title="Drag to reorder">
                         <i class="fas fa-grip-vertical"></i>
                     </span>
+                    <!-- Order number -->
                     <div class="stat-order-badge" id="order-badge-{{ i }}">{{ loop.index }}</div>
-                    <div class="stat-icon-preview-wrap" id="icon-preview-{{ i }}">
+                    <!-- Icon preview -->
+                    <div class="stat-icon-preview-wrap">
                         <i class="{{ stat.icon or 'fas fa-chart-bar' }}" id="icon-el-{{ i }}"></i>
                     </div>
+                    <!-- Label + value preview -->
                     <div class="stat-title-col">
                         <p class="stat-card-label" id="label-preview-{{ i }}">{{ stat.label or 'Untitled Stat' }}</p>
                         <p class="stat-card-value" id="value-preview-{{ i }}">
                             {{ '(auto-synced from DB)' if stat.auto else (stat.value or '—') }}
                         </p>
                     </div>
-                    <!-- Toggle: JS-only, updates hidden field, saved with main form -->
-                    <div class="toggle-wrap">
-                        <span class="toggle-label {{ 'on' if stat.is_active else 'off' }}" id="toggle-label-{{ i }}">
-                            {{ 'ON' if stat.is_active else 'OFF' }}
-                        </span>
-                        <button type="button"
-                                class="toggle-btn {{ 'on' if stat.is_active else '' }}"
-                                onclick="toggleActive({{ i }}, this)"
-                                title="{{ 'Click to disable' if stat.is_active else 'Click to enable' }}">
-                        </button>
-                    </div>
-                    <span class="vis-badge {{ 'visible' if stat.is_active else 'hidden' }}" id="vis-badge-{{ i }}">
-                        <i class="fas fa-{{ 'eye' if stat.is_active else 'eye-slash' }} me-1"></i>
-                        {{ 'Visible' if stat.is_active else 'Hidden' }}
-                    </span>
+                    <!-- Visibility toggle button (single control) -->
                     <button type="button"
-                            class="btn btn-outline-danger btn-sm ms-1"
-                            style="border-radius:8px; padding:5px 9px; flex-shrink:0;"
+                            id="vis-btn-{{ i }}"
+                            class="stat-vis-btn {{ 'enabled' if stat.is_active else 'disabled' }}"
+                            onclick="toggleStat({{ i }})"
+                            title="{{ 'Currently visible — click to hide' if stat.is_active else 'Currently hidden — click to show' }}">
+                        <i class="fas fa-{{ 'eye' if stat.is_active else 'eye-slash' }}"></i>
+                        {{ 'Visible' if stat.is_active else 'Hidden' }}
+                    </button>
+                    <!-- Delete button -->
+                    <button type="button"
+                            class="stat-del-btn"
                             onclick="removeStatCard(this)"
-                            title="Delete stat">
-                        <i class="fas fa-trash"></i>
+                            title="Delete this stat">
+                        <i class="fas fa-trash-alt"></i>
                     </button>
                 </div>
 
@@ -281,7 +295,7 @@
                                {{ 'disabled' if stat.auto else '' }}
                                oninput="updateValuePreview({{ i }}, this.value, '{{ stat.auto }}')">
                     </div>
-                    <div class="field-group auto-select-col">
+                    <div class="field-group">
                         <label>Source</label>
                         <select name="stat_auto_{{ i }}"
                                 onchange="handleAutoChange({{ i }}, this)">
@@ -295,7 +309,7 @@
                         </select>
                     </div>
                     <div class="field-group">
-                        <label>Icon <a href="https://fontawesome.com/search?m=free" target="_blank" class="text-muted fw-normal">(FA class)</a></label>
+                        <label>Icon <a href="https://fontawesome.com/search?m=free&s=solid" target="_blank" class="text-muted fw-normal">(FA class)</a></label>
                         <input type="text"
                                name="stat_icon_{{ i }}"
                                value="{{ stat.icon or '' }}"
@@ -308,19 +322,19 @@
         </div>
 
         <!-- Add stat button -->
-        <div class="add-stat-row mb-4" onclick="addStatCard()">
+        <button type="button" class="add-stat-row mb-4" onclick="addStatCard()">
             <i class="fas fa-plus-circle me-2"></i>
             <strong>Add New Stat</strong>
-            <span class="ms-2 text-muted" style="font-size:.85rem">Followers, Likes, YouTube views, etc.</span>
-        </div>
+            <span class="ms-2 text-muted" style="font-size:.82rem;">Followers, Likes, YouTube views, etc.</span>
+        </button>
 
-        <!-- Save button -->
-        <div class="d-flex justify-content-between align-items-center gap-3 mb-4">
-            <span class="text-muted small">
+        <!-- Save bar -->
+        <div class="save-bar">
+            <span class="hint">
                 <i class="fas fa-info-circle me-1"></i>
-                Toggle switches take effect after clicking <strong>Save All Changes</strong>.
+                Toggle changes (Visible/Hidden) take effect when you click <strong>Save All Changes</strong>.
             </span>
-            <button type="submit" class="btn btn-primary px-4" style="border-radius: 10px;">
+            <button type="submit" class="btn btn-primary px-4" style="border-radius:10px; font-weight:600;">
                 <i class="fas fa-save me-2"></i>Save All Changes
             </button>
         </div>
@@ -332,7 +346,7 @@
 <script>
 let cardCount = {{ data.stats | length }};
 
-// ── Live preview helpers ──────────────────────────────────────────
+// ── Live preview helpers ────────────────────────────────────────
 function updateLabelPreview(i, val) {
     const el = document.getElementById('label-preview-' + i);
     if (el) el.textContent = val || 'Untitled Stat';
@@ -357,26 +371,28 @@ function handleAutoChange(i, select) {
     }
 }
 
-// ── Toggle active state (JS only — saved with main form) ──────────
-function toggleActive(i, btn) {
+// ── Visibility toggle — single function, single button ──────────
+function toggleStat(i) {
     const field = document.getElementById('active_field_' + i);
-    const card  = btn.closest('.stat-card');
-    const label = document.getElementById('toggle-label-' + i);
-    const badge = document.getElementById('vis-badge-' + i);
+    const btn   = document.getElementById('vis-btn-' + i);
+    const card  = document.getElementById('stat-card-' + i);
     if (!field) return;
+
     const isOn = field.value !== '1';
     field.value = isOn ? '1' : '0';
-    btn.classList.toggle('on', isOn);
-    if (label) { label.textContent = isOn ? 'ON' : 'OFF'; label.className = 'toggle-label ' + (isOn ? 'on' : 'off'); }
-    card.classList.toggle('is-enabled',  isOn);
-    card.classList.toggle('is-disabled', !isOn);
-    if (badge) {
-        badge.className = 'vis-badge ' + (isOn ? 'visible' : 'hidden');
-        badge.innerHTML = '<i class="fas fa-' + (isOn ? 'eye' : 'eye-slash') + ' me-1"></i>' + (isOn ? 'Visible' : 'Hidden');
+
+    if (btn) {
+        btn.className = 'stat-vis-btn ' + (isOn ? 'enabled' : 'disabled');
+        btn.innerHTML = '<i class="fas fa-' + (isOn ? 'eye' : 'eye-slash') + '"></i> ' + (isOn ? 'Visible' : 'Hidden');
+        btn.title = isOn ? 'Currently visible — click to hide' : 'Currently hidden — click to show';
+    }
+    if (card) {
+        card.classList.toggle('is-enabled',  isOn);
+        card.classList.toggle('is-disabled', !isOn);
     }
 }
 
-// ── Add stat card ─────────────────────────────────────────────────
+// ── Add stat card ───────────────────────────────────────────────
 function addStatCard() {
     const grid = document.getElementById('statCardsGrid');
     const i    = cardCount++;
@@ -389,25 +405,21 @@ function addStatCard() {
         <input type="hidden" name="stat_active_${i}" id="active_field_${i}" value="1">
         <div class="card-header-row">
             <span class="drag-handle" title="Drag to reorder"><i class="fas fa-grip-vertical"></i></span>
-            <div class="stat-order-badge">${i + 1}</div>
-            <div class="stat-icon-preview-wrap" id="icon-preview-${i}">
+            <div class="stat-order-badge" id="order-badge-${i}">${i + 1}</div>
+            <div class="stat-icon-preview-wrap">
                 <i class="fas fa-chart-bar" id="icon-el-${i}"></i>
             </div>
             <div class="stat-title-col">
                 <p class="stat-card-label" id="label-preview-${i}">New Stat</p>
                 <p class="stat-card-value" id="value-preview-${i}">—</p>
             </div>
-            <div class="toggle-wrap">
-                <span class="toggle-label on" id="toggle-label-${i}">ON</span>
-                <button type="button" class="toggle-btn on" onclick="toggleActive(${i}, this)" title="Click to disable"></button>
-            </div>
-            <span class="vis-badge visible" id="vis-badge-${i}">
-                <i class="fas fa-eye me-1"></i>Visible
-            </span>
-            <button type="button" class="btn btn-outline-danger btn-sm ms-1"
-                    style="border-radius:8px; padding:5px 9px; flex-shrink:0;"
-                    onclick="removeStatCard(this)" title="Delete stat">
-                <i class="fas fa-trash"></i>
+            <button type="button" id="vis-btn-${i}" class="stat-vis-btn enabled"
+                    onclick="toggleStat(${i})"
+                    title="Currently visible — click to hide">
+                <i class="fas fa-eye"></i> Visible
+            </button>
+            <button type="button" class="stat-del-btn" onclick="removeStatCard(this)" title="Delete this stat">
+                <i class="fas fa-trash-alt"></i>
             </button>
         </div>
         <div class="fields-row">
@@ -422,7 +434,7 @@ function addStatCard() {
                        placeholder="e.g. 50K+"
                        oninput="updateValuePreview(${i}, this.value, '')">
             </div>
-            <div class="field-group auto-select-col">
+            <div class="field-group">
                 <label>Source</label>
                 <select name="stat_auto_${i}" onchange="handleAutoChange(${i}, this)">
                     <option value="" selected>Manual (use value above)</option>
@@ -431,7 +443,7 @@ function addStatCard() {
                 </select>
             </div>
             <div class="field-group">
-                <label>Icon <a href="https://fontawesome.com/search?m=free" target="_blank" class="text-muted fw-normal">(FA class)</a></label>
+                <label>Icon <a href="https://fontawesome.com/search?m=free&s=solid" target="_blank" class="text-muted fw-normal">(FA class)</a></label>
                 <input type="text" name="stat_icon_${i}" value="fas fa-chart-bar"
                        placeholder="fas fa-users"
                        oninput="updateIconPreview(${i}, this.value)">
@@ -442,37 +454,57 @@ function addStatCard() {
     card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-// ── Remove stat card ──────────────────────────────────────────────
+// ── Remove stat card ────────────────────────────────────────────
 function removeStatCard(btn) {
     const card = btn.closest('.stat-card');
     if (document.querySelectorAll('.stat-card').length <= 1) {
         alert('You must keep at least one stat.');
         return;
     }
-    if (!confirm('Remove this stat? This will take effect after saving.')) return;
-    card.remove();
-    renumberCards();
+    if (!confirm('Remove this stat? This takes effect after saving.')) return;
+    card.style.transition = 'opacity .2s';
+    card.style.opacity = '0';
+    setTimeout(function() {
+        card.remove();
+        renumberCards();
+    }, 200);
 }
 
-// ── Renumber all cards after add/remove/drag ──────────────────────
+// ── Renumber all cards after add / remove / drag ────────────────
 function renumberCards() {
     document.querySelectorAll('.stat-card').forEach(function(card, idx) {
+        card.dataset.index = idx;
+        card.id = 'stat-card-' + idx;
+
+        // Update name attributes (e.g. stat_label_2 → stat_label_0)
         card.querySelectorAll('[name]').forEach(function(el) {
             el.name = el.name.replace(/_\d+$/, '_' + idx);
         });
+        // Update id attributes (e.g. active_field_2 → active_field_0)
         card.querySelectorAll('[id]').forEach(function(el) {
             el.id = el.id.replace(/_\d+$/, '_' + idx);
         });
+        // Update onclick attributes
         card.querySelectorAll('[onclick]').forEach(function(el) {
-            el.setAttribute('onclick', el.getAttribute('onclick').replace(/\d+/g, idx));
+            el.setAttribute('onclick', el.getAttribute('onclick').replace(/\d+/, idx));
         });
+        // Update oninput attributes (fixes live preview after reorder)
+        card.querySelectorAll('[oninput]').forEach(function(el) {
+            el.setAttribute('oninput', el.getAttribute('oninput').replace(/\d+/, idx));
+        });
+        // Update onchange attributes
+        card.querySelectorAll('[onchange]').forEach(function(el) {
+            el.setAttribute('onchange', el.getAttribute('onchange').replace(/\d+/, idx));
+        });
+        // Update order badge text
         const badge = card.querySelector('.stat-order-badge');
         if (badge) badge.textContent = idx + 1;
-        card.dataset.index = idx;
     });
+    // Reset cardCount to the actual number of cards
+    cardCount = document.querySelectorAll('.stat-card').length;
 }
 
-// ── Drag-to-reorder (HTML5 drag API) ─────────────────────────────
+// ── Drag-to-reorder (HTML5 drag API) ───────────────────────────
 (function initDrag() {
     const grid = document.getElementById('statCardsGrid');
     if (!grid) return;
@@ -482,11 +514,12 @@ function renumberCards() {
         const card = e.target.closest('.stat-card');
         if (!card) return;
         dragged = card;
-        setTimeout(() => card.style.opacity = '.4', 0);
+        setTimeout(function() { if (dragged) dragged.style.opacity = '.35'; }, 0);
         e.dataTransfer.effectAllowed = 'move';
     });
     grid.addEventListener('dragend', function() {
         if (dragged) { dragged.style.opacity = ''; dragged = null; }
+        renumberCards();
     });
     grid.addEventListener('dragover', function(e) {
         e.preventDefault();
@@ -496,7 +529,6 @@ function renumberCards() {
             const rect = card.getBoundingClientRect();
             const after = e.clientY > rect.top + rect.height / 2;
             grid.insertBefore(dragged, after ? card.nextSibling : card);
-            renumberCards();
         }
     });
 })();
