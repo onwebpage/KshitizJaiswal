@@ -40,3 +40,9 @@ externalPort = 80
 integrations = ["python_database:1.0.0"]
 stack = "FLASK_VANILLA_JS"
 expertMode = true
+
+[userenv]
+
+[userenv.shared]
+SMTP_FROM_EMAIL = "invite@kshitizjaiswal.in"
+SMTP_FROM_NAME = "Kshitiz Jaiswal"
