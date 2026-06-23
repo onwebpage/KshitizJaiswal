@@ -4820,6 +4820,28 @@ h1, h2, h3, h4, h5, h6 {
    PREMIUM UPGRADE V2 — Creator Platform Quality
    ══════════════════════════════════════════════════════════ */
 
+/* ── Reel static grid (when <4 reels — no carousel duplication) ── */
+.reel-static-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    justify-content: center;
+    padding: 1.5rem 0 2rem;
+}
+.reel-static-grid .reel-card {
+    flex: 0 0 auto;
+}
+
+/* ── Reel card as link — remove browser default decoration ── */
+a.reel-card,
+a.reel-card:hover,
+a.reel-card:focus,
+a.reel-card:visited {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
 /* ── Reel card: CSS-only play button overlay ─────────────── */
 .reel-card-thumb::after {
     content: '';

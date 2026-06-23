@@ -44,111 +44,60 @@
         </div>
 
         {% if content.reels %}
-        <!-- Scrolling Reel Cards -->
+        {% set reels_count = content.reels|length %}
+
+        {# Reusable card macro — used in both static grid and carousel #}
+        {% macro reel_card(reel, hidden=false) %}
+        <a href="{{ url_for('reel_detail', reel_id=reel.id) }}"
+           class="reel-card layout-{{ reel.card_layout or 'standard' }}"
+           data-reel-id="{{ reel.id }}"
+           {% if hidden %}aria-hidden="true" tabindex="-1"{% endif %}>
+            <div class="reel-card-thumb">
+                {% if reel.category_tag %}
+                <span class="reel-cat-badge reel-cat-{{ reel.category_tag }}">
+                    {% if reel.category_tag == 'trending' %}🔥{% elif reel.category_tag == 'new' %}🆕{% elif reel.category_tag == 'must_watch' %}👀{% elif reel.category_tag == 'fan_favourite' %}❤{% elif reel.category_tag == 'exclusive' %}⭐{% elif reel.category_tag == 'behind_scenes' %}🎬{% endif %}
+                    {{ reel.category_tag | replace('_', ' ') | title }}
+                </span>
+                {% endif %}
+                <img
+                    src="{% if reel.thumbnail %}{{ url_for('static', filename=reel.thumbnail) if not reel.thumbnail.startswith('http') else reel.thumbnail }}{% else %}https://placehold.co/400x225/1a0000/cc0000?text=No+Image{% endif %}"
+                    alt="{{ reel.title }}"
+                    class="reel-card-img"
+                    loading="lazy"
+                    onerror="this.src='https://placehold.co/400x225/1a0000/cc0000?text=No+Image'">
+                <div class="reel-card-overlay">
+                    <span class="reel-action-btn reel-btn-play">
+                        <i class="fas fa-play"></i> Watch Now
+                    </span>
+                    <span class="reel-action-btn reel-btn-detail">
+                        <i class="fas fa-book-open"></i> Behind the Reel
+                    </span>
+                </div>
+            </div>
+            <div class="reel-card-info">
+                <p class="reel-card-title">{{ reel.title }}</p>
+                <div class="reel-card-meta">
+                    {% if reel.topic_tag %}<span class="reel-topic-tag">{{ reel.topic_tag }}</span>{% endif %}
+                    <span class="reel-views"><i class="fas fa-eye"></i> {{ reel.view_count or 0 }}</span>
+                </div>
+            </div>
+        </a>
+        {% endmacro %}
+
+        {% if reels_count < 4 %}
+        <!-- Static grid: too few reels for infinite scroll (avoids visible duplicates) -->
+        <div class="reel-static-grid">
+            {% for reel in content.reels %}{{ reel_card(reel) }}{% endfor %}
+        </div>
+        {% else %}
+        <!-- Infinite-scroll carousel: enough reels to fill the track -->
         <div class="reel-carousel-container" aria-label="Video Carousel">
             <div class="reel-carousel" id="reelCarousel">
-                {% for reel in content.reels %}
-                <div class="reel-card layout-{{ reel.card_layout or 'standard' }}" data-reel-id="{{ reel.id }}">
-                    <!-- Thumbnail + Platform Badge -->
-                    <div class="reel-card-thumb">
-                        {% if reel.category_tag %}
-                        <span class="reel-cat-badge reel-cat-{{ reel.category_tag }}">
-                            {% if reel.category_tag == 'trending' %}🔥{% elif reel.category_tag == 'new' %}🆕{% elif reel.category_tag == 'must_watch' %}👀{% elif reel.category_tag == 'fan_favourite' %}❤{% elif reel.category_tag == 'exclusive' %}⭐{% elif reel.category_tag == 'behind_scenes' %}🎬{% endif %}
-                            {{ reel.category_tag | replace('_', ' ') | title }}
-                        </span>
-                        {% endif %}
-
-                        <!-- Platform badge -->
-                        {% if 'instagram' in reel.video_url %}
-                        <span class="reel-platform-badge platform-ig"><i class="fab fa-instagram"></i></span>
-                        {% elif reel.video_url %}
-                        <span class="reel-platform-badge platform-yt"><i class="fab fa-youtube"></i></span>
-                        {% endif %}
-
-                        <img
-                            src="{% if reel.thumbnail %}{{ url_for('static', filename=reel.thumbnail) if not reel.thumbnail.startswith('http') else reel.thumbnail }}{% else %}https://placehold.co/400x225/1a0000/cc0000?text=No+Image{% endif %}"
-                            alt="{{ reel.title }}"
-                            class="reel-card-img"
-                            loading="lazy"
-                            onerror="this.src='https://placehold.co/400x225/1a0000/cc0000?text=No+Image'">
-
-                        <!-- Overlay: two actions -->
-                        <div class="reel-card-overlay">
-                            {% if reel.video_url %}
-                            <a href="{{ reel.video_url }}" target="_blank" rel="noopener noreferrer"
-                               class="reel-action-btn reel-btn-platform" title="Watch on Platform">
-                                {% if 'instagram' in reel.video_url %}
-                                <i class="fab fa-instagram"></i> Instagram
-                                {% else %}
-                                <i class="fab fa-youtube"></i> YouTube
-                                {% endif %}
-                            </a>
-                            {% endif %}
-                            <a href="{{ url_for('reel_detail', reel_id=reel.id) }}"
-                               class="reel-action-btn reel-btn-detail" title="Behind the Reel">
-                                <i class="fas fa-book-open"></i> Behind the Reel
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- Card Info -->
-                    <div class="reel-card-info">
-                        <p class="reel-card-title">{{ reel.title }}</p>
-                        <div class="reel-card-meta">
-                            {% if reel.topic_tag %}
-                            <span class="reel-topic-tag">{{ reel.topic_tag }}</span>
-                            {% endif %}
-                            <span class="reel-views"><i class="fas fa-eye"></i> {{ reel.view_count or 0 }}</span>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-
-                <!-- Duplicate set for seamless infinite scroll -->
-                {% for reel in content.reels %}
-                <div class="reel-card layout-{{ reel.card_layout or 'standard' }}" aria-hidden="true">
-                    <div class="reel-card-thumb">
-                        {% if reel.category_tag %}
-                        <span class="reel-cat-badge reel-cat-{{ reel.category_tag }}">
-                            {% if reel.category_tag == 'trending' %}🔥{% elif reel.category_tag == 'new' %}🆕{% elif reel.category_tag == 'must_watch' %}👀{% elif reel.category_tag == 'fan_favourite' %}❤{% elif reel.category_tag == 'exclusive' %}⭐{% elif reel.category_tag == 'behind_scenes' %}🎬{% endif %}
-                            {{ reel.category_tag | replace('_', ' ') | title }}
-                        </span>
-                        {% endif %}
-                        {% if 'instagram' in reel.video_url %}
-                        <span class="reel-platform-badge platform-ig"><i class="fab fa-instagram"></i></span>
-                        {% elif reel.video_url %}
-                        <span class="reel-platform-badge platform-yt"><i class="fab fa-youtube"></i></span>
-                        {% endif %}
-                        <img
-                            src="{% if reel.thumbnail %}{{ url_for('static', filename=reel.thumbnail) if not reel.thumbnail.startswith('http') else reel.thumbnail }}{% else %}https://placehold.co/400x225/1a0000/cc0000?text=No+Image{% endif %}"
-                            alt="{{ reel.title }}"
-                            class="reel-card-img"
-                            loading="lazy"
-                            onerror="this.src='https://placehold.co/400x225/1a0000/cc0000?text=No+Image'">
-                        <div class="reel-card-overlay">
-                            {% if reel.video_url %}
-                            <a href="{{ reel.video_url }}" target="_blank" rel="noopener noreferrer"
-                               class="reel-action-btn reel-btn-platform">
-                                {% if 'instagram' in reel.video_url %}<i class="fab fa-instagram"></i> Instagram{% else %}<i class="fab fa-youtube"></i> YouTube{% endif %}
-                            </a>
-                            {% endif %}
-                            <a href="{{ url_for('reel_detail', reel_id=reel.id) }}"
-                               class="reel-action-btn reel-btn-detail">
-                                <i class="fas fa-book-open"></i> Behind the Reel
-                            </a>
-                        </div>
-                    </div>
-                    <div class="reel-card-info">
-                        <p class="reel-card-title">{{ reel.title }}</p>
-                        <div class="reel-card-meta">
-                            {% if reel.topic_tag %}<span class="reel-topic-tag">{{ reel.topic_tag }}</span>{% endif %}
-                            <span class="reel-views"><i class="fas fa-eye"></i> {{ reel.view_count or 0 }}</span>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
+                {% for reel in content.reels %}{{ reel_card(reel) }}{% endfor %}
+                {% for reel in content.reels %}{{ reel_card(reel, hidden=true) }}{% endfor %}
             </div>
         </div>
+        {% endif %}
         {% else %}
         <div class="text-center py-5">
             <i class="fas fa-video fa-3x text-muted mb-3"></i>

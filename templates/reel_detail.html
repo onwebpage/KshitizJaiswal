@@ -20,31 +20,31 @@
                 <div class="video-section mb-4">
                     {% if reel.video_url %}
                         {% if reel.is_instagram %}
-                        <!-- Instagram Embed with Script (Minimal - No Profile/Interactions) -->
-                        <div class="instagram-embed-container" id="instagram-container">
-                            <blockquote class="instagram-media instagram-media-minimal" 
-                                data-instgrm-captioned
-                                data-instgrm-permalink="{{ reel.video_url }}"
-                                data-instgrm-version="14"
-                                style="background:#FFF; border:0; border-radius:3px; box-shadow:0 0 1px 0 rgba(0,0,0,0.5),0 1px 10px 0 rgba(0,0,0,0.15); margin: 1px; max-width:540px; min-width:326px; padding:0; width:99.375%; width:-webkit-calc(100% - 2px); width:calc(100% - 2px);">
-                            </blockquote>
-                            <!-- Instagram Note -->
-                            <div class="instagram-control-note">
-                                <i class="fas fa-info-circle me-2"></i>Click on the video to play/pause
-                            </div>
+                        <!-- Instagram direct embed — no external SDK, no redirect buttons -->
+                        <div class="ig-video-wrapper">
+                            <iframe
+                                src="{{ reel.embed_url }}"
+                                class="ig-embed-iframe"
+                                frameborder="0"
+                                scrolling="no"
+                                allowtransparency="true"
+                                allowfullscreen="true"
+                                title="{{ reel.title }}">
+                            </iframe>
+                            <!-- Bottom bar overlay hides Instagram logo/branding -->
+                            <div class="ig-brand-cover"></div>
                         </div>
                         {% else %}
-                        <!-- YouTube Embed -->
+                        <!-- YouTube Embed with Play/Pause controls -->
                         <div class="video-container" id="youtube-container">
-                            <iframe id="youtube-player" src="{{ reel.embed_url }}?enablejsapi=1" frameborder="0" allowfullscreen 
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
-                            <!-- Play/Pause Controls -->
-                            <div class="video-controls">
-                                <button class="control-btn play-btn" id="ytPlayBtn" title="Play">
-                                    <i class="fas fa-play"></i>
-                                </button>
-                                <button class="control-btn pause-btn" id="ytPauseBtn" style="display:none;" title="Pause">
-                                    <i class="fas fa-pause"></i>
+                            <iframe id="youtube-player"
+                                src="{{ reel.embed_url }}&enablejsapi=1&rel=0&modestbranding=1&controls=1"
+                                frameborder="0" allowfullscreen
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture">
+                            </iframe>
+                            <div class="video-controls" id="ytControls">
+                                <button class="control-btn" id="ytPlayBtn" title="Play/Pause">
+                                    <i class="fas fa-play" id="ytIcon"></i>
                                 </button>
                             </div>
                         </div>
@@ -94,18 +94,7 @@
                             <i class="fas fa-eye me-1"></i>{{ reel.view_count }} views
                         </span>
 
-                        <!-- Open on Platform button -->
-                        {% if reel.original_url %}
-                        <a href="{{ reel.original_url }}" target="_blank" rel="noopener noreferrer"
-                           class="btn btn-sm rounded-pill ms-auto"
-                           style="{% if reel.is_instagram %}background:linear-gradient(135deg,#f58529,#dd2a7b,#8134af);color:#fff;{% else %}background:#cc0000;color:#fff;{% endif %}">
-                            {% if reel.is_instagram %}
-                            <i class="fab fa-instagram me-1"></i>Open on Instagram
-                            {% else %}
-                            <i class="fab fa-youtube me-1"></i>Watch on YouTube
-                            {% endif %}
-                        </a>
-                        {% endif %}
+                        <!-- Platform redirect links removed — videos play directly on site -->
                     </div>
                 </div>
 
@@ -428,205 +417,132 @@
     }
 }
 
-.instagram-embed-container {
+/* ── Instagram direct iframe embed ── */
+.ig-video-wrapper {
     position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 500px;
-    max-height: 500px;
+    width: 100%;
+    max-width: 420px;
+    margin: 0 auto;
     background: #000;
     border-radius: 12px;
-    padding: 0;
-    overflow: hidden !important;
+    overflow: hidden;
+    aspect-ratio: 9 / 16;
 }
 
-.instagram-media {
-    margin: 0 auto !important;
-    transform: scale(1.0);
+.ig-embed-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
 }
 
-/* Wrapper to crop Instagram embed - hides profile and interactions */
-.instagram-media-minimal {
-    position: relative;
-    margin: -120px 0 -300px 0 !important;
-    max-height: none !important;
+/* Thin bar at bottom covers the Instagram logo strip */
+.ig-brand-cover {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 48px;
+    background: #000;
+    z-index: 10;
+    pointer-events: none;
 }
 
-/* Additional styling to ensure clean video display */
-.instagram-embed-container .instagram-media-minimal {
-    border: none !important;
-    box-shadow: none !important;
-}
-
-/* Video Controls */
+/* ── YouTube controls ── */
 .video-controls {
     position: absolute;
-    bottom: 20px;
+    bottom: 16px;
     left: 50%;
     transform: translateX(-50%);
-    display: flex;
-    gap: 15px;
-    z-index: 1000;
+    z-index: 10;
+    opacity: 0;
+    transition: opacity .3s;
 }
 
+#youtube-container:hover .video-controls { opacity: 1; }
+
 .control-btn {
-    width: 60px;
-    height: 60px;
+    width: 56px;
+    height: 56px;
     border-radius: 50%;
     border: none;
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(255,255,255,.92);
     color: #1a1a1a;
-    font-size: 24px;
+    font-size: 20px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0,0,0,.35);
+    transition: transform .2s, box-shadow .2s;
 }
 
-.control-btn:hover {
-    background: #fff;
-    transform: scale(1.1);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
-}
+.control-btn:hover { transform: scale(1.1); box-shadow: 0 6px 18px rgba(0,0,0,.45); }
+.control-btn:active { transform: scale(.95); }
+.control-btn i { pointer-events: none; }
 
-.control-btn:active {
-    transform: scale(0.95);
-}
-
-.control-btn i {
-    pointer-events: none;
-}
-
-.video-container {
-    position: relative;
-}
-
-.instagram-embed-container {
-    position: relative;
-}
-
-.instagram-control-note {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(255, 255, 255, 0.95);
-    color: #1a1a1a;
-    padding: 12px 20px;
-    border-radius: 25px;
-    font-size: 14px;
-    font-weight: 500;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    z-index: 1000;
-    white-space: nowrap;
-}
+.video-container { position: relative; }
 </style>
 
 {% if reel.is_instagram %}
-<script async src="//www.instagram.com/embed.js"></script>
 <script>
-// Hide Instagram profile and interaction elements while allowing video control
-window.addEventListener('load', function() {
-    setTimeout(function() {
-        // Force container constraints
-        const container = document.querySelector('.instagram-embed-container');
-        if (container) {
-            container.style.maxHeight = '500px';
-            container.style.overflow = 'hidden';
+// No external SDK needed — using direct iframe embed
+// Fallback: if iframe fails to load, show a message
+document.addEventListener('DOMContentLoaded', function() {
+    var iframe = document.querySelector('.ig-embed-iframe');
+    if (!iframe) return;
+    iframe.addEventListener('error', function() {
+        var wrapper = document.querySelector('.ig-video-wrapper');
+        if (wrapper) {
+            wrapper.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#fff;text-align:center;padding:2rem;"><div><i class="fas fa-film fa-3x mb-3"></i><p>Video preview unavailable.<br>Visit the reel page to watch.</p></div></div>';
         }
-        
-        // Use MutationObserver to detect and constrain Instagram embed
-        const observer = new MutationObserver(function(mutations) {
-            mutations.forEach(function(mutation) {
-                if (mutation.addedNodes.length) {
-                    mutation.addedNodes.forEach(function(node) {
-                        if (node.tagName === 'IFRAME') {
-                            // Instagram embed loaded as iframe
-                            const container = node.closest('.instagram-embed-container');
-                            if (container) {
-                                container.style.maxHeight = '500px';
-                                container.style.overflow = 'hidden';
-                            }
-                        }
-                    });
-                }
-            });
-        });
-        
-        const targetNode = document.querySelector('.instagram-embed-container');
-        if (targetNode) {
-            observer.observe(targetNode, { childList: true, subtree: true });
-        }
-        
-        // Additional check for already loaded iframes
-        const existingIframes = document.querySelectorAll('.instagram-embed-container iframe');
-        existingIframes.forEach(function(iframe) {
-            const container = iframe.closest('.instagram-embed-container');
-            if (container) {
-                container.style.maxHeight = '500px';
-                container.style.overflow = 'hidden';
-            }
-        });
-    }, 1000);
-    
-    // Double-check after a longer delay
-    setTimeout(function() {
-        const container = document.querySelector('.instagram-embed-container');
-        if (container) {
-            container.style.maxHeight = '500px';
-            container.style.overflow = 'hidden';
-        }
-    }, 3000);
+    });
 });
 </script>
 {% else %}
 <script>
-// YouTube IFrame API for better control
-var tag = document.createElement('script');
-tag.src = "https://www.youtube.com/iframe_api";
-var firstScriptTag = document.getElementsByTagName('script')[0];
-firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+// ── YouTube IFrame API ──
+(function() {
+    var tag = document.createElement('script');
+    tag.src = 'https://www.youtube.com/iframe_api';
+    document.head.appendChild(tag);
+})();
 
-var player;
+var _ytPlayer = null;
+var _ytPlaying = false;
+
 function onYouTubeIframeAPIReady() {
-    const iframe = document.getElementById('youtube-player');
-    if (iframe) {
-        const src = iframe.src;
-        const videoId = src.split('/embed/')[1].split('?')[0];
-        
-        player = new YT.Player('youtube-player', {
-            videoId: videoId,
-            playerVars: {
-                'enablejsapi': 1
+    var iframe = document.getElementById('youtube-player');
+    if (!iframe) return;
+    var src = iframe.src;
+    var match = src.match(/\/embed\/([A-Za-z0-9_-]+)/);
+    if (!match) return;
+    _ytPlayer = new YT.Player('youtube-player', {
+        videoId: match[1],
+        playerVars: { enablejsapi: 1, rel: 0, modestbranding: 1 },
+        events: {
+            onStateChange: function(e) {
+                _ytPlaying = (e.data === YT.PlayerState.PLAYING);
+                var icon = document.getElementById('ytIcon');
+                if (icon) {
+                    icon.className = _ytPlaying ? 'fas fa-pause' : 'fas fa-play';
+                }
             }
-        });
-    }
+        }
+    });
 }
 
-// Play/Pause functionality for YouTube
 document.addEventListener('DOMContentLoaded', function() {
-    const ytPlayBtn = document.getElementById('ytPlayBtn');
-    const ytPauseBtn = document.getElementById('ytPauseBtn');
-    
-    if (ytPlayBtn && ytPauseBtn) {
-        ytPlayBtn.addEventListener('click', function() {
-            if (player && player.playVideo) {
-                player.playVideo();
-                ytPlayBtn.style.display = 'none';
-                ytPauseBtn.style.display = 'flex';
-            }
-        });
-        
-        ytPauseBtn.addEventListener('click', function() {
-            if (player && player.pauseVideo) {
-                player.pauseVideo();
-                ytPauseBtn.style.display = 'none';
-                ytPlayBtn.style.display = 'flex';
-            }
-        });
+    var btn = document.getElementById('ytPlayBtn');
+    if (!btn) return;
+    btn.addEventListener('click', function() {
+        if (!_ytPlayer) return;
+        if (_ytPlaying) { _ytPlayer.pauseVideo(); } else { _ytPlayer.playVideo(); }
+    });
+});
+</script>
+{% endif %}
+{% if false %}<script>/* old block fully removed */
     }
 });
 </script>
