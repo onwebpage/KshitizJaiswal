@@ -97,12 +97,13 @@
             rafId = requestAnimationFrame(tick);
         }
 
-        // Initialise position at -50% so the loop starts seamlessly
-        halfWidth = getHalfWidth() || 1;
-        currentX = -halfWidth;
-        applyTransform();
-
-        rafId = requestAnimationFrame(tick);
+        // Defer start by one paint so the flex layout has settled
+        requestAnimationFrame(function() {
+            halfWidth = getHalfWidth() || 1;
+            currentX = -halfWidth;
+            applyTransform();
+            rafId = requestAnimationFrame(tick);
+        });
 
         // ── Hover: pause / resume ──────────────────────────────────────────
         carousel.addEventListener('mouseenter', function() { paused = true; });

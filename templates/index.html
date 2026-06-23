@@ -46,7 +46,7 @@
         {% if content.reels %}
         {% set reels_count = content.reels|length %}
 
-        {# Reusable card macro — used in both static grid and carousel #}
+        {# Reusable card macro #}
         {% macro reel_card(reel, hidden=false) %}
         <a href="{{ url_for('reel_detail', reel_id=reel.id) }}"
            class="reel-card layout-{{ reel.card_layout or 'standard' }}"
@@ -84,20 +84,30 @@
         </a>
         {% endmacro %}
 
-        {% if reels_count < 4 %}
-        <!-- Static grid: too few reels for infinite scroll (avoids visible duplicates) -->
-        <div class="reel-static-grid">
-            {% for reel in content.reels %}{{ reel_card(reel) }}{% endfor %}
-        </div>
-        {% else %}
-        <!-- Infinite-scroll carousel: enough reels to fill the track -->
+        {#
+            Always use the infinite-scroll carousel.
+            Repeat the reel set enough times so the track is always wider than
+            the viewport — even when there is only 1 or 2 reels.
+            half_repeats = how many times each half repeats the full reel list.
+            Formula: max(1, floor(8 / reels_count) + 1), capped at 4.
+        #}
+        {% set _hr = (8 // reels_count + 1) %}
+        {% set half_repeats = [1, _hr] | max %}
+        {% if half_repeats > 4 %}{% set half_repeats = 4 %}{% endif %}
+
+        <!-- Infinite-scroll carousel (always active) -->
         <div class="reel-carousel-container" aria-label="Video Carousel">
             <div class="reel-carousel" id="reelCarousel">
-                {% for reel in content.reels %}{{ reel_card(reel) }}{% endfor %}
-                {% for reel in content.reels %}{{ reel_card(reel, hidden=true) }}{% endfor %}
+                {# First half — visible #}
+                {% for _i in range(half_repeats) %}
+                    {% for reel in content.reels %}{{ reel_card(reel) }}{% endfor %}
+                {% endfor %}
+                {# Second half — aria-hidden duplicate for seamless wrap #}
+                {% for _i in range(half_repeats) %}
+                    {% for reel in content.reels %}{{ reel_card(reel, hidden=true) }}{% endfor %}
+                {% endfor %}
             </div>
         </div>
-        {% endif %}
         {% else %}
         <div class="text-center py-5">
             <i class="fas fa-video fa-3x text-muted mb-3"></i>
