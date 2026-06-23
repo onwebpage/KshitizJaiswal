@@ -2473,15 +2473,18 @@ def admin_users():
     enrollment_data = []
     for enrollment in enrollments:
         enrollment_data.append({
-            'id': enrollment.id,
-            'clerk_user_id': enrollment.clerk_user_id,
+            'id':           enrollment.id,
+            'clerk_user_id': enrollment.clerk_user_id or '',
+            'guest_name':   enrollment.guest_name or '',
+            'guest_email':  enrollment.guest_email or '',
+            'guest_phone':  enrollment.guest_phone or '',
             'course_title': enrollment.course.title,
-            'amount_paid': enrollment.amount_paid,
-            'payment_id': enrollment.payment_id,
-            'granted_at': enrollment.granted_at.strftime('%Y-%m-%d %H:%M'),
-            'expires_at': enrollment.expires_at.strftime('%Y-%m-%d') if enrollment.expires_at else 'Never'
+            'amount_paid':  enrollment.amount_paid,
+            'payment_id':   enrollment.payment_id or '',
+            'granted_at':   enrollment.granted_at.strftime('%Y-%m-%d %H:%M'),
+            'expires_at':   enrollment.expires_at.strftime('%Y-%m-%d') if enrollment.expires_at else 'Lifetime'
         })
-    
+
     return render_template('admin/users.html', enrollments=enrollment_data)
 
 @app.route('/admin/inner-circle')
@@ -3285,6 +3288,37 @@ def user_logout():
     return redirect(url_for('index'))
 
 
+@app.route('/api/user/status')
+def api_user_status():
+    """API: Return current authentication status for the JS purchase flow"""
+    clerk_user_id = get_clerk_user_id()
+    course_user = get_course_user()
+
+    if clerk_user_id:
+        name = ''
+        email = ''
+        try:
+            from clerk_auth import get_clerk_user as _gcku
+            cu = _gcku()
+            if cu:
+                name = f"{cu.first_name or ''} {cu.last_name or ''}".strip()
+                if getattr(cu, 'email_addresses', None):
+                    email = cu.email_addresses[0].email_address
+        except Exception:
+            pass
+        return jsonify({'logged_in': True, 'auth_type': 'clerk',
+                        'name': name, 'email': email, 'phone': ''})
+
+    if course_user:
+        return jsonify({'logged_in': True, 'auth_type': 'course_user',
+                        'name': course_user.name,
+                        'email': course_user.email or '',
+                        'phone': course_user.phone or ''})
+
+    return jsonify({'logged_in': False, 'auth_type': None,
+                    'name': '', 'email': '', 'phone': ''})
+
+
 @app.route('/user/change-password', methods=['GET', 'POST'])
 def change_password():
     """Change password for course user"""
@@ -3579,8 +3613,11 @@ def course_detail(course_id):
     curriculum_settings = _get_curriculum_settings()
     testimonials = [t for t in _get_testimonials_list() if t.get('is_visible', True)]
 
+    is_logged_in = bool(clerk_user_id or get_course_user())
+
     return render_template('course_detail.html', course=course_data, razorpay_key=razorpay_key,
-                           curriculum_settings=curriculum_settings, testimonials=testimonials)
+                           curriculum_settings=curriculum_settings, testimonials=testimonials,
+                           is_logged_in=is_logged_in)
 
 @app.route('/course/<int:course_id>/lesson/<int:lesson_id>')
 def lesson_view(course_id, lesson_id):
@@ -3646,22 +3683,40 @@ def lesson_view(course_id, lesson_id):
 
 @app.route('/course/<int:course_id>/purchase', methods=['POST'])
 def purchase_course(course_id):
-    """Initiate course purchase — no login required"""
+    """Initiate course purchase — login required"""
     course = Course.query.get_or_404(course_id)
-    
+
+    clerk_user_id = get_clerk_user_id()
+    course_user   = get_course_user()
+
+    # Require authentication before purchase
+    if not clerk_user_id and not course_user:
+        return jsonify({
+            'success': False,
+            'login_required': True,
+            'message': 'Please sign in to purchase this course.',
+            'login_url': url_for('clerk_login')
+        }), 401
+
     data = request.get_json() or {}
-    guest_name = data.get('name', '').strip()
+    guest_name  = data.get('name',  '').strip()
     guest_email = data.get('email', '').strip()
     guest_phone = data.get('phone', '').strip()
-    
-    clerk_user_id = get_clerk_user_id()
-    
-    # Check if already has access (by Clerk ID or by email)
+
+    # Fill in from CourseUser session if fields are missing
+    if course_user:
+        if not guest_name  and course_user.name:          guest_name  = course_user.name
+        if not guest_email and course_user.email:         guest_email = course_user.email
+        if not guest_phone and course_user.phone:         guest_phone = course_user.phone
+
+    # Check for existing access
     if clerk_user_id and UserCourseAccess.has_access(clerk_user_id, course_id):
         return jsonify({'success': False, 'message': 'You already have access to this course'}), 400
+    if course_user and course_user.has_course_access(course_id):
+        return jsonify({'success': False, 'message': 'You already have access to this course'}), 400
     if guest_email and UserCourseAccess.has_access_by_email(guest_email, course_id):
-        return jsonify({'success': False, 'message': 'This email already has access to this course'}), 400
-    
+        return jsonify({'success': False, 'message': 'This account already has access to this course'}), 400
+
     try:
         amount = course.price * 100
         order = razorpay_client.order.create({
@@ -3675,45 +3730,50 @@ def purchase_course(course_id):
                 'buyer_phone': guest_phone
             }
         })
-        
+
         return jsonify({
             'success': True,
             'order_id': order['id'],
             'amount': amount,
             'course_id': course_id
         })
-    
+
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
 
 @app.route('/course/payment/verify', methods=['POST'])
 def verify_course_payment():
-    """Verify course payment and grant access — no login required"""
+    """Verify course payment and grant access — login required"""
     data = request.get_json()
-    
-    payment_id = data.get('razorpay_payment_id')
-    order_id = data.get('razorpay_order_id')
-    signature = data.get('razorpay_signature')
-    course_id = data.get('course_id')
-    guest_name = data.get('name', '').strip()
+
+    payment_id  = data.get('razorpay_payment_id')
+    order_id    = data.get('razorpay_order_id')
+    signature   = data.get('razorpay_signature')
+    course_id   = data.get('course_id')
+    guest_name  = data.get('name',  '').strip()
     guest_email = data.get('email', '').strip()
     guest_phone = data.get('phone', '').strip()
-    
+
     clerk_user_id = get_clerk_user_id()
-    
+    course_user   = get_course_user()
+
+    # Supplement guest fields from session if missing
+    if course_user:
+        if not guest_name  and course_user.name:  guest_name  = course_user.name
+        if not guest_email and course_user.email: guest_email = course_user.email
+        if not guest_phone and course_user.phone: guest_phone = course_user.phone
+
     try:
-        params_dict = {
-            'razorpay_order_id': order_id,
+        razorpay_client.utility.verify_payment_signature({
+            'razorpay_order_id':   order_id,
             'razorpay_payment_id': payment_id,
-            'razorpay_signature': signature
-        }
-        
-        razorpay_client.utility.verify_payment_signature(params_dict)
-        
+            'razorpay_signature':  signature
+        })
+
         course = Course.query.get(course_id)
         if not course:
             return jsonify({'success': False, 'message': 'Course not found'}), 404
-        
+
         access = UserCourseAccess(
             clerk_user_id=clerk_user_id,
             course_id=course_id,
@@ -3726,59 +3786,61 @@ def verify_course_payment():
         db.session.add(access)
         db.session.commit()
 
-        # Auto-create CourseUser account if not already exists
-        try:
-            if guest_email or guest_phone:
-                existing_user = None
-                if guest_email:
-                    existing_user = CourseUser.get_by_identifier(guest_email)
-                if not existing_user and guest_phone:
-                    existing_user = CourseUser.get_by_identifier(guest_phone)
-
-                if not existing_user:
-                    auto_password = CourseUser.generate_password(guest_name, guest_phone)
-                    new_user = CourseUser(
-                        name=guest_name or 'User',
-                        email=guest_email or None,
-                        phone=guest_phone or None,
-                        must_change_password=True
-                    )
-                    new_user.set_password(auto_password)
-                    db.session.add(new_user)
-                    db.session.commit()
-
-                    import logging as _log
-                    _log.info(f"CourseUser created for {guest_email or guest_phone}")
-
-                    # Send WhatsApp + Email credentials
-                    from utils import send_whatsapp_credentials, send_email_credentials
-                    login_id = guest_email or guest_phone
-                    _login_url = url_for('user_login', _external=True)
-                    send_whatsapp_credentials(
-                        phone=guest_phone,
-                        name=guest_name or 'User',
-                        login_id=login_id,
-                        password=auto_password,
-                        login_url=_login_url
-                    )
+        # Auto-create CourseUser ONLY for truly new / unregistered buyers
+        # Skip if the buyer is already logged in via Clerk or CourseUser
+        already_logged_in = bool(clerk_user_id or course_user)
+        if not already_logged_in:
+            try:
+                if guest_email or guest_phone:
+                    existing_user = None
                     if guest_email:
-                        send_email_credentials(
-                            email=guest_email,
+                        existing_user = CourseUser.get_by_identifier(guest_email)
+                    if not existing_user and guest_phone:
+                        existing_user = CourseUser.get_by_identifier(guest_phone)
+
+                    if not existing_user:
+                        auto_password = CourseUser.generate_password(guest_name, guest_phone)
+                        new_user = CourseUser(
+                            name=guest_name or 'User',
+                            email=guest_email or None,
+                            phone=guest_phone or None,
+                            must_change_password=True
+                        )
+                        new_user.set_password(auto_password)
+                        db.session.add(new_user)
+                        db.session.commit()
+
+                        import logging as _log
+                        _log.info(f"CourseUser created for {guest_email or guest_phone}")
+
+                        from utils import send_whatsapp_credentials, send_email_credentials
+                        login_id  = guest_email or guest_phone
+                        _login_url = url_for('user_login', _external=True)
+                        send_whatsapp_credentials(
+                            phone=guest_phone,
                             name=guest_name or 'User',
                             login_id=login_id,
                             password=auto_password,
                             login_url=_login_url
                         )
-        except Exception as _e:
-            import logging as _log
-            _log.error(f"CourseUser creation error after payment: {_e}")
+                        if guest_email:
+                            send_email_credentials(
+                                email=guest_email,
+                                name=guest_name or 'User',
+                                login_id=login_id,
+                                password=auto_password,
+                                login_url=_login_url
+                            )
+            except Exception as _e:
+                import logging as _log
+                _log.error(f"CourseUser creation error after payment: {_e}")
 
         return jsonify({
             'success': True,
-            'message': 'Payment successful! Your account credentials have been sent to your WhatsApp.',
-            'redirect_url': url_for('course_detail', course_id=course_id)
+            'message': 'Payment successful! Your course access has been activated.',
+            'redirect_url': url_for('my_courses')
         })
-    
+
     except razorpay.errors.SignatureVerificationError:
         return jsonify({'success': False, 'message': 'Payment verification failed'}), 400
     except Exception as e:

@@ -44,8 +44,8 @@
                         <i class="fas fa-check-circle me-2"></i>
                         <span>You have full access to this course!</span>
                     </div>
-                    {% if wa_support_phone %}
-                    <a href="https://wa.me/{{ wa_support_phone }}?text=Hi%2C+I+need+help+with+the+course%3A+{{ course.title | urlencode if course.title else 'this+course' }}"
+                    {% if whatsapp_support_phone %}
+                    <a href="https://wa.me/{{ whatsapp_support_phone }}?text=Hi%2C+I+need+help+with+the+course%3A+{{ course.title | urlencode if course.title else 'this+course' }}"
                        target="_blank" rel="noopener"
                        class="btn fw-semibold"
                        style="background:#25D366;color:#fff;border:none;border-radius:10px;padding:10px 18px;">
@@ -523,24 +523,61 @@ if (pvBtn) {
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script>
 const razorpayKey = "{{ razorpay_key }}";
-let _activeCourseId = null;
+let _activeCourseId   = null;
 let _activeCoursePrice = null;
+let _activeAuthType   = null;
 
 function purchaseCourse(courseId, price) {
-    _activeCourseId = courseId;
+    _activeCourseId    = courseId;
     _activeCoursePrice = price;
-    document.getElementById('purchaseModalPrice').textContent = price;
-    document.getElementById('purchaseModalCourseName').textContent = document.querySelector('h1')?.textContent?.trim() || 'Course Purchase';
 
-    // Pre-fill if Clerk user is signed in
-    const clerkUser = window.Clerk?.user;
-    if (clerkUser) {
-        document.getElementById('buyerName').value = (clerkUser.firstName || '') + ' ' + (clerkUser.lastName || '');
-        document.getElementById('buyerEmail').value = clerkUser.primaryEmailAddress?.emailAddress || '';
-    }
+    fetch('/api/user/status')
+        .then(function(r) { return r.json(); })
+        .then(function(user) {
+            if (!user.logged_in) {
+                const nextPath = encodeURIComponent(window.location.pathname + '?buy=1');
+                window.location.href = '/login?next=' + nextPath;
+                return;
+            }
 
-    const modal = new bootstrap.Modal(document.getElementById('purchaseModal'));
-    modal.show();
+            _activeAuthType = user.auth_type;
+
+            document.getElementById('purchaseModalPrice').textContent       = price;
+            document.getElementById('purchaseModalCourseName').textContent  =
+                document.querySelector('h1')?.textContent?.trim() || 'Course Purchase';
+
+            const nameInput  = document.getElementById('buyerName');
+            const emailInput = document.getElementById('buyerEmail');
+            const phoneInput = document.getElementById('buyerPhone');
+
+            nameInput.readOnly  = false;
+            emailInput.readOnly = false;
+            phoneInput.readOnly = false;
+            phoneInput.setAttribute('required', '');
+            phoneInput.placeholder = '10-digit mobile number';
+
+            if (user.name)  { nameInput.value  = user.name;  nameInput.readOnly  = true; }
+            if (user.email) { emailInput.value = user.email; emailInput.readOnly = true; }
+            if (user.phone) {
+                const ph = user.phone.replace(/^\+91/, '').replace(/\D/g, '').slice(-10);
+                if (ph) { phoneInput.value = ph; phoneInput.readOnly = true; }
+            }
+
+            if (user.auth_type === 'clerk') {
+                const cu = window.Clerk?.user;
+                if (cu) {
+                    if (!nameInput.value)
+                        nameInput.value  = ((cu.firstName || '') + ' ' + (cu.lastName || '')).trim();
+                    if (!emailInput.value)
+                        emailInput.value = cu.primaryEmailAddress?.emailAddress || '';
+                }
+                phoneInput.removeAttribute('required');
+                phoneInput.placeholder = 'Optional';
+            }
+
+            new bootstrap.Modal(document.getElementById('purchaseModal')).show();
+        })
+        .catch(function() { window.location.href = '/login'; });
 }
 
 document.getElementById('purchaseForm').addEventListener('submit', async function(e) {
@@ -549,16 +586,20 @@ document.getElementById('purchaseForm').addEventListener('submit', async functio
     const email = document.getElementById('buyerEmail').value.trim();
     const phone = document.getElementById('buyerPhone').value.trim();
 
-    if (!name || !email || !phone) {
-        alert('Please fill in all required fields.');
+    if (!name || !email) {
+        alert('Please fill in your name and email.');
         return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         alert('Please enter a valid email address.');
         return;
     }
-    if (!/^\d{10}$/.test(phone)) {
+    if (phone && !/^\d{10}$/.test(phone)) {
         alert('Please enter a valid 10-digit mobile number.');
+        return;
+    }
+    if (_activeAuthType !== 'clerk' && !phone) {
+        alert('Please enter your mobile number.');
         return;
     }
 
@@ -575,6 +616,10 @@ document.getElementById('purchaseForm').addEventListener('submit', async functio
         const data = await response.json();
 
         if (!data.success) {
+            if (data.login_required) {
+                window.location.href = data.login_url || '/login';
+                return;
+            }
             alert(data.message || 'Failed to initiate payment');
             submitBtn.disabled = false;
             submitBtn.innerHTML = '<i class="fas fa-lock me-2"></i>Proceed to Payment';
@@ -639,9 +684,10 @@ if (new URLSearchParams(window.location.search).get('buy') === '1') {
     });
 }
 
-const _WA_SUPPORT = "{{ wa_support_phone }}";
-const _LOGIN_URL = "{{ url_for('user_login') }}";
-const _COURSES_URL = "{{ url_for('courses') }}";
+const _WA_SUPPORT     = "{{ whatsapp_support_phone }}";
+const _MY_COURSES_URL = "{{ url_for('my_courses') }}";
+const _LOGIN_URL      = "{{ url_for('user_login') }}";
+const _COURSES_URL    = "{{ url_for('courses') }}";
 
 function showPaymentSuccess(redirectUrl, email) {
     const overlay = document.createElement('div');
@@ -671,20 +717,20 @@ function showPaymentSuccess(redirectUrl, email) {
 
             <div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1px solid #86efac;border-radius:14px;padding:18px 20px;margin-bottom:20px;text-align:left;">
                 <div style="display:flex;align-items:flex-start;gap:12px;">
-                    <div style="width:42px;height:42px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                        <i class="fab fa-whatsapp" style="color:#fff;font-size:1.15rem;"></i>
+                    <div style="width:42px;height:42px;background:linear-gradient(135deg,#10b981,#059669);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <i class="fas fa-unlock-alt" style="color:#fff;font-size:1.1rem;"></i>
                     </div>
                     <div>
-                        <p style="font-weight:700;color:#166534;margin:0 0 4px;font-size:0.95rem;">Credentials Sent to WhatsApp!</p>
-                        <p style="color:#15803d;font-size:0.82rem;margin:0;line-height:1.5;">Your <strong>login ID</strong> and <strong>password</strong> have been sent to your WhatsApp. Check your messages to sign in anytime.</p>
+                        <p style="font-weight:700;color:#166534;margin:0 0 4px;font-size:0.95rem;">Course Unlocked!</p>
+                        <p style="color:#15803d;font-size:0.82rem;margin:0;line-height:1.5;">Your course is now in your <strong>My Courses</strong> dashboard. Start learning right away!</p>
                     </div>
                 </div>
             </div>
 
-            <a href="${_LOGIN_URL}"
+            <a href="${_MY_COURSES_URL}"
                style="display:flex;align-items:center;justify-content:center;gap:10px;background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;text-decoration:none;padding:16px;border-radius:14px;font-weight:700;font-size:1.05rem;margin-bottom:10px;box-shadow:0 8px 24px rgba(124,58,237,0.38);">
                 <i class="fas fa-graduation-cap"></i>
-                Go to My Dashboard
+                Go to My Courses
             </a>
             <a href="${redirectUrl || _COURSES_URL}"
                style="display:flex;align-items:center;justify-content:center;gap:8px;background:#f1f5f9;color:#475569;text-decoration:none;padding:13px;border-radius:12px;font-weight:600;font-size:0.9rem;margin-bottom:20px;">
@@ -701,7 +747,7 @@ function showPaymentSuccess(redirectUrl, email) {
 
     document.body.appendChild(overlay);
     overlay.addEventListener('click', function(e) {
-        if (e.target === overlay) window.location.href = _LOGIN_URL;
+        if (e.target === overlay) window.location.href = _MY_COURSES_URL;
     });
 }
 
