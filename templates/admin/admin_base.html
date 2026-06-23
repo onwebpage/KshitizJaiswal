@@ -87,6 +87,9 @@
             <a href="{{ url_for('admin_courses') }}" class="admin-nav-item {{ 'active' if request.endpoint in ['admin_courses', 'admin_add_course', 'admin_edit_course'] else '' }}">
                 <i class="fas fa-book me-2"></i>Courses
             </a>
+            <a href="{{ url_for('admin_course_purchases') }}" class="admin-nav-item {{ 'active' if request.endpoint in ['admin_course_purchases', 'admin_revoke_course_access', 'admin_restore_course_access'] else '' }}">
+                <i class="fas fa-shopping-cart me-2"></i>Course Purchases
+            </a>
             <a href="{{ url_for('admin_modules') }}" class="admin-nav-item {{ 'active' if request.endpoint in ['admin_modules', 'admin_add_module', 'admin_edit_module'] else '' }}">
                 <i class="fas fa-folder me-2"></i>Modules
             </a>

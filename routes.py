@@ -3772,16 +3772,19 @@ def verify_course_payment():
             clerk_user_id=clerk_user_id,
             course_id=course_id,
             payment_id=payment_id,
+            order_id=order_id,
+            payment_status='success',
             amount_paid=course.price,
             guest_name=guest_name,
             guest_email=guest_email,
-            guest_phone=guest_phone
+            guest_phone=guest_phone,
+            account_created=False,
+            access_revoked=False,
         )
         db.session.add(access)
         db.session.commit()
 
         # Auto-create CourseUser ONLY for truly new / unregistered buyers
-        # Skip if the buyer is already logged in via Clerk or CourseUser
         already_logged_in = bool(clerk_user_id or course_user)
         if not already_logged_in:
             try:
@@ -3805,7 +3808,10 @@ def verify_course_payment():
                         db.session.add(new_user)
                         db.session.commit()
 
-                        # Auto-log the new user in so they can reach My Courses
+                        # Mark account_created on the access record
+                        access.account_created = True
+                        db.session.commit()
+
                         session['course_user_id'] = new_user.id
 
                         import logging as _log
@@ -3830,7 +3836,6 @@ def verify_course_payment():
                                 login_url=_login_url
                             )
                     else:
-                        # Returning buyer — log them in
                         session['course_user_id'] = existing_user.id
             except Exception as _e:
                 import logging as _log
@@ -4540,3 +4545,94 @@ def admin_account():
 
     return render_template('admin/account_settings.html', form=form,
                            title='Account Settings', current_username=stored_username)
+
+
+# ─── Course Purchases Admin ─────────────────────────────────────────────────
+
+@app.route('/admin/course-purchases')
+def admin_course_purchases():
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+
+    from sqlalchemy import func as _func
+
+    search      = request.args.get('search', '').strip()
+    course_filter = request.args.get('course', '').strip()
+    status_filter = request.args.get('status', '').strip()
+
+    query = UserCourseAccess.query.join(Course)
+
+    if search:
+        like = f'%{search}%'
+        query = query.filter(db.or_(
+            UserCourseAccess.guest_name.ilike(like),
+            UserCourseAccess.guest_email.ilike(like),
+            UserCourseAccess.guest_phone.ilike(like),
+            UserCourseAccess.payment_id.ilike(like),
+            UserCourseAccess.order_id.ilike(like),
+        ))
+
+    if course_filter:
+        query = query.filter(UserCourseAccess.course_id == course_filter)
+
+    if status_filter == 'revoked':
+        query = query.filter(UserCourseAccess.access_revoked == True)
+    elif status_filter == 'active':
+        query = query.filter(UserCourseAccess.access_revoked == False)
+    elif status_filter == 'manual':
+        query = query.filter(UserCourseAccess.payment_status == 'manual')
+
+    purchases = query.order_by(UserCourseAccess.granted_at.desc()).all()
+
+    all_courses = Course.query.filter_by(is_active=True).order_by(Course.title).all()
+
+    total_revenue = db.session.query(
+        _func.sum(UserCourseAccess.amount_paid)
+    ).filter(UserCourseAccess.access_revoked == False).scalar() or 0
+
+    counts = {
+        'total':   UserCourseAccess.query.count(),
+        'active':  UserCourseAccess.query.filter_by(access_revoked=False).count(),
+        'revoked': UserCourseAccess.query.filter_by(access_revoked=True).count(),
+        'manual':  UserCourseAccess.query.filter_by(payment_status='manual').count(),
+        'accounts_created': UserCourseAccess.query.filter_by(account_created=True).count(),
+    }
+
+    return render_template(
+        'admin/course_purchases.html',
+        purchases=purchases,
+        all_courses=all_courses,
+        counts=counts,
+        total_revenue=total_revenue,
+        search=search,
+        course_filter=course_filter,
+        status_filter=status_filter,
+    )
+
+
+@app.route('/admin/course-purchase/<int:purchase_id>/revoke', methods=['POST'])
+def admin_revoke_course_access(purchase_id):
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    access = UserCourseAccess.query.get_or_404(purchase_id)
+    access.access_revoked = True
+    db.session.commit()
+    flash(f'Access revoked for {access.guest_name or access.guest_email}.', 'warning')
+    return redirect(url_for('admin_course_purchases',
+                            search=request.args.get('search',''),
+                            course=request.args.get('course',''),
+                            status=request.args.get('status','')))
+
+
+@app.route('/admin/course-purchase/<int:purchase_id>/restore', methods=['POST'])
+def admin_restore_course_access(purchase_id):
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    access = UserCourseAccess.query.get_or_404(purchase_id)
+    access.access_revoked = False
+    db.session.commit()
+    flash(f'Access restored for {access.guest_name or access.guest_email}.', 'success')
+    return redirect(url_for('admin_course_purchases',
+                            search=request.args.get('search',''),
+                            course=request.args.get('course',''),
+                            status=request.args.get('status','')))

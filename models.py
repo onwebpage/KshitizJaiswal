@@ -555,31 +555,40 @@ class Lesson(db.Model):
 
 class UserCourseAccess(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    clerk_user_id = db.Column(db.String(100), nullable=True)  # Clerk user ID (nullable for guest purchases)
+    clerk_user_id = db.Column(db.String(100), nullable=True)
     course_id = db.Column(db.Integer, db.ForeignKey('course.id'), nullable=False)
-    payment_id = db.Column(db.String(200))  # Razorpay payment ID
-    amount_paid = db.Column(db.Integer)  # Amount paid in rupees
+    payment_id = db.Column(db.String(200))       # Razorpay payment ID
+    order_id   = db.Column(db.String(200))       # Razorpay order ID
+    payment_status = db.Column(db.String(50), default='success')  # success / manual / pending / failed
+    amount_paid = db.Column(db.Integer)          # Amount paid in rupees
     granted_at = db.Column(db.DateTime, default=datetime.utcnow)
-    expires_at = db.Column(db.DateTime)  # Optional expiration date
-    # Guest purchase fields (used when user is not logged in)
-    guest_name = db.Column(db.String(200))
+    expires_at = db.Column(db.DateTime)
+    # Guest purchase fields
+    guest_name  = db.Column(db.String(200))
     guest_email = db.Column(db.String(200))
     guest_phone = db.Column(db.String(20))
-    
+    # Post-purchase tracking
+    account_created  = db.Column(db.Boolean, default=False)  # Was a CourseUser auto-created?
+    access_revoked   = db.Column(db.Boolean, default=False)  # Admin revoked access?
+
     course = db.relationship('Course', backref='user_accesses')
-    
+
     def to_dict(self):
         return {
             'id': self.id,
             'clerk_user_id': self.clerk_user_id or '',
             'course_id': self.course_id,
             'payment_id': self.payment_id or '',
+            'order_id': self.order_id or '',
+            'payment_status': self.payment_status or 'success',
             'amount_paid': self.amount_paid,
             'granted_at': self.granted_at.isoformat() if self.granted_at else '',
             'expires_at': self.expires_at.isoformat() if self.expires_at else None,
             'guest_name': self.guest_name or '',
             'guest_email': self.guest_email or '',
-            'guest_phone': self.guest_phone or ''
+            'guest_phone': self.guest_phone or '',
+            'account_created': self.account_created or False,
+            'access_revoked': self.access_revoked or False,
         }
     
     @staticmethod
@@ -591,7 +600,7 @@ class UserCourseAccess(db.Model):
             clerk_user_id=clerk_user_id,
             course_id=course_id
         ).first()
-        if access:
+        if access and not access.access_revoked:
             if access.expires_at is None or access.expires_at > datetime.utcnow():
                 return True
         return False
@@ -605,11 +614,11 @@ class UserCourseAccess(db.Model):
             guest_email=email,
             course_id=course_id
         ).first()
-        if access:
+        if access and not access.access_revoked:
             if access.expires_at is None or access.expires_at > datetime.utcnow():
                 return True
         return False
-    
+
     @staticmethod
     def get_user_courses(clerk_user_id):
         """Get all courses a user has access to"""
@@ -618,7 +627,7 @@ class UserCourseAccess(db.Model):
         accesses = UserCourseAccess.query.filter_by(clerk_user_id=clerk_user_id).all()
         valid_accesses = []
         for access in accesses:
-            if access.expires_at is None or access.expires_at > datetime.utcnow():
+            if not access.access_revoked and (access.expires_at is None or access.expires_at > datetime.utcnow()):
                 valid_accesses.append(access)
         return valid_accesses
 
