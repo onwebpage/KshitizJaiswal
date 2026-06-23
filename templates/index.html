@@ -84,28 +84,10 @@
         </a>
         {% endmacro %}
 
-        {#
-            Always use the infinite-scroll carousel.
-            Repeat the reel set enough times so the track is always wider than
-            the viewport — even when there is only 1 or 2 reels.
-            half_repeats = how many times each half repeats the full reel list.
-            Formula: max(1, floor(8 / reels_count) + 1), capped at 4.
-        #}
-        {% set _hr = (8 // reels_count + 1) %}
-        {% set half_repeats = [1, _hr] | max %}
-        {% if half_repeats > 4 %}{% set half_repeats = 4 %}{% endif %}
-
-        <!-- Infinite-scroll carousel (always active) -->
+        <!-- Infinite-scroll carousel — JS clones cards for seamless loop -->
         <div class="reel-carousel-container" aria-label="Video Carousel">
             <div class="reel-carousel" id="reelCarousel">
-                {# First half — visible #}
-                {% for _i in range(half_repeats) %}
-                    {% for reel in content.reels %}{{ reel_card(reel) }}{% endfor %}
-                {% endfor %}
-                {# Second half — aria-hidden duplicate for seamless wrap #}
-                {% for _i in range(half_repeats) %}
-                    {% for reel in content.reels %}{{ reel_card(reel, hidden=true) }}{% endfor %}
-                {% endfor %}
+                {% for reel in content.reels %}{{ reel_card(reel) }}{% endfor %}
             </div>
         </div>
         {% else %}

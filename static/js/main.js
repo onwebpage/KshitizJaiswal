@@ -48,68 +48,87 @@
         });
     }
 
-    // Initialize reel carousel auto-scroll (JS-driven, rightward, infinite loop)
+    // Initialize reel carousel — JS-driven, rightward, seamless infinite loop.
+    // Only real cards are in the HTML; JS clones them once (aria-hidden) purely
+    // for the wrap effect so the track is always wide enough.
     function initReelCarousel() {
-        const carousel = document.getElementById('reelCarousel');
+        var carousel = document.getElementById('reelCarousel');
         if (!carousel) return;
 
-        // Disable CSS animation — we drive it with rAF
+        // Remove any residual CSS animation
         carousel.style.animation = 'none';
 
-        var SPEED = 0.6;        // px per ms at 60 fps equivalent
-        var paused = false;
+        var SPEED = 0.28;       // px per ms — slow, premium feel
+        var paused   = false;
         var dragging = false;
         var dragStartClient = 0;
-        var dragStartX = 0;
+        var dragStartX      = 0;
         var currentX = 0;
         var lastTime = null;
-        var halfWidth = 0;
-        var rafId = null;
+        var oneSetWidth = 0;    // pixel width of the original (real) card set
 
-        function getHalfWidth() {
-            return carousel.scrollWidth / 2;
-        }
+        // ── Clone real cards so the track loops seamlessly ─────────────────
+        // We wait one frame to ensure the flex layout has been painted and
+        // scrollWidth is accurate before we measure and clone.
+        requestAnimationFrame(function() {
+            // Collect the original (real) card nodes
+            var originals = Array.prototype.slice.call(carousel.children);
+            if (!originals.length) return;
 
-        function clampX(x) {
-            // Keep currentX in the range [-halfWidth, 0)
-            // Going right: x increases toward 0, then wraps back to -halfWidth
-            if (x >= 0) x -= halfWidth;
-            if (x < -halfWidth) x += halfWidth;
-            return x;
-        }
+            // Measure one full set width (gap is baked into scrollWidth)
+            oneSetWidth = carousel.scrollWidth;
+
+            // Clone each card, mark as decorative duplicate
+            originals.forEach(function(card) {
+                var clone = card.cloneNode(true);
+                clone.setAttribute('aria-hidden', 'true');
+                clone.setAttribute('tabindex', '-1');
+                // Prevent duplicate links from being keyboard-focusable
+                clone.querySelectorAll('a, button').forEach(function(el) {
+                    el.setAttribute('tabindex', '-1');
+                });
+                carousel.appendChild(clone);
+            });
+
+            // Start position: at -oneSetWidth so we scroll rightward toward 0
+            currentX = -oneSetWidth;
+            applyTransform();
+
+            // Kick off the animation loop
+            requestAnimationFrame(tick);
+        });
 
         function applyTransform() {
             carousel.style.transform = 'translateX(' + currentX + 'px)';
         }
 
+        function clampX(x) {
+            // Right-scroll: x moves from -oneSetWidth toward 0.
+            // When it reaches 0 (completed one full set), jump back.
+            if (x >= 0)           x -= oneSetWidth;
+            if (x < -oneSetWidth) x += oneSetWidth;
+            return x;
+        }
+
         function tick(timestamp) {
             if (!lastTime) lastTime = timestamp;
-            var dt = Math.min(timestamp - lastTime, 50); // cap dt to avoid jumps after tab-switch
+            var dt = Math.min(timestamp - lastTime, 50); // cap to avoid jump on tab-switch
             lastTime = timestamp;
 
-            if (!paused && !dragging) {
-                halfWidth = getHalfWidth();
-                currentX += SPEED * dt;   // move right each frame
+            if (!paused && !dragging && oneSetWidth > 0) {
+                currentX += SPEED * dt;
                 currentX = clampX(currentX);
                 applyTransform();
             }
 
-            rafId = requestAnimationFrame(tick);
+            requestAnimationFrame(tick);
         }
 
-        // Defer start by one paint so the flex layout has settled
-        requestAnimationFrame(function() {
-            halfWidth = getHalfWidth() || 1;
-            currentX = -halfWidth;
-            applyTransform();
-            rafId = requestAnimationFrame(tick);
-        });
-
-        // ── Hover: pause / resume ──────────────────────────────────────────
+        // ── Hover: pause ───────────────────────────────────────────────────
         carousel.addEventListener('mouseenter', function() { paused = true; });
         carousel.addEventListener('mouseleave', function() {
             paused = false;
-            lastTime = null; // reset dt so no jump
+            lastTime = null;
         });
 
         // ── Mouse drag (desktop) ───────────────────────────────────────────
@@ -120,19 +139,14 @@
             carousel.style.cursor = 'grabbing';
             e.preventDefault();
         });
-
         document.addEventListener('mousemove', function(e) {
             if (!dragging) return;
-            halfWidth = getHalfWidth();
-            var dx = e.clientX - dragStartClient;
-            currentX = clampX(dragStartX + dx);
+            currentX = clampX(dragStartX + (e.clientX - dragStartClient));
             applyTransform();
         });
-
         document.addEventListener('mouseup', function() {
             if (!dragging) return;
             dragging = false;
-            paused = false;
             lastTime = null;
             carousel.style.cursor = '';
         });
@@ -143,28 +157,20 @@
             dragStartClient = e.touches[0].clientX;
             dragStartX = currentX;
         }, { passive: true });
-
         carousel.addEventListener('touchmove', function(e) {
             if (!dragging) return;
-            halfWidth = getHalfWidth();
-            var dx = e.touches[0].clientX - dragStartClient;
-            currentX = clampX(dragStartX + dx);
+            currentX = clampX(dragStartX + (e.touches[0].clientX - dragStartClient));
             applyTransform();
         }, { passive: true });
-
         carousel.addEventListener('touchend', function() {
             dragging = false;
             lastTime = null;
         }, { passive: true });
 
-        // ── Tab visibility: pause when hidden ─────────────────────────────
+        // ── Tab visibility ─────────────────────────────────────────────────
         document.addEventListener('visibilitychange', function() {
-            if (document.hidden) {
-                paused = true;
-            } else {
-                paused = false;
-                lastTime = null;
-            }
+            paused = document.hidden;
+            if (!document.hidden) lastTime = null;
         });
     }
 
