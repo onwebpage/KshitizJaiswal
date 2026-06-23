@@ -44,5 +44,5 @@ expertMode = true
 [userenv]
 
 [userenv.shared]
-SMTP_FROM_EMAIL = "invite@kshitizjaiswal.in"
-SMTP_FROM_NAME = "Kshitiz Jaiswal"
+SMTP_FROM_EMAIL = ""
+SMTP_FROM_NAME = "Kshitiz Jaiswal Courses"
