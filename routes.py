@@ -894,7 +894,7 @@ def admin_add_reel():
             thumbnail_url = save_uploaded_file(form.thumbnail.data, 'reels')
         
         # Process sources
-        sources = [s.strip() for s in form.sources.data.split('\n') if s.strip()]
+        sources = [s.strip() for s in (form.sources.data or '').split('\n') if s.strip()]
         
         # Handle thumbnail URL fallback
         if not thumbnail_url and form.thumbnail_url.data:
@@ -978,7 +978,7 @@ def admin_edit_reel(reel_id):
             reel.thumbnail = save_uploaded_file(form.thumbnail.data, 'reels')
         
         # Process sources
-        sources = [s.strip() for s in form.sources.data.split('\n') if s.strip()]
+        sources = [s.strip() for s in (form.sources.data or '').split('\n') if s.strip()]
         
         # Handle thumbnail URL fallback on edit
         if not reel.thumbnail and form.thumbnail_url.data:
