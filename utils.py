@@ -286,46 +286,99 @@ def send_email_credentials(email, name, login_id, password, login_url=None):
         login_url = login_url or 'https://your-site.com/user/login'
         first_name = (name or 'Student').split()[0]
 
-        html_body = f"""
-        <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;background:#f8fafc;padding:32px 16px;">
-          <div style="background:linear-gradient(135deg,#7c3aed,#4f46e5);border-radius:16px 16px 0 0;padding:32px;text-align:center;">
-            <div style="font-size:48px;margin-bottom:12px;">🎓</div>
-            <h1 style="color:#fff;margin:0;font-size:24px;">Welcome to Your Course!</h1>
-            <p style="color:rgba(255,255,255,0.8);margin:8px 0 0;">Kshitiz Jaiswal — Unfiltered Commentator</p>
-          </div>
-          <div style="background:#fff;border-radius:0 0 16px 16px;padding:32px;box-shadow:0 4px 16px rgba(0,0,0,0.08);">
-            <p style="color:#334155;font-size:16px;">Hello <strong>{first_name}</strong>,</p>
-            <p style="color:#64748b;">Your account has been created after your course purchase. Use the credentials below to log in:</p>
-            <div style="background:#f1f5f9;border-radius:12px;padding:20px;margin:20px 0;">
-              <p style="margin:0 0 8px;color:#64748b;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Your Login Details</p>
-              <table style="width:100%;border-collapse:collapse;">
-                <tr><td style="padding:8px 0;color:#64748b;width:110px;">Login ID</td><td style="padding:8px 0;color:#1e293b;font-weight:700;">{login_id}</td></tr>
-                <tr><td style="padding:8px 0;color:#64748b;">Password</td><td style="padding:8px 0;color:#1e293b;font-weight:700;">{password}</td></tr>
-              </table>
-            </div>
-            <div style="text-align:center;margin:24px 0;">
-              <a href="{login_url}" style="background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;text-decoration:none;padding:14px 32px;border-radius:10px;font-weight:700;font-size:16px;display:inline-block;">
-                👉 Login to Your Dashboard
-              </a>
-            </div>
-            <p style="color:#94a3b8;font-size:13px;text-align:center;">You can change your password after logging in for the first time.</p>
-            <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0;">
-            <p style="color:#94a3b8;font-size:12px;text-align:center;">
-              Kshitiz Jaiswal | Unfiltered Commentator<br>
-              <a href="{login_url}" style="color:#7c3aed;">{login_url}</a>
-            </p>
-          </div>
-        </div>
-        """
+        plain_body = f"""Hello {first_name},
+
+Your account has been created for Kshitiz Jaiswal Courses.
+
+Here are your login details:
+
+  Login ID : {login_id}
+  Password : {password}
+
+Login here: {login_url}
+
+You can change your password after logging in.
+
+-- 
+Kshitiz Jaiswal | Unfiltered Commentator
+{login_url}
+"""
+
+        html_body = f"""<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,Helvetica,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:24px 0;">
+  <tr><td align="center">
+    <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">
+      <tr>
+        <td style="background:#1e1b4b;padding:28px 32px;text-align:center;">
+          <p style="margin:0;color:#c7d2fe;font-size:13px;letter-spacing:1px;text-transform:uppercase;">Kshitiz Jaiswal Courses</p>
+          <h1 style="margin:8px 0 0;color:#ffffff;font-size:22px;font-weight:700;">Your Account is Ready</h1>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:32px;">
+          <p style="margin:0 0 16px;color:#1e293b;font-size:16px;">Hello <strong>{first_name}</strong>,</p>
+          <p style="margin:0 0 24px;color:#475569;font-size:15px;line-height:1.6;">
+            Your account has been created. Use the details below to log in and access your course.
+          </p>
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:24px;">
+            <tr>
+              <td style="padding:14px 20px;border-bottom:1px solid #e2e8f0;">
+                <span style="color:#64748b;font-size:13px;display:block;margin-bottom:3px;">Login ID</span>
+                <strong style="color:#1e293b;font-size:15px;">{login_id}</strong>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:14px 20px;">
+                <span style="color:#64748b;font-size:13px;display:block;margin-bottom:3px;">Password</span>
+                <strong style="color:#1e293b;font-size:15px;font-family:monospace;">{password}</strong>
+              </td>
+            </tr>
+          </table>
+          <table width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+              <td align="center" style="padding-bottom:24px;">
+                <a href="{login_url}" style="display:inline-block;background:#4f46e5;color:#ffffff;text-decoration:none;padding:14px 36px;border-radius:6px;font-weight:600;font-size:15px;">
+                  Log In to Your Course
+                </a>
+              </td>
+            </tr>
+          </table>
+          <p style="margin:0;color:#94a3b8;font-size:13px;text-align:center;">
+            You can change your password any time after logging in.
+          </p>
+        </td>
+      </tr>
+      <tr>
+        <td style="background:#f8fafc;padding:18px 32px;border-top:1px solid #e2e8f0;text-align:center;">
+          <p style="margin:0;color:#94a3b8;font-size:12px;">
+            Kshitiz Jaiswal | Unfiltered Commentator<br>
+            <a href="{login_url}" style="color:#6366f1;text-decoration:none;">{login_url}</a>
+          </p>
+        </td>
+      </tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>"""
 
         msg = MIMEMultipart('alternative')
-        msg['Subject'] = f"🎓 Your Course Login Credentials — Kshitiz Jaiswal"
-        msg['From'] = f"{from_name} <{from_email}>"
-        msg['To'] = email
+        msg['Subject'] = f"Your login details for Kshitiz Jaiswal Courses"
+        msg['From']    = f"{from_name} <{from_email}>"
+        msg['To']      = email
+        msg['Reply-To'] = from_email
+        msg['X-Priority'] = '1'
+        msg['Importance'] = 'high'
+        msg.attach(MIMEText(plain_body, 'plain'))
         msg.attach(MIMEText(html_body, 'html'))
 
         with smtplib.SMTP(smtp_host, smtp_port, timeout=15) as server:
+            server.ehlo()
             server.starttls()
+            server.ehlo()
             server.login(smtp_user, smtp_password)
             server.sendmail(from_email, [email], msg.as_string())
 
