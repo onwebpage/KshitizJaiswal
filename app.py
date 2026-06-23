@@ -45,7 +45,7 @@ os.makedirs('data', exist_ok=True)
 os.makedirs('instance', exist_ok=True)
 
 # Configure the database
-# Prefer Replit's native PostgreSQL (PGHOST=helium) over any external DATABASE_URL
+# Priority: Replit native PG (PGHOST) → external DATABASE_URL → SQLite fallback
 def _build_replit_pg_url():
     host = os.environ.get("PGHOST")
     port = os.environ.get("PGPORT", "5432")
@@ -58,24 +58,42 @@ def _build_replit_pg_url():
         return f"postgresql://{user}@{host}:{port}/{dbname}"
     return None
 
-database_url = _build_replit_pg_url() or os.environ.get("DATABASE_URL")
+def _is_external_db(url):
+    """Return True when the URL is NOT Replit's internal helium database."""
+    if not url:
+        return False
+    return "helium" not in url and "PGHOST" not in url
 
-# Check if we should use PostgreSQL or SQLite
+replit_pg_url = _build_replit_pg_url()
+external_db_url = os.environ.get("DATABASE_URL")
+database_url = replit_pg_url or external_db_url
+
 use_sqlite = False
 
 if database_url:
-    # Try to use PostgreSQL, but fall back to SQLite if connection fails
     try:
         import psycopg2
-        # Quick connection test
-        test_conn = psycopg2.connect(database_url)
+        # Build connection kwargs — external providers (Railway, Aiven, Neon, Supabase)
+        # require sslmode=require; Replit's internal helium does not.
+        is_external = _is_external_db(database_url) and not replit_pg_url
+        connect_kwargs = {}
+        if is_external and "sslmode" not in database_url:
+            connect_kwargs["sslmode"] = "require"
+
+        test_conn = psycopg2.connect(database_url, **connect_kwargs)
         test_conn.close()
-        logging.info("Using PostgreSQL database (Production)")
-        app.config["SQLALCHEMY_DATABASE_URI"] = database_url
-        app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+
+        engine_options = {
             "pool_recycle": 300,
             "pool_pre_ping": True,
         }
+        if is_external and "sslmode" not in database_url:
+            engine_options["connect_args"] = {"sslmode": "require"}
+
+        logging.info(f"Using PostgreSQL database ({'external' if is_external else 'Replit internal'})")
+        app.config["SQLALCHEMY_DATABASE_URI"] = database_url
+        app.config["SQLALCHEMY_ENGINE_OPTIONS"] = engine_options
+
     except Exception as e:
         logging.warning(f"PostgreSQL connection failed ({e}), falling back to SQLite")
         use_sqlite = True
@@ -83,8 +101,7 @@ else:
     use_sqlite = True
 
 if use_sqlite:
-    # Development: Use SQLite
-    logging.info("Using SQLite database (Development)")
+    logging.info("Using SQLite database (Development fallback)")
     db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instance', 'app.db')
     app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{db_path}"
     app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {}
@@ -147,7 +164,7 @@ with app.app_context():
         _add_column("reel",               "is_featured",          "BOOLEAN DEFAULT FALSE")
         _add_column("opinion",            "topic_tag",            "VARCHAR(100)")
         _add_column("subscriber",         "place",                "VARCHAR(100)")
-        _add_column("subscriber",         "age",                  "INTEGER")
+        _add_column("subscriber",         "age",                  "VARCHAR(20)")
 
         # PostgreSQL-only migrations (silently ignored on SQLite)
         pg_only = [
@@ -160,6 +177,15 @@ with app.app_context():
                 db.session.commit()
             except Exception:
                 db.session.rollback()
+
+        # ── Seed default data on fresh databases ─────────────────────────────
+        try:
+            from models import SocialLink, AdminUser as _AdminUser
+            SocialLink.seed_missing_platforms()   # adds any missing platform rows
+            _AdminUser.create_default_tiers()     # creates subscription tiers if none
+            logging.info("Default data seeding complete")
+        except Exception as _seed_err:
+            logging.warning(f"Seeding skipped: {_seed_err}")
 
     except Exception as e:
         logging.error(f"Failed to create database tables: {e}")
