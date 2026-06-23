@@ -20,8 +20,10 @@
                 <div class="video-section mb-4">
                     {% if reel.video_url %}
                         {% if reel.is_instagram %}
-                        <!-- Instagram direct embed — no external SDK, no redirect buttons -->
+                        <!-- Instagram direct embed — profile header + bottom bar cropped via CSS -->
                         <div class="ig-video-wrapper">
+                            <!-- top cover: hides profile picture / name / "View profile" -->
+                            <div class="ig-top-cover"></div>
                             <iframe
                                 src="{{ reel.embed_url }}"
                                 class="ig-embed-iframe"
@@ -31,7 +33,7 @@
                                 allowfullscreen="true"
                                 title="{{ reel.title }}">
                             </iframe>
-                            <!-- Bottom bar overlay hides Instagram logo/branding -->
+                            <!-- bottom cover: hides "View more on Instagram", likes, actions -->
                             <div class="ig-brand-cover"></div>
                         </div>
                         {% else %}
@@ -429,23 +431,41 @@
     aspect-ratio: 9 / 16;
 }
 
+/* iframe fills the entire wrapper; covers sit on top to mask header/footer */
 .ig-embed-iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
     border: none;
     display: block;
 }
 
-/* Thin bar at bottom covers the Instagram logo strip */
+/* Hides "future__rex · View profile · Original audio" header — ~68px */
+.ig-top-cover {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 68px;
+    background: #000;
+    z-index: 10;
+    pointer-events: none;
+    border-radius: 12px 12px 0 0;
+}
+
+/* Hides "View more on Instagram", likes, heart/comment/share/save row — ~140px */
 .ig-brand-cover {
     position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
-    height: 48px;
+    height: 140px;
     background: #000;
     z-index: 10;
     pointer-events: none;
+    border-radius: 0 0 12px 12px;
 }
 
 /* ── YouTube controls ── */
