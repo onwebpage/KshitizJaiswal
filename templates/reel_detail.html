@@ -135,7 +135,11 @@
                         {% for source in reel.sources %}
                         <li>
                             <i class="fas fa-external-link-alt me-2"></i>
+                            {% if source.startswith('http://') or source.startswith('https://') %}
+                            <a href="{{ source }}" target="_blank" rel="noopener noreferrer">{{ source }}</a>
+                            {% else %}
                             {{ source }}
+                            {% endif %}
                         </li>
                         {% endfor %}
                     </ul>
@@ -321,6 +325,18 @@
     padding: 0.75rem 0;
     border-bottom: 1px solid #f0f0f0;
     color: #555;
+}
+
+.sources-list li a {
+    color: #cc0000;
+    text-decoration: none;
+    word-break: break-all;
+    transition: color 0.2s;
+}
+
+.sources-list li a:hover {
+    color: #990000;
+    text-decoration: underline;
 }
 
 .sources-list li:last-child {
