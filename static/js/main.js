@@ -48,29 +48,122 @@
         });
     }
 
-    // Initialize reel carousel auto-scroll
+    // Initialize reel carousel auto-scroll (JS-driven, rightward, infinite loop)
     function initReelCarousel() {
         const carousel = document.getElementById('reelCarousel');
         if (!carousel) return;
 
-        // Pause animation on hover
-        carousel.addEventListener('mouseenter', function() {
-            this.style.animationPlayState = 'paused';
-        });
+        // Disable CSS animation — we drive it with rAF
+        carousel.style.animation = 'none';
 
+        var SPEED = 0.6;        // px per ms at 60 fps equivalent
+        var paused = false;
+        var dragging = false;
+        var dragStartClient = 0;
+        var dragStartX = 0;
+        var currentX = 0;
+        var lastTime = null;
+        var halfWidth = 0;
+        var rafId = null;
+
+        function getHalfWidth() {
+            return carousel.scrollWidth / 2;
+        }
+
+        function clampX(x) {
+            // Keep currentX in the range [-halfWidth, 0)
+            // Going right: x increases toward 0, then wraps back to -halfWidth
+            if (x >= 0) x -= halfWidth;
+            if (x < -halfWidth) x += halfWidth;
+            return x;
+        }
+
+        function applyTransform() {
+            carousel.style.transform = 'translateX(' + currentX + 'px)';
+        }
+
+        function tick(timestamp) {
+            if (!lastTime) lastTime = timestamp;
+            var dt = Math.min(timestamp - lastTime, 50); // cap dt to avoid jumps after tab-switch
+            lastTime = timestamp;
+
+            if (!paused && !dragging) {
+                halfWidth = getHalfWidth();
+                currentX += SPEED * dt;   // move right each frame
+                currentX = clampX(currentX);
+                applyTransform();
+            }
+
+            rafId = requestAnimationFrame(tick);
+        }
+
+        // Initialise position at -50% so the loop starts seamlessly
+        halfWidth = getHalfWidth() || 1;
+        currentX = -halfWidth;
+        applyTransform();
+
+        rafId = requestAnimationFrame(tick);
+
+        // ── Hover: pause / resume ──────────────────────────────────────────
+        carousel.addEventListener('mouseenter', function() { paused = true; });
         carousel.addEventListener('mouseleave', function() {
-            this.style.animationPlayState = 'running';
+            paused = false;
+            lastTime = null; // reset dt so no jump
         });
 
-        // Handle reel clicks with loading state
-        const reelLinks = document.querySelectorAll('.reel-link');
-        reelLinks.forEach(link => {
-            link.addEventListener('click', function(e) {
-                const overlay = this.querySelector('.reel-overlay');
-                if (overlay) {
-                    overlay.innerHTML = '<i class="fas fa-spinner fa-spin"></i><h6>Loading...</h6>';
-                }
-            });
+        // ── Mouse drag (desktop) ───────────────────────────────────────────
+        carousel.addEventListener('mousedown', function(e) {
+            dragging = true;
+            dragStartClient = e.clientX;
+            dragStartX = currentX;
+            carousel.style.cursor = 'grabbing';
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', function(e) {
+            if (!dragging) return;
+            halfWidth = getHalfWidth();
+            var dx = e.clientX - dragStartClient;
+            currentX = clampX(dragStartX + dx);
+            applyTransform();
+        });
+
+        document.addEventListener('mouseup', function() {
+            if (!dragging) return;
+            dragging = false;
+            paused = false;
+            lastTime = null;
+            carousel.style.cursor = '';
+        });
+
+        // ── Touch drag (mobile) ────────────────────────────────────────────
+        carousel.addEventListener('touchstart', function(e) {
+            dragging = true;
+            dragStartClient = e.touches[0].clientX;
+            dragStartX = currentX;
+        }, { passive: true });
+
+        carousel.addEventListener('touchmove', function(e) {
+            if (!dragging) return;
+            halfWidth = getHalfWidth();
+            var dx = e.touches[0].clientX - dragStartClient;
+            currentX = clampX(dragStartX + dx);
+            applyTransform();
+        }, { passive: true });
+
+        carousel.addEventListener('touchend', function() {
+            dragging = false;
+            lastTime = null;
+        }, { passive: true });
+
+        // ── Tab visibility: pause when hidden ─────────────────────────────
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                paused = true;
+            } else {
+                paused = false;
+                lastTime = null;
+            }
         });
     }
 
@@ -533,17 +626,7 @@
         };
     }
 
-    // Handle visibility change (tab switching)
-    document.addEventListener('visibilitychange', function() {
-        const carousel = document.getElementById('reelCarousel');
-        if (carousel) {
-            if (document.hidden) {
-                carousel.style.animationPlayState = 'paused';
-            } else {
-                carousel.style.animationPlayState = 'running';
-            }
-        }
-    });
+    // Visibility change for carousel is handled inside initReelCarousel
 
     // Handle window resize
     window.addEventListener('resize', debounce(function() {

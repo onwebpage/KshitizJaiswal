@@ -311,16 +311,11 @@
     display: flex;
     gap: 1.1rem;
     width: max-content;
-    animation: reelScroll 35s linear infinite;
     will-change: transform;
+    cursor: grab;
 }
 
-.reel-carousel:hover { animation-play-state: paused; }
-
-@keyframes reelScroll {
-    0%   { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-}
+.reel-carousel:active { cursor: grabbing; }
 
 /* ── Individual card ───────────────────────────────── */
 .reel-card {
@@ -477,7 +472,6 @@
     .reel-card { width: 180px; }
     .reel-card.layout-portrait { width: 125px; }
     .reel-card.layout-landscape { width: 240px; }
-    .reel-carousel { animation-duration: 28s; }
 }
 </style>
 
