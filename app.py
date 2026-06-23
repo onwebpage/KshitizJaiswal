@@ -212,11 +212,15 @@ def inject_global_context():
 
     # WhatsApp support phone from DB settings
     whatsapp_support_phone = ''
+    whatsapp_link = 'https://wa.me/message/TYMT7KS4JVF7F1'
     try:
         wa_rec = SiteContent.query.filter_by(content_key='whatsapp_settings').first()
         if wa_rec:
             wa_data = json.loads(wa_rec.content_data)
             whatsapp_support_phone = wa_data.get('support_phone', '')
+            db_link = wa_data.get('whatsapp_link', '')
+            if db_link:
+                whatsapp_link = db_link
     except Exception:
         pass
 
@@ -280,6 +284,7 @@ def inject_global_context():
         'is_column_visible': is_column_visible,
         'footer_newsletter_form': footer_newsletter_form,
         'whatsapp_support_phone': whatsapp_support_phone,
+        'whatsapp_link': whatsapp_link,
         'footer_stats': footer_stats,
     }
 

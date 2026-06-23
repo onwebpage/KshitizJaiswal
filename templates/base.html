@@ -481,10 +481,46 @@
         var form = document.getElementById('footerNewsletterForm');
         var successBox = document.getElementById('footerNewsletterSuccess');
         if (!form) return;
-        form.addEventListener('submit', function() {
+
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
             var btn = form.querySelector('button[type=submit]');
+            var name = form.querySelector('input[name=name]').value.trim();
+            var email = form.querySelector('input[name=email]').value.trim();
+
+            if (!name || !email) {
+                alert('Please enter your name and email.');
+                return;
+            }
+
             if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Subscribing…'; }
+
+            var formData = new FormData();
+            formData.append('name', name);
+            formData.append('email', email);
+            var csrfInput = form.querySelector('input[name=csrf_token]');
+            if (csrfInput) formData.append('csrf_token', csrfInput.value);
+
+            try {
+                var resp = await fetch('/newsletter', {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    body: formData
+                });
+                var data = await resp.json();
+                if (data.success) {
+                    form.style.display = 'none';
+                    if (successBox) successBox.classList.remove('d-none');
+                } else {
+                    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Subscribe'; }
+                    alert(data.message || 'Something went wrong. Please try again.');
+                }
+            } catch(err) {
+                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane me-1"></i>Subscribe'; }
+                alert('Connection error. Please try again.');
+            }
         });
+
         {% if request.args.get('subscribed') == '1' %}
         if (successBox) {
             form.style.display = 'none';

@@ -459,6 +459,7 @@ def newsletter_subscribe():
             if is_ajax:
                 return jsonify({'success': True, 'message': 'Successfully subscribed to newsletter!'})
             flash('Successfully subscribed to newsletter!', 'success')
+            return redirect(url_for('index') + '?subscribed=1#newsletter')
         except Exception as e:
             logging.error(f"Newsletter subscribe error: {e}")
             if is_ajax:
