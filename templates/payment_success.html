@@ -76,8 +76,10 @@
                             <p style="font-weight:700;color:#1e293b;text-align:center;margin:0 0 14px;font-size:1rem;">
                                 Need Help? We're here for you.
                             </p>
-                            <a href="https://wa.me/{{ wa_support_phone }}?text=Hi%2C+I+just+purchased+a+course+and+need+help+getting+started."
-                               target="_blank" rel="noopener"
+                            <a href="https://api.whatsapp.com/send?phone={{ wa_support_phone }}&text=Hi%2C+I+just+purchased+a+course+and+need+help+getting+started."
+                               data-whatsapp-link="https://api.whatsapp.com/send?phone={{ wa_support_phone }}&text=Hi%2C+I+just+purchased+a+course+and+need+help+getting+started."
+                               data-whatsapp-fallback="https://web.whatsapp.com/send?phone={{ wa_support_phone }}"
+                               class="js-whatsapp-link"
                                style="display:flex;align-items:center;justify-content:center;gap:10px;background:#25D366;color:#fff;text-decoration:none;padding:16px;border-radius:14px;font-weight:700;font-size:1.05rem;box-shadow:0 6px 20px rgba(37,211,102,0.4);">
                                 <i class="fab fa-whatsapp" style="font-size:1.4rem;"></i>
                                 Chat with us on WhatsApp

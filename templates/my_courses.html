@@ -23,9 +23,10 @@
                     <p class="text-muted mb-0" style="font-size:0.85rem;">Our support team is available on WhatsApp. Chat with us anytime.</p>
                 </div>
             </div>
-            <a href="https://wa.me/{{ wa_support_phone }}?text=Hi%2C+I+need+help+with+my+course+on+Kshitiz+Jaiswal%27s+platform."
-               target="_blank" rel="noopener"
-               class="btn btn-success fw-semibold flex-shrink-0 ms-3"
+            <a href="https://api.whatsapp.com/send?phone={{ wa_support_phone }}&text=Hi%2C+I+need+help+with+my+course+on+Kshitiz+Jaiswal%27s+platform."
+               data-whatsapp-link="https://api.whatsapp.com/send?phone={{ wa_support_phone }}&text=Hi%2C+I+need+help+with+my+course+on+Kshitiz+Jaiswal%27s+platform."
+               data-whatsapp-fallback="https://web.whatsapp.com/send?phone={{ wa_support_phone }}"
+               class="btn btn-success fw-semibold flex-shrink-0 ms-3 js-whatsapp-link"
                style="border-radius:10px;background:#25D366;border:none;white-space:nowrap;">
                 <i class="fab fa-whatsapp me-2"></i>Chat Support
             </a>

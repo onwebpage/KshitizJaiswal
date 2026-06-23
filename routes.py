@@ -2,7 +2,7 @@ from flask import render_template, request, jsonify, redirect, url_for, flash, s
 from app import app, db, _error_log, log_app_error
 from models import DataManager, AdminUser, SiteContent, Reel, Opinion, Subscriber, SubscriptionTier, UserSubscription, Course, Module, Lesson, UserCourseAccess, SocialLink, ColumnVisibility, UserActivity, SiteConfig, CourseUser
 from forms import NewsletterForm, PollVoteForm, AdminLoginForm, ReelForm, OpinionForm, HeroContentForm, PaymentSettingsForm, SubscriptionTierForm, CourseForm, ModuleForm, LessonForm, SocialLinkForm
-from utils import save_uploaded_file, calculate_poll_percentages, get_youtube_embed_url, get_video_info, slugify
+from utils import save_uploaded_file, calculate_poll_percentages, get_youtube_embed_url, get_video_info, slugify, load_whatsapp_settings
 from clerk_auth import clerk_auth_required, get_clerk_user, get_clerk_user_id
 import razorpay
 import os
@@ -76,26 +76,11 @@ def inject_section_visibility():
     except Exception:
         site_settings = {}
 
-    # WhatsApp support phone and chat link for support buttons
-    wa_support_phone = ''
-    whatsapp_link = 'https://wa.me/message/TYMT7KS4JVF7F1'  # default fallback
-    try:
-        import re as _re
-        wa_rec = SiteContent.query.filter_by(content_key='whatsapp_settings').first()
-        if wa_rec:
-            wa_data = json.loads(wa_rec.content_data)
-            raw = wa_data.get('support_phone', '')
-            digits = _re.sub(r'[^0-9]', '', raw)
-            if len(digits) == 10:
-                digits = '91' + digits
-            wa_support_phone = digits
-            # Full WhatsApp chat link (takes priority over phone number)
-            whatsapp_link = wa_data.get('whatsapp_link', '').strip()
-            # Fall back to building wa.me link from phone if no custom link set
-            if not whatsapp_link and digits:
-                whatsapp_link = f'https://wa.me/{digits}'
-    except Exception:
-        pass
+    # WhatsApp support phone and mobile-compatible chat links
+    _wa = load_whatsapp_settings()
+    wa_support_phone = _wa['phone_digits']
+    whatsapp_link = _wa['whatsapp_link']
+    whatsapp_web_link = _wa['whatsapp_web_link']
 
     # Announcement banner
     try:
@@ -134,6 +119,7 @@ def inject_section_visibility():
         'course_user': get_course_user(),
         'wa_support_phone': wa_support_phone,
         'whatsapp_link': whatsapp_link,
+        'whatsapp_web_link': whatsapp_web_link,
         'announcement': announcement,
         'seo_config': seo_config,
     }

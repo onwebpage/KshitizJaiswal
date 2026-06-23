@@ -259,8 +259,11 @@
                         <div class="footer-whatsapp-block">
                             <p class="footer-whatsapp-label">Need help? Chat with us directly</p>
                             <a href="{{ whatsapp_link if whatsapp_link else '#' }}"
-                               target="_blank" rel="noopener noreferrer"
-                               class="footer-whatsapp-btn{% if not whatsapp_link %} disabled{% endif %}"
+                               {% if whatsapp_link %}
+                               data-whatsapp-link="{{ whatsapp_link }}"
+                               data-whatsapp-fallback="{{ whatsapp_web_link or whatsapp_link }}"
+                               {% endif %}
+                               class="footer-whatsapp-btn js-whatsapp-link{% if not whatsapp_link %} disabled{% endif %}"
                                {% if not whatsapp_link %}aria-disabled="true"{% endif %}>
                                 <i class="fab fa-whatsapp me-2"></i>WhatsApp Support
                             </a>
@@ -806,6 +809,7 @@
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     
     <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/whatsapp.js') }}"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     
     <!-- Clerk Authentication Script -->

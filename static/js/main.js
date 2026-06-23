@@ -469,11 +469,15 @@
                 } else if (this.classList.contains('linkedin')) {
                     shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${url}`;
                 } else if (this.classList.contains('whatsapp')) {
-                    shareUrl = `https://wa.me/?text=${title}%20${url}`;
+                    shareUrl = `https://api.whatsapp.com/send?text=${title}%20${url}`;
                 }
                 
                 if (shareUrl) {
-                    window.open(shareUrl, '_blank', 'width=600,height=400');
+                    if (this.classList.contains('whatsapp') && window.openWhatsApp) {
+                        window.openWhatsApp(shareUrl);
+                    } else {
+                        window.open(shareUrl, '_blank', 'width=600,height=400');
+                    }
                 }
             });
         });

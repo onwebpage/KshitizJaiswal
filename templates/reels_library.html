@@ -179,6 +179,26 @@
             <a href="{{ url_for('reels_library') }}" class="btn btn-primary mt-3">Clear Filters</a>
         </div>
         {% endif %}
+
+        {% if whatsapp_link %}
+        <div class="reels-wa-banner mt-5">
+            <div class="reels-wa-inner">
+                <div class="reels-wa-icon">
+                    <i class="fab fa-whatsapp"></i>
+                </div>
+                <div class="reels-wa-text">
+                    <h5 class="mb-1">Want to discuss a reel?</h5>
+                    <p class="mb-0">Chat with us on WhatsApp — we'd love to hear your thoughts!</p>
+                </div>
+                <a href="{{ whatsapp_link }}"
+                   data-whatsapp-link="{{ whatsapp_link }}"
+                   data-whatsapp-fallback="{{ whatsapp_web_link or whatsapp_link }}"
+                   class="reels-wa-btn js-whatsapp-link">
+                    <i class="fab fa-whatsapp me-2"></i>Chat on WhatsApp
+                </a>
+            </div>
+        </div>
+        {% endif %}
     </div>
 </section>
 
@@ -321,6 +341,65 @@
     background: #f8f9fa;
     border-radius: 12px;
     padding: 4rem 2rem;
+}
+
+/* ── WhatsApp CTA ─────────────────────────────────── */
+.reels-wa-banner {
+    background: linear-gradient(135deg, #1a0000 0%, #3d0000 50%, #1a0000 100%);
+    border-radius: 18px;
+    padding: 2px;
+    box-shadow: 0 8px 28px rgba(204, 0, 0, 0.18);
+}
+.reels-wa-inner {
+    background: linear-gradient(135deg, #140000 0%, #2d0505 60%, #1a0000 100%);
+    border-radius: 16px;
+    padding: 24px 28px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    border: 1px solid rgba(204, 0, 0, 0.25);
+}
+.reels-wa-icon {
+    width: 56px;
+    height: 56px;
+    background: #25D366;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 1.6rem;
+    color: #fff;
+}
+.reels-wa-text { flex: 1; color: #fff; min-width: 180px; }
+.reels-wa-text h5 { font-size: 1.05rem; font-weight: 700; margin-bottom: 4px; }
+.reels-wa-text p { font-size: 0.88rem; opacity: 0.78; margin: 0; }
+.reels-wa-btn {
+    display: inline-flex;
+    align-items: center;
+    background: #25D366;
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.92rem;
+    padding: 12px 24px;
+    border-radius: 50px;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s;
+    box-shadow: 0 4px 16px rgba(37, 211, 102, 0.3);
+    flex-shrink: 0;
+}
+.reels-wa-btn:hover {
+    background: #128C7E;
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(37, 211, 102, 0.4);
+    text-decoration: none;
+}
+@media (max-width: 768px) {
+    .reels-wa-inner { padding: 20px; flex-direction: column; text-align: center; }
+    .reels-wa-btn { width: 100%; justify-content: center; }
 }
 </style>
 {% endblock %}

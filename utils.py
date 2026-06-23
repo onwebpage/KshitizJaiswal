@@ -477,3 +477,122 @@ def get_readable_table_name(table_name):
     
     # Default conversion: replace underscores with spaces and title case
     return table_name.replace('_', ' ').title()
+
+
+def normalize_phone_digits(phone):
+    """Strip a phone value to E.164 digits (defaults 10-digit Indian numbers to 91 prefix)."""
+    digits = re.sub(r'[^0-9]', '', phone or '')
+    if len(digits) == 10:
+        digits = '91' + digits
+    return digits
+
+
+def _normalize_whatsapp_link(link):
+    """Convert any WhatsApp URL to a mobile-compatible https://api.whatsapp.com form."""
+    link = (link or '').strip()
+    if not link:
+        return ''
+
+    if link.startswith('http://'):
+        link = 'https://' + link[7:]
+
+    lower = link.lower()
+
+    if lower.startswith('whatsapp://'):
+        from urllib.parse import urlparse, parse_qs
+        parsed = urlparse(link.replace('whatsapp://', 'https://', 1))
+        qs = parse_qs(parsed.query)
+        phone = normalize_phone_digits((qs.get('phone') or [''])[0])
+        text = (qs.get('text') or [''])[0]
+        if phone:
+            base = f'https://api.whatsapp.com/send?phone={phone}'
+            return f'{base}&text={text}' if text else base
+        return link
+
+    if 'chat.whatsapp.com' in lower:
+        return link
+
+    msg_match = re.match(r'https?://(?:wa\.me|api\.whatsapp\.com)/message/([A-Za-z0-9]+)', link, re.I)
+    if msg_match:
+        return f'https://api.whatsapp.com/message/{msg_match.group(1)}'
+
+    phone_match = re.match(r'https?://wa\.me/(\+?\d[\d\s\-]*)(\?.*)?$', link, re.I)
+    if phone_match:
+        digits = normalize_phone_digits(phone_match.group(1))
+        suffix = phone_match.group(2) or ''
+        if digits:
+            base = f'https://api.whatsapp.com/send?phone={digits}'
+            if suffix:
+                if suffix.startswith('?'):
+                    suffix = '&' + suffix[1:]
+                return base + suffix
+            return base
+
+    if 'web.whatsapp.com/send' in lower:
+        return link.replace('web.whatsapp.com', 'api.whatsapp.com')
+
+    if lower.startswith('https://api.whatsapp.com/'):
+        return link
+
+    return link
+
+
+def _whatsapp_web_fallback(primary_url, phone_digits=''):
+    """Build a web.whatsapp.com fallback for desktop browsers without the app."""
+    msg_match = re.search(r'api\.whatsapp\.com/message/([A-Za-z0-9]+)', primary_url)
+    if msg_match:
+        return primary_url
+
+    phone_match = re.search(r'[?&]phone=(\d+)', primary_url)
+    if phone_match:
+        return f'https://web.whatsapp.com/send?phone={phone_match.group(1)}'
+    if phone_digits:
+        return f'https://web.whatsapp.com/send?phone={phone_digits}'
+    return primary_url
+
+
+def build_whatsapp_urls(custom_link='', support_phone=''):
+    """Return normalized WhatsApp chat URLs for mobile and desktop fallback."""
+    custom_link = (custom_link or '').strip()
+    phone_digits = normalize_phone_digits(support_phone)
+
+    url = ''
+    if custom_link:
+        url = _normalize_whatsapp_link(custom_link)
+    elif phone_digits:
+        url = f'https://api.whatsapp.com/send?phone={phone_digits}'
+
+    web_url = _whatsapp_web_fallback(url, phone_digits) if url else ''
+    return {'url': url, 'web_url': web_url, 'phone_digits': phone_digits}
+
+
+_DEFAULT_WA_MESSAGE_CODE = 'TYMT7KS4JVF7F1'
+
+
+def load_whatsapp_settings():
+    """Load WhatsApp support settings from DB with mobile-safe URL normalization."""
+    default_url = f'https://api.whatsapp.com/message/{_DEFAULT_WA_MESSAGE_CODE}'
+    result = {
+        'support_phone': '',
+        'phone_digits': '',
+        'whatsapp_link': default_url,
+        'whatsapp_web_link': default_url,
+    }
+    try:
+        from models import SiteContent
+        import json
+
+        wa_rec = SiteContent.query.filter_by(content_key='whatsapp_settings').first()
+        if wa_rec:
+            wa_data = json.loads(wa_rec.content_data)
+            raw_phone = wa_data.get('support_phone', '')
+            raw_link = wa_data.get('whatsapp_link', '').strip()
+            result['support_phone'] = raw_phone
+            urls = build_whatsapp_urls(raw_link, raw_phone)
+            if urls['url']:
+                result['whatsapp_link'] = urls['url']
+                result['whatsapp_web_link'] = urls['web_url']
+                result['phone_digits'] = urls['phone_digits']
+    except Exception:
+        pass
+    return result

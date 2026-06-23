@@ -207,7 +207,7 @@
         {% endif %}
 
         <!-- WhatsApp CTA Banner -->
-        {% set wa_href = whatsapp_link if whatsapp_link else '#' %}
+        {% if whatsapp_link %}
         <div class="courses-wa-banner mt-5">
             <div class="courses-wa-inner">
                 <div class="courses-wa-icon">
@@ -220,11 +220,15 @@
                     <h5 class="mb-1">Have questions about a course?</h5>
                     <p class="mb-0 opacity-75">Chat with us on WhatsApp — we reply fast!</p>
                 </div>
-                <a href="{{ wa_href }}" target="_blank" rel="noopener noreferrer" class="courses-wa-btn">
+                <a href="{{ whatsapp_link }}"
+                   data-whatsapp-link="{{ whatsapp_link }}"
+                   data-whatsapp-fallback="{{ whatsapp_web_link or whatsapp_link }}"
+                   class="courses-wa-btn js-whatsapp-link">
                     <i class="fab fa-whatsapp me-2"></i>Chat on WhatsApp
                 </a>
             </div>
         </div>
+        {% endif %}
     </div>
 </section>
 

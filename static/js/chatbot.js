@@ -83,7 +83,11 @@
 
         // WhatsApp button
         if (data.show_whatsapp && data.whatsapp_url) {
-            inner += '<a href="' + esc(data.whatsapp_url) + '" target="_blank" rel="noopener" class="cb-wa-btn">'
+            var waFallback = data.whatsapp_web_url || data.whatsapp_url;
+            inner += '<a href="' + esc(data.whatsapp_url) + '"'
+                   + ' data-whatsapp-link="' + esc(data.whatsapp_url) + '"'
+                   + ' data-whatsapp-fallback="' + esc(waFallback) + '"'
+                   + ' class="cb-wa-btn js-whatsapp-link">'
                    + '<i class="fab fa-whatsapp"></i> Chat on WhatsApp</a>';
         }
 
@@ -99,6 +103,8 @@
         // Attach contact form submit
         var fsubmit = div.querySelector('.cb-fsubmit');
         if (fsubmit) fsubmit.addEventListener('click', submitInquiry);
+
+        if (window.bindWhatsAppLinks) window.bindWhatsAppLinks();
 
         // Set quick replies
         if (data.quick_replies && data.quick_replies.length) {
