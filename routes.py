@@ -712,16 +712,54 @@ def admin_dashboard():
     """Admin dashboard"""
     if 'admin_logged_in' not in session:
         return redirect(url_for('admin_login'))
-    
-    # already imported - Subscriber
+
     content = DataManager.get_content()
     subscribers = [s.to_dict() for s in Subscriber.query.all()]
     reels_section_visible = SiteConfig.get('reels_section_visible', 'true') == 'true'
 
+    # Build real recent activities from DB
+    recent_activities = []
+    try:
+        for r in Reel.query.order_by(Reel.created_at.desc()).limit(5).all():
+            if r.created_at:
+                recent_activities.append({
+                    'icon': 'fa-video', 'color': 'primary',
+                    'text': f'Reel added: <strong>{r.title[:50]}</strong>',
+                    'timestamp': r.created_at,
+                })
+        for s in Subscriber.query.order_by(Subscriber.subscribed_at.desc()).limit(5).all():
+            if s.subscribed_at:
+                recent_activities.append({
+                    'icon': 'fa-user-plus', 'color': 'success',
+                    'text': f'New subscriber: <strong>{s.name}</strong>',
+                    'timestamp': s.subscribed_at,
+                })
+        for o in Opinion.query.order_by(Opinion.created_at.desc()).limit(3).all():
+            if o.created_at:
+                recent_activities.append({
+                    'icon': 'fa-poll', 'color': 'info',
+                    'text': f'Opinion created: <strong>{o.title[:50]}</strong>',
+                    'timestamp': o.created_at,
+                })
+        for c in Course.query.order_by(Course.created_at.desc()).limit(3).all():
+            if c.created_at:
+                recent_activities.append({
+                    'icon': 'fa-book', 'color': 'warning',
+                    'text': f'Course added: <strong>{c.title[:50]}</strong>',
+                    'timestamp': c.created_at,
+                })
+        recent_activities.sort(key=lambda x: x['timestamp'], reverse=True)
+        recent_activities = recent_activities[:10]
+    except Exception as _e:
+        logging.warning(f'Dashboard recent activities query error: {_e}')
+        db.session.rollback()
+        recent_activities = []
+
     return render_template('admin/dashboard.html',
-                         content=content,
-                         subscribers=subscribers,
-                         reels_section_visible=reels_section_visible)
+                           content=content,
+                           subscribers=subscribers,
+                           reels_section_visible=reels_section_visible,
+                           recent_activities=recent_activities)
 
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
@@ -1465,7 +1503,7 @@ def admin_hero_content():
 
         db.session.commit()
         flash('Hero content updated successfully!', 'success')
-        return redirect(url_for('admin_dashboard'))
+        return redirect(url_for('admin_hero_content'))
 
     # Pre-populate text fields; file inputs cannot be pre-populated
     if request.method == 'GET':
@@ -1507,7 +1545,7 @@ def admin_payment_settings():
         
         db.session.commit()
         flash('Payment settings updated successfully!', 'success')
-        return redirect(url_for('admin_dashboard'))
+        return redirect(url_for('admin_payment_settings'))
     
     # Pre-populate form with current data (hide secret for security)
     if request.method == 'GET':
@@ -2799,7 +2837,7 @@ def admin_content_manager():
                 auto    = request.form.get(f'stat_auto_{idx}', '').strip()
                 visible = request.form.get(f'stat_visible_{idx}', '1')
                 if icon.strip() or label:
-                    stats.append({'icon': icon.strip(), 'label': label, 'value': value, 'auto': auto, 'visible': visible})
+                    stats.append({'icon': icon.strip(), 'label': label, 'value': value, 'auto': auto, 'is_active': visible == '1'})
                 idx += 1
             data   = {'title': title, 'subtitle': subtitle, 'stats': stats}
             record = SiteContent.query.filter_by(content_key='statistics_data').first()
@@ -2940,24 +2978,100 @@ def admin_email_broadcast():
     """Email Broadcast to Subscribers"""
     if 'admin_logged_in' not in session:
         return redirect(url_for('admin_login'))
-    
+
     if request.method == 'POST':
-        subject = request.form.get('subject')
-        message = request.form.get('message')
-        
+        subject = request.form.get('subject', '').strip()
+        message = request.form.get('message', '').strip()
+
+        if not subject or not message:
+            flash('Subject and message are required.', 'error')
+            return redirect(url_for('admin_email_broadcast'))
+
         subscribers = Subscriber.query.all()
-        subscriber_emails = [s.email for s in subscribers]
-        
-        # Note: This would require email service integration (SendGrid, etc.)
-        # For now, we'll just show the preview
-        flash(f'Email preview ready! Would send to {len(subscriber_emails)} subscribers. (Email service integration required)', 'info')
-        
-        return render_template('admin/email_broadcast.html',
-                             subject=subject,
-                             message=message,
-                             subscriber_count=len(subscriber_emails),
-                             preview_mode=True)
-    
+        subscriber_emails = [s.email for s in subscribers if s.email]
+
+        if not subscriber_emails:
+            flash('No subscribers found to send to.', 'warning')
+            return redirect(url_for('admin_email_broadcast'))
+
+        # Load SMTP settings from DB (configured via WhatsApp/Email Settings page)
+        email_content = SiteContent.query.filter_by(content_key='email_settings').first()
+        email_settings = json.loads(email_content.content_data) if email_content else {}
+
+        smtp_host     = (email_settings.get('smtp_host', '') or os.environ.get('SMTP_HOST', '')).strip()
+        smtp_port_str = email_settings.get('smtp_port', '') or os.environ.get('SMTP_PORT', '587')
+        smtp_user     = (email_settings.get('smtp_user', '') or os.environ.get('SMTP_USER', '')).strip()
+        smtp_password = (email_settings.get('smtp_password', '') or os.environ.get('SMTP_PASSWORD', '')).strip()
+        from_name     = (email_settings.get('from_name', '') or 'Kshitiz Jaiswal').strip()
+        from_email    = (email_settings.get('from_email', '') or smtp_user).strip()
+
+        try:
+            smtp_port = int(smtp_port_str)
+        except (ValueError, TypeError):
+            smtp_port = 587
+
+        if not smtp_host or not smtp_user or not smtp_password:
+            flash(
+                f'SMTP not configured. Please set SMTP credentials in '
+                f'WhatsApp Settings → Email Settings first. '
+                f'Email would have been sent to {len(subscriber_emails)} subscribers.',
+                'warning'
+            )
+            return render_template('admin/email_broadcast.html',
+                                   subject=subject, message=message,
+                                   subscriber_count=len(subscriber_emails),
+                                   preview_mode=True)
+
+        # Send actual emails via SMTP
+        import smtplib
+        from email.mime.text import MIMEText
+        from email.mime.multipart import MIMEMultipart
+
+        html_body = (
+            f'<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">'
+            f'<h2 style="color:#8B0000;">{subject}</h2>'
+            f'<div style="white-space:pre-wrap;line-height:1.7;color:#333;">{message}</div>'
+            f'<hr style="margin-top:30px;border:none;border-top:1px solid #eee;">'
+            f'<p style="color:#999;font-size:12px;margin-top:12px;">'
+            f'You are receiving this because you subscribed to Kshitiz Jaiswal\'s newsletter. '
+            f'</p></div>'
+        )
+
+        sent = 0
+        failed = 0
+        try:
+            server = smtplib.SMTP(smtp_host, smtp_port, timeout=15)
+            server.ehlo()
+            server.starttls()
+            server.login(smtp_user, smtp_password)
+
+            for addr in subscriber_emails:
+                try:
+                    msg = MIMEMultipart('alternative')
+                    msg['Subject'] = subject
+                    msg['From']    = f'{from_name} <{from_email}>'
+                    msg['To']      = addr
+                    msg.attach(MIMEText(message, 'plain', 'utf-8'))
+                    msg.attach(MIMEText(html_body, 'html', 'utf-8'))
+                    server.sendmail(from_email, addr, msg.as_string())
+                    sent += 1
+                except Exception as _e:
+                    logging.warning(f'Email to {addr} failed: {_e}')
+                    failed += 1
+
+            server.quit()
+
+            if failed:
+                flash(f'Sent to {sent} subscribers. {failed} failed — check logs.', 'warning')
+            else:
+                flash(f'Email sent successfully to {sent} subscribers!', 'success')
+
+        except Exception as exc:
+            logging.error(f'SMTP broadcast error: {exc}')
+            flash(f'SMTP connection failed: {exc}. Check your email settings.', 'error')
+
+        return redirect(url_for('admin_email_broadcast'))
+
     subscriber_count = Subscriber.query.count()
     return render_template('admin/email_broadcast.html', subscriber_count=subscriber_count)
 
@@ -4332,17 +4446,13 @@ def admin_seo():
             key   = page['key']
             title = request.form.get(f'seo_{key}_title', '').strip()
             desc  = request.form.get(f'seo_{key}_description', '').strip()
-            if title:
-                SiteConfig.set(f'seo_{key}_title', title)
-            if desc:
-                SiteConfig.set(f'seo_{key}_description', desc)
+            SiteConfig.set(f'seo_{key}_title', title)
+            SiteConfig.set(f'seo_{key}_description', desc)
 
         og_image       = request.form.get('seo_og_image', '').strip()
         twitter_handle = request.form.get('seo_twitter_handle', '').strip()
-        if og_image:
-            SiteConfig.set('seo_og_image', og_image)
-        if twitter_handle:
-            SiteConfig.set('seo_twitter_handle', twitter_handle)
+        SiteConfig.set('seo_og_image', og_image)
+        SiteConfig.set('seo_twitter_handle', twitter_handle)
 
         flash('SEO settings saved successfully!', 'success')
         return redirect(url_for('admin_seo'))

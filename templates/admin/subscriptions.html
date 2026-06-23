@@ -1,232 +1,200 @@
-{% extends "base.html" %}
+{% extends "admin/admin_base.html" %}
 
 {% block title %}AutoPay Subscriptions — Admin{% endblock %}
 
-{% block content %}
-<div class="admin-section">
-    <div class="container-fluid">
-        <div class="row">
-            <!-- Sidebar -->
-            <div class="col-lg-3 col-md-4">
-                <div class="admin-sidebar">
-                    <div class="admin-header">
-                        <h4><i class="fas fa-cog me-2"></i>Admin Panel</h4>
-                        <a href="{{ url_for('admin_logout') }}" class="btn btn-sm btn-outline-danger">
-                            <i class="fas fa-sign-out-alt me-1"></i>Logout
-                        </a>
-                    </div>
-                    <div class="admin-nav">
-                        <a href="{{ url_for('admin_dashboard') }}" class="admin-nav-item">
-                            <i class="fas fa-home me-2"></i>Dashboard
-                        </a>
-                        <a href="{{ url_for('admin_subscriptions') }}" class="admin-nav-item active">
-                            <i class="fas fa-sync-alt me-2"></i>AutoPay Subscriptions
-                        </a>
-                        <a href="{{ url_for('admin_subscription_tiers') }}" class="admin-nav-item">
-                            <i class="fas fa-crown me-2"></i>Subscription Tiers
-                        </a>
-                        <a href="{{ url_for('admin_payment_settings') }}" class="admin-nav-item">
-                            <i class="fas fa-credit-card me-2"></i>Payment Settings
-                        </a>
-                    </div>
+{% block admin_content %}
+<div class="container-fluid p-4">
+
+    <div class="admin-header mb-3">
+        <h2><i class="fas fa-sync-alt me-2"></i>AutoPay Subscriptions</h2>
+        <span class="badge bg-success fs-6">{{ counts.total }} total</span>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ 'danger' if category == 'error' else ('warning' if category == 'warning' else 'success') }} alert-dismissible fade show">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Summary Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="admin-card text-center py-3">
+                <div class="fs-3 fw-bold text-success">{{ counts.active }}</div>
+                <div class="small text-muted">Active</div>
             </div>
-
-            <!-- Main Content -->
-            <div class="col-lg-9 col-md-8">
-                <div class="admin-content">
-                    <div class="admin-header">
-                        <h2><i class="fas fa-sync-alt me-2"></i>AutoPay Subscriptions</h2>
-                        <span class="badge bg-success fs-6">{{ counts.total }} total</span>
-                    </div>
-
-                    {% with messages = get_flashed_messages(with_categories=true) %}
-                        {% if messages %}
-                            {% for category, message in messages %}
-                                <div class="alert alert-{{ 'danger' if category == 'error' else ('warning' if category == 'warning' else 'success') }} alert-dismissible fade show">
-                                    {{ message }}
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                                </div>
-                            {% endfor %}
-                        {% endif %}
-                    {% endwith %}
-
-                    <!-- Summary Cards -->
-                    <div class="row g-3 mb-4">
-                        <div class="col-6 col-md-3">
-                            <div class="admin-card text-center py-3">
-                                <div class="fs-3 fw-bold text-success">{{ counts.active }}</div>
-                                <div class="small text-muted">Active</div>
-                            </div>
-                        </div>
-                        <div class="col-6 col-md-3">
-                            <div class="admin-card text-center py-3">
-                                <div class="fs-3 fw-bold text-primary">{{ counts.authenticated }}</div>
-                                <div class="small text-muted">Authenticated</div>
-                            </div>
-                        </div>
-                        <div class="col-6 col-md-3">
-                            <div class="admin-card text-center py-3">
-                                <div class="fs-3 fw-bold text-warning">{{ counts.halted + counts.pending }}</div>
-                                <div class="small text-muted">Halted / Pending</div>
-                            </div>
-                        </div>
-                        <div class="col-6 col-md-3">
-                            <div class="admin-card text-center py-3">
-                                <div class="fs-3 fw-bold text-danger">₹{{ counts.active_revenue }}</div>
-                                <div class="small text-muted">Est. per cycle</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Webhook Setup Alert -->
-                    <div class="alert alert-warning d-flex gap-2 align-items-start mb-4" style="border-radius:10px;">
-                        <i class="fas fa-exclamation-triangle mt-1 flex-shrink-0"></i>
-                        <div>
-                            <strong>Webhook Setup Required for Reliable AutoPay</strong><br>
-                            <span class="small">In your <a href="https://dashboard.razorpay.com/app/webhooks" target="_blank">Razorpay Dashboard → Webhooks</a>, add:
-                            <code>{{ request.host_url }}razorpay/webhook</code> and set the secret as <code>RAZORPAY_WEBHOOK_SECRET</code> in Replit Secrets.
-                            Subscribe to: <em>subscription.charged, subscription.activated, subscription.halted, subscription.cancelled, subscription.completed, payment.failed</em></span>
-                        </div>
-                    </div>
-
-                    <!-- Status Filter -->
-                    <div class="mb-3 d-flex flex-wrap gap-2">
-                        <a href="{{ url_for('admin_subscriptions') }}" class="btn btn-sm {% if not status_filter %}btn-dark{% else %}btn-outline-secondary{% endif %}">
-                            All ({{ counts.total }})
-                        </a>
-                        {% for s, label, cls in [
-                            ('active','Active','success'),
-                            ('authenticated','Authenticated','primary'),
-                            ('created','Created','info'),
-                            ('pending','Pending','warning'),
-                            ('halted','Halted','danger'),
-                            ('cancelled','Cancelled','secondary'),
-                            ('completed','Completed','dark'),
-                            ('expired','Expired','secondary')
-                        ] %}
-                        {% if counts[s] > 0 or status_filter == s %}
-                        <a href="{{ url_for('admin_subscriptions', status=s) }}"
-                            class="btn btn-sm {% if status_filter == s %}btn-{{ cls }}{% else %}btn-outline-{{ cls }}{% endif %}">
-                            {{ label }} ({{ counts[s] }})
-                        </a>
-                        {% endif %}
-                        {% endfor %}
-                    </div>
-
-                    <!-- Subscriptions Table -->
-                    <div class="admin-card">
-                        {% if subscriptions %}
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Subscriber</th>
-                                        <th>Tier</th>
-                                        <th>Amount</th>
-                                        <th>Status</th>
-                                        <th>Paid</th>
-                                        <th>Razorpay ID</th>
-                                        <th>Created</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for sub in subscriptions %}
-                                    {% set d = sub.to_dict() %}
-                                    <tr>
-                                        <td class="text-muted small">{{ sub.id }}</td>
-                                        <td>
-                                            {% if d.name %}<div class="fw-semibold">{{ d.name }}</div>{% endif %}
-                                            {% if d.email %}<div class="small text-muted">{{ d.email }}</div>{% endif %}
-                                            {% if d.phone %}<div class="small text-muted">+91 {{ d.phone }}</div>{% endif %}
-                                            {% if not d.name and not d.email %}<span class="text-muted small">Anonymous</span>{% endif %}
-                                        </td>
-                                        <td><span class="badge bg-secondary">{{ d.tier_name or '—' }}</span></td>
-                                        <td class="fw-bold text-success">₹{{ d.amount_rupees }}</td>
-                                        <td>
-                                            {% if d.status == 'active' %}
-                                                <span class="badge bg-success">Active</span>
-                                            {% elif d.status == 'authenticated' %}
-                                                <span class="badge bg-primary">Authenticated</span>
-                                            {% elif d.status == 'created' %}
-                                                <span class="badge bg-info text-dark">Created</span>
-                                            {% elif d.status == 'pending' %}
-                                                <span class="badge bg-warning text-dark">Pending</span>
-                                            {% elif d.status == 'halted' %}
-                                                <span class="badge bg-danger">Halted</span>
-                                            {% elif d.status == 'cancelled' %}
-                                                <span class="badge bg-secondary">Cancelled</span>
-                                            {% elif d.status == 'completed' %}
-                                                <span class="badge bg-dark">Completed</span>
-                                            {% elif d.status == 'expired' %}
-                                                <span class="badge bg-secondary">Expired</span>
-                                            {% else %}
-                                                <span class="badge bg-light text-dark">{{ d.status }}</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            <span class="fw-semibold">{{ d.paid_count }}</span>
-                                            <span class="text-muted small">/{{ d.total_count }}</span>
-                                        </td>
-                                        <td>
-                                            <code class="small">{{ d.razorpay_subscription_id }}</code>
-                                        </td>
-                                        <td class="small text-muted text-nowrap">{{ d.created_at }}</td>
-                                        <td>
-                                            {% if sub.status not in ['cancelled','completed','expired'] %}
-                                            <form method="POST"
-                                                  action="{{ url_for('admin_cancel_subscription', sub_id=sub.id) }}"
-                                                  onsubmit="return confirm('Cancel this subscription immediately? This cannot be undone.')">
-                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Cancel Subscription">
-                                                    <i class="fas fa-times-circle me-1"></i>Cancel
-                                                </button>
-                                            </form>
-                                            {% else %}
-                                            <span class="text-muted small">—</span>
-                                            {% endif %}
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                        {% else %}
-                        <div class="text-center py-5">
-                            <i class="fas fa-sync-alt fa-3x text-muted mb-3"></i>
-                            <h5 class="text-muted">No subscriptions yet</h5>
-                            <p class="text-muted">When users click "AutoPay" on the support section and complete the mandate, their subscriptions will appear here.</p>
-                        </div>
-                        {% endif %}
-                    </div>
-
-                    <!-- Help Card -->
-                    <div class="admin-card mt-4">
-                        <h5><i class="fas fa-info-circle me-2 text-primary"></i>AutoPay Status Guide</h5>
-                        <div class="row g-2 mt-1">
-                            <div class="col-md-6">
-                                <ul class="list-unstyled mb-0" style="font-size:.9rem;">
-                                    <li class="mb-1"><span class="badge bg-info text-dark me-2">created</span>Subscription created, user hasn't completed mandate yet</li>
-                                    <li class="mb-1"><span class="badge bg-primary me-2">authenticated</span>Mandate authorized by user (first payment attempted)</li>
-                                    <li class="mb-1"><span class="badge bg-success me-2">active</span>Recurring charge succeeded — supporter is active</li>
-                                    <li class="mb-1"><span class="badge bg-warning text-dark me-2">pending</span>Charge attempted, waiting for confirmation</li>
-                                </ul>
-                            </div>
-                            <div class="col-md-6">
-                                <ul class="list-unstyled mb-0" style="font-size:.9rem;">
-                                    <li class="mb-1"><span class="badge bg-danger me-2">halted</span>Multiple payment failures — subscription paused</li>
-                                    <li class="mb-1"><span class="badge bg-secondary me-2">cancelled</span>Cancelled by user or admin</li>
-                                    <li class="mb-1"><span class="badge bg-dark me-2">completed</span>All billing cycles completed</li>
-                                    <li class="mb-1"><span class="badge bg-secondary me-2">expired</span>Subscription expired</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="admin-card text-center py-3">
+                <div class="fs-3 fw-bold text-primary">{{ counts.authenticated }}</div>
+                <div class="small text-muted">Authenticated</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="admin-card text-center py-3">
+                <div class="fs-3 fw-bold text-warning">{{ counts.halted + counts.pending }}</div>
+                <div class="small text-muted">Halted / Pending</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="admin-card text-center py-3">
+                <div class="fs-3 fw-bold text-danger">₹{{ counts.active_revenue }}</div>
+                <div class="small text-muted">Est. per cycle</div>
             </div>
         </div>
     </div>
+
+    <!-- Webhook Setup Alert -->
+    <div class="alert alert-warning d-flex gap-2 align-items-start mb-4" style="border-radius:10px;">
+        <i class="fas fa-exclamation-triangle mt-1 flex-shrink-0"></i>
+        <div>
+            <strong>Webhook Setup Required for Reliable AutoPay</strong><br>
+            <span class="small">In your <a href="https://dashboard.razorpay.com/app/webhooks" target="_blank">Razorpay Dashboard → Webhooks</a>, add:
+            <code>{{ request.host_url }}razorpay/webhook</code> and set the secret as <code>RAZORPAY_WEBHOOK_SECRET</code> in Replit Secrets.
+            Subscribe to: <em>subscription.charged, subscription.activated, subscription.halted, subscription.cancelled, subscription.completed, payment.failed</em></span>
+        </div>
+    </div>
+
+    <!-- Status Filter -->
+    <div class="mb-3 d-flex flex-wrap gap-2">
+        <a href="{{ url_for('admin_subscriptions') }}" class="btn btn-sm {% if not status_filter %}btn-dark{% else %}btn-outline-secondary{% endif %}">
+            All ({{ counts.total }})
+        </a>
+        {% for s, label, cls in [
+            ('active','Active','success'),
+            ('authenticated','Authenticated','primary'),
+            ('created','Created','info'),
+            ('pending','Pending','warning'),
+            ('halted','Halted','danger'),
+            ('cancelled','Cancelled','secondary'),
+            ('completed','Completed','dark'),
+            ('expired','Expired','secondary')
+        ] %}
+        {% if counts[s] > 0 or status_filter == s %}
+        <a href="{{ url_for('admin_subscriptions', status=s) }}"
+            class="btn btn-sm {% if status_filter == s %}btn-{{ cls }}{% else %}btn-outline-{{ cls }}{% endif %}">
+            {{ label }} ({{ counts[s] }})
+        </a>
+        {% endif %}
+        {% endfor %}
+    </div>
+
+    <!-- Subscriptions Table -->
+    <div class="admin-card">
+        {% if subscriptions %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Subscriber</th>
+                        <th>Tier</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Paid</th>
+                        <th>Razorpay ID</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sub in subscriptions %}
+                    {% set d = sub.to_dict() %}
+                    <tr>
+                        <td class="text-muted small">{{ sub.id }}</td>
+                        <td>
+                            {% if d.name %}<div class="fw-semibold">{{ d.name }}</div>{% endif %}
+                            {% if d.email %}<div class="small text-muted">{{ d.email }}</div>{% endif %}
+                            {% if d.phone %}<div class="small text-muted">+91 {{ d.phone }}</div>{% endif %}
+                            {% if not d.name and not d.email %}<span class="text-muted small">Anonymous</span>{% endif %}
+                        </td>
+                        <td><span class="badge bg-secondary">{{ d.tier_name or '—' }}</span></td>
+                        <td class="fw-bold text-success">₹{{ d.amount_rupees }}</td>
+                        <td>
+                            {% if d.status == 'active' %}
+                                <span class="badge bg-success">Active</span>
+                            {% elif d.status == 'authenticated' %}
+                                <span class="badge bg-primary">Authenticated</span>
+                            {% elif d.status == 'created' %}
+                                <span class="badge bg-info text-dark">Created</span>
+                            {% elif d.status == 'pending' %}
+                                <span class="badge bg-warning text-dark">Pending</span>
+                            {% elif d.status == 'halted' %}
+                                <span class="badge bg-danger">Halted</span>
+                            {% elif d.status == 'cancelled' %}
+                                <span class="badge bg-secondary">Cancelled</span>
+                            {% elif d.status == 'completed' %}
+                                <span class="badge bg-dark">Completed</span>
+                            {% elif d.status == 'expired' %}
+                                <span class="badge bg-secondary">Expired</span>
+                            {% else %}
+                                <span class="badge bg-light text-dark">{{ d.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="fw-semibold">{{ d.paid_count }}</span>
+                            <span class="text-muted small">/{{ d.total_count }}</span>
+                        </td>
+                        <td>
+                            <code class="small">{{ d.razorpay_subscription_id }}</code>
+                        </td>
+                        <td class="small text-muted text-nowrap">{{ d.created_at }}</td>
+                        <td>
+                            {% if sub.status not in ['cancelled','completed','expired'] %}
+                            <form method="POST"
+                                  action="{{ url_for('admin_cancel_subscription', sub_id=sub.id) }}"
+                                  onsubmit="return confirm('Cancel this subscription immediately? This cannot be undone.')">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Cancel Subscription">
+                                    <i class="fas fa-times-circle me-1"></i>Cancel
+                                </button>
+                            </form>
+                            {% else %}
+                            <span class="text-muted small">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-sync-alt fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">No subscriptions yet</h5>
+            <p class="text-muted">When users click "AutoPay" on the support section and complete the mandate, their subscriptions will appear here.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Help Card -->
+    <div class="admin-card mt-4">
+        <h5><i class="fas fa-info-circle me-2 text-primary"></i>AutoPay Status Guide</h5>
+        <div class="row g-2 mt-1">
+            <div class="col-md-6">
+                <ul class="list-unstyled mb-0" style="font-size:.9rem;">
+                    <li class="mb-1"><span class="badge bg-info text-dark me-2">created</span>Subscription created, user hasn't completed mandate yet</li>
+                    <li class="mb-1"><span class="badge bg-primary me-2">authenticated</span>Mandate authorized by user (first payment attempted)</li>
+                    <li class="mb-1"><span class="badge bg-success me-2">active</span>Recurring charge succeeded — supporter is active</li>
+                    <li class="mb-1"><span class="badge bg-warning text-dark me-2">pending</span>Charge attempted, waiting for confirmation</li>
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <ul class="list-unstyled mb-0" style="font-size:.9rem;">
+                    <li class="mb-1"><span class="badge bg-danger me-2">halted</span>Multiple payment failures — subscription paused</li>
+                    <li class="mb-1"><span class="badge bg-secondary me-2">cancelled</span>Cancelled by user or admin</li>
+                    <li class="mb-1"><span class="badge bg-dark me-2">completed</span>All billing cycles completed</li>
+                    <li class="mb-1"><span class="badge bg-secondary me-2">expired</span>Subscription expired</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
 </div>
 {% endblock %}
 

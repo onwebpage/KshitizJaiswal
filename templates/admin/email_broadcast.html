@@ -26,8 +26,9 @@
     {% if preview_mode %}
     <div class="alert alert-warning">
         <i class="fas fa-exclamation-triangle me-2"></i>
-        <strong>Preview Mode:</strong> No emails were sent yet. Configure SMTP in
-        <a href="{{ url_for('admin_site_settings') }}" class="alert-link">Site Settings</a> to enable actual sending.
+        <strong>SMTP not configured:</strong> No emails were sent. Go to
+        <a href="{{ url_for('admin_whatsapp_settings') }}" class="alert-link">WhatsApp &amp; Email Settings</a>
+        to set up SMTP credentials, then try again.
     </div>
     <div class="card mb-4">
         <div class="card-header bg-success text-white">
@@ -42,7 +43,7 @@
     {% endif %}
 
     <form method="POST">
-        <input type="hidden" name="csrf_token" value="{{ form.hidden_tag() if form is defined else '' }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="card mb-4">
             <div class="card-header">
                 <h5 class="mb-0"><i class="fas fa-edit me-2"></i>Compose Email</h5>
@@ -64,7 +65,7 @@
 
         <div class="d-flex gap-2">
             <button type="submit" class="btn btn-primary btn-lg">
-                <i class="fas fa-paper-plane me-2"></i>Preview Email
+                <i class="fas fa-paper-plane me-2"></i>Send to All Subscribers
             </button>
             <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary btn-lg">
                 <i class="fas fa-times me-1"></i>Cancel
@@ -73,10 +74,11 @@
     </form>
 
     <div class="alert alert-secondary mt-4">
-        <h6><i class="fas fa-wrench me-2"></i>To enable actual email delivery:</h6>
-        <p class="mb-1">Go to <a href="{{ url_for('admin_site_settings') }}">Site Settings</a> and configure SMTP credentials, or integrate with an email service:</p>
+        <h6><i class="fas fa-info-circle me-2"></i>How Email Broadcast Works</h6>
         <ul class="mb-0">
-            <li>SendGrid · Mailgun · AWS SES · Resend</li>
+            <li>Emails are sent via your configured SMTP server to every Inner Circle subscriber.</li>
+            <li>To set up SMTP, go to <a href="{{ url_for('admin_whatsapp_settings') }}">WhatsApp &amp; Email Settings</a> and fill in the Email Settings section.</li>
+            <li>Both plain-text and HTML versions are sent automatically.</li>
         </ul>
     </div>
 </div>

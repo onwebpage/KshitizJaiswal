@@ -1,316 +1,278 @@
-{% extends "base.html" %}
+{% extends "admin/admin_base.html" %}
 
 {% block title %}Course Purchases — Admin{% endblock %}
 
-{% block content %}
-<div class="admin-section">
-  <div class="container-fluid">
-    <div class="row">
+{% block admin_content %}
+<div class="container-fluid p-4">
 
-      <!-- Sidebar -->
-      <div class="col-lg-3 col-md-4">
-        <div class="admin-sidebar">
-          <div class="admin-header">
-            <h4><i class="fas fa-cog me-2"></i>Admin Panel</h4>
-            <a href="{{ url_for('admin_logout') }}" class="btn btn-sm btn-outline-danger">
-              <i class="fas fa-sign-out-alt me-1"></i>Logout
-            </a>
-          </div>
-          <div class="admin-nav">
-            <a href="{{ url_for('admin_dashboard') }}" class="admin-nav-item">
-              <i class="fas fa-home me-2"></i>Dashboard
-            </a>
-            <a href="{{ url_for('admin_courses') }}" class="admin-nav-item">
-              <i class="fas fa-book me-2"></i>Courses
-            </a>
-            <a href="{{ url_for('admin_course_purchases') }}" class="admin-nav-item active">
-              <i class="fas fa-shopping-cart me-2"></i>Course Purchases
-            </a>
-            <a href="{{ url_for('admin_users') }}" class="admin-nav-item">
-              <i class="fas fa-user-shield me-2"></i>User Management
-            </a>
-            <a href="{{ url_for('admin_analytics') }}" class="admin-nav-item">
-              <i class="fas fa-chart-line me-2"></i>Analytics
-            </a>
-          </div>
-        </div>
-      </div>
-
-      <!-- Main Content -->
-      <div class="col-lg-9 col-md-8">
-        <div class="admin-content">
-
-          <div class="admin-header mb-3">
-            <div>
-              <h2><i class="fas fa-shopping-cart me-2"></i>Course Purchases</h2>
-              <p class="text-muted mb-0">All course purchases with full buyer details, payment info, and access management.</p>
-            </div>
-          </div>
-
-          {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-              {% for category, message in messages %}
-                <div class="alert alert-{{ 'danger' if category == 'error' else ('warning' if category == 'warning' else 'success') }} alert-dismissible fade show">
-                  {{ message }}
-                  <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-              {% endfor %}
-            {% endif %}
-          {% endwith %}
-
-          <!-- Summary Cards -->
-          <div class="row g-3 mb-4">
-            <div class="col-6 col-md-3">
-              <div class="admin-card text-center py-3">
-                <div class="fs-2 fw-bold text-primary">{{ counts.total }}</div>
-                <div class="small text-muted">Total Purchases</div>
-              </div>
-            </div>
-            <div class="col-6 col-md-3">
-              <div class="admin-card text-center py-3">
-                <div class="fs-2 fw-bold text-success">{{ counts.active }}</div>
-                <div class="small text-muted">Active Access</div>
-              </div>
-            </div>
-            <div class="col-6 col-md-3">
-              <div class="admin-card text-center py-3">
-                <div class="fs-2 fw-bold text-info">{{ counts.accounts_created }}</div>
-                <div class="small text-muted">Accounts Created</div>
-              </div>
-            </div>
-            <div class="col-6 col-md-3">
-              <div class="admin-card text-center py-3">
-                <div class="fs-2 fw-bold text-warning">₹{{ total_revenue }}</div>
-                <div class="small text-muted">Total Revenue</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Search & Filters -->
-          <form method="GET" action="{{ url_for('admin_course_purchases') }}" class="admin-card mb-4">
-            <div class="row g-3 align-items-end">
-              <div class="col-md-5">
-                <label class="form-label small fw-semibold text-muted">SEARCH</label>
-                <div class="input-group">
-                  <span class="input-group-text"><i class="fas fa-search"></i></span>
-                  <input type="text" name="search" value="{{ search }}" class="form-control"
-                         placeholder="Name, email, phone, payment ID…">
-                </div>
-              </div>
-              <div class="col-md-4">
-                <label class="form-label small fw-semibold text-muted">FILTER BY COURSE</label>
-                <select name="course" class="form-select">
-                  <option value="">All Courses</option>
-                  {% for c in all_courses %}
-                  <option value="{{ c.id }}" {{ 'selected' if course_filter == c.id|string else '' }}>
-                    {{ c.title }} (₹{{ c.price }})
-                  </option>
-                  {% endfor %}
-                </select>
-              </div>
-              <div class="col-md-3">
-                <label class="form-label small fw-semibold text-muted">ACCESS STATUS</label>
-                <select name="status" class="form-select">
-                  <option value="">All</option>
-                  <option value="active"   {{ 'selected' if status_filter == 'active'   else '' }}>Active</option>
-                  <option value="revoked"  {{ 'selected' if status_filter == 'revoked'  else '' }}>Revoked</option>
-                  <option value="manual"   {{ 'selected' if status_filter == 'manual'   else '' }}>Manual Grant</option>
-                </select>
-              </div>
-            </div>
-            <div class="d-flex gap-2 mt-3">
-              <button type="submit" class="btn btn-dark btn-sm">
-                <i class="fas fa-filter me-1"></i>Apply Filters
-              </button>
-              {% if search or course_filter or status_filter %}
-              <a href="{{ url_for('admin_course_purchases') }}" class="btn btn-outline-secondary btn-sm">
-                <i class="fas fa-times me-1"></i>Clear
-              </a>
-              {% endif %}
-              <span class="text-muted small align-self-center ms-2">
-                Showing {{ purchases|length }} record{{ 's' if purchases|length != 1 else '' }}
-              </span>
-            </div>
-          </form>
-
-          <!-- Purchases Table -->
-          <div class="admin-card p-0">
-            {% if purchases %}
-            <div class="table-responsive">
-              <table class="table table-hover align-middle mb-0" id="purchasesTable">
-                <thead class="table-dark">
-                  <tr>
-                    <th class="ps-3" style="width:40px">#</th>
-                    <th>Buyer</th>
-                    <th>Course</th>
-                    <th>Payment</th>
-                    <th>Date & Time</th>
-                    <th>Access</th>
-                    <th>Account</th>
-                    <th class="pe-3">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for p in purchases %}
-                  <tr class="{{ 'table-danger' if p.access_revoked else '' }}">
-                    <td class="ps-3 text-muted small">{{ p.id }}</td>
-
-                    <!-- Buyer Info -->
-                    <td>
-                      {% if p.guest_name %}
-                      <div class="fw-semibold">{{ p.guest_name }}</div>
-                      {% endif %}
-                      {% if p.guest_email %}
-                      <div class="small text-muted">
-                        <i class="fas fa-envelope me-1" style="font-size:10px;"></i>{{ p.guest_email }}
-                      </div>
-                      {% endif %}
-                      {% if p.guest_phone %}
-                      <div class="small text-muted">
-                        <i class="fas fa-phone me-1" style="font-size:10px;"></i>{{ p.guest_phone }}
-                      </div>
-                      {% endif %}
-                      {% if p.clerk_user_id %}
-                      <div class="small text-info">
-                        <i class="fas fa-user-check me-1" style="font-size:10px;"></i>
-                        <span title="{{ p.clerk_user_id }}">Clerk User</span>
-                      </div>
-                      {% endif %}
-                      {% if not p.guest_name and not p.guest_email and not p.guest_phone and not p.clerk_user_id %}
-                      <span class="text-muted small">Anonymous</span>
-                      {% endif %}
-                    </td>
-
-                    <!-- Course -->
-                    <td>
-                      <div class="fw-semibold small">{{ p.course.title }}</div>
-                      <div class="text-success fw-bold">₹{{ p.amount_paid }}</div>
-                    </td>
-
-                    <!-- Payment Info -->
-                    <td>
-                      {% if p.payment_status == 'success' %}
-                        <span class="badge bg-success mb-1">Paid</span>
-                      {% elif p.payment_status == 'manual' %}
-                        <span class="badge bg-secondary mb-1">Manual</span>
-                      {% elif p.payment_status == 'pending' %}
-                        <span class="badge bg-warning text-dark mb-1">Pending</span>
-                      {% else %}
-                        <span class="badge bg-light text-dark mb-1">{{ p.payment_status or '—' }}</span>
-                      {% endif %}
-                      {% if p.payment_id and p.payment_id != 'manual_grant_admin' %}
-                      <div class="small font-monospace text-muted" style="font-size:10px;" title="{{ p.payment_id }}">
-                        {{ p.payment_id[:18] }}…
-                      </div>
-                      {% endif %}
-                      {% if p.order_id %}
-                      <div class="small font-monospace text-muted" style="font-size:10px;" title="{{ p.order_id }}">
-                        {{ p.order_id[:18] }}…
-                      </div>
-                      {% endif %}
-                    </td>
-
-                    <!-- Date -->
-                    <td class="small text-nowrap">
-                      {% if p.granted_at %}
-                        <div>{{ p.granted_at.strftime('%d %b %Y') }}</div>
-                        <div class="text-muted">{{ p.granted_at.strftime('%I:%M %p') }}</div>
-                      {% else %}—{% endif %}
-                    </td>
-
-                    <!-- Access Status -->
-                    <td>
-                      {% if p.access_revoked %}
-                        <span class="badge bg-danger">Revoked</span>
-                      {% else %}
-                        <span class="badge bg-success">Active</span>
-                      {% endif %}
-                    </td>
-
-                    <!-- Account Created -->
-                    <td>
-                      {% if p.account_created %}
-                        <span class="badge bg-info text-dark">
-                          <i class="fas fa-check me-1"></i>Created
-                        </span>
-                      {% else %}
-                        <span class="text-muted small">—</span>
-                      {% endif %}
-                    </td>
-
-                    <!-- Actions -->
-                    <td class="pe-3">
-                      {% if not p.access_revoked %}
-                      <form method="POST"
-                            action="{{ url_for('admin_revoke_course_access', purchase_id=p.id) }}"
-                            onsubmit="return confirm('Revoke access for {{ p.guest_name or p.guest_email }}? They will no longer be able to access this course.')">
-                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Revoke Access">
-                          <i class="fas fa-ban me-1"></i>Revoke
-                        </button>
-                      </form>
-                      {% else %}
-                      <form method="POST"
-                            action="{{ url_for('admin_restore_course_access', purchase_id=p.id) }}"
-                            onsubmit="return confirm('Restore course access for {{ p.guest_name or p.guest_email }}?')">
-                        <button type="submit" class="btn btn-sm btn-outline-success" title="Restore Access">
-                          <i class="fas fa-undo me-1"></i>Restore
-                        </button>
-                      </form>
-                      {% endif %}
-                    </td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
-
-            {% else %}
-            <div class="text-center py-5">
-              <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
-              <h5 class="text-muted">
-                {% if search or course_filter or status_filter %}
-                  No purchases match your filters
-                {% else %}
-                  No course purchases yet
-                {% endif %}
-              </h5>
-              <p class="text-muted small">
-                {% if search or course_filter or status_filter %}
-                  <a href="{{ url_for('admin_course_purchases') }}">Clear filters</a> to see all purchases.
-                {% else %}
-                  When someone buys a course, their full details will appear here instantly.
-                {% endif %}
-              </p>
-            </div>
-            {% endif %}
-          </div>
-
-          <!-- Legend -->
-          <div class="admin-card mt-4">
-            <h6 class="fw-semibold mb-3"><i class="fas fa-info-circle me-2 text-primary"></i>Column Guide</h6>
-            <div class="row g-2" style="font-size:.875rem;">
-              <div class="col-md-6">
-                <ul class="list-unstyled mb-0">
-                  <li class="mb-2"><span class="badge bg-success me-2">Paid</span>Verified Razorpay payment</li>
-                  <li class="mb-2"><span class="badge bg-secondary me-2">Manual</span>Granted manually by admin</li>
-                  <li class="mb-2"><span class="badge bg-warning text-dark me-2">Pending</span>Payment initiated, not verified</li>
-                </ul>
-              </div>
-              <div class="col-md-6">
-                <ul class="list-unstyled mb-0">
-                  <li class="mb-2"><span class="badge bg-info text-dark me-2">Created</span>Account auto-created and credentials emailed</li>
-                  <li class="mb-2"><span class="badge bg-danger me-2">Revoked</span>Access blocked by admin (buyer cannot open course)</li>
-                  <li class="mb-2"><span class="badge bg-success me-2">Active</span>Buyer can log in and access their course</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
+  <div class="admin-header mb-3">
+    <div>
+      <h2><i class="fas fa-shopping-cart me-2"></i>Course Purchases</h2>
+      <p class="text-muted mb-0">All course purchases with full buyer details, payment info, and access management.</p>
     </div>
   </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ 'danger' if category == 'error' else ('warning' if category == 'warning' else 'success') }} alert-dismissible fade show">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <!-- Summary Cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="admin-card text-center py-3">
+        <div class="fs-2 fw-bold text-primary">{{ counts.total }}</div>
+        <div class="small text-muted">Total Purchases</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="admin-card text-center py-3">
+        <div class="fs-2 fw-bold text-success">{{ counts.active }}</div>
+        <div class="small text-muted">Active Access</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="admin-card text-center py-3">
+        <div class="fs-2 fw-bold text-info">{{ counts.accounts_created }}</div>
+        <div class="small text-muted">Accounts Created</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="admin-card text-center py-3">
+        <div class="fs-2 fw-bold text-warning">₹{{ total_revenue }}</div>
+        <div class="small text-muted">Total Revenue</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search & Filters -->
+  <form method="GET" action="{{ url_for('admin_course_purchases') }}" class="admin-card mb-4">
+    <div class="row g-3 align-items-end">
+      <div class="col-md-5">
+        <label class="form-label small fw-semibold text-muted">SEARCH</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="fas fa-search"></i></span>
+          <input type="text" name="search" value="{{ search }}" class="form-control"
+                 placeholder="Name, email, phone, payment ID…">
+        </div>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label small fw-semibold text-muted">FILTER BY COURSE</label>
+        <select name="course" class="form-select">
+          <option value="">All Courses</option>
+          {% for c in all_courses %}
+          <option value="{{ c.id }}" {{ 'selected' if course_filter == c.id|string else '' }}>
+            {{ c.title }} (₹{{ c.price }})
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small fw-semibold text-muted">ACCESS STATUS</label>
+        <select name="status" class="form-select">
+          <option value="">All</option>
+          <option value="active"   {{ 'selected' if status_filter == 'active'   else '' }}>Active</option>
+          <option value="revoked"  {{ 'selected' if status_filter == 'revoked'  else '' }}>Revoked</option>
+          <option value="manual"   {{ 'selected' if status_filter == 'manual'   else '' }}>Manual Grant</option>
+        </select>
+      </div>
+    </div>
+    <div class="d-flex gap-2 mt-3">
+      <button type="submit" class="btn btn-dark btn-sm">
+        <i class="fas fa-filter me-1"></i>Apply Filters
+      </button>
+      {% if search or course_filter or status_filter %}
+      <a href="{{ url_for('admin_course_purchases') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-times me-1"></i>Clear
+      </a>
+      {% endif %}
+      <span class="text-muted small align-self-center ms-2">
+        Showing {{ purchases|length }} record{{ 's' if purchases|length != 1 else '' }}
+      </span>
+    </div>
+  </form>
+
+  <!-- Purchases Table -->
+  <div class="admin-card p-0">
+    {% if purchases %}
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0" id="purchasesTable">
+        <thead class="table-dark">
+          <tr>
+            <th class="ps-3" style="width:40px">#</th>
+            <th>Buyer</th>
+            <th>Course</th>
+            <th>Payment</th>
+            <th>Date & Time</th>
+            <th>Access</th>
+            <th>Account</th>
+            <th class="pe-3">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in purchases %}
+          <tr class="{{ 'table-danger' if p.access_revoked else '' }}">
+            <td class="ps-3 text-muted small">{{ p.id }}</td>
+
+            <!-- Buyer Info -->
+            <td>
+              {% if p.guest_name %}
+              <div class="fw-semibold">{{ p.guest_name }}</div>
+              {% endif %}
+              {% if p.guest_email %}
+              <div class="small text-muted">
+                <i class="fas fa-envelope me-1" style="font-size:10px;"></i>{{ p.guest_email }}
+              </div>
+              {% endif %}
+              {% if p.guest_phone %}
+              <div class="small text-muted">
+                <i class="fas fa-phone me-1" style="font-size:10px;"></i>{{ p.guest_phone }}
+              </div>
+              {% endif %}
+              {% if p.clerk_user_id %}
+              <div class="small text-info">
+                <i class="fas fa-user-check me-1" style="font-size:10px;"></i>
+                <span title="{{ p.clerk_user_id }}">Clerk User</span>
+              </div>
+              {% endif %}
+              {% if not p.guest_name and not p.guest_email and not p.guest_phone and not p.clerk_user_id %}
+              <span class="text-muted small">Anonymous</span>
+              {% endif %}
+            </td>
+
+            <!-- Course -->
+            <td>
+              <div class="fw-semibold small">{{ p.course.title }}</div>
+              <div class="text-success fw-bold">₹{{ p.amount_paid }}</div>
+            </td>
+
+            <!-- Payment Info -->
+            <td>
+              {% if p.payment_status == 'success' %}
+                <span class="badge bg-success mb-1">Paid</span>
+              {% elif p.payment_status == 'manual' %}
+                <span class="badge bg-secondary mb-1">Manual</span>
+              {% elif p.payment_status == 'pending' %}
+                <span class="badge bg-warning text-dark mb-1">Pending</span>
+              {% else %}
+                <span class="badge bg-light text-dark mb-1">{{ p.payment_status or '—' }}</span>
+              {% endif %}
+              {% if p.payment_id and p.payment_id != 'manual_grant_admin' %}
+              <div class="small font-monospace text-muted" style="font-size:10px;" title="{{ p.payment_id }}">
+                {{ p.payment_id[:18] }}…
+              </div>
+              {% endif %}
+              {% if p.order_id %}
+              <div class="small font-monospace text-muted" style="font-size:10px;" title="{{ p.order_id }}">
+                {{ p.order_id[:18] }}…
+              </div>
+              {% endif %}
+            </td>
+
+            <!-- Date -->
+            <td class="small text-nowrap">
+              {% if p.granted_at %}
+                <div>{{ p.granted_at.strftime('%d %b %Y') }}</div>
+                <div class="text-muted">{{ p.granted_at.strftime('%I:%M %p') }}</div>
+              {% else %}—{% endif %}
+            </td>
+
+            <!-- Access Status -->
+            <td>
+              {% if p.access_revoked %}
+                <span class="badge bg-danger">Revoked</span>
+              {% else %}
+                <span class="badge bg-success">Active</span>
+              {% endif %}
+            </td>
+
+            <!-- Account Created -->
+            <td>
+              {% if p.account_created %}
+                <span class="badge bg-info text-dark">
+                  <i class="fas fa-check me-1"></i>Created
+                </span>
+              {% else %}
+                <span class="text-muted small">—</span>
+              {% endif %}
+            </td>
+
+            <!-- Actions -->
+            <td class="pe-3">
+              {% if not p.access_revoked %}
+              <form method="POST"
+                    action="{{ url_for('admin_revoke_course_access', purchase_id=p.id) }}"
+                    onsubmit="return confirm('Revoke access for {{ p.guest_name or p.guest_email }}? They will no longer be able to access this course.')">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-sm btn-outline-danger" title="Revoke Access">
+                  <i class="fas fa-ban me-1"></i>Revoke
+                </button>
+              </form>
+              {% else %}
+              <form method="POST"
+                    action="{{ url_for('admin_restore_course_access', purchase_id=p.id) }}"
+                    onsubmit="return confirm('Restore course access for {{ p.guest_name or p.guest_email }}?')">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-sm btn-outline-success" title="Restore Access">
+                  <i class="fas fa-undo me-1"></i>Restore
+                </button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% else %}
+    <div class="text-center py-5">
+      <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
+      <h5 class="text-muted">
+        {% if search or course_filter or status_filter %}
+          No purchases match your filters
+        {% else %}
+          No course purchases yet
+        {% endif %}
+      </h5>
+      <p class="text-muted small">
+        {% if search or course_filter or status_filter %}
+          <a href="{{ url_for('admin_course_purchases') }}">Clear filters</a> to see all purchases.
+        {% else %}
+          When someone buys a course, their full details will appear here instantly.
+        {% endif %}
+      </p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Legend -->
+  <div class="admin-card mt-4">
+    <h6 class="fw-semibold mb-3"><i class="fas fa-info-circle me-2 text-primary"></i>Column Guide</h6>
+    <div class="row g-2" style="font-size:.875rem;">
+      <div class="col-md-6">
+        <ul class="list-unstyled mb-0">
+          <li class="mb-2"><span class="badge bg-success me-2">Paid</span>Verified Razorpay payment</li>
+          <li class="mb-2"><span class="badge bg-secondary me-2">Manual</span>Granted manually by admin</li>
+          <li class="mb-2"><span class="badge bg-warning text-dark me-2">Pending</span>Payment initiated, not verified</li>
+        </ul>
+      </div>
+      <div class="col-md-6">
+        <ul class="list-unstyled mb-0">
+          <li class="mb-2"><span class="badge bg-info text-dark me-2">Created</span>Account auto-created and credentials emailed</li>
+          <li class="mb-2"><span class="badge bg-danger me-2">Revoked</span>Access blocked by admin</li>
+          <li class="mb-2"><span class="badge bg-success me-2">Active</span>Buyer can log in and access their course</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
 </div>
 {% endblock %}
 
