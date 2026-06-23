@@ -3,527 +3,563 @@
 {% block title %}{{ reel.title }} - Kshitiz Jaiswal{% endblock %}
 
 {% block content %}
-<section class="reel-detail-section section-padding">
-    <div class="container-fluid" style="max-width: 1400px;">
-        <!-- Back Button -->
-        <div class="mb-4">
-            <a href="{{ url_for('reels_library') }}" class="btn btn-outline-primary">
-                <i class="fas fa-arrow-left me-2"></i>Back to Library
-            </a>
-        </div>
 
-        <!-- Main Content: Video Left, Info Right -->
-        <div class="row g-4">
-            <!-- Left Side: Video/Thumbnail -->
-            <div class="col-lg-8">
-                <!-- Video Section -->
-                <div class="video-section mb-4">
-                    {% if reel.video_url %}
-                        {% if reel.is_instagram %}
-                        <!-- Instagram direct embed — profile header + bottom bar cropped via CSS -->
-                        <div class="ig-video-wrapper">
-                            <!-- top cover: hides profile picture / name / "View profile" -->
-                            <div class="ig-top-cover"></div>
-                            <iframe
-                                src="{{ reel.embed_url }}"
-                                class="ig-embed-iframe"
-                                frameborder="0"
-                                scrolling="no"
-                                allowtransparency="true"
-                                allowfullscreen="true"
-                                title="{{ reel.title }}">
-                            </iframe>
-                            <!-- bottom cover: hides "View more on Instagram", likes, actions -->
-                            <div class="ig-brand-cover"></div>
-                        </div>
-                        {% else %}
-                        <!-- YouTube Embed with Play/Pause controls -->
-                        <div class="video-container" id="youtube-container">
-                            <iframe id="youtube-player"
-                                src="{{ reel.embed_url }}&enablejsapi=1&rel=0&modestbranding=1&controls=1"
-                                frameborder="0" allowfullscreen
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture">
-                            </iframe>
-                            <div class="video-controls" id="ytControls">
-                                <button class="control-btn" id="ytPlayBtn" title="Play/Pause">
-                                    <i class="fas fa-play" id="ytIcon"></i>
-                                </button>
-                            </div>
-                        </div>
-                        {% endif %}
-                    {% elif reel.thumbnail %}
-                        <div class="video-placeholder">
-                            <img src="{{ url_for('static', filename=reel.thumbnail) if reel.thumbnail and not reel.thumbnail.startswith('http') else reel.thumbnail }}" 
-                                 alt="{{ reel.title }}" class="img-fluid rounded"
-                                 onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/reel-placeholder.svg') }}'">
-                            <div class="video-overlay">
-                                <i class="fas fa-play-circle fa-3x"></i>
-                                <p class="mt-3">Full video coming soon</p>
-                            </div>
-                        </div>
-                    {% else %}
-                        <div class="video-placeholder">
-                            <div class="no-media-placeholder">
-                                <i class="fas fa-video fa-3x mb-3"></i>
-                                <h5>Media coming soon</h5>
-                                <p class="text-muted">Video and thumbnail will be added shortly</p>
-                            </div>
-                        </div>
-                    {% endif %}
-                </div>
-
-                <!-- Title and Meta -->
-                <div class="reel-header mb-4">
-                    <h1 class="reel-title">{{ reel.title }}</h1>
-                    <div class="reel-meta d-flex flex-wrap align-items-center gap-2">
-                        {% if reel.category_tag %}
-                        <span class="badge bg-primary">
-                            {% if reel.category_tag == 'trending' %}🔥 Trending
-                            {% elif reel.category_tag == 'new' %}🆕 New
-                            {% elif reel.category_tag == 'fan_favourite' %}❤ Fan Favourite
-                            {% elif reel.category_tag == 'exclusive' %}⭐ Exclusive
-                            {% elif reel.category_tag == 'must_watch' %}👀 Must Watch
-                            {% elif reel.category_tag == 'behind_scenes' %}🎬 Behind the Scenes
-                            {% else %}{{ reel.category_tag }}{% endif %}
-                        </span>
-                        {% endif %}
-                        {% if reel.topic_tag %}
-                        <span class="badge bg-secondary">
-                            <i class="fas fa-tag me-1"></i>{{ reel.topic_tag }}
-                        </span>
-                        {% endif %}
-                        <span class="text-muted">
-                            <i class="fas fa-eye me-1"></i>{{ reel.view_count }} views
-                        </span>
-
-                        <!-- Platform redirect links removed — videos play directly on site -->
-                    </div>
-                </div>
-
-                <!-- Behind The Thought Section -->
-                <div class="content-section mb-4">
-                    <h3 class="content-title">
-                        <i class="fas fa-lightbulb me-2"></i>Why This Topic?
-                    </h3>
-                    <div class="content-body">
-                        <p>{{ reel.behind_thought }}</p>
-                    </div>
-                </div>
-
-                <!-- More Thoughts / Extra Context -->
-                {% if reel.extra_context %}
-                <div class="content-section mb-4">
-                    <h3 class="content-title">
-                        <i class="fas fa-comment-dots me-2"></i>More Thoughts
-                    </h3>
-                    <div class="content-body">
-                        <p>{{ reel.extra_context }}</p>
-                    </div>
-                </div>
-                {% endif %}
-            </div>
-
-            <!-- Right Side: Info Panels -->
-            <div class="col-lg-4">
-                <!-- Sources Panel -->
-                <div class="info-panel mb-4">
-                    <h4 class="panel-title">
-                        <i class="fas fa-book me-2"></i>Sources
-                    </h4>
-                    {% if reel.sources and reel.sources|length > 0 %}
-                    <ul class="sources-list">
-                        {% for source in reel.sources %}
-                        <li>
-                            <i class="fas fa-external-link-alt me-2"></i>
-                            {% if source.startswith('http://') or source.startswith('https://') %}
-                            <a href="{{ source }}" target="_blank" rel="noopener noreferrer">{{ source }}</a>
-                            {% else %}
-                            {{ source }}
-                            {% endif %}
-                        </li>
-                        {% endfor %}
-                    </ul>
-                    {% else %}
-                    <p class="text-muted mb-0">Sources will be updated soon</p>
-                    {% endif %}
-                </div>
-
-                <!-- Share Panel - Hidden as per user request -->
-                <div class="info-panel mb-4" style="display: none;">
-                    <h4 class="panel-title">
-                        <i class="fas fa-share me-2"></i>Share This
-                    </h4>
-                    <div class="share-buttons">
-                        <a href="#" class="share-btn twitter" title="Share on Twitter">
-                            <i class="fab fa-twitter"></i>
-                        </a>
-                        <a href="#" class="share-btn facebook" title="Share on Facebook">
-                            <i class="fab fa-facebook"></i>
-                        </a>
-                        <a href="#" class="share-btn linkedin" title="Share on LinkedIn">
-                            <i class="fab fa-linkedin"></i>
-                        </a>
-                        <a href="#" class="share-btn whatsapp" title="Share on WhatsApp">
-                            <i class="fab fa-whatsapp"></i>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Related Reels from Same Topic -->
-                {% if related_reels and related_reels|length > 0 %}
-                <div class="info-panel">
-                    <h4 class="panel-title">
-                        <i class="fas fa-list me-2"></i>More from "{{ reel.topic_tag }}"
-                    </h4>
-                    <div class="related-reels-list">
-                        {% for related in related_reels %}
-                        <a href="{{ url_for('reel_detail', reel_id=related.id) }}" class="related-reel-item">
-                            <img src="{{ url_for('static', filename=related.thumbnail) if related.thumbnail and not related.thumbnail.startswith('http') else related.thumbnail }}" 
-                                 alt="{{ related.title }}" class="related-thumbnail"
-                                 onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/reel-placeholder.svg') }}'">
-                            <div class="related-info">
-                                <h6>{{ related.title }}</h6>
-                                <small class="text-muted"><i class="fas fa-eye me-1"></i>{{ related.view_count }} views</small>
-                            </div>
-                        </a>
-                        {% endfor %}
-                    </div>
-                    <a href="{{ url_for('reels_library', topic=reel.topic_tag) }}" class="btn btn-outline-primary btn-sm w-100 mt-3">
-                        <i class="fas fa-th me-1"></i>View All in Topic
-                    </a>
-                </div>
-                {% endif %}
-            </div>
-        </div>
+<!-- ── Hero Strip ────────────────────────────────────────────── -->
+<div class="rd-hero">
+    <div class="rd-hero-inner">
+        <a href="{{ url_for('reels_library') }}" class="rd-back-btn">
+            <i class="fas fa-arrow-left"></i>
+            <span>Back to Library</span>
+        </a>
     </div>
-</section>
+</div>
+
+<!-- ── Main Layout ───────────────────────────────────────────── -->
+<div class="rd-page">
+
+    <!-- Video Column (left on desktop, full-width on mobile) -->
+    <div class="rd-video-col">
+
+        <!-- Video / Embed -->
+        <div class="rd-video-wrap">
+            {% if reel.video_url %}
+                {% if reel.is_instagram %}
+                <div class="ig-video-wrapper">
+                    <div class="ig-top-cover"></div>
+                    <iframe src="{{ reel.embed_url }}"
+                        class="ig-embed-iframe"
+                        frameborder="0" scrolling="no"
+                        allowtransparency="true" allowfullscreen="true"
+                        title="{{ reel.title }}"></iframe>
+                    <div class="ig-brand-cover"></div>
+                </div>
+                {% else %}
+                <div class="rd-yt-wrap" id="youtube-container">
+                    <iframe id="youtube-player"
+                        src="{{ reel.embed_url }}&enablejsapi=1&rel=0&modestbranding=1&controls=1"
+                        frameborder="0" allowfullscreen
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture">
+                    </iframe>
+                    <div class="video-controls" id="ytControls">
+                        <button class="control-btn" id="ytPlayBtn" title="Play/Pause">
+                            <i class="fas fa-play" id="ytIcon"></i>
+                        </button>
+                    </div>
+                </div>
+                {% endif %}
+            {% elif reel.thumbnail %}
+            <div class="rd-thumb-wrap">
+                <img src="{{ url_for('static', filename=reel.thumbnail) if reel.thumbnail and not reel.thumbnail.startswith('http') else reel.thumbnail }}"
+                     alt="{{ reel.title }}"
+                     onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/reel-placeholder.svg') }}'">
+                <div class="rd-thumb-overlay">
+                    <i class="fas fa-play-circle"></i>
+                    <p>Full video coming soon</p>
+                </div>
+            </div>
+            {% else %}
+            <div class="rd-no-media">
+                <i class="fas fa-video"></i>
+                <h5>Media coming soon</h5>
+                <p>Video will be added shortly</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Title & Meta -->
+        <div class="rd-title-block">
+            <h1 class="rd-title">{{ reel.title }}</h1>
+            <div class="rd-meta">
+                {% if reel.category_tag %}
+                <span class="rd-badge rd-badge-cat">
+                    {% if reel.category_tag == 'trending' %}🔥 Trending
+                    {% elif reel.category_tag == 'new' %}🆕 New
+                    {% elif reel.category_tag == 'fan_favourite' %}❤ Fan Favourite
+                    {% elif reel.category_tag == 'exclusive' %}⭐ Exclusive
+                    {% elif reel.category_tag == 'must_watch' %}👀 Must Watch
+                    {% elif reel.category_tag == 'behind_scenes' %}🎬 Behind the Scenes
+                    {% else %}{{ reel.category_tag }}{% endif %}
+                </span>
+                {% endif %}
+                {% if reel.topic_tag %}
+                <span class="rd-badge rd-badge-topic">
+                    <i class="fas fa-tag"></i> {{ reel.topic_tag }}
+                </span>
+                {% endif %}
+                <span class="rd-views">
+                    <i class="fas fa-eye"></i> {{ reel.view_count }} views
+                </span>
+            </div>
+        </div>
+
+        <!-- Why This Topic -->
+        <div class="rd-card rd-card-thought">
+            <div class="rd-card-header">
+                <span class="rd-card-icon"><i class="fas fa-lightbulb"></i></span>
+                <h3 class="rd-card-title">Why This Topic?</h3>
+            </div>
+            <p class="rd-card-body">{{ reel.behind_thought }}</p>
+        </div>
+
+        <!-- More Thoughts -->
+        {% if reel.extra_context %}
+        <div class="rd-card rd-card-more">
+            <div class="rd-card-header">
+                <span class="rd-card-icon rd-card-icon--blue"><i class="fas fa-comment-dots"></i></span>
+                <h3 class="rd-card-title">More Thoughts</h3>
+            </div>
+            <p class="rd-card-body">{{ reel.extra_context }}</p>
+        </div>
+        {% endif %}
+
+    </div><!-- /rd-video-col -->
+
+    <!-- Sidebar (right on desktop, below on mobile) -->
+    <div class="rd-sidebar">
+
+        <!-- Sources Card -->
+        <div class="rd-side-card">
+            <div class="rd-side-card-header">
+                <i class="fas fa-book-open"></i>
+                <span>Sources</span>
+            </div>
+            <div class="rd-side-card-body">
+                {% if reel.sources and reel.sources|length > 0 %}
+                <ul class="rd-sources">
+                    {% for source in reel.sources %}
+                    <li class="rd-source-item">
+                        {% if source.startswith('http://') or source.startswith('https://') %}
+                        <a href="{{ source }}" target="_blank" rel="noopener noreferrer" class="rd-source-link">
+                            <span class="rd-source-icon"><i class="fas fa-external-link-alt"></i></span>
+                            <span class="rd-source-text">{{ source }}</span>
+                        </a>
+                        {% else %}
+                        <div class="rd-source-plain">
+                            <span class="rd-source-icon"><i class="fas fa-circle-dot"></i></span>
+                            <span class="rd-source-text">{{ source }}</span>
+                        </div>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="rd-empty-note">Sources will be updated soon</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Related Reels -->
+        {% if related_reels and related_reels|length > 0 %}
+        <div class="rd-side-card">
+            <div class="rd-side-card-header">
+                <i class="fas fa-play-circle"></i>
+                <span>More from "{{ reel.topic_tag }}"</span>
+            </div>
+            <div class="rd-side-card-body">
+                <div class="rd-related-list">
+                    {% for related in related_reels %}
+                    <a href="{{ url_for('reel_detail', reel_id=related.id) }}" class="rd-related-item">
+                        <img src="{{ url_for('static', filename=related.thumbnail) if related.thumbnail and not related.thumbnail.startswith('http') else related.thumbnail }}"
+                             alt="{{ related.title }}" class="rd-related-thumb"
+                             onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/reel-placeholder.svg') }}'">
+                        <div class="rd-related-info">
+                            <p class="rd-related-title">{{ related.title }}</p>
+                            <span class="rd-related-views"><i class="fas fa-eye"></i> {{ related.view_count }}</span>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+                <a href="{{ url_for('reels_library', topic=reel.topic_tag) }}" class="rd-view-all-btn">
+                    <i class="fas fa-th-large"></i> View All in Topic
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
+    </div><!-- /rd-sidebar -->
+
+</div><!-- /rd-page -->
+
 
 <style>
-.video-section {
-    background: #000;
-    border-radius: 12px;
-    overflow: hidden;
+/* ══════════════════════════════════════════
+   REEL DETAIL — PREMIUM RESPONSIVE LAYOUT
+══════════════════════════════════════════ */
+
+/* Hero strip */
+.rd-hero {
+    background: linear-gradient(135deg, #1a0000 0%, #3d0000 50%, #1a0000 100%);
+    padding: 18px 0 0;
+    border-bottom: 3px solid #cc0000;
+}
+.rd-hero-inner {
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 0 24px 18px;
+}
+.rd-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #fff;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: .9rem;
+    background: rgba(255,255,255,.1);
+    border: 1px solid rgba(255,255,255,.2);
+    padding: 8px 18px;
+    border-radius: 50px;
+    transition: background .2s, transform .2s;
+}
+.rd-back-btn:hover { background: rgba(255,255,255,.2); color: #fff; transform: translateX(-3px); }
+
+/* Page wrapper — two-column on desktop */
+.rd-page {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 28px;
+    max-width: 1300px;
+    margin: 32px auto;
+    padding: 0 24px 60px;
 }
 
-.video-container {
+/* ── Video wrap ── */
+.rd-video-col { min-width: 0; }
+
+.rd-video-wrap {
+    border-radius: 16px;
+    overflow: hidden;
+    background: #000;
+    box-shadow: 0 8px 32px rgba(0,0,0,.25);
+    margin-bottom: 24px;
+}
+
+/* YouTube 16:9 */
+.rd-yt-wrap {
     position: relative;
     width: 100%;
-    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+    padding-bottom: 56.25%;
     height: 0;
     overflow: hidden;
 }
-
-.video-container iframe {
+.rd-yt-wrap iframe {
     position: absolute;
-    top: 0;
-    left: 0;
+    inset: 0;
     width: 100%;
     height: 100%;
 }
 
-.video-placeholder {
+/* Thumbnail placeholder */
+.rd-thumb-wrap {
     position: relative;
     width: 100%;
     padding-bottom: 56.25%;
     background: #000;
-    border-radius: 12px;
     overflow: hidden;
 }
-
-.video-placeholder img {
+.rd-thumb-wrap img {
     position: absolute;
-    top: 0;
-    left: 0;
+    inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
-
-.video-overlay {
+.rd-thumb-overlay {
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.7);
+    inset: 0;
+    background: rgba(0,0,0,.65);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     color: #fff;
+    gap: 10px;
 }
+.rd-thumb-overlay i { font-size: 3.5rem; color: #cc0000; }
+.rd-thumb-overlay p { margin: 0; font-size: .95rem; opacity: .85; }
 
-.no-media-placeholder {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+/* No media */
+.rd-no-media {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 320px;
+    color: #aaa;
     text-align: center;
-    color: #fff;
+    gap: 12px;
 }
+.rd-no-media i { font-size: 3rem; }
+.rd-no-media h5 { margin: 0; color: #888; }
+.rd-no-media p { margin: 0; font-size: .9rem; }
 
-.reel-header {
-    padding: 1.5rem 0;
-    border-bottom: 1px solid #e0e0e0;
-}
-
-.reel-title {
-    font-size: 2rem;
-    font-weight: 700;
-    margin-bottom: 1rem;
-    color: #1a1a1a;
-}
-
-.reel-meta {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    flex-wrap: wrap;
-}
-
-.content-section {
-    background: #f8f9fa;
-    padding: 2rem;
-    border-radius: 12px;
-}
-
-.content-title {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: #1a1a1a;
-    margin-bottom: 1rem;
-}
-
-.content-body p {
-    font-size: 1.05rem;
-    line-height: 1.8;
-    color: #444;
-    margin-bottom: 0;
-}
-
-.info-panel {
-    background: #fff;
-    border: 1px solid #e0e0e0;
-    border-radius: 12px;
-    padding: 1.5rem;
-}
-
-.panel-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #1a1a1a;
-    margin-bottom: 1rem;
-}
-
-.sources-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.sources-list li {
-    padding: 0.75rem 0;
-    border-bottom: 1px solid #f0f0f0;
-    color: #555;
-}
-
-.sources-list li a {
-    color: #cc0000;
-    text-decoration: none;
-    word-break: break-all;
-    transition: color 0.2s;
-}
-
-.sources-list li a:hover {
-    color: #990000;
-    text-decoration: underline;
-}
-
-.sources-list li:last-child {
-    border-bottom: none;
-}
-
-.share-buttons {
-    display: flex;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-}
-
-.share-btn {
-    width: 45px;
-    height: 45px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    color: #fff;
-    font-size: 1.2rem;
-    transition: transform 0.3s ease;
-}
-
-.share-btn:hover {
-    transform: scale(1.1);
-    color: #fff;
-}
-
-.share-btn.twitter {
-    background: #1DA1F2;
-}
-
-.share-btn.facebook {
-    background: #4267B2;
-}
-
-.share-btn.linkedin {
-    background: #0077b5;
-}
-
-.share-btn.whatsapp {
-    background: #25D366;
-}
-
-.related-reels-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.related-reel-item {
-    display: flex;
-    gap: 1rem;
-    padding: 0.75rem;
-    border-radius: 8px;
-    background: #f8f9fa;
-    text-decoration: none;
-    transition: background 0.3s ease;
-}
-
-.related-reel-item:hover {
-    background: #e9ecef;
-}
-
-.related-thumbnail {
-    width: 100px;
-    height: 60px;
-    object-fit: cover;
-    border-radius: 6px;
-}
-
-.related-info {
-    flex: 1;
-}
-
-.related-info h6 {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #1a1a1a;
-    margin-bottom: 0.25rem;
-    line-height: 1.3;
-}
-
-.related-info small {
-    font-size: 0.8rem;
-}
-
-@media (max-width: 991px) {
-    .reel-title {
-        font-size: 1.5rem;
-    }
-    
-    .content-section {
-        padding: 1.5rem;
-    }
-}
-
-/* ── Instagram direct iframe embed ── */
+/* Instagram wrapper */
 .ig-video-wrapper {
     position: relative;
     width: 100%;
-    max-width: 560px;
+    max-width: 420px;
     margin: 0 auto;
     background: #000;
-    border-radius: 12px;
-    overflow: hidden;
-    aspect-ratio: 9 / 16;
+    aspect-ratio: 9/16;
 }
+.ig-embed-iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; }
+.ig-top-cover    { position: absolute; top: 0; left: 0; right: 0; height: 68px; background: #000; z-index: 10; pointer-events: none; }
+.ig-brand-cover  { position: absolute; bottom: 0; left: 0; right: 0; height: 175px; background: #000; z-index: 10; pointer-events: none; }
 
-/* iframe fills the entire wrapper; covers sit on top to mask header/footer */
-.ig-embed-iframe {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border: none;
-    display: block;
-}
-
-/* Hides "future__rex · View profile · Original audio" header — ~68px */
-.ig-top-cover {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 68px;
-    background: #000;
-    z-index: 10;
-    pointer-events: none;
-    border-radius: 12px 12px 0 0;
-}
-
-/* Hides "View more on Instagram", likes, heart/comment/share/save row — ~175px */
-.ig-brand-cover {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 175px;
-    background: #000;
-    z-index: 10;
-    pointer-events: none;
-    border-radius: 0 0 12px 12px;
-}
-
-/* ── YouTube controls ── */
+/* YouTube custom controls */
 .video-controls {
     position: absolute;
-    bottom: 16px;
+    bottom: 18px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 10;
     opacity: 0;
     transition: opacity .3s;
 }
-
 #youtube-container:hover .video-controls { opacity: 1; }
-
 .control-btn {
-    width: 56px;
-    height: 56px;
+    width: 54px; height: 54px;
     border-radius: 50%;
     border: none;
     background: rgba(255,255,255,.92);
     color: #1a1a1a;
-    font-size: 20px;
+    font-size: 18px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 4px 12px rgba(0,0,0,.35);
+    box-shadow: 0 4px 16px rgba(0,0,0,.4);
     transition: transform .2s, box-shadow .2s;
 }
-
-.control-btn:hover { transform: scale(1.1); box-shadow: 0 6px 18px rgba(0,0,0,.45); }
+.control-btn:hover { transform: scale(1.1); box-shadow: 0 6px 20px rgba(0,0,0,.5); }
 .control-btn:active { transform: scale(.95); }
 .control-btn i { pointer-events: none; }
 
-.video-container { position: relative; }
+/* ── Title block ── */
+.rd-title-block { margin-bottom: 22px; }
+.rd-title {
+    font-size: clamp(1.5rem, 3vw, 2.1rem);
+    font-weight: 800;
+    color: #111;
+    margin: 0 0 12px;
+    line-height: 1.25;
+    letter-spacing: -.02em;
+}
+.rd-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.rd-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 12px;
+    border-radius: 50px;
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: .02em;
+}
+.rd-badge-cat { background: linear-gradient(135deg, #cc0000, #ff4444); color: #fff; }
+.rd-badge-topic { background: #f0f4ff; color: #3b5bdb; border: 1px solid #c5d0e6; }
+.rd-views { font-size: .84rem; color: #888; display: flex; align-items: center; gap: 5px; }
+
+/* ── Content cards ── */
+.rd-card {
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 20px;
+    border: 1px solid transparent;
+}
+.rd-card-thought {
+    background: linear-gradient(135deg, #fff9f9 0%, #fff 100%);
+    border-color: #f5d0d0;
+}
+.rd-card-more {
+    background: linear-gradient(135deg, #f8f9ff 0%, #fff 100%);
+    border-color: #dde3ff;
+}
+.rd-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+.rd-card-icon {
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #cc0000, #ff4444);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: .95rem; flex-shrink: 0;
+}
+.rd-card-icon--blue {
+    background: linear-gradient(135deg, #3b5bdb, #748ffc);
+}
+.rd-card-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #111;
+    margin: 0;
+}
+.rd-card-body {
+    font-size: 1rem;
+    line-height: 1.85;
+    color: #444;
+    margin: 0;
+}
+
+/* ══ SIDEBAR ══════════════════════════════ */
+.rd-sidebar { display: flex; flex-direction: column; gap: 20px; }
+
+.rd-side-card {
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid #ebebeb;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,.06);
+}
+.rd-side-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, #1a0000, #3d0000);
+    color: #fff;
+    font-weight: 700;
+    font-size: .95rem;
+    border-bottom: 2px solid #cc0000;
+}
+.rd-side-card-header i { color: #ff6b6b; font-size: 1rem; }
+.rd-side-card-body { padding: 16px 20px; }
+
+/* Sources list */
+.rd-sources { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 2px; }
+.rd-source-item { border-radius: 10px; overflow: hidden; }
+.rd-source-link, .rd-source-plain {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 11px 12px;
+    border-radius: 10px;
+    transition: background .2s;
+    text-decoration: none;
+}
+.rd-source-link { background: #fdf5f5; }
+.rd-source-link:hover { background: #fce8e8; }
+.rd-source-plain { background: #f8f9fa; }
+.rd-source-icon {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #cc0000, #ff4444);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: .65rem;
+    flex-shrink: 0; margin-top: 1px;
+}
+.rd-source-plain .rd-source-icon { background: #dee2e6; color: #666; }
+.rd-source-text {
+    font-size: .82rem;
+    color: #333;
+    word-break: break-all;
+    line-height: 1.5;
+}
+.rd-source-link .rd-source-text { color: #cc0000; font-weight: 500; }
+.rd-empty-note { color: #aaa; font-size: .88rem; margin: 0; text-align: center; padding: 12px 0; }
+
+/* Related reels */
+.rd-related-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+.rd-related-item {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 10px;
+    border-radius: 12px;
+    background: #f8f9fa;
+    text-decoration: none;
+    transition: background .2s, transform .2s;
+}
+.rd-related-item:hover { background: #ffe8e8; transform: translateX(3px); }
+.rd-related-thumb {
+    width: 76px; height: 50px;
+    object-fit: cover;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+.rd-related-info { flex: 1; min-width: 0; }
+.rd-related-title {
+    font-size: .83rem;
+    font-weight: 600;
+    color: #111;
+    margin: 0 0 4px;
+    line-height: 1.3;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+.rd-related-views { font-size: .75rem; color: #999; display: flex; align-items: center; gap: 4px; }
+
+.rd-view-all-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    width: 100%;
+    padding: 10px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #cc0000, #ff4444);
+    color: #fff;
+    font-weight: 700;
+    font-size: .85rem;
+    text-decoration: none;
+    transition: opacity .2s, transform .2s;
+}
+.rd-view-all-btn:hover { color: #fff; opacity: .9; transform: translateY(-1px); }
+
+/* ══ RESPONSIVE ═══════════════════════════ */
+@media (max-width: 1024px) {
+    .rd-page {
+        grid-template-columns: 1fr 300px;
+        gap: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .rd-page {
+        grid-template-columns: 1fr;
+        padding: 0 16px 50px;
+        margin-top: 20px;
+        gap: 0;
+    }
+
+    /* On mobile: sidebar moves below main content */
+    .rd-sidebar {
+        margin-top: 20px;
+    }
+
+    .rd-title { font-size: 1.4rem; }
+
+    .rd-card { padding: 20px; }
+
+    /* Instagram: limit height on mobile */
+    .ig-video-wrapper {
+        max-width: 100%;
+        max-height: 70vw;
+        aspect-ratio: 9/16;
+    }
+
+    .rd-hero-inner { padding: 0 16px 14px; }
+
+    /* Sources: full-width cards on mobile */
+    .rd-source-text { font-size: .85rem; }
+}
+
+@media (max-width: 480px) {
+    .rd-title { font-size: 1.25rem; }
+    .rd-card { padding: 16px; }
+    .rd-card-body { font-size: .95rem; }
+    .rd-side-card-body { padding: 14px 16px; }
+    .rd-related-thumb { width: 64px; height: 44px; }
+}
 </style>
 
 {% if reel.is_instagram %}
 <script>
-// No external SDK needed — using direct iframe embed
-// Fallback: if iframe fails to load, show a message
 document.addEventListener('DOMContentLoaded', function() {
     var iframe = document.querySelector('.ig-embed-iframe');
     if (!iframe) return;
@@ -537,7 +573,6 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 {% else %}
 <script>
-// ── YouTube IFrame API ──
 (function() {
     var tag = document.createElement('script');
     tag.src = 'https://www.youtube.com/iframe_api';
@@ -560,9 +595,7 @@ function onYouTubeIframeAPIReady() {
             onStateChange: function(e) {
                 _ytPlaying = (e.data === YT.PlayerState.PLAYING);
                 var icon = document.getElementById('ytIcon');
-                if (icon) {
-                    icon.className = _ytPlaying ? 'fas fa-pause' : 'fas fa-play';
-                }
+                if (icon) icon.className = _ytPlaying ? 'fas fa-pause' : 'fas fa-play';
             }
         }
     });
@@ -578,9 +611,5 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 {% endif %}
-{% if false %}<script>/* old block fully removed */
-    }
-});
-</script>
-{% endif %}
+
 {% endblock %}
