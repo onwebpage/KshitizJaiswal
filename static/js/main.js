@@ -48,221 +48,159 @@
         });
     }
 
-    // Initialize reel carousel — JS-driven infinite loop with drag, swipe,
-    // momentum, and auto-resume after user interaction.
+    // Initialize reel carousel — arrow button navigation with touch swipe support.
     function initReelCarousel() {
         var carousel = document.getElementById('reelCarousel');
         if (!carousel) return;
-        // Support both old (.reel-carousel-container) and new (.preel-carousel-wrap) wrapper
-        var wrapper = carousel.closest('.preel-carousel-wrap') || carousel.closest('.reel-carousel-container') || carousel.parentElement;
 
-        // Kill any residual CSS animation so JS owns the transform entirely
-        carousel.style.animation = 'none';
+        var prevBtn = document.getElementById('reelPrev');
+        var nextBtn = document.getElementById('reelNext');
+        var overflow = carousel.closest('.preel-carousel-overflow') || carousel.parentElement;
 
-        var SPEED        = 0.15;   // px per ms — auto-scroll pace
-        var RESUME_DELAY = 3000;   // ms of inactivity before auto-scroll resumes
-        var FRICTION     = 0.92;   // momentum decay per frame (lower = stops faster)
-        var MIN_VELOCITY = 0.05;   // px/ms below which momentum is ignored
-
-        var autoScrollPaused = false; // true while user is hovering (desktop)
-        var dragging         = false;
-        var touchLocked      = null;  // null | 'h' | 'v' — detected axis after touchstart
-        var dragStartClient  = 0;
-        var dragStartY       = 0;
-        var dragStartX       = 0;
-        var currentX         = 0;
-        var lastTime         = null;
-        var velocity         = 0;    // px/ms — momentum after drag release
-        var lastDragX        = 0;
-        var lastDragTime     = 0;
-        var resumeTimer      = null;
-        var oneSetWidth      = 0;
-
-        // ── Clone real cards once for the seamless loop ────────────────────
-        requestAnimationFrame(function() {
-            var originals = Array.prototype.slice.call(carousel.children);
-            if (!originals.length) return;
-
-            oneSetWidth = carousel.scrollWidth;
-
-            originals.forEach(function(card) {
-                var clone = card.cloneNode(true);
-                clone.setAttribute('aria-hidden', 'true');
-                clone.setAttribute('tabindex', '-1');
-                clone.querySelectorAll('a, button').forEach(function(el) {
-                    el.setAttribute('tabindex', '-1');
-                });
-                carousel.appendChild(clone);
-            });
-
-            // Prevent native browser drag on all images inside the carousel
-            // (without this, browsers try to drag the image when you click-drag)
-            carousel.querySelectorAll('img').forEach(function(img) {
-                img.setAttribute('draggable', 'false');
-            });
-
-            currentX = -oneSetWidth;
-            applyTransform();
-            requestAnimationFrame(tick);
-        });
-
-        // Also block the native dragstart that fires on links/images
+        // Block native drag on images/links
         carousel.addEventListener('dragstart', function(e) { e.preventDefault(); });
+        carousel.querySelectorAll('img').forEach(function(img) {
+            img.setAttribute('draggable', 'false');
+        });
 
-        function applyTransform() {
-            carousel.style.transform = 'translateX(' + currentX + 'px)';
+        var currentIndex = 0;   // index of the first fully-visible card
+        var cardGap      = 18;  // px — matches CSS gap
+
+        // ── Helpers ────────────────────────────────────────────────────────
+        function getCardWidth() {
+            var card = carousel.querySelector('.preel-card');
+            return card ? card.offsetWidth : 280;
         }
 
-        function wrapX(x) {
-            // Apply modular wrap so the track loops seamlessly
-            if (oneSetWidth <= 0) return x;
-            if (x >= 0)           x -= oneSetWidth;
-            if (x < -oneSetWidth) x += oneSetWidth;
-            return x;
+        function getStep() {
+            // How many cards to move per button click
+            var visibleWidth = overflow.offsetWidth;
+            var cw           = getCardWidth() + cardGap;
+            return Math.max(1, Math.floor(visibleWidth / cw));
         }
 
-        function scheduleResume() {
-            clearTimeout(resumeTimer);
-            resumeTimer = setTimeout(function() {
-                if (!dragging) {
-                    velocity = 0;
-                    lastTime = null;
-                }
-            }, RESUME_DELAY);
+        function totalCards() {
+            return carousel.querySelectorAll('.preel-card').length;
         }
 
-        function tick(timestamp) {
-            if (!lastTime) lastTime = timestamp;
-            var dt = Math.min(timestamp - lastTime, 50);
-            lastTime = timestamp;
+        function maxIndex() {
+            var visibleWidth = overflow.offsetWidth;
+            var cw           = getCardWidth() + cardGap;
+            var visible      = Math.floor(visibleWidth / cw);
+            return Math.max(0, totalCards() - visible);
+        }
 
-            if (!dragging && oneSetWidth > 0) {
-                if (Math.abs(velocity) > MIN_VELOCITY) {
-                    // Momentum phase — glide to a stop after drag release
-                    currentX  = wrapX(currentX + velocity * dt);
-                    velocity *= Math.pow(FRICTION, dt / 16);
-                    applyTransform();
-                } else if (!autoScrollPaused) {
-                    // Normal auto-scroll
-                    currentX = wrapX(currentX + SPEED * dt);
-                    applyTransform();
-                }
+        function clamp(val) {
+            return Math.max(0, Math.min(val, maxIndex()));
+        }
+
+        function applyTransform(animated) {
+            var cw = getCardWidth() + cardGap;
+            var x  = -currentIndex * cw;
+            if (!animated) {
+                carousel.style.transition = 'none';
+                carousel.style.transform  = 'translateX(' + x + 'px)';
+                // re-enable transition after a frame
+                requestAnimationFrame(function() {
+                    carousel.style.transition = '';
+                });
+            } else {
+                carousel.style.transform = 'translateX(' + x + 'px)';
             }
-
-            requestAnimationFrame(tick);
+            updateButtons();
         }
 
-        // ── Hover: pause auto-scroll on desktop ────────────────────────────
-        carousel.addEventListener('mouseenter', function() {
-            if (!dragging) autoScrollPaused = true;
-        });
-        carousel.addEventListener('mouseleave', function() {
-            if (!dragging) {
-                autoScrollPaused = false;
-                lastTime = null;
+        function updateButtons() {
+            if (!prevBtn || !nextBtn) return;
+            var mx = maxIndex();
+            if (currentIndex <= 0) {
+                prevBtn.style.display = 'none';
+            } else {
+                prevBtn.style.display = '';
+                prevBtn.style.opacity = '';
             }
-        });
+            if (currentIndex >= mx || mx === 0) {
+                nextBtn.style.display = 'none';
+            } else {
+                nextBtn.style.display = '';
+                nextBtn.style.opacity = '';
+            }
+        }
 
-        // ── Mouse drag (desktop) ───────────────────────────────────────────
-        // KEY FIX: use RELATIVE delta (currentX += dx each move) instead of
-        // absolute (dragStartX + totalDelta). The absolute approach calls
-        // wrapX() on a large value which can jump by oneSetWidth mid-drag.
-        carousel.addEventListener('mousedown', function(e) {
-            // Only respond to primary mouse button
-            if (e.button !== 0) return;
-            dragging         = true;
-            autoScrollPaused = false;
-            lastDragX        = e.clientX;
-            lastDragTime     = performance.now();
-            velocity         = 0;
-            carousel.style.cursor = 'grabbing';
-            if (wrapper) wrapper.style.cursor = 'grabbing';
-            clearTimeout(resumeTimer);
-            e.preventDefault(); // stops text selection & native image drag
-        });
-
-        document.addEventListener('mousemove', function(e) {
-            if (!dragging) return;
-            var now = performance.now();
-            var dx  = e.clientX - lastDragX;
-            var dt  = now - lastDragTime || 1;
-
-            velocity     = dx / dt;   // live velocity for momentum on release
-            lastDragX    = e.clientX;
-            lastDragTime = now;
-
-            // Relative delta — safe across wrap boundaries, no sudden jumps
-            currentX = wrapX(currentX + dx);
-            applyTransform();
-        });
-
-        document.addEventListener('mouseup', function() {
-            if (!dragging) return;
-            dragging = false;
-            carousel.style.cursor = '';
-            if (wrapper) wrapper.style.cursor = '';
-            // Hand off to momentum tick, then resume auto-scroll after delay
-            scheduleResume();
-            lastTime = null;
-        });
+        // ── Arrow button clicks ────────────────────────────────────────────
+        if (prevBtn) {
+            prevBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                currentIndex = clamp(currentIndex - getStep());
+                applyTransform(true);
+            });
+        }
+        if (nextBtn) {
+            nextBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                currentIndex = clamp(currentIndex + getStep());
+                applyTransform(true);
+            });
+        }
 
         // ── Touch swipe (mobile) ───────────────────────────────────────────
+        var touchStartX  = 0;
+        var touchStartY  = 0;
+        var touchLocked  = null;
+        var touchMoveX   = 0;
+
         carousel.addEventListener('touchstart', function(e) {
-            dragging     = true;
-            touchLocked  = null;
-            dragStartY   = e.touches[0].clientY;
-            lastDragX    = e.touches[0].clientX;
-            lastDragTime = performance.now();
-            velocity     = 0;
-            clearTimeout(resumeTimer);
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+            touchLocked = null;
+            touchMoveX  = 0;
         }, { passive: true });
 
         carousel.addEventListener('touchmove', function(e) {
-            if (!dragging) return;
-            var tx = e.touches[0].clientX;
-            var ty = e.touches[0].clientY;
+            var dx = e.touches[0].clientX - touchStartX;
+            var dy = e.touches[0].clientY - touchStartY;
 
-            // Determine scroll axis on first meaningful movement
             if (touchLocked === null) {
-                var absH = Math.abs(tx - lastDragX);
-                var absV = Math.abs(ty - dragStartY);
-                if (absH < 4 && absV < 4) return;
-                touchLocked = absH >= absV ? 'h' : 'v';
+                if (Math.abs(dx) < 4 && Math.abs(dy) < 4) return;
+                touchLocked = Math.abs(dx) >= Math.abs(dy) ? 'h' : 'v';
             }
+            if (touchLocked === 'v') return;
 
-            if (touchLocked === 'v') return; // let browser scroll vertically
-
-            // Horizontal — take control of the event
             e.preventDefault();
-
-            var now = performance.now();
-            var dx  = tx - lastDragX;
-            var dt  = now - lastDragTime || 1;
-
-            velocity     = dx / dt;
-            lastDragX    = tx;
-            lastDragTime = now;
-
-            currentX = wrapX(currentX + dx); // relative delta, same fix as mouse
-            applyTransform();
+            touchMoveX = dx;
+            // Live drag feedback — offset the carousel slightly
+            var cw = getCardWidth() + cardGap;
+            var baseX = -currentIndex * cw;
+            carousel.style.transition = 'none';
+            carousel.style.transform  = 'translateX(' + (baseX + dx * 0.6) + 'px)';
         }, { passive: false });
 
         carousel.addEventListener('touchend', function() {
-            dragging    = false;
+            if (touchLocked !== 'h') return;
+            carousel.style.transition = '';
+            var SWIPE_THRESHOLD = 60; // px
+            if (touchMoveX < -SWIPE_THRESHOLD) {
+                currentIndex = clamp(currentIndex + 1);
+            } else if (touchMoveX > SWIPE_THRESHOLD) {
+                currentIndex = clamp(currentIndex - 1);
+            }
+            applyTransform(true);
             touchLocked = null;
-            scheduleResume();
-            lastTime = null;
+            touchMoveX  = 0;
         }, { passive: true });
 
-        // ── Tab visibility ──────────────────────────────────────────────────
-        document.addEventListener('visibilitychange', function() {
-            if (document.hidden) {
-                autoScrollPaused = true;
-            } else {
-                autoScrollPaused = false;
-                lastTime = null;
-            }
+        // ── Recalc on window resize ────────────────────────────────────────
+        var resizeTimer;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(function() {
+                currentIndex = clamp(currentIndex);
+                applyTransform(false);
+            }, 150);
         });
+
+        // ── Initial render ─────────────────────────────────────────────────
+        applyTransform(false);
     }
 
     // Initialize poll voting functionality

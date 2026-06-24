@@ -40,12 +40,12 @@
         <a href="{{ url_for('reel_detail', reel_id=reel.id) }}" class="preel-card" data-reel-id="{{ reel.id }}">
             <div class="preel-thumb">
                 <img
-                    src="{% if reel.thumbnail %}{{ url_for('static', filename=reel.thumbnail) if not reel.thumbnail.startswith('http') else reel.thumbnail }}{% else %}https://placehold.co/360x480/0d0d1a/cc0000?text={{ reel.title | urlencode }}{% endif %}"
+                    src="{% if reel.thumbnail %}{{ url_for('static', filename=reel.thumbnail) if not reel.thumbnail.startswith('http') else reel.thumbnail }}{% else %}{{ url_for('static', filename='img/reel-placeholder.svg') }}{% endif %}"
                     alt="{{ reel.title }}"
                     class="preel-img"
                     loading="lazy"
                     draggable="false"
-                    onerror="this.src='https://placehold.co/360x480/0d0d1a/cc0000?text=No+Image'">
+                    onerror="this.onerror=null; this.src='{{ url_for('static', filename='img/reel-placeholder.svg') }}'">
                 <div class="preel-gradient"></div>
                 {% if platform == 'youtube' %}
                 <span class="preel-platform-badge preel-yt"><i class="fab fa-youtube"></i> YouTube</span>
@@ -69,9 +69,17 @@
         {% endmacro %}
 
         <div class="preel-carousel-wrap" aria-label="Video Carousel">
-            <div class="preel-carousel" id="reelCarousel">
-                {% for reel in content.reels %}{{ premium_reel_card(reel) }}{% endfor %}
+            <button class="preel-nav-btn preel-nav-prev" id="reelPrev" aria-label="Previous reels" style="display:none">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <div class="preel-carousel-overflow">
+                <div class="preel-carousel" id="reelCarousel">
+                    {% for reel in content.reels %}{{ premium_reel_card(reel) }}{% endfor %}
+                </div>
             </div>
+            <button class="preel-nav-btn preel-nav-next" id="reelNext" aria-label="Next reels">
+                <i class="fas fa-chevron-right"></i>
+            </button>
         </div>
         {% else %}
         <div class="text-center py-5">
@@ -332,14 +340,12 @@
 
 /* ══ Carousel track ═══════════════════════════════════════════════════ */
 .preel-carousel-wrap {
-    overflow: hidden;
     position: relative;
-    mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
-    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
-    cursor: grab;
+    padding: 0 52px;
 }
-.preel-carousel-wrap:active { cursor: grabbing; }
-
+.preel-carousel-overflow {
+    overflow: hidden;
+}
 .preel-carousel {
     display: flex;
     gap: 18px;
@@ -347,7 +353,44 @@
     will-change: transform;
     user-select: none;
     -webkit-user-select: none;
+    transition: transform 0.45s cubic-bezier(0.23, 1, 0.32, 1);
 }
+
+/* ══ Nav buttons ══════════════════════════════════════════════════════ */
+.preel-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,.3);
+    background: rgba(20,20,30,.85);
+    color: #fff;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .2s, border-color .2s, transform .2s;
+    box-shadow: 0 4px 18px rgba(0,0,0,.4);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+.preel-nav-btn:hover {
+    background: rgba(204,0,0,.9);
+    border-color: rgba(204,0,0,.8);
+    transform: translateY(-50%) scale(1.08);
+}
+.preel-nav-btn:disabled,
+.preel-nav-btn[style*="display:none"],
+.preel-nav-btn[style*="display: none"] {
+    opacity: 0;
+    pointer-events: none;
+}
+.preel-nav-prev { left: 0; }
+.preel-nav-next { right: 0; }
 
 /* ══ Individual card ══════════════════════════════════════════════════ */
 .preel-card {
@@ -493,11 +536,15 @@
     .premium-reels-section { padding: 48px 0 56px; }
     .preel-card { width: 210px; }
     .premium-reels-header { margin-bottom: 28px; }
+    .preel-carousel-wrap { padding: 0 44px; }
+    .preel-nav-btn { width: 38px; height: 38px; font-size: .85rem; }
 }
 @media (max-width: 480px) {
     .preel-card { width: 175px; border-radius: 14px; }
     .preel-carousel { gap: 12px; }
     .preel-title { font-size: .82rem; }
+    .preel-carousel-wrap { padding: 0 38px; }
+    .preel-nav-btn { width: 34px; height: 34px; font-size: .8rem; }
 }
 </style>
 
