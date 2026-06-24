@@ -96,26 +96,6 @@
             <p class="text-muted">No reels yet — check back soon!</p>
         </div>
         {% endif %}
-
-        {% if whatsapp_link %}
-        <div class="reels-wa-banner mt-5">
-            <div class="reels-wa-inner">
-                <div class="reels-wa-icon">
-                    <i class="fab fa-whatsapp"></i>
-                </div>
-                <div class="reels-wa-text">
-                    <h5 class="mb-1">Want to discuss a reel?</h5>
-                    <p class="mb-0">Chat with us on WhatsApp — we'd love to hear your thoughts!</p>
-                </div>
-                <a href="{{ whatsapp_link }}"
-                   data-whatsapp-link="{{ whatsapp_link }}"
-                   data-whatsapp-fallback="{{ whatsapp_web_link or whatsapp_link }}"
-                   class="reels-wa-btn js-whatsapp-link">
-                    <i class="fab fa-whatsapp me-2"></i>Chat on WhatsApp
-                </a>
-            </div>
-        </div>
-        {% endif %}
     </div>
 </section>
 {% endif %}
