@@ -240,7 +240,7 @@
             {% for stat in data.stats %}
             {% set i = loop.index0 %}
             <div class="stat-card {{ 'is-enabled' if stat.is_active else 'is-disabled' }}"
-                 id="stat-card-{{ i }}" data-index="{{ i }}" draggable="true">
+                 id="stat-card-{{ i }}" data-index="{{ i }}">
 
                 <input type="hidden" name="stat_active_{{ i }}"
                        id="active_field_{{ i }}"
@@ -248,7 +248,7 @@
 
                 <div class="card-header-row">
                     <!-- Drag handle -->
-                    <span class="drag-handle" title="Drag to reorder">
+                    <span class="drag-handle" title="Drag to reorder" draggable="true">
                         <i class="fas fa-grip-vertical"></i>
                     </span>
                     <!-- Order number -->
@@ -409,11 +409,10 @@ function addStatCard() {
     card.className = 'stat-card is-enabled';
     card.id = 'stat-card-' + i;
     card.dataset.index = i;
-    card.setAttribute('draggable', 'true');
     card.innerHTML = `
         <input type="hidden" name="stat_active_${i}" id="active_field_${i}" value="1">
         <div class="card-header-row">
-            <span class="drag-handle" title="Drag to reorder"><i class="fas fa-grip-vertical"></i></span>
+            <span class="drag-handle" title="Drag to reorder" draggable="true"><i class="fas fa-grip-vertical"></i></span>
             <div class="stat-order-badge" id="order-badge-${i}">${i + 1}</div>
             <div class="stat-icon-preview-wrap">
                 <i class="fas fa-chart-bar" id="icon-el-${i}"></i>
@@ -514,21 +513,30 @@ function renumberCards() {
     cardCount = document.querySelectorAll('.stat-card').length;
 }
 
-// ── Drag-to-reorder (HTML5 drag API) ───────────────────────────
+// ── Drag-to-reorder (HTML5 drag API — handle-only) ─────────────
 (function initDrag() {
     const grid = document.getElementById('statCardsGrid');
     if (!grid) return;
     let dragged = null;
 
+    // dragstart fires on the drag-handle span; bubble up to find the card
     grid.addEventListener('dragstart', function(e) {
-        const card = e.target.closest('.stat-card');
+        const handle = e.target.closest('.drag-handle');
+        if (!handle) { e.preventDefault(); return; } // only allow drag from handle
+        const card = handle.closest('.stat-card');
         if (!card) return;
+        // Make the whole card draggable temporarily so the browser picks it up
+        card.setAttribute('draggable', 'true');
         dragged = card;
         setTimeout(function() { if (dragged) dragged.style.opacity = '.35'; }, 0);
         e.dataTransfer.effectAllowed = 'move';
     });
-    grid.addEventListener('dragend', function() {
-        if (dragged) { dragged.style.opacity = ''; dragged = null; }
+    grid.addEventListener('dragend', function(e) {
+        if (dragged) {
+            dragged.style.opacity = '';
+            dragged.removeAttribute('draggable'); // remove after drag ends
+            dragged = null;
+        }
         renumberCards();
     });
     grid.addEventListener('dragover', function(e) {
