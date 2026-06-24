@@ -46,3 +46,8 @@ pillow
 psycopg2-binary
 razorpay
 requests
+email_validator
+flask
+flask-sqlalchemy
+gunicorn
+psycopg2-binary
