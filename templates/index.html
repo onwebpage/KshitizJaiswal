@@ -10,21 +10,6 @@
     <div class="hero-bg hero-bg-mobile d-md-none" style="background-image: url('{% if content.hero.mobile_url %}{% if content.hero.mobile_url.startswith('http') %}{{ content.hero.mobile_url }}{% else %}{{ url_for('static', filename=content.hero.mobile_url) }}{% endif %}{% elif content.hero.banner_url %}{% if content.hero.banner_url.startswith('http') %}{{ content.hero.banner_url }}{% else %}{{ url_for('static', filename=content.hero.banner_url) }}{% endif %}{% endif %}');"></div>
     {% endif %}
 
-    <!-- Brand Overlay — always shown on top of background -->
-    <div class="hero-overlay">
-        <div class="container text-center px-3">
-            <h1 class="hero-title">{{ content.hero.name or 'Kshitiz Jaiswal' }}</h1>
-            <p class="hero-tagline">{{ content.hero.tagline or 'Unfiltered. Unbiased. Uncommon.' }}</p>
-            <div class="hero-cta d-flex flex-wrap gap-3 justify-content-center">
-                <a href="#beyond-reel" class="btn btn-light btn-lg rounded-pill px-5">
-                    <i class="fas fa-play me-2"></i>Watch Reels
-                </a>
-                <a href="#support" class="btn btn-outline-light btn-lg rounded-pill px-5">
-                    <i class="fas fa-heart me-2"></i>Support
-                </a>
-            </div>
-        </div>
-    </div>
 </section>
 {% endif %}
 
