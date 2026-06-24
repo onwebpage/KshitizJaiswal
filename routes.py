@@ -3839,8 +3839,9 @@ def purchase_course(course_id):
         return jsonify({'success': False, 'message': 'This email already has access to this course. Please log in.'}), 400
 
     try:
-        amount = course.price * 100
-        order = razorpay_client.order.create({
+        amount = int(course.price) * 100
+        client = get_razorpay_client()
+        order = client.order.create(data={
             'amount': amount,
             'currency': 'INR',
             'payment_capture': 1,
@@ -3860,6 +3861,7 @@ def purchase_course(course_id):
         })
 
     except Exception as e:
+        logging.error(f"Course order creation failed for course {course_id}: {e}")
         return jsonify({'success': False, 'message': str(e)}), 500
 
 @app.route('/course/payment/verify', methods=['POST'])
@@ -3885,7 +3887,8 @@ def verify_course_payment():
         if not guest_phone and course_user.phone: guest_phone = course_user.phone
 
     try:
-        razorpay_client.utility.verify_payment_signature({
+        client = get_razorpay_client()
+        client.utility.verify_payment_signature({
             'razorpay_order_id':   order_id,
             'razorpay_payment_id': payment_id,
             'razorpay_signature':  signature
