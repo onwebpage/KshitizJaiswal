@@ -390,6 +390,140 @@ Kshitiz Jaiswal | Unfiltered Commentator
         return False
 
 
+def send_course_purchase_confirmation(email, name, course_title, amount_paid, my_courses_url=None, login_url=None):
+    """Send a purchase confirmation email after every successful course payment."""
+    import logging, os, smtplib, json
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.text import MIMEText
+    try:
+        from models import SiteContent
+
+        smtp_host  = 'smtp.gmail.com'; smtp_port = 587
+        smtp_user  = ''; smtp_password = ''
+        from_email = ''; from_name = 'Kshitiz Jaiswal Courses'
+
+        email_content = SiteContent.query.filter_by(content_key='email_settings').first()
+        if email_content:
+            settings = json.loads(email_content.content_data)
+            if settings.get('enabled'):
+                smtp_host     = settings.get('smtp_host', smtp_host).strip() or smtp_host
+                smtp_port     = int(settings.get('smtp_port', smtp_port))
+                smtp_user     = settings.get('smtp_user', '').strip()
+                smtp_password = settings.get('smtp_password', '').strip()
+                from_email    = settings.get('from_email', '').strip()
+                from_name     = settings.get('from_name', from_name).strip()
+
+        if not smtp_user or not smtp_password:
+            env_user = os.environ.get('SMTP_USER', '').strip()
+            env_pass = os.environ.get('SMTP_PASSWORD', '').strip()
+            if env_user and env_pass:
+                smtp_user     = env_user
+                smtp_password = env_pass
+                smtp_host     = os.environ.get('SMTP_HOST', 'smtp.gmail.com').strip()
+                smtp_port     = int(os.environ.get('SMTP_PORT', '587'))
+                from_email    = os.environ.get('SMTP_FROM_EMAIL', smtp_user).strip()
+                from_name     = os.environ.get('SMTP_FROM_NAME', 'Kshitiz Jaiswal Courses').strip()
+
+        if not smtp_user or not smtp_password:
+            logging.warning("Email SMTP credentials missing — skipping purchase confirmation.")
+            return False
+
+        from_email     = from_email or smtp_user
+        my_courses_url = my_courses_url or login_url or 'https://your-site.com/my-courses'
+        login_url      = login_url or 'https://your-site.com/user/login'
+        first_name     = (name or 'Student').split()[0]
+        amount_str     = f"₹{int(amount_paid):,}" if amount_paid else ''
+
+        plain_body = f"""Hello {first_name},
+
+Thank you for purchasing "{course_title}"!
+
+{('Amount Paid: ' + amount_str + chr(10)) if amount_str else ''}Your course is now active and ready to access.
+
+Access your course here: {my_courses_url}
+
+-- 
+Kshitiz Jaiswal | Unfiltered Commentator
+{login_url}
+"""
+
+        html_body = f"""<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,Helvetica,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:24px 0;">
+  <tr><td align="center">
+    <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">
+      <tr>
+        <td style="background:#7f1d1d;padding:28px 32px;text-align:center;">
+          <p style="margin:0;color:#fca5a5;font-size:13px;letter-spacing:1px;text-transform:uppercase;">Payment Confirmed</p>
+          <h1 style="margin:8px 0 0;color:#ffffff;font-size:22px;font-weight:700;">Thank You for Your Purchase!</h1>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:32px;">
+          <p style="margin:0 0 16px;color:#1e293b;font-size:16px;">Hello <strong>{first_name}</strong>,</p>
+          <p style="margin:0 0 24px;color:#475569;font-size:15px;line-height:1.6;">
+            Your payment was successful. You now have full access to:
+          </p>
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;margin-bottom:24px;">
+            <tr>
+              <td style="padding:18px 20px;">
+                <span style="color:#7f1d1d;font-size:13px;display:block;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">Course</span>
+                <strong style="color:#1e293b;font-size:17px;">{course_title}</strong>
+                {f'<br><span style="color:#dc2626;font-size:14px;margin-top:6px;display:block;">Amount Paid: {amount_str}</span>' if amount_str else ''}
+              </td>
+            </tr>
+          </table>
+          <table width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+              <td align="center" style="padding-bottom:24px;">
+                <a href="{my_courses_url}" style="display:inline-block;background:#dc2626;color:#ffffff;text-decoration:none;padding:14px 36px;border-radius:6px;font-weight:600;font-size:15px;">
+                  Go to My Courses
+                </a>
+              </td>
+            </tr>
+          </table>
+          <p style="margin:0;color:#94a3b8;font-size:13px;text-align:center;">
+            If you have any questions, reply to this email.
+          </p>
+        </td>
+      </tr>
+      <tr>
+        <td style="background:#f8fafc;padding:18px 32px;border-top:1px solid #e2e8f0;text-align:center;">
+          <p style="margin:0;color:#94a3b8;font-size:12px;">
+            Kshitiz Jaiswal | Unfiltered Commentator<br>
+            <a href="{login_url}" style="color:#dc2626;text-decoration:none;">{login_url}</a>
+          </p>
+        </td>
+      </tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>"""
+
+        msg = MIMEMultipart('alternative')
+        msg['Subject']  = f"Purchase Confirmed: {course_title}"
+        msg['From']     = f"{from_name} <{from_email}>"
+        msg['To']       = email
+        msg['Reply-To'] = from_email
+        msg.attach(MIMEText(plain_body, 'plain'))
+        msg.attach(MIMEText(html_body, 'html'))
+
+        with smtplib.SMTP(smtp_host, smtp_port, timeout=15) as server:
+            server.ehlo(); server.starttls(); server.ehlo()
+            server.login(smtp_user, smtp_password)
+            server.sendmail(from_email, [email], msg.as_string())
+
+        logging.info(f"Purchase confirmation email sent to {email} for '{course_title}'")
+        return True
+
+    except Exception as e:
+        logging.error(f"send_course_purchase_confirmation error: {e}")
+        return False
+
+
 def send_whatsapp_credentials(phone, name, login_id, password, login_url=None):
     """Send login credentials to user via WhatsApp (Meta Cloud API)."""
     import logging

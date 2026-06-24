@@ -3991,6 +3991,26 @@ def verify_course_payment():
         db.session.add(access)
         db.session.commit()
 
+        # ── Always send purchase confirmation email ────────────────────────
+        buyer_email = guest_email
+        buyer_name  = guest_name
+        if not buyer_email and course_user:
+            buyer_email = course_user.email
+            buyer_name  = buyer_name or course_user.name
+        if buyer_email:
+            try:
+                from utils import send_course_purchase_confirmation
+                send_course_purchase_confirmation(
+                    email=buyer_email,
+                    name=buyer_name or 'Student',
+                    course_title=course.title,
+                    amount_paid=course.price,
+                    my_courses_url=url_for('my_courses', _external=True),
+                    login_url=url_for('user_login', _external=True),
+                )
+            except Exception as _mail_err:
+                logging.warning(f"Purchase confirmation email failed (non-fatal): {_mail_err}")
+
         # Auto-create CourseUser ONLY for truly new / unregistered buyers
         already_logged_in = bool(clerk_user_id or course_user)
         if not already_logged_in:
