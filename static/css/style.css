@@ -2128,6 +2128,93 @@ h1, h2, h3, h4, h5, h6 {
   line-height: 1.5;
 }
 
+/* ── Footer Newsletter Form ─────────────────────────────────── */
+.footer-newsletter-block {
+  padding: 0;
+}
+
+.footer-newsletter-title {
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+}
+
+.footer-newsletter-sub {
+  color: rgba(255,255,255,0.65);
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.footer-nl-form {
+  width: 100%;
+}
+
+.footer-nl-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.footer-nl-input {
+  display: block;
+  width: 100%;
+  height: 44px;
+  padding: 0 0.9rem;
+  font-size: 0.9rem;
+  font-family: inherit;
+  line-height: 1.5;
+  color: #fff;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+  -webkit-appearance: none;
+  appearance: none;
+  box-sizing: border-box;
+  resize: none;
+}
+
+.footer-nl-input::placeholder {
+  color: rgba(255,255,255,0.4);
+}
+
+.footer-nl-input:focus {
+  border-color: rgba(255,255,255,0.5);
+  background: rgba(255,255,255,0.12);
+}
+
+.footer-nl-btn {
+  display: block;
+  width: 100%;
+  height: 44px;
+  padding: 0 1.2rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: inherit;
+  color: #fff;
+  background: var(--primary-color, #e53935);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+  letter-spacing: 0.02em;
+}
+
+.footer-nl-btn:hover {
+  background: #c62828;
+  transform: translateY(-1px);
+}
+
+.footer-nl-success {
+  color: #69f0ae;
+  font-size: 0.9rem;
+  padding: 0.5rem 0;
+  margin-bottom: 0.75rem;
+}
+
 .footer-cta {
   border-radius: 25px;
   padding: 0.6rem 1.2rem;

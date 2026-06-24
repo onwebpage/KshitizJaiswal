@@ -877,6 +877,35 @@ input[type="submit"], input[type="button"],
 }
 
 /* ── 35. PRINT ───────────────────────────────────────────────── */
+/* ── Footer Newsletter Form – Mobile ─────────────────────────── */
+@media (max-width: 767.98px) {
+  .footer-nl-fields {
+    gap: 0.5rem;
+  }
+
+  .footer-nl-input {
+    height: 44px;
+    font-size: 16px; /* prevents iOS auto-zoom */
+    padding: 0 0.75rem;
+    border-radius: 8px;
+  }
+
+  .footer-nl-btn {
+    height: 44px;
+    font-size: 15px;
+    border-radius: 8px;
+  }
+
+  .footer-newsletter-title {
+    font-size: 1rem;
+  }
+
+  .footer-newsletter-sub {
+    font-size: 0.82rem;
+    margin-bottom: 0.85rem;
+  }
+}
+
 @media print {
   .custom-navbar,
   .footer-section,
