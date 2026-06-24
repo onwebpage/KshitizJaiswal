@@ -58,7 +58,7 @@
         // Remove any residual CSS animation
         carousel.style.animation = 'none';
 
-        var SPEED = 0.28;       // px per ms — slow, premium feel
+        var SPEED = 0.15;       // px per ms — relaxed, easy-to-read pace
         var paused   = false;
         var dragging = false;
         var dragStartClient = 0;
