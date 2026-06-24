@@ -257,6 +257,22 @@ def index():
         for stat in stats_data['stats']:
             stat['resolved_value'] = stat.get('value', '')
 
+    # Load support trust bar data
+    _DEFAULT_TRUST_BAR = {
+        'enabled': True,
+        'items': [
+            {'icon': 'fas fa-users',      'value': '127+',  'label': 'Supporters',               'is_active': True},
+            {'icon': 'fas fa-rupee-sign', 'value': '₹2340', 'label': 'raised this month',        'is_active': True},
+            {'icon': 'fas fa-shield-alt', 'value': '',      'label': '100% Secure via Razorpay', 'is_active': True},
+            {'icon': 'fas fa-lock',       'value': '',      'label': 'No hidden charges',         'is_active': True},
+        ]
+    }
+    try:
+        _tb_rec = SiteContent.query.filter_by(content_key='support_trust_bar').first()
+        support_trust_bar = json.loads(_tb_rec.content_data) if _tb_rec else _DEFAULT_TRUST_BAR
+    except Exception:
+        support_trust_bar = _DEFAULT_TRUST_BAR
+
     return render_template('index.html',
                          content=content,
                          newsletter_form=newsletter_form,
@@ -266,6 +282,7 @@ def index():
                          page_content=page_content,
                          homepage_courses=homepage_courses,
                          stats_data=stats_data,
+                         support_trust_bar=support_trust_bar,
                          testimonials_list=_get_testimonials_list())
 
 @app.route('/reels')
@@ -2812,11 +2829,33 @@ def admin_content_manager():
                 'support_section_subtitle':   request.form.get('support_section_subtitle', '').strip(),
                 'custom_support_button_text': request.form.get('custom_support_button_text', '').strip(),
                 'custom_support_subtitle':    request.form.get('custom_support_subtitle', '').strip(),
-                'support_stats_count':        request.form.get('support_stats_count', '127').strip(),
-                'support_stats_amount':       request.form.get('support_stats_amount', '2340').strip(),
             })
             DataManager.save_page_content(pc)
             SiteConfig.set('section_support_visible', 'true' if request.form.get('section_support_visible') else 'false')
+
+            # Save trust bar items
+            trust_items = []
+            tb_idx = 0
+            while True:
+                tb_icon = request.form.get(f'tb_icon_{tb_idx}')
+                if tb_icon is None:
+                    break
+                tb_value   = request.form.get(f'tb_value_{tb_idx}', '').strip()
+                tb_label   = request.form.get(f'tb_label_{tb_idx}', '').strip()
+                tb_active  = request.form.get(f'tb_active_{tb_idx}', '0') == '1'
+                if tb_icon.strip() or tb_label:
+                    trust_items.append({'icon': tb_icon.strip(), 'value': tb_value, 'label': tb_label, 'is_active': tb_active})
+                tb_idx += 1
+            tb_enabled = request.form.get('trust_bar_enabled') == '1'
+            tb_data = {'enabled': tb_enabled, 'items': trust_items}
+            tb_rec = SiteContent.query.filter_by(content_key='support_trust_bar').first()
+            if tb_rec:
+                tb_rec.content_data = json.dumps(tb_data)
+            else:
+                tb_rec = SiteContent(content_key='support_trust_bar', content_data=json.dumps(tb_data))
+                db.session.add(tb_rec)
+            db.session.commit()
+
             flash('Support section saved!', 'success')
             return redirect(url_for('admin_content_manager') + '#support')
 
@@ -2919,13 +2958,29 @@ def admin_content_manager():
     }
     subscription_tiers = SubscriptionTier.query.order_by(SubscriptionTier.sort_order).all()
 
+    _DEFAULT_TRUST_BAR = {
+        'enabled': True,
+        'items': [
+            {'icon': 'fas fa-users',      'value': '127+',  'label': 'Supporters',               'is_active': True},
+            {'icon': 'fas fa-rupee-sign', 'value': '₹2340', 'label': 'raised this month',        'is_active': True},
+            {'icon': 'fas fa-shield-alt', 'value': '',      'label': '100% Secure via Razorpay', 'is_active': True},
+            {'icon': 'fas fa-lock',       'value': '',      'label': 'No hidden charges',         'is_active': True},
+        ]
+    }
+    try:
+        _tb_rec = SiteContent.query.filter_by(content_key='support_trust_bar').first()
+        trust_bar_data = json.loads(_tb_rec.content_data) if _tb_rec else _DEFAULT_TRUST_BAR
+    except Exception:
+        trust_bar_data = _DEFAULT_TRUST_BAR
+
     return render_template('admin/content_manager.html',
                            pc=pc,
                            stats_data=stats_data,
                            visibility=visibility,
                            subscription_tiers=subscription_tiers,
                            live_subscriber_count=live_subscriber_count,
-                           live_reel_count=live_reel_count)
+                           live_reel_count=live_reel_count,
+                           trust_bar_data=trust_bar_data)
 
 
 @app.route('/admin/column-visibility', methods=['GET', 'POST'])

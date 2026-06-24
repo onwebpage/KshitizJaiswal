@@ -160,26 +160,20 @@
                 </div>
 
                 <!-- Support Trust Row -->
+                {% if support_trust_bar and support_trust_bar.enabled %}
+                {% set active_trust_items = support_trust_bar['items'] | selectattr('is_active') | list %}
+                {% if active_trust_items %}
                 <div class="support-trust-row">
+                    {% for item in active_trust_items %}
                     <div class="support-trust-item">
-                        <i class="fas fa-users"></i>
-                        <strong>{{ page_content.support_stats_count or 127 }}+</strong>
-                        <span>Supporters</span>
+                        <i class="{{ item.icon or 'fas fa-check' }}"></i>
+                        {% if item.value %}<strong>{{ item.value }}</strong>{% endif %}
+                        <span>{{ item.label }}</span>
                     </div>
-                    <div class="support-trust-item">
-                        <i class="fas fa-rupee-sign"></i>
-                        <strong>₹{{ page_content.support_stats_amount or 2340 }}</strong>
-                        <span>raised this month</span>
-                    </div>
-                    <div class="support-trust-item">
-                        <i class="fas fa-shield-alt"></i>
-                        <span>100% Secure via Razorpay</span>
-                    </div>
-                    <div class="support-trust-item">
-                        <i class="fas fa-lock"></i>
-                        <span>No hidden charges</span>
-                    </div>
+                    {% endfor %}
                 </div>
+                {% endif %}
+                {% endif %}
             </div>
         </div>
         </div>
