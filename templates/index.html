@@ -15,70 +15,68 @@
 
 <!-- Beyond The Reel Section -->
 {% if section_vis.reels %}
-<section id="beyond-reel" class="section-padding reels-section">
+<section id="beyond-reel" class="premium-reels-section">
     <div class="container">
-        <!-- Section Header — two-column premium layout -->
-        <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+        <div class="premium-reels-header">
             <div>
-                <h2 class="section-title mb-1">{{ page_content.reels_section_title }}</h2>
-                <p class="section-subtitle mb-0">{{ page_content.reels_section_subtitle }}</p>
+                <h2 class="premium-reels-title">{{ page_content.reels_section_title }}</h2>
+                <p class="premium-reels-subtitle">{{ page_content.reels_section_subtitle }}</p>
             </div>
-            <a href="{{ url_for('reels_library') }}" class="btn btn-outline-primary btn-sm rounded-pill px-4 flex-shrink-0">
-                View Full Library <i class="fas fa-arrow-right ms-1"></i>
+            <a href="{{ url_for('reels_library') }}" class="btn premium-reels-viewall">
+                View All <i class="fas fa-arrow-right ms-2"></i>
             </a>
         </div>
 
         {% if content.reels %}
-        {% set reels_count = content.reels|length %}
-
-        {# Reusable card macro #}
-        {% macro reel_card(reel, hidden=false) %}
-        <a href="{{ url_for('reel_detail', reel_id=reel.id) }}"
-           class="reel-card layout-{{ reel.card_layout or 'standard' }}"
-           data-reel-id="{{ reel.id }}"
-           {% if hidden %}aria-hidden="true" tabindex="-1"{% endif %}>
-            <div class="reel-card-thumb">
+        {% macro premium_reel_card(reel) %}
+        {%- set vtype = reel.video_type or 'auto' -%}
+        {%- if vtype == 'youtube' or 'youtube.com' in (reel.video_url or '') or 'youtu.be' in (reel.video_url or '') -%}
+            {%- set platform = 'youtube' -%}
+        {%- elif vtype == 'instagram' or 'instagram.com' in (reel.video_url or '') -%}
+            {%- set platform = 'instagram' -%}
+        {%- else -%}
+            {%- set platform = '' -%}
+        {%- endif -%}
+        <a href="{{ url_for('reel_detail', reel_id=reel.id) }}" class="preel-card" data-reel-id="{{ reel.id }}">
+            <div class="preel-thumb">
+                <img
+                    src="{% if reel.thumbnail %}{{ url_for('static', filename=reel.thumbnail) if not reel.thumbnail.startswith('http') else reel.thumbnail }}{% else %}https://placehold.co/360x480/0d0d1a/cc0000?text={{ reel.title | urlencode }}{% endif %}"
+                    alt="{{ reel.title }}"
+                    class="preel-img"
+                    loading="lazy"
+                    draggable="false"
+                    onerror="this.src='https://placehold.co/360x480/0d0d1a/cc0000?text=No+Image'">
+                <div class="preel-gradient"></div>
+                {% if platform == 'youtube' %}
+                <span class="preel-platform-badge preel-yt"><i class="fab fa-youtube"></i> YouTube</span>
+                {% elif platform == 'instagram' %}
+                <span class="preel-platform-badge preel-ig"><i class="fab fa-instagram"></i> Instagram</span>
+                {% endif %}
                 {% if reel.category_tag %}
-                <span class="reel-cat-badge reel-cat-{{ reel.category_tag }}">
-                    {% if reel.category_tag == 'trending' %}🔥{% elif reel.category_tag == 'new' %}🆕{% elif reel.category_tag == 'must_watch' %}👀{% elif reel.category_tag == 'fan_favourite' %}❤{% elif reel.category_tag == 'exclusive' %}⭐{% elif reel.category_tag == 'behind_scenes' %}🎬{% endif %}
+                <span class="preel-cat-badge preel-cat-{{ reel.category_tag }}">
+                    {% if reel.category_tag == 'trending' %}🔥{% elif reel.category_tag == 'new' %}✨{% elif reel.category_tag == 'must_watch' %}👀{% elif reel.category_tag == 'fan_favourite' %}❤{% elif reel.category_tag == 'exclusive' %}⭐{% elif reel.category_tag == 'behind_scenes' %}🎬{% endif %}
                     {{ reel.category_tag | replace('_', ' ') | title }}
                 </span>
                 {% endif %}
-                <img
-                    src="{% if reel.thumbnail %}{{ url_for('static', filename=reel.thumbnail) if not reel.thumbnail.startswith('http') else reel.thumbnail }}{% else %}https://placehold.co/400x225/1a0000/cc0000?text=No+Image{% endif %}"
-                    alt="{{ reel.title }}"
-                    class="reel-card-img"
-                    loading="lazy"
-                    onerror="this.src='https://placehold.co/400x225/1a0000/cc0000?text=No+Image'">
-                <div class="reel-card-overlay">
-                    <span class="reel-action-btn reel-btn-play">
-                        <i class="fas fa-play"></i> Watch Now
-                    </span>
-                    <span class="reel-action-btn reel-btn-detail">
-                        <i class="fas fa-book-open"></i> Behind the Reel
-                    </span>
+                <div class="preel-hover-overlay">
+                    <div class="preel-play-btn"><i class="fas fa-play"></i></div>
                 </div>
-            </div>
-            <div class="reel-card-info">
-                <p class="reel-card-title">{{ reel.title }}</p>
-                <div class="reel-card-meta">
-                    {% if reel.topic_tag %}<span class="reel-topic-tag">{{ reel.topic_tag }}</span>{% endif %}
-                    <span class="reel-views"><i class="fas fa-eye"></i> {{ reel.view_count or 0 }}</span>
+                <div class="preel-title-block">
+                    <p class="preel-title">{{ reel.title }}</p>
                 </div>
             </div>
         </a>
         {% endmacro %}
 
-        <!-- Infinite-scroll carousel — JS clones cards for seamless loop -->
-        <div class="reel-carousel-container" aria-label="Video Carousel">
-            <div class="reel-carousel" id="reelCarousel">
-                {% for reel in content.reels %}{{ reel_card(reel) }}{% endfor %}
+        <div class="preel-carousel-wrap" aria-label="Video Carousel">
+            <div class="preel-carousel" id="reelCarousel">
+                {% for reel in content.reels %}{{ premium_reel_card(reel) }}{% endfor %}
             </div>
         </div>
         {% else %}
         <div class="text-center py-5">
-            <i class="fas fa-video fa-3x text-muted mb-3"></i>
-            <p class="text-muted">No reels yet — check back soon!</p>
+            <i class="fas fa-video fa-3x mb-3" style="color:rgba(255,255,255,.25)"></i>
+            <p style="color:rgba(255,255,255,.5)">No reels yet — check back soon!</p>
         </div>
         {% endif %}
     </div>
@@ -266,242 +264,234 @@
 </style>
 {% endif %}
 
-<!-- Reel Card CSS -->
+<!-- Premium Reel Carousel CSS -->
 <style>
-/* ── Carousel wrapper ──────────────────────────────── */
-.reels-section { background: var(--gray-50, #f8f9fa); }
-
-.reel-carousel-container {
+/* ══ Section wrapper ══════════════════════════════════════════════════ */
+.premium-reels-section {
+    background: linear-gradient(180deg, #0a0a12 0%, #0f0f1e 60%, #0a0a12 100%);
+    padding: 64px 0 72px;
     overflow: hidden;
     position: relative;
-    mask-image: linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%);
-    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 6%, black 94%, transparent 100%);
+}
+.premium-reels-section::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(204,0,0,.12) 0%, transparent 70%);
+    pointer-events: none;
 }
 
-.reel-carousel {
+/* ══ Header ═══════════════════════════════════════════════════════════ */
+.premium-reels-header {
     display: flex;
-    gap: 1.1rem;
-    width: max-content;
-    will-change: transform;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 40px;
+    position: relative;
+    z-index: 1;
+}
+.premium-reels-title {
+    font-size: clamp(1.6rem, 3.5vw, 2.2rem);
+    font-weight: 800;
+    color: #fff;
+    margin: 0 0 6px;
+    letter-spacing: -.3px;
+}
+.premium-reels-subtitle {
+    font-size: .95rem;
+    color: rgba(255,255,255,.55);
+    margin: 0;
+}
+.premium-reels-viewall {
+    background: transparent;
+    color: #fff;
+    border: 1.5px solid rgba(255,255,255,.25);
+    border-radius: 50px;
+    padding: 9px 22px;
+    font-size: .85rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background .2s, border-color .2s, color .2s;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.premium-reels-viewall:hover {
+    background: rgba(255,255,255,.12);
+    border-color: rgba(255,255,255,.55);
+    color: #fff;
+    text-decoration: none;
+}
+
+/* ══ Carousel track ═══════════════════════════════════════════════════ */
+.preel-carousel-wrap {
+    overflow: hidden;
+    position: relative;
+    mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
     cursor: grab;
 }
+.preel-carousel-wrap:active { cursor: grabbing; }
 
-.reel-carousel:active { cursor: grabbing; }
+.preel-carousel {
+    display: flex;
+    gap: 18px;
+    width: max-content;
+    will-change: transform;
+    user-select: none;
+    -webkit-user-select: none;
+}
 
-/* ── Individual card ───────────────────────────────── */
-.reel-card {
+/* ══ Individual card ══════════════════════════════════════════════════ */
+.preel-card {
     flex-shrink: 0;
-    width: 220px;
-    border-radius: 14px;
-    background: #fff;
-    box-shadow: 0 2px 12px rgba(0,0,0,.09);
+    width: 280px;
+    border-radius: 18px;
     overflow: hidden;
-    transition: transform .25s ease, box-shadow .25s ease;
-    cursor: default;
-}
-
-.reel-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 8px 28px rgba(0,0,0,.18);
-}
-
-/* Portrait layout — narrower, taller */
-.reel-card.layout-portrait { width: 155px; }
-/* Landscape — wider */
-.reel-card.layout-landscape { width: 300px; }
-
-/* ── Thumbnail ─────────────────────────────────────── */
-.reel-card-thumb {
+    display: block;
+    text-decoration: none;
     position: relative;
-    overflow: hidden;
-    background: #1a0000;
+    box-shadow: 0 8px 32px rgba(0,0,0,.45);
+    transition: transform .3s cubic-bezier(.23,1,.32,1), box-shadow .3s ease;
+}
+.preel-card:hover {
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: 0 20px 56px rgba(0,0,0,.65);
+    text-decoration: none;
 }
 
-.reel-card.layout-standard .reel-card-thumb { aspect-ratio: 16/9; }
-.reel-card.layout-portrait  .reel-card-thumb { aspect-ratio: 9/16; }
-.reel-card.layout-landscape .reel-card-thumb { aspect-ratio: 21/9; }
-
-.reel-card-img {
+/* ══ Thumbnail ════════════════════════════════════════════════════════ */
+.preel-thumb {
+    position: relative;
+    aspect-ratio: 9/14;
+    background: #0d0d1a;
+    overflow: hidden;
+}
+.preel-img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
-    transition: transform .35s ease;
+    transition: transform .45s cubic-bezier(.23,1,.32,1);
+    pointer-events: none;
 }
-.reel-card:hover .reel-card-img { transform: scale(1.07); }
+.preel-card:hover .preel-img { transform: scale(1.08); }
 
-/* ── Overlay with action buttons ───────────────────── */
-.reel-card-overlay {
+/* ══ Bottom gradient + title ══════════════════════════════════════════ */
+.preel-gradient {
     position: absolute;
     inset: 0;
-    background: rgba(0,0,0,.55);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: .55rem;
-    opacity: 0;
-    transition: opacity .25s ease;
-    padding: .6rem;
+    background: linear-gradient(
+        to bottom,
+        transparent 35%,
+        rgba(0,0,0,.25) 55%,
+        rgba(0,0,0,.85) 80%,
+        rgba(0,0,0,.97) 100%
+    );
+    z-index: 1;
 }
-.reel-card:hover .reel-card-overlay { opacity: 1; }
-
-.reel-action-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: .35rem;
-    padding: .45rem .95rem;
-    border-radius: 30px;
-    font-size: .78rem;
+.preel-title-block {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 14px 16px 18px;
+    z-index: 2;
+}
+.preel-title {
+    font-size: .95rem;
     font-weight: 700;
-    text-decoration: none;
-    transition: transform .15s, background .15s;
-    white-space: nowrap;
-}
-.reel-action-btn:hover { transform: scale(1.05); text-decoration: none; }
-
-.reel-btn-platform {
-    background: #fff;
-    color: #cc0000;
-}
-.reel-btn-platform:hover { background: #cc0000; color: #fff; }
-
-.reel-btn-detail {
-    background: rgba(255,255,255,.18);
     color: #fff;
-    border: 1px solid rgba(255,255,255,.5);
-}
-.reel-btn-detail:hover { background: rgba(255,255,255,.35); color: #fff; }
-
-/* ── Platform badge ────────────────────────────────── */
-.reel-platform-badge {
-    position: absolute;
-    bottom: 8px;
-    left: 8px;
-    padding: 3px 8px;
-    border-radius: 20px;
-    font-size: .72rem;
-    font-weight: 700;
-    backdrop-filter: blur(4px);
-    z-index: 3;
-}
-.platform-yt { background: rgba(255,0,0,.85); color: #fff; }
-.platform-ig { background: linear-gradient(135deg,#f58529,#dd2a7b,#8134af); color: #fff; }
-
-/* ── Category tag ──────────────────────────────────── */
-.reel-cat-badge {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    padding: 3px 9px;
-    border-radius: 20px;
-    font-size: .7rem;
-    font-weight: 700;
-    z-index: 3;
-    background: rgba(255,255,255,.92);
-    color: #333;
-    backdrop-filter: blur(4px);
-}
-
-/* ── Card info ─────────────────────────────────────── */
-.reel-card-info {
-    padding: .65rem .75rem .7rem;
-}
-.reel-card-title {
-    font-size: .82rem;
-    font-weight: 700;
-    color: #1a1a1a;
-    margin: 0 0 .35rem;
-    line-height: 1.35;
+    margin: 0;
+    line-height: 1.4;
     display: -webkit-box;
-    -webkit-line-clamp: 2;
+    -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
-}
-.reel-card-meta {
-    display: flex;
-    align-items: center;
-    gap: .5rem;
-    flex-wrap: wrap;
-}
-.reel-topic-tag {
-    font-size: .68rem;
-    background: rgba(204,0,0,.1);
-    color: #cc0000;
-    border-radius: 10px;
-    padding: 1px 7px;
-    font-weight: 600;
-}
-.reel-views {
-    font-size: .68rem;
-    color: #888;
-    margin-left: auto;
+    text-shadow: 0 1px 6px rgba(0,0,0,.6);
 }
 
-/* ── Mobile tweaks ─────────────────────────────────── */
-@media (max-width: 575.98px) {
-    .reel-card { width: 180px; }
-    .reel-card.layout-portrait { width: 125px; }
-    .reel-card.layout-landscape { width: 240px; }
-}
-
-/* ── Beyond The Reel — WhatsApp CTA ───────────────── */
-.reels-wa-banner {
-    background: linear-gradient(135deg, #1a0000 0%, #3d0000 50%, #1a0000 100%);
-    border-radius: 18px;
-    padding: 2px;
-    box-shadow: 0 8px 28px rgba(204, 0, 0, 0.18);
-}
-.reels-wa-inner {
-    background: linear-gradient(135deg, #140000 0%, #2d0505 60%, #1a0000 100%);
-    border-radius: 16px;
-    padding: 24px 28px;
+/* ══ Hover overlay — play button ══════════════════════════════════════ */
+.preel-hover-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,.28);
     display: flex;
     align-items: center;
-    gap: 20px;
-    flex-wrap: wrap;
-    border: 1px solid rgba(204, 0, 0, 0.25);
+    justify-content: center;
+    opacity: 0;
+    transition: opacity .25s ease;
+    z-index: 3;
+    pointer-events: none;
 }
-.reels-wa-icon {
-    width: 56px;
-    height: 56px;
-    background: #25D366;
+.preel-card:hover .preel-hover-overlay { opacity: 1; }
+.preel-play-btn {
+    width: 58px;
+    height: 58px;
+    background: rgba(255,255,255,.95);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    flex-shrink: 0;
-    font-size: 1.6rem;
-    color: #fff;
+    font-size: 1.2rem;
+    color: #cc0000;
+    box-shadow: 0 4px 20px rgba(0,0,0,.4);
+    transform: scale(.9);
+    transition: transform .25s ease;
 }
-.reels-wa-text { flex: 1; color: #fff; min-width: 180px; }
-.reels-wa-text h5 { font-size: 1.05rem; font-weight: 700; margin-bottom: 4px; }
-.reels-wa-text p { font-size: 0.88rem; opacity: 0.78; margin: 0; }
-.reels-wa-btn {
+.preel-card:hover .preel-play-btn { transform: scale(1); }
+
+/* ══ Platform badge ═══════════════════════════════════════════════════ */
+.preel-platform-badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: .72rem;
+    font-weight: 700;
+    backdrop-filter: blur(8px);
+    z-index: 4;
     display: inline-flex;
     align-items: center;
-    background: #25D366;
+    gap: 5px;
+}
+.preel-yt {
+    background: rgba(255,0,0,.88);
     color: #fff;
+}
+.preel-ig {
+    background: linear-gradient(135deg, rgba(245,133,41,.9), rgba(221,42,123,.9), rgba(129,52,175,.9));
+    color: #fff;
+}
+
+/* ══ Category badge ═══════════════════════════════════════════════════ */
+.preel-cat-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: .7rem;
     font-weight: 700;
-    font-size: 0.92rem;
-    padding: 12px 24px;
-    border-radius: 50px;
-    text-decoration: none;
-    white-space: nowrap;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s;
-    box-shadow: 0 4px 16px rgba(37, 211, 102, 0.3);
-    flex-shrink: 0;
-}
-.reels-wa-btn:hover {
-    background: #128C7E;
+    background: rgba(255,255,255,.18);
     color: #fff;
-    transform: translateY(-2px);
-    box-shadow: 0 8px 22px rgba(37, 211, 102, 0.4);
-    text-decoration: none;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,.25);
+    z-index: 4;
 }
-@media (max-width: 768px) {
-    .reels-wa-inner { padding: 20px; flex-direction: column; text-align: center; }
-    .reels-wa-btn { width: 100%; justify-content: center; }
+
+/* ══ Mobile ═══════════════════════════════════════════════════════════ */
+@media (max-width: 767.98px) {
+    .premium-reels-section { padding: 48px 0 56px; }
+    .preel-card { width: 210px; }
+    .premium-reels-header { margin-bottom: 28px; }
+}
+@media (max-width: 480px) {
+    .preel-card { width: 175px; border-radius: 14px; }
+    .preel-carousel { gap: 12px; }
+    .preel-title { font-size: .82rem; }
 }
 </style>
 

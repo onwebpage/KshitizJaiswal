@@ -26,21 +26,26 @@
     gap: 8px;
 }
 .reel-form-section-title i { color: #cc0000; font-size: .9rem; }
-.ig-url-preview {
+.url-preview-box {
     display: none;
     align-items: center;
     gap: 10px;
     padding: 10px 14px;
-    background: linear-gradient(135deg, #fdf2f8, #fff);
-    border: 1.5px solid #f9a8d4;
+    background: linear-gradient(135deg, #f0f9ff, #fff);
+    border: 1.5px solid #bae6fd;
     border-radius: 10px;
     margin-top: 10px;
     font-size: .85rem;
-    color: #be185d;
+    color: #0369a1;
     font-weight: 600;
 }
-.ig-url-preview i { font-size: 1.1rem; }
-.ig-url-preview a { color: #be185d; text-decoration: underline dotted; }
+.url-preview-box.ig-mode {
+    background: linear-gradient(135deg, #fdf2f8, #fff);
+    border-color: #f9a8d4;
+    color: #be185d;
+}
+.url-preview-box i { font-size: 1.1rem; }
+.url-preview-box a { color: inherit; text-decoration: underline dotted; }
 </style>
 {% endblock %}
 
@@ -59,32 +64,41 @@
                 <form method="POST" enctype="multipart/form-data" id="reelForm">
                     {{ form.hidden_tag() }}
                     {{ form.thumbnail_url(id="thumbnailUrlHidden", type="hidden") }}
-                    {{ form.video_type(type="hidden", value="instagram") }}
                     {{ form.card_layout(type="hidden", value="portrait") }}
 
-                    <!-- ── Section 1: Instagram URL ── -->
+                    <!-- ── Section 1: Platform + URL ── -->
                     <div class="reel-form-section">
                         <div class="reel-form-section-title">
-                            <i class="fab fa-instagram"></i> Instagram Reel URL
+                            <i class="fas fa-video"></i> Platform &amp; Video URL
                         </div>
 
-                        <label class="form-label fw-semibold">
-                            Instagram Reel Link <span class="text-danger">*</span>
-                        </label>
-                        {{ form.video_url(
-                            class="form-control form-control-lg",
-                            id="videoUrl",
-                            placeholder="https://www.instagram.com/reel/ABC123.../",
-                            autocomplete="off"
-                        ) }}
-                        <small class="form-text text-muted">
-                            Paste the full link to the Instagram reel. Users will be sent here when they click "Watch Reel on Instagram".
-                        </small>
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">
+                                Platform <span class="text-danger">*</span>
+                            </label>
+                            {{ form.video_type(class="form-select form-select-lg", id="videoType") }}
+                            <small class="form-text text-muted">Select whether this is a YouTube video or an Instagram reel.</small>
+                        </div>
 
-                        <div class="ig-url-preview mt-2" id="igUrlPreview">
-                            <i class="fab fa-instagram"></i>
-                            <span>Instagram reel detected — users will be redirected to:&nbsp;</span>
-                            <a id="igUrlLink" href="#" target="_blank" rel="noopener noreferrer" id="igPreviewLink">view link</a>
+                        <div class="mb-1">
+                            <label class="form-label fw-semibold" id="urlLabel">
+                                Video / Reel URL <span class="text-danger">*</span>
+                            </label>
+                            {{ form.video_url(
+                                class="form-control form-control-lg",
+                                id="videoUrl",
+                                placeholder="https://www.youtube.com/watch?v=... or https://www.instagram.com/reel/...",
+                                autocomplete="off"
+                            ) }}
+                            <small class="form-text text-muted" id="urlHint">
+                                Paste the full URL. Users will be sent here when they click to watch.
+                            </small>
+                        </div>
+
+                        <div class="url-preview-box mt-2" id="urlPreviewBox" style="display:none">
+                            <i id="urlPreviewIcon" class="fab fa-youtube"></i>
+                            <span id="urlPreviewText">URL detected:</span>&nbsp;
+                            <a id="urlPreviewLink" href="#" target="_blank" rel="noopener noreferrer">view link</a>
                         </div>
                     </div>
 
@@ -210,32 +224,74 @@
 {{ image_upload_js() }}
 <script>
 (function () {
-    var urlInput   = document.getElementById('videoUrl');
-    var previewBox = document.getElementById('igUrlPreview');
-    var previewLnk = document.getElementById('igUrlLink');
+    var urlInput    = document.getElementById('videoUrl');
+    var typeSelect  = document.getElementById('videoType');
+    var previewBox  = document.getElementById('urlPreviewBox');
+    var previewIcon = document.getElementById('urlPreviewIcon');
+    var previewText = document.getElementById('urlPreviewText');
+    var previewLnk  = document.getElementById('urlPreviewLink');
+    var urlHint     = document.getElementById('urlHint');
 
+    function isYouTube(url) {
+        return /youtube\.com\/(watch|shorts)|youtu\.be\//.test(url);
+    }
     function isInstagram(url) {
-        return /instagram\.com\/(p|reel)\/[A-Za-z0-9_-]+/.test(url);
+        return /instagram\.com\/(p|reel)\//.test(url);
     }
 
-    function updatePreview() {
-        var val = urlInput ? urlInput.value.trim() : '';
-        if (isInstagram(val)) {
-            if (previewLnk) { previewLnk.href = val; previewLnk.textContent = val.length > 55 ? val.slice(0, 55) + '…' : val; }
-            if (previewBox) previewBox.style.display = 'flex';
+    function updateUI() {
+        if (!urlInput || !typeSelect) return;
+        var val  = urlInput.value.trim();
+        var type = typeSelect.value;
+
+        // Auto-detect platform from URL if type is 'auto'
+        if (type === 'auto') {
+            if (isYouTube(val))     type = 'youtube';
+            else if (isInstagram(val)) type = 'instagram';
+        }
+
+        var isIg = (type === 'instagram');
+        var isYt = (type === 'youtube');
+
+        // Update placeholder
+        if (isYt) {
+            urlInput.placeholder = 'https://www.youtube.com/watch?v=...';
+            if (urlHint) urlHint.textContent = 'Paste the YouTube video URL. Users will be taken to YouTube when they click watch.';
+        } else {
+            urlInput.placeholder = 'https://www.instagram.com/reel/ABC123.../';
+            if (urlHint) urlHint.textContent = 'Paste the full Instagram reel URL. Users will be sent here when they click watch.';
+        }
+
+        // Update preview box
+        if (val && (isYouTube(val) || isInstagram(val))) {
+            var short = val.length > 55 ? val.slice(0, 55) + '…' : val;
+            if (previewLnk)  { previewLnk.href = val; previewLnk.textContent = short; }
+            if (previewBox)  {
+                previewBox.style.display = 'flex';
+                previewBox.classList.toggle('ig-mode', isIg);
+            }
+            if (previewIcon) {
+                previewIcon.className = isIg ? 'fab fa-instagram' : 'fab fa-youtube';
+            }
+            if (previewText) {
+                previewText.textContent = isIg ? 'Instagram reel detected — opens:' : 'YouTube video detected — opens:';
+            }
         } else {
             if (previewBox) previewBox.style.display = 'none';
         }
     }
 
     if (urlInput) {
-        urlInput.addEventListener('input', updatePreview);
-        urlInput.addEventListener('paste', function () { setTimeout(updatePreview, 10); });
-        updatePreview(); // run on load for edit page
+        urlInput.addEventListener('input', updateUI);
+        urlInput.addEventListener('paste', function () { setTimeout(updateUI, 10); });
+    }
+    if (typeSelect) {
+        typeSelect.addEventListener('change', updateUI);
     }
 
-    // Flash auto-close
+    // Run on load (populates hints on edit page)
     document.addEventListener('DOMContentLoaded', function () {
+        updateUI();
         document.querySelectorAll('.alert.alert-dismissible').forEach(function(el) {
             setTimeout(function() { try { new bootstrap.Alert(el).close(); } catch(e){} }, 5000);
         });

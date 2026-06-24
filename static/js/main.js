@@ -53,6 +53,8 @@
     function initReelCarousel() {
         var carousel = document.getElementById('reelCarousel');
         if (!carousel) return;
+        // Support both old (.reel-carousel-container) and new (.preel-carousel-wrap) wrapper
+        var wrapper = carousel.closest('.preel-carousel-wrap') || carousel.closest('.reel-carousel-container') || carousel.parentElement;
 
         // Kill any residual CSS animation so JS owns the transform entirely
         carousel.style.animation = 'none';
@@ -174,6 +176,7 @@
             lastDragTime     = performance.now();
             velocity         = 0;
             carousel.style.cursor = 'grabbing';
+            if (wrapper) wrapper.style.cursor = 'grabbing';
             clearTimeout(resumeTimer);
             e.preventDefault(); // stops text selection & native image drag
         });
@@ -197,6 +200,7 @@
             if (!dragging) return;
             dragging = false;
             carousel.style.cursor = '';
+            if (wrapper) wrapper.style.cursor = '';
             // Hand off to momentum tick, then resume auto-scroll after delay
             scheduleResume();
             lastTime = null;
