@@ -703,16 +703,17 @@
         }
         .nl-input:focus { border-color:#cc0000; }
         @media (max-width: 480px) {
-            #newsletterPopup { padding: 10px !important; align-items: flex-end !important; }
-            #nlPopupBox { border-radius:16px 16px 0 0; max-width:100%; }
-            .nl-popup-header { padding:14px 16px 10px; }
-            .nl-popup-icon { width:36px; height:36px; font-size:.95rem; margin-bottom:6px; }
-            #nlPopupTitle { font-size:.98rem !important; }
-            .nl-popup-subtitle { font-size:.78rem !important; }
-            .nl-popup-body { padding:14px 16px 12px; }
-            .nl-input { padding:8px 11px; font-size:.83rem; border-radius:8px; }
-            .nl-row-gap { gap:8px !important; margin-bottom:8px !important; }
-            #newsletterPopupSubmit { padding:9px !important; font-size:.88rem !important; }
+            #newsletterPopup { padding: 12px !important; align-items: center !important; }
+            #nlPopupBox { border-radius:14px; max-width:320px; width:calc(100% - 24px); }
+            .nl-popup-header { padding:12px 14px 8px; }
+            .nl-popup-icon { width:32px; height:32px; font-size:.85rem; margin-bottom:5px; }
+            #nlPopupTitle { font-size:.9rem !important; margin:5px 0 2px !important; }
+            .nl-popup-subtitle { font-size:.72rem !important; }
+            .nl-popup-body { padding:12px 14px 10px; }
+            .nl-input { padding:7px 10px; font-size:.8rem; border-radius:7px; }
+            .nl-row-gap { gap:7px !important; margin-bottom:7px !important; }
+            #newsletterPopupSubmit { padding:8px !important; font-size:.82rem !important; border-radius:8px !important; }
+            #newsletterPopupForm div { margin-bottom:7px !important; }
         }
     </style>
     <div id="newsletterPopup" role="dialog" aria-modal="true" aria-labelledby="nlPopupTitle"
