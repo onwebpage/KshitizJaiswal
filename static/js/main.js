@@ -48,131 +48,117 @@
         });
     }
 
-    // Initialize reel carousel — arrow button navigation with touch swipe support.
+    // Initialize reel carousel — arrow navigation + touch swipe, circular wrap.
     function initReelCarousel() {
         var carousel = document.getElementById('reelCarousel');
         if (!carousel) return;
 
-        var prevBtn = document.getElementById('reelPrev');
-        var nextBtn = document.getElementById('reelNext');
+        var prevBtn  = document.getElementById('reelPrev');
+        var nextBtn  = document.getElementById('reelNext');
         var overflow = carousel.closest('.preel-carousel-overflow') || carousel.parentElement;
 
-        // Block native drag on images/links
         carousel.addEventListener('dragstart', function(e) { e.preventDefault(); });
         carousel.querySelectorAll('img').forEach(function(img) {
             img.setAttribute('draggable', 'false');
         });
 
-        var currentIndex = 0;   // index of the first fully-visible card
-        var cardGap      = 18;  // px — matches CSS gap
+        var currentIndex = 0;
+        var GAP          = 18; // matches CSS gap (updated per breakpoint below)
 
         // ── Helpers ────────────────────────────────────────────────────────
+        function getGap() {
+            // Read from computed style for accuracy across breakpoints
+            var cs = window.getComputedStyle(carousel);
+            return parseFloat(cs.columnGap || cs.gap) || GAP;
+        }
+
         function getCardWidth() {
             var card = carousel.querySelector('.preel-card');
             return card ? card.offsetWidth : 280;
-        }
-
-        function getStep() {
-            // How many cards to move per button click
-            var visibleWidth = overflow.offsetWidth;
-            var cw           = getCardWidth() + cardGap;
-            return Math.max(1, Math.floor(visibleWidth / cw));
         }
 
         function totalCards() {
             return carousel.querySelectorAll('.preel-card').length;
         }
 
-        function maxIndex() {
+        function maxScrollIndex() {
+            // How many card-steps we can scroll before running out of content
             var visibleWidth = overflow.offsetWidth;
-            var cw           = getCardWidth() + cardGap;
-            var visible      = Math.floor(visibleWidth / cw);
-            return Math.max(0, totalCards() - visible);
+            var cw           = getCardWidth() + getGap();
+            return Math.max(0, totalCards() - Math.floor(visibleWidth / cw));
         }
 
-        function clamp(val) {
-            return Math.max(0, Math.min(val, maxIndex()));
-        }
+        // ── Navigate — always moves by 1 card, wraps at boundaries ────────
+        function goTo(index, animated) {
+            var total = totalCards();
+            if (!total) return;
 
-        function applyTransform(animated) {
-            var cw = getCardWidth() + cardGap;
-            var x  = -currentIndex * cw;
-            if (!animated) {
+            // Circular wrap
+            currentIndex = ((index % total) + total) % total;
+
+            var cw      = getCardWidth() + getGap();
+            var maxPx   = Math.max(0, carousel.scrollWidth - overflow.offsetWidth);
+            var targetX = -Math.min(currentIndex * cw, maxPx);
+
+            if (animated === false) {
                 carousel.style.transition = 'none';
-                carousel.style.transform  = 'translateX(' + x + 'px)';
-                // re-enable transition after a frame
-                requestAnimationFrame(function() {
-                    carousel.style.transition = '';
-                });
+                carousel.style.transform  = 'translateX(' + targetX + 'px)';
+                requestAnimationFrame(function() { carousel.style.transition = ''; });
             } else {
-                carousel.style.transform = 'translateX(' + x + 'px)';
+                carousel.style.transform = 'translateX(' + targetX + 'px)';
             }
+
             updateButtons();
         }
 
         function updateButtons() {
-            if (!prevBtn || !nextBtn) return;
-            var mx = maxIndex();
             var total = totalCards();
+            var show  = total > 1;
+            if (prevBtn) prevBtn.style.display = show ? '' : 'none';
+            if (nextBtn) nextBtn.style.display = show ? '' : 'none';
+            if (!show) return;
 
-            // Always show buttons if there are any cards; disable at boundaries
-            if (total <= 1) {
-                prevBtn.style.display = 'none';
-                nextBtn.style.display = 'none';
-                return;
-            }
+            var mx = maxScrollIndex();
 
-            prevBtn.style.display = '';
-            nextBtn.style.display = '';
-
-            if (currentIndex <= 0) {
-                prevBtn.disabled = true;
-                prevBtn.style.opacity = '0.35';
-                prevBtn.style.cursor  = 'default';
-            } else {
-                prevBtn.disabled = false;
-                prevBtn.style.opacity = '';
+            // Prev: dim at start but still clickable (wraps to end)
+            if (prevBtn) {
+                prevBtn.disabled      = false;
                 prevBtn.style.cursor  = '';
+                prevBtn.style.opacity = currentIndex === 0 ? '0.45' : '';
             }
-
-            if (currentIndex >= mx) {
-                nextBtn.disabled = true;
-                nextBtn.style.opacity = '0.35';
-                nextBtn.style.cursor  = 'default';
-            } else {
-                nextBtn.disabled = false;
-                nextBtn.style.opacity = '';
+            // Next: dim at end but still clickable (wraps to start)
+            if (nextBtn) {
+                nextBtn.disabled      = false;
                 nextBtn.style.cursor  = '';
+                nextBtn.style.opacity = (mx > 0 && currentIndex >= mx) ? '0.45' : '';
             }
         }
 
-        // ── Arrow button clicks ────────────────────────────────────────────
+        // ── Button clicks ─────────────────────────────────────────────────
         if (prevBtn) {
             prevBtn.addEventListener('click', function(e) {
                 e.stopPropagation();
-                currentIndex = clamp(currentIndex - getStep());
-                applyTransform(true);
+                goTo(currentIndex - 1, true);
             });
         }
         if (nextBtn) {
             nextBtn.addEventListener('click', function(e) {
                 e.stopPropagation();
-                currentIndex = clamp(currentIndex + getStep());
-                applyTransform(true);
+                goTo(currentIndex + 1, true);
             });
         }
 
         // ── Touch swipe (mobile) ───────────────────────────────────────────
-        var touchStartX  = 0;
-        var touchStartY  = 0;
-        var touchLocked  = null;
-        var touchMoveX   = 0;
+        var touchStartX = 0;
+        var touchStartY = 0;
+        var touchLocked = null;
+        var touchDeltaX = 0;
 
         carousel.addEventListener('touchstart', function(e) {
             touchStartX = e.touches[0].clientX;
             touchStartY = e.touches[0].clientY;
             touchLocked = null;
-            touchMoveX  = 0;
+            touchDeltaX = 0;
         }, { passive: true });
 
         carousel.addEventListener('touchmove', function(e) {
@@ -180,46 +166,45 @@
             var dy = e.touches[0].clientY - touchStartY;
 
             if (touchLocked === null) {
-                if (Math.abs(dx) < 4 && Math.abs(dy) < 4) return;
+                if (Math.abs(dx) < 5 && Math.abs(dy) < 5) return;
                 touchLocked = Math.abs(dx) >= Math.abs(dy) ? 'h' : 'v';
             }
             if (touchLocked === 'v') return;
 
             e.preventDefault();
-            touchMoveX = dx;
-            // Live drag feedback — offset the carousel slightly
-            var cw = getCardWidth() + cardGap;
-            var baseX = -currentIndex * cw;
+            touchDeltaX = dx;
+
+            // Live drag preview
+            var cw     = getCardWidth() + getGap();
+            var maxPx  = Math.max(0, carousel.scrollWidth - overflow.offsetWidth);
+            var baseX  = -Math.min(currentIndex * cw, maxPx);
             carousel.style.transition = 'none';
-            carousel.style.transform  = 'translateX(' + (baseX + dx * 0.6) + 'px)';
+            carousel.style.transform  = 'translateX(' + (baseX + dx * 0.65) + 'px)';
         }, { passive: false });
 
         carousel.addEventListener('touchend', function() {
-            if (touchLocked !== 'h') return;
+            if (touchLocked !== 'h') { touchLocked = null; return; }
             carousel.style.transition = '';
-            var SWIPE_THRESHOLD = 60; // px
-            if (touchMoveX < -SWIPE_THRESHOLD) {
-                currentIndex = clamp(currentIndex + 1);
-            } else if (touchMoveX > SWIPE_THRESHOLD) {
-                currentIndex = clamp(currentIndex - 1);
+            if (touchDeltaX < -50) {
+                goTo(currentIndex + 1, true);
+            } else if (touchDeltaX > 50) {
+                goTo(currentIndex - 1, true);
+            } else {
+                goTo(currentIndex, true); // snap back
             }
-            applyTransform(true);
             touchLocked = null;
-            touchMoveX  = 0;
+            touchDeltaX = 0;
         }, { passive: true });
 
-        // ── Recalc on window resize ────────────────────────────────────────
+        // ── Resize: re-snap to current index ──────────────────────────────
         var resizeTimer;
         window.addEventListener('resize', function() {
             clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(function() {
-                currentIndex = clamp(currentIndex);
-                applyTransform(false);
-            }, 150);
+            resizeTimer = setTimeout(function() { goTo(currentIndex, false); }, 150);
         });
 
-        // ── Initial render ─────────────────────────────────────────────────
-        applyTransform(false);
+        // ── Init ───────────────────────────────────────────────────────────
+        goTo(0, false);
     }
 
     // Initialize poll voting functionality
