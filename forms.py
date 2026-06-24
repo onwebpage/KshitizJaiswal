@@ -18,24 +18,24 @@ class AdminLoginForm(FlaskForm):
     password = PasswordField('Password', validators=[DataRequired()])
 
 class ReelForm(FlaskForm):
-    title = StringField('Title', validators=[DataRequired(), Length(max=100)])
-    thumbnail = FileField('Thumbnail', validators=[FileAllowed(['jpg', 'jpeg', 'png', 'gif'])])
+    title = StringField('Reel Title', validators=[DataRequired(), Length(max=200)])
+    thumbnail = FileField('Thumbnail Image', validators=[FileAllowed(['jpg', 'jpeg', 'png', 'gif', 'webp'])])
     thumbnail_url = StringField('Thumbnail URL', validators=[Optional(), Length(max=500)])
-    video_url = StringField('Video URL')
+    video_url = StringField('Instagram Reel URL', validators=[Optional(), Length(max=500)])
     video_type = SelectField('Content Type', choices=[
-        ('auto', '🔍 Auto-detect'),
-        ('youtube', '▶️ YouTube Video'),
-        ('instagram', '📸 Instagram Reel'),
-    ], default='auto')
+        ('auto', 'Auto-detect'),
+        ('youtube', 'YouTube Video'),
+        ('instagram', 'Instagram Reel'),
+    ], default='instagram')
     card_layout = SelectField('Card Layout', choices=[
+        ('portrait', 'Portrait (9:16)'),
         ('standard', 'Standard (16:9)'),
-        ('portrait', 'Portrait (9:16) — best for Reels/Shorts'),
-        ('landscape', 'Landscape (21:9) — wide cinematic'),
-    ], default='standard')
+        ('landscape', 'Landscape (21:9)'),
+    ], default='portrait')
     sort_order = IntegerField('Display Order (lower = first)', validators=[NumberRange(min=0)], default=0)
-    behind_thought = TextAreaField('Behind the Thought', validators=[DataRequired()])
-    sources = TextAreaField('Sources (one per line)')
-    extra_context = TextAreaField('Extra Context')
+    behind_thought = TextAreaField('Description', validators=[Optional()])
+    sources = TextAreaField('Sources (one per line)', validators=[Optional()])
+    extra_context = TextAreaField('Extra Context', validators=[Optional()])
     category_tag = SelectField('Category Tag', choices=[
         ('', 'No Tag'),
         ('trending', '🔥 Trending'),
@@ -45,7 +45,7 @@ class ReelForm(FlaskForm):
         ('must_watch', '👀 Must Watch'),
         ('behind_scenes', '🎬 Behind the Scenes')
     ])
-    topic_tag = StringField('Topic Tag', validators=[Length(max=100)], 
+    topic_tag = StringField('Topic Tag', validators=[Optional(), Length(max=100)],
                            render_kw={"placeholder": "e.g., Vote Chori Issue, Education Reform"})
     is_featured = SelectField('Show on Homepage?', choices=[('0', 'No'), ('1', 'Yes')], default='0')
     is_visible = SelectField('Visible on Site?', choices=[('1', 'Yes — Show'), ('0', 'No — Hide')], default='1')

@@ -943,10 +943,10 @@ def admin_add_reel():
             title=form.title.data,
             thumbnail=thumbnail_url or '',
             video_url=form.video_url.data or '',
-            video_type=form.video_type.data or 'auto',
-            card_layout=form.card_layout.data or 'standard',
+            video_type=form.video_type.data or 'instagram',
+            card_layout=form.card_layout.data or 'portrait',
             sort_order=form.sort_order.data or 0,
-            behind_thought=form.behind_thought.data,
+            behind_thought=form.behind_thought.data or '',
             sources=json.dumps(sources),
             extra_context=form.extra_context.data or '',
             category_tag=form.category_tag.data or '',
@@ -1025,10 +1025,10 @@ def admin_edit_reel(reel_id):
 
         reel.title = form.title.data
         reel.video_url = form.video_url.data or ''
-        reel.video_type = form.video_type.data or 'auto'
-        reel.card_layout = form.card_layout.data or 'standard'
+        reel.video_type = form.video_type.data or 'instagram'
+        reel.card_layout = form.card_layout.data or 'portrait'
         reel.sort_order = form.sort_order.data or 0
-        reel.behind_thought = form.behind_thought.data
+        reel.behind_thought = form.behind_thought.data or ''
         reel.sources = json.dumps(sources)
         reel.extra_context = form.extra_context.data or ''
         reel.category_tag = form.category_tag.data or ''

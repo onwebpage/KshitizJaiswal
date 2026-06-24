@@ -5,459 +5,241 @@
 
 {% block extra_head %}{{ image_upload_css() }}
 <style>
-.fetch-card {
-    border: 1.5px solid #e5e7eb;
+.reel-form-section {
+    background: #fff;
     border-radius: 14px;
-    overflow: hidden;
-    background: #fafbff;
+    border: 1.5px solid #e5e7eb;
+    padding: 28px;
+    margin-bottom: 20px;
 }
-.fetch-preview-thumb {
-    width: 120px;
-    height: 72px;
-    object-fit: cover;
-    border-radius: 8px;
-    border: 1px solid #e5e7eb;
-    flex-shrink: 0;
-}
-.fetch-status {
-    font-size: .85rem;
-    font-weight: 500;
-    min-height: 20px;
-    transition: color .2s;
-}
-.auto-tag {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    background: #ede9fe;
-    color: #6d28d9;
-    font-size: .7rem;
+.reel-form-section-title {
+    font-size: .8rem;
     font-weight: 700;
-    padding: 2px 8px;
-    border-radius: 50px;
-    letter-spacing: .3px;
-    vertical-align: middle;
-    margin-left: 6px;
-}
-.field-row-label {
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: #9ca3af;
+    margin-bottom: 18px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #f3f4f6;
     display: flex;
     align-items: center;
-    gap: 0;
-    margin-bottom: 6px;
+    gap: 8px;
 }
+.reel-form-section-title i { color: #cc0000; font-size: .9rem; }
+.ig-url-preview {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: linear-gradient(135deg, #fdf2f8, #fff);
+    border: 1.5px solid #f9a8d4;
+    border-radius: 10px;
+    margin-top: 10px;
+    font-size: .85rem;
+    color: #be185d;
+    font-weight: 600;
+}
+.ig-url-preview i { font-size: 1.1rem; }
+.ig-url-preview a { color: #be185d; text-decoration: underline dotted; }
 </style>
 {% endblock %}
 
 {% block admin_content %}
 <div class="container-fluid p-4">
     <div class="row justify-content-center">
-        <div class="col-xl-9 col-lg-10 col-md-12">
-                <div class="admin-card">
-                    <div class="admin-header">
-                        <h2>{{ title }}</h2>
-                        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
-                            <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
-                        </a>
+        <div class="col-xl-8 col-lg-10 col-md-12">
+            <div class="admin-card">
+                <div class="admin-header">
+                    <h2>{{ title }}</h2>
+                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                    </a>
+                </div>
+
+                <form method="POST" enctype="multipart/form-data" id="reelForm">
+                    {{ form.hidden_tag() }}
+                    {{ form.thumbnail_url(id="thumbnailUrlHidden", type="hidden") }}
+                    {{ form.video_type(type="hidden", value="instagram") }}
+                    {{ form.card_layout(type="hidden", value="portrait") }}
+
+                    <!-- ── Section 1: Instagram URL ── -->
+                    <div class="reel-form-section">
+                        <div class="reel-form-section-title">
+                            <i class="fab fa-instagram"></i> Instagram Reel URL
+                        </div>
+
+                        <label class="form-label fw-semibold">
+                            Instagram Reel Link <span class="text-danger">*</span>
+                        </label>
+                        {{ form.video_url(
+                            class="form-control form-control-lg",
+                            id="videoUrl",
+                            placeholder="https://www.instagram.com/reel/ABC123.../",
+                            autocomplete="off"
+                        ) }}
+                        <small class="form-text text-muted">
+                            Paste the full link to the Instagram reel. Users will be sent here when they click "Watch Reel on Instagram".
+                        </small>
+
+                        <div class="ig-url-preview mt-2" id="igUrlPreview">
+                            <i class="fab fa-instagram"></i>
+                            <span>Instagram reel detected — users will be redirected to:&nbsp;</span>
+                            <a id="igUrlLink" href="#" target="_blank" rel="noopener noreferrer" id="igPreviewLink">view link</a>
+                        </div>
                     </div>
 
-                    <form method="POST" enctype="multipart/form-data" id="reelForm">
-                        {{ form.hidden_tag() }}
-                        {# Hidden thumbnail_url field set by JS after auto-fetch #}
-                        {{ form.thumbnail_url(id="thumbnailUrlHidden", type="hidden") }}
+                    <!-- ── Section 2: Thumbnail ── -->
+                    <div class="reel-form-section">
+                        <div class="reel-form-section-title">
+                            <i class="fas fa-image"></i> Thumbnail Image
+                        </div>
 
-                        <div class="row g-4">
+                        <p class="text-muted small mb-3">
+                            Upload a screenshot or custom image for this reel. This is what visitors will see on your website — no Instagram embed will be shown.
+                        </p>
 
-                            <!-- ── Step 1: Video URL (auto-fetch trigger) ── -->
-                            <div class="col-12">
-                                <div class="fetch-card p-3">
-                                    <div class="d-flex align-items-center gap-2 mb-1">
-                                        <i class="fas fa-magic text-primary"></i>
-                                        <span class="fw-bold" style="font-size:.95rem;">Step 1 — Paste Video URL</span>
-                                        <span class="text-muted small">(Thumbnail, title &amp; caption will be fetched automatically)</span>
-                                    </div>
+                        {{ image_upload_field(
+                            field=form.thumbnail,
+                            label="Drag & Drop or Click to Upload Thumbnail",
+                            hint="JPG / PNG · Recommended 9:16 ratio (e.g. 1080×1920 px) for best results",
+                            current_image=reel.thumbnail if reel and reel.thumbnail else None
+                        ) }}
+                    </div>
 
-                                    <div class="input-group mt-2">
-                                        {{ form.video_url(class="form-control form-control-lg", id="videoUrl",
-                                           placeholder="https://youtube.com/watch?v=... or https://youtu.be/...") }}
-                                        <button type="button" class="btn btn-primary px-4 fw-semibold" id="fetchBtn" onclick="doFetchMeta()">
-                                            <i class="fas fa-wand-magic-sparkles me-1"></i>Fetch Info
-                                        </button>
-                                    </div>
-                                    <div class="mt-2 d-flex align-items-center gap-3 flex-wrap">
-                                        <small class="text-muted">
-                                            <i class="fab fa-youtube me-1 text-danger"></i>YouTube &nbsp;·&nbsp;
-                                            <i class="fab fa-instagram me-1" style="color:#e1306c;"></i>Instagram
-                                        </small>
-                                        <span class="fetch-status" id="fetchStatus"></span>
-                                    </div>
+                    <!-- ── Section 3: Title & Description ── -->
+                    <div class="reel-form-section">
+                        <div class="reel-form-section-title">
+                            <i class="fas fa-pen"></i> Content Details
+                        </div>
 
-                                    <!-- Live platform detection -->
-                                    <div id="urlPreview" class="mt-2" style="display:none;">
-                                        <small class="text-muted">
-                                            Detected: <strong id="detectedType">—</strong> &nbsp;·&nbsp;
-                                            <a id="originalLink" href="#" target="_blank" rel="noopener" class="text-decoration-none">
-                                                <i class="fas fa-external-link-alt me-1"></i>Open on Platform
-                                            </a>
-                                        </small>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">
+                                Reel Title <span class="text-danger">*</span>
+                            </label>
+                            {{ form.title(class="form-control", id="titleInput", placeholder="Enter a title for this reel") }}
+                            {% for err in form.title.errors %}<div class="invalid-feedback d-block">{{ err }}</div>{% endfor %}
+                        </div>
 
-                            <!-- ── Auto-fetch preview card (hidden until fetch succeeds) ── -->
-                            <div class="col-12" id="fetchPreviewRow" style="display:none;">
-                                <div class="alert alert-success alert-dismissible mb-0 py-3" style="border-radius:12px;">
-                                    <div class="d-flex align-items-start gap-3">
-                                        <img id="fetchedThumb" src="" alt="Thumbnail" class="fetch-preview-thumb"
-                                             onerror="this.style.display='none'">
-                                        <div class="flex-grow-1 min-w-0">
-                                            <div class="fw-semibold mb-1" id="fetchedTitle" style="font-size:.9rem; word-break:break-word;"></div>
-                                            <div class="text-muted small" id="fetchedDesc" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;"></div>
-                                            <div class="mt-2 d-flex gap-2 flex-wrap">
-                                                <button type="button" class="btn btn-sm btn-success fw-semibold" onclick="applyFetchedData(true)">
-                                                    <i class="fas fa-check me-1"></i>Apply to All Fields
-                                                </button>
-                                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('fetchPreviewRow').style.display='none'">
-                                                    <i class="fas fa-times me-1"></i>Dismiss
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Description <span class="text-muted fw-normal">(optional)</span></label>
+                            {{ form.behind_thought(
+                                class="form-control",
+                                id="descriptionInput",
+                                rows="5",
+                                placeholder="Write a short description shown on the reel page — what this reel is about, the story behind it, etc."
+                            ) }}
+                        </div>
+                    </div>
 
-                            <!-- ── Title ── -->
-                            <div class="col-12">
-                                <div class="field-row-label">
-                                    <label class="form-label fw-semibold mb-0">
-                                        {{ form.title.label.text }} <span class="text-danger">*</span>
-                                    </label>
-                                    <span class="auto-tag" id="titleAutoTag" style="display:none;">
-                                        <i class="fas fa-magic"></i> Auto-filled
-                                    </span>
-                                </div>
-                                {{ form.title(class="form-control", id="titleInput", placeholder="Enter reel title") }}
-                                {% for err in form.title.errors %}<div class="invalid-feedback d-block">{{ err }}</div>{% endfor %}
-                            </div>
+                    <!-- ── Section 4: Visibility & Tags ── -->
+                    <div class="reel-form-section">
+                        <div class="reel-form-section-title">
+                            <i class="fas fa-sliders-h"></i> Visibility & Tags
+                        </div>
 
-                            <!-- ── Content Type + Card Layout + Sort ── -->
+                        <div class="row g-3 mb-3">
                             <div class="col-md-4">
-                                <label class="form-label fw-semibold">{{ form.video_type.label.text }}</label>
-                                {{ form.video_type(class="form-select", id="videoType") }}
-                                <small class="form-text text-muted">Auto-detect works for most URLs.</small>
+                                <label class="form-label fw-semibold">{{ form.is_visible.label.text }}</label>
+                                {{ form.is_visible(class="form-select") }}
+                                <small class="form-text text-muted">Hidden reels won't appear anywhere on the site.</small>
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-semibold">{{ form.card_layout.label.text }}</label>
-                                {{ form.card_layout(class="form-select") }}
-                                <small class="form-text text-muted">Portrait for Reels/Shorts, Standard for regular videos.</small>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-semibold">{{ form.sort_order.label.text }}</label>
-                                {{ form.sort_order(class="form-control", type="number", min="0") }}
-                                <small class="form-text text-muted">0 = shown first in carousel.</small>
-                            </div>
-
-                            <!-- ── Thumbnail ── -->
-                            <div class="col-12">
-                                <div class="field-row-label">
-                                    <label class="form-label fw-semibold mb-0">
-                                        <i class="fas fa-image me-1 text-primary"></i>Thumbnail Image
-                                    </label>
-                                    <span class="auto-tag" id="thumbAutoTag" style="display:none;">
-                                        <i class="fas fa-magic"></i> Auto-fetched
-                                    </span>
-                                </div>
-
-                                <!-- Auto-fetched thumbnail preview (shown when URL thumbnail is ready) -->
-                                <div id="autoThumbPreview" style="display:none; margin-bottom:12px;">
-                                    <div class="d-flex align-items-center gap-3 p-3"
-                                         style="background:#f0fdf4; border:1.5px solid #86efac; border-radius:10px;">
-                                        <img id="autoThumbImg" src="" alt="Auto-fetched thumbnail"
-                                             style="width:140px;height:80px;object-fit:cover;border-radius:8px;border:1px solid #e5e7eb;"
-                                             onerror="document.getElementById('autoThumbPreview').style.display='none'">
-                                        <div>
-                                            <div class="fw-semibold small text-success mb-1">
-                                                <i class="fas fa-check-circle me-1"></i>Thumbnail auto-fetched
-                                            </div>
-                                            <div class="text-muted" style="font-size:.78rem;">Upload a different image below to override.</div>
-                                            <button type="button" class="btn btn-sm btn-outline-danger mt-1"
-                                                    onclick="clearAutoThumb()">
-                                                <i class="fas fa-times me-1"></i>Remove
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {{ image_upload_field(
-                                    field=form.thumbnail,
-                                    label="Upload Custom Thumbnail (optional — overrides auto-fetched)",
-                                    hint="JPG / PNG · Recommended 800×450 px",
-                                    current_image=reel.thumbnail if reel and reel.thumbnail else None
-                                ) }}
-                            </div>
-
-                            <!-- ── Visibility Controls ── -->
                             <div class="col-md-4">
                                 <label class="form-label fw-semibold">{{ form.is_featured.label.text }}</label>
                                 {{ form.is_featured(class="form-select") }}
                                 <small class="form-text text-muted">Featured reels appear in the homepage carousel.</small>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label fw-semibold">{{ form.is_visible.label.text }}</label>
-                                {{ form.is_visible(class="form-select") }}
-                                <small class="form-text text-muted">Hidden reels won't show anywhere on the site.</small>
+                                <label class="form-label fw-semibold">{{ form.sort_order.label.text }}</label>
+                                {{ form.sort_order(class="form-control", type="number", min="0") }}
+                                <small class="form-text text-muted">0 = shown first in the list.</small>
                             </div>
-                            <div class="col-md-4">
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
                                 <label class="form-label fw-semibold">{{ form.category_tag.label.text }}</label>
                                 {{ form.category_tag(class="form-select") }}
                             </div>
-
-                            <!-- ── Topic Tag ── -->
-                            <div class="col-12">
+                            <div class="col-md-6">
                                 <label class="form-label fw-semibold">{{ form.topic_tag.label.text }}</label>
                                 {{ form.topic_tag(class="form-control") }}
                                 <small class="form-text text-muted">Groups related reels together (e.g. "Vote Chori Issue").</small>
                             </div>
-
-                            <!-- ── Behind the Thought / Caption ── -->
-                            <div class="col-12">
-                                <div class="field-row-label">
-                                    <label class="form-label fw-semibold mb-0">
-                                        {{ form.behind_thought.label.text }} <span class="text-danger">*</span>
-                                    </label>
-                                    <span class="auto-tag" id="captionAutoTag" style="display:none;">
-                                        <i class="fas fa-magic"></i> Auto-filled
-                                    </span>
-                                </div>
-                                {{ form.behind_thought(class="form-control", id="behindThoughtInput", rows="6",
-                                   placeholder="Explain the thought process behind this reel...") }}
-                                {% for err in form.behind_thought.errors %}<div class="invalid-feedback d-block">{{ err }}</div>{% endfor %}
-                            </div>
-
-                            <!-- ── Sources ── -->
-                            <div class="col-12">
-                                <label class="form-label fw-semibold">{{ form.sources.label.text }}</label>
-                                {{ form.sources(class="form-control", rows="4",
-                                   placeholder="Add one source URL per line:&#10;https://source1.com&#10;https://source2.com") }}
-                                <small class="form-text text-muted">One source per line. Added manually.</small>
-                            </div>
-
-                            <!-- ── Extra Context ── -->
-                            <div class="col-12">
-                                <label class="form-label fw-semibold">{{ form.extra_context.label.text }}</label>
-                                {{ form.extra_context(class="form-control", rows="4",
-                                   placeholder="Any additional context or information...") }}
-                            </div>
-
-                            <!-- ── Submit ── -->
-                            <div class="col-12">
-                                <hr class="my-2">
-                                <div class="d-flex gap-2 flex-wrap">
-                                    <button type="submit" class="btn btn-primary px-4">
-                                        <i class="fas fa-save me-1"></i>Save Reel
-                                    </button>
-                                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary px-4">
-                                        <i class="fas fa-times me-1"></i>Cancel
-                                    </a>
-                                </div>
-                            </div>
-
                         </div>
-                    </form>
-                </div>
+                    </div>
+
+                    <!-- ── Section 5: Extra (Sources / Context) ── -->
+                    <div class="reel-form-section">
+                        <div class="reel-form-section-title">
+                            <i class="fas fa-book-open"></i> Sources & Extra Context <span class="text-muted fw-normal ms-1" style="text-transform:none;letter-spacing:0;font-size:.78rem;">(optional)</span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">{{ form.sources.label.text }}</label>
+                            {{ form.sources(class="form-control", rows="4",
+                               placeholder="Add one source URL per line:&#10;https://source1.com&#10;https://source2.com") }}
+                            <small class="form-text text-muted">One source per line. Shown in the sidebar on the reel page.</small>
+                        </div>
+
+                        <div>
+                            <label class="form-label fw-semibold">{{ form.extra_context.label.text }}</label>
+                            {{ form.extra_context(class="form-control", rows="4",
+                               placeholder="Any additional notes or context...") }}
+                        </div>
+                    </div>
+
+                    <!-- ── Submit ── -->
+                    <div class="d-flex gap-3 flex-wrap">
+                        <button type="submit" class="btn btn-primary px-5 fw-semibold">
+                            <i class="fas fa-save me-2"></i>Save Reel
+                        </button>
+                        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary px-4">
+                            <i class="fas fa-times me-1"></i>Cancel
+                        </a>
+                    </div>
+
+                </form>
             </div>
         </div>
     </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
 {{ image_upload_js() }}
 <script>
-// ── Cached fetch result ────────────────────────────────────────────
-let _fetchedData = { title: '', thumbnail: '', description: '' };
-
-// ── Platform detection (runs on input) ────────────────────────────
 (function () {
-    const urlInput   = document.getElementById('videoUrl');
-    const typeSelect = document.getElementById('videoType');
-    const preview    = document.getElementById('urlPreview');
-    const detectedEl = document.getElementById('detectedType');
-    const linkEl     = document.getElementById('originalLink');
+    var urlInput   = document.getElementById('videoUrl');
+    var previewBox = document.getElementById('igUrlPreview');
+    var previewLnk = document.getElementById('igUrlLink');
 
-    function detectVideo(url) {
-        if (!url) { preview.style.display = 'none'; return; }
-        const igMatch  = url.match(/instagram\.com\/(?:p|reel)\/([A-Za-z0-9_-]+)/);
-        const ytShort  = url.match(/youtube\.com\/shorts\/([A-Za-z0-9_-]+)/);
-        const ytMatch  = url.match(/(?:youtube\.com\/watch\?(?:.*&)?v=|youtu\.be\/)([A-Za-z0-9_-]+)/);
+    function isInstagram(url) {
+        return /instagram\.com\/(p|reel)\/[A-Za-z0-9_-]+/.test(url);
+    }
 
-        if (igMatch) {
-            detectedEl.textContent = '📸 Instagram Reel';
-            linkEl.href = `https://www.instagram.com/reel/${igMatch[1]}/`;
-            if (typeSelect) typeSelect.value = 'instagram';
-        } else if (ytShort) {
-            detectedEl.textContent = '▶️ YouTube Short';
-            linkEl.href = `https://youtu.be/${ytShort[1]}`;
-            if (typeSelect) typeSelect.value = 'youtube';
-        } else if (ytMatch) {
-            detectedEl.textContent = '▶️ YouTube Video';
-            linkEl.href = `https://youtu.be/${ytMatch[1]}`;
-            if (typeSelect) typeSelect.value = 'youtube';
+    function updatePreview() {
+        var val = urlInput ? urlInput.value.trim() : '';
+        if (isInstagram(val)) {
+            if (previewLnk) { previewLnk.href = val; previewLnk.textContent = val.length > 55 ? val.slice(0, 55) + '…' : val; }
+            if (previewBox) previewBox.style.display = 'flex';
         } else {
-            preview.style.display = 'none';
-            return;
+            if (previewBox) previewBox.style.display = 'none';
         }
-        preview.style.display = '';
     }
 
     if (urlInput) {
-        urlInput.addEventListener('input', () => detectVideo(urlInput.value.trim()));
-        detectVideo(urlInput.value.trim()); // run on load (edit page)
-    }
-})();
-
-// ── Fetch metadata from server ─────────────────────────────────────
-async function doFetchMeta() {
-    const urlInput  = document.getElementById('videoUrl');
-    const statusEl  = document.getElementById('fetchStatus');
-    const fetchBtn  = document.getElementById('fetchBtn');
-    const previewRow = document.getElementById('fetchPreviewRow');
-
-    const url = urlInput ? urlInput.value.trim() : '';
-    if (!url) {
-        setStatus('⚠️ Please paste a video URL first.', 'text-warning');
-        return;
+        urlInput.addEventListener('input', updatePreview);
+        urlInput.addEventListener('paste', function () { setTimeout(updatePreview, 10); });
+        updatePreview(); // run on load for edit page
     }
 
-    setStatus('<i class="fas fa-spinner fa-spin me-1"></i>Fetching metadata…', 'text-primary');
-    fetchBtn.disabled = true;
-    previewRow.style.display = 'none';
-
-    try {
-        const resp = await fetch('/admin/fetch-video-meta?url=' + encodeURIComponent(url));
-        const data = await resp.json();
-
-        if (data.success) {
-            _fetchedData = {
-                title:       data.title       || '',
-                thumbnail:   data.thumbnail   || '',
-                description: data.description || '',
-            };
-
-            // Show preview card only if we have a thumbnail
-            if (_fetchedData.thumbnail) {
-                document.getElementById('fetchedThumb').src  = _fetchedData.thumbnail;
-                document.getElementById('fetchedTitle').textContent = _fetchedData.title;
-                document.getElementById('fetchedDesc').textContent  = _fetchedData.description;
-                previewRow.style.display = '';
-            }
-
-            // Auto-apply immediately
-            applyFetchedData(false);
-
-            if (data.partial) {
-                setStatus('⚠️ Title auto-filled from URL. Instagram blocks thumbnail fetching — please upload a screenshot as the thumbnail.', 'text-warning');
-            } else {
-                setStatus('✅ Metadata fetched — fields auto-filled. Edit freely.', 'text-success');
-            }
-        } else {
-            setStatus('❌ ' + (data.error || 'Could not fetch metadata.'), 'text-danger');
-        }
-    } catch (e) {
-        setStatus('❌ Network error. Check the URL and try again.', 'text-danger');
-    }
-
-    fetchBtn.disabled = false;
-}
-
-// ── Apply fetched data to form fields ─────────────────────────────
-function applyFetchedData(force) {
-    const d = _fetchedData;
-
-    // Title
-    const titleEl = document.getElementById('titleInput');
-    if (titleEl && d.title && (force || !titleEl.value.trim())) {
-        titleEl.value = d.title;
-        document.getElementById('titleAutoTag').style.display = '';
-    }
-
-    // Caption / Behind the Thought
-    const captionEl = document.getElementById('behindThoughtInput');
-    if (captionEl && d.description && (force || !captionEl.value.trim())) {
-        captionEl.value = d.description;
-        document.getElementById('captionAutoTag').style.display = '';
-    }
-
-    // Thumbnail (set hidden URL + show preview)
-    if (d.thumbnail) {
-        setAutoThumb(d.thumbnail);
-    }
-
-    // Dismiss the preview card after applying
-    document.getElementById('fetchPreviewRow').style.display = 'none';
-}
-
-// ── Thumbnail URL helpers ──────────────────────────────────────────
-function setAutoThumb(url) {
-    document.getElementById('thumbnailUrlHidden').value = url;
-    document.getElementById('autoThumbImg').src        = url;
-    document.getElementById('autoThumbPreview').style.display = '';
-    document.getElementById('thumbAutoTag').style.display     = '';
-}
-
-function clearAutoThumb() {
-    document.getElementById('thumbnailUrlHidden').value       = '';
-    document.getElementById('autoThumbPreview').style.display = 'none';
-    document.getElementById('thumbAutoTag').style.display     = 'none';
-    _fetchedData.thumbnail = '';
-}
-
-// ── Status helper ─────────────────────────────────────────────────
-function setStatus(html, cls) {
-    const el = document.getElementById('fetchStatus');
-    if (!el) return;
-    el.innerHTML   = html;
-    el.className   = 'fetch-status ' + cls;
-}
-
-// ── Auto-fetch on URL paste / input (debounced 1.2 s) ────────────
-(function () {
-    const urlInput = document.getElementById('videoUrl');
-    if (!urlInput) return;
-    let _timer = null;
-    const DELAY = 1200;
-
-    function isVideoUrl(url) {
-        return /(?:youtube\.com\/(?:watch|shorts)|youtu\.be\/|instagram\.com\/(?:p|reel)\/)/.test(url);
-    }
-
-    function scheduleAutoFetch() {
-        clearTimeout(_timer);
-        const url = urlInput.value.trim();
-        if (!isVideoUrl(url)) return;
-        // Don't re-fetch if we already have data for this session
-        if (_fetchedData.thumbnail || _fetchedData.title) return;
-        setStatus('<i class="fas fa-magic me-1"></i>URL detected — fetching info…', 'text-muted');
-        _timer = setTimeout(() => doFetchMeta(), DELAY);
-    }
-
-    urlInput.addEventListener('input', scheduleAutoFetch);
-    urlInput.addEventListener('paste', function () { setTimeout(scheduleAutoFetch, 10); });
-    urlInput.addEventListener('change', scheduleAutoFetch);
-})();
-
-// ── Flash auto-close ──────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll('.alert.alert-dismissible').forEach(function(el) {
-        setTimeout(() => { try { new bootstrap.Alert(el).close(); } catch(e){} }, 5000);
+    // Flash auto-close
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.alert.alert-dismissible').forEach(function(el) {
+            setTimeout(function() { try { new bootstrap.Alert(el).close(); } catch(e){} }, 5000);
+        });
     });
-
-    // On edit page: if thumbnail already set from URL, show auto-thumb preview
-    const hiddenThumb = document.getElementById('thumbnailUrlHidden');
-    if (hiddenThumb && hiddenThumb.value && hiddenThumb.value.startsWith('http')) {
-        setAutoThumb(hiddenThumb.value);
-        // Mark as already-fetched so auto-trigger doesn't re-fetch on edit page
-        _fetchedData.thumbnail = hiddenThumb.value;
-    }
-});
+})();
 </script>
 {% endblock %}

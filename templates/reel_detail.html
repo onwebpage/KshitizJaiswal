@@ -27,16 +27,29 @@
              {% if thumb_url %}style="--reel-thumb: url('{{ thumb_url }}')"{% endif %}>
             {% if reel.video_url %}
                 {% if reel.is_instagram %}
-                <!-- Instagram: portrait 9:16 -->
-                <div class="ig-video-wrapper">
-                    <div class="ig-top-cover"></div>
-                    <iframe src="{{ reel.embed_url }}"
-                        class="ig-embed-iframe"
-                        frameborder="0" scrolling="no"
-                        allowtransparency="true" allowfullscreen="true"
-                        allow="autoplay; encrypted-media"
-                        title="{{ reel.title }}"></iframe>
-                    <div class="ig-brand-cover"></div>
+                <!-- Instagram: thumbnail + watch button, no embed -->
+                <div class="ig-thumb-card">
+                    {% if reel.thumbnail %}
+                    {% set thumb_url_ig = (url_for('static', filename=reel.thumbnail) if reel.thumbnail and not reel.thumbnail.startswith('http') else reel.thumbnail) %}
+                    <div class="ig-thumb-img-wrap">
+                        <img src="{{ thumb_url_ig }}"
+                             alt="{{ reel.title }}"
+                             class="ig-thumb-img"
+                             onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/reel-placeholder.svg') }}'">
+                    </div>
+                    {% else %}
+                    <div class="ig-thumb-placeholder">
+                        <i class="fab fa-instagram"></i>
+                        <p>Instagram Reel</p>
+                    </div>
+                    {% endif %}
+                    <div class="ig-watch-btn-wrap">
+                        <a href="{{ reel.original_url or reel.video_url }}"
+                           target="_blank" rel="noopener noreferrer"
+                           class="ig-watch-btn">
+                            <i class="fab fa-instagram me-2"></i>Watch Reel on Instagram
+                        </a>
+                    </div>
                 </div>
                 {% elif reel.detected_type == 'youtube_short' %}
                 <!-- YouTube Short: portrait 9:16 -->
@@ -359,32 +372,78 @@
 .rd-no-media h5 { margin: 0; color: #888; }
 .rd-no-media p { margin: 0; font-size: .9rem; }
 
-/* ── Instagram wrapper ── */
-.ig-video-wrapper {
-    position: relative;
+/* ── Instagram thumbnail card ── */
+.ig-thumb-card {
     width: 100%;
     max-width: 380px;
     margin: 0 auto;
-    aspect-ratio: 9/16;
     border-radius: 16px;
     overflow: hidden;
-    /* Blurred thumbnail background instead of black */
-    background-image: var(--reel-thumb, linear-gradient(135deg, #2d0000, #5a0000));
-    background-size: cover;
-    background-position: center;
+    box-shadow: 0 8px 32px rgba(0,0,0,.18);
+    background: #111;
+    display: flex;
+    flex-direction: column;
 }
-.ig-embed-iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; }
-/* Subtle gradient covers only the very top/bottom for branding elements */
-.ig-top-cover    {
-    position: absolute; top: 0; left: 0; right: 0; height: 56px;
-    background: linear-gradient(to bottom, rgba(20,0,0,.75) 0%, transparent 100%);
-    z-index: 10; pointer-events: none;
+.ig-thumb-img-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 9 / 16;
+    overflow: hidden;
+    background: #1a0000;
 }
-.ig-brand-cover  {
-    position: absolute; bottom: 0; left: 0; right: 0; height: 140px;
-    background: linear-gradient(to top, rgba(20,0,0,.85) 0%, transparent 100%);
-    z-index: 10; pointer-events: none;
+.ig-thumb-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+    display: block;
+    transition: transform .3s ease;
 }
+.ig-thumb-card:hover .ig-thumb-img { transform: scale(1.03); }
+.ig-thumb-placeholder {
+    width: 100%;
+    aspect-ratio: 9 / 16;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    background: linear-gradient(135deg, #1a0000, #3d0000);
+    color: rgba(255,255,255,.5);
+    font-size: 3.5rem;
+}
+.ig-thumb-placeholder p { font-size: 1rem; margin: 0; }
+.ig-watch-btn-wrap {
+    padding: 18px 20px;
+    background: #0a0a0a;
+    display: flex;
+    justify-content: center;
+}
+.ig-watch-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #833ab4, #fd1d1d, #fcb045);
+    color: #fff;
+    font-weight: 700;
+    font-size: .97rem;
+    padding: 13px 28px;
+    border-radius: 50px;
+    text-decoration: none;
+    width: 100%;
+    max-width: 320px;
+    transition: transform .2s, box-shadow .2s, opacity .2s;
+    box-shadow: 0 4px 20px rgba(253,29,29,.35);
+    letter-spacing: .01em;
+}
+.ig-watch-btn:hover {
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(253,29,29,.45);
+    opacity: .92;
+    text-decoration: none;
+}
+.ig-watch-btn i { font-size: 1.1rem; }
 
 /* ── Title block ── */
 .rd-title-block { margin-bottom: 22px; }
@@ -639,19 +698,5 @@
 }
 </style>
 
-{% if reel.is_instagram %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    var iframe = document.querySelector('.ig-embed-iframe');
-    if (!iframe) return;
-    iframe.addEventListener('error', function() {
-        var wrapper = document.querySelector('.ig-video-wrapper');
-        if (wrapper) {
-            wrapper.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#fff;text-align:center;padding:2rem;"><div><i class="fas fa-film fa-3x mb-3"></i><p>Video preview unavailable.<br>Visit the reel page to watch.</p></div></div>';
-        }
-    });
-});
-</script>
-{% endif %}
 
 {% endblock %}
