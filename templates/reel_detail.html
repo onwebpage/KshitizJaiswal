@@ -240,6 +240,10 @@
     box-shadow: 0 8px 32px rgba(0,0,0,.25);
     margin-bottom: 24px;
 }
+/* Portrait wraps must NOT clip overflow so the full-width trick works */
+.rd-video-wrap--portrait {
+    overflow: visible;
+}
 
 /* YouTube 16:9 landscape */
 .rd-yt-wrap {
@@ -258,7 +262,7 @@
     border: none;
 }
 
-/* YouTube Short / portrait — 9:16, centred, max 420px wide, no black bars */
+/* YouTube Short / portrait — 9:16, centred, max 380px wide on desktop */
 .rd-yt-portrait {
     position: relative;
     width: 100%;
@@ -281,9 +285,11 @@
 .rd-video-wrap--portrait {
     background: transparent;
     box-shadow: none;
+    border-radius: 0;
     display: flex;
     justify-content: center;
     padding: 0;
+    margin-bottom: 24px;
 }
 
 /* Thumbnail placeholder */
@@ -535,26 +541,59 @@
 @media (max-width: 768px) {
     .rd-page {
         grid-template-columns: 1fr;
-        padding: 0 12px 50px;
-        margin-top: 16px;
+        padding: 0 0 50px;
+        margin-top: 0;
         gap: 0;
     }
 
-    .rd-sidebar { margin-top: 20px; }
+    .rd-video-col {
+        padding: 0;
+    }
+
+    /* Portrait video section: break out of any padding and fill full width */
+    .rd-video-wrap--portrait {
+        width: 100vw;
+        margin-left: calc(-50vw + 50%);
+        margin-right: calc(-50vw + 50%);
+        margin-bottom: 0;
+        border-radius: 0;
+    }
+
+    /* Portrait video: full viewport width, max height ~85vh for clean reel feel */
+    .rd-yt-portrait,
+    .ig-video-wrapper {
+        max-width: 100%;
+        width: 100%;
+        border-radius: 0;
+        margin: 0;
+        /* Cap height so video doesn't overflow the screen */
+        max-height: 85vh;
+        max-height: 85svh;
+        aspect-ratio: 9 / 16;
+    }
+
+    /* Title/cards: give them padding now that the page has none */
+    .rd-title-block,
+    .rd-card,
+    .rd-sidebar {
+        padding-left: 16px;
+        padding-right: 16px;
+    }
+    .rd-card { padding: 20px 16px; }
+    .rd-title-block { padding-top: 18px; }
+    .rd-sidebar { margin-top: 8px; padding-bottom: 8px; }
+
     .rd-title { font-size: 1.4rem; }
-    .rd-card { padding: 20px; }
     .rd-hero-inner { padding: 0 16px 14px; }
     .rd-source-text { font-size: .85rem; }
 
-    /* Portrait video: fill most of screen width on mobile */
-    .rd-yt-portrait,
-    .ig-video-wrapper {
-        max-width: min(340px, calc(100vw - 24px));
-    }
-
-    /* Landscape video: full width on mobile */
+    /* Landscape video: full width, keep border-radius */
     .rd-yt-wrap {
-        border-radius: 12px;
+        border-radius: 0;
+    }
+    .rd-video-wrap:not(.rd-video-wrap--portrait) {
+        border-radius: 0;
+        margin-bottom: 20px;
     }
 }
 
