@@ -1,108 +1,313 @@
 {% extends "admin/admin_base.html" %}
-{% from 'admin/_image_upload.html' import image_upload_field, image_upload_css, image_upload_js %}
 
-{% block title %}{{ title }} - Admin{% endblock %}
-
-{% block extra_head %}{{ image_upload_css() }}{% endblock %}
+{% block title %}Hero Banner - Admin{% endblock %}
 
 {% block admin_content %}
 <div class="container-fluid p-4">
     <div class="row justify-content-center">
-        <div class="col-lg-8">
+        <div class="col-lg-9">
+
             <div class="admin-card">
                 <div class="admin-header">
-                    <h2>{{ title }}</h2>
-                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
-                        <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                    <h2><i class="fas fa-image me-2"></i>Hero Banner</h2>
+                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-arrow-left me-1"></i>Back
                     </a>
                 </div>
 
-                <!-- Current Hero Preview -->
-                {% if current_hero.banner_url %}
-                <div class="hero-preview mb-4">
-                    <h5>Current Hero Section Preview:</h5>
-                    <div class="hero-preview-container" style="height: 200px; background-image: url('{% if current_hero.banner_url.startswith('http') %}{{ current_hero.banner_url }}{% else %}{{ url_for('static', filename=current_hero.banner_url) }}{% endif %}'); background-size: cover; background-position: center; border-radius: 8px; position: relative;">
-                        <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(99, 102, 241, 0.7) 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; color: white;">
-                            <div>
-                                <h3>{{ current_hero.name }}</h3>
-                                <p>{{ current_hero.tagline }}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
-
-                <form method="POST" enctype="multipart/form-data">
+                <form method="POST" enctype="multipart/form-data" id="heroForm">
                     {{ form.hidden_tag() }}
 
-                    <div class="row g-4">
-                        <div class="col-12">
-                            <label for="{{ form.name.id }}" class="form-label">{{ form.name.label.text }}</label>
-                            {{ form.name(class="form-control") }}
-                            {% if form.name.errors %}
-                                <div class="text-danger">{% for error in form.name.errors %}<small>{{ error }}</small>{% endfor %}</div>
-                            {% endif %}
-                        </div>
-
-                        <div class="col-12">
-                            <label for="{{ form.tagline.id }}" class="form-label">{{ form.tagline.label.text }}</label>
-                            {{ form.tagline(class="form-control", rows="3") }}
-                            {% if form.tagline.errors %}
-                                <div class="text-danger">{% for error in form.tagline.errors %}<small>{{ error }}</small>{% endfor %}</div>
-                            {% endif %}
-                        </div>
-
-                        <!-- Desktop Image Section -->
-                        <div class="col-12">
-                            <h6 class="mb-3"><i class="fas fa-desktop me-2 text-primary"></i>Desktop Hero Image</h6>
-                            {{ image_upload_field(
-                                field=form.desktop_image,
-                                label="Desktop Image",
-                                hint="JPG / PNG · Recommended 1920×1080 px",
-                                current_image=current_hero.desktop_url if current_hero.desktop_url else None
-                            ) }}
-                        </div>
-
-                        <!-- Mobile Image Section -->
-                        <div class="col-12">
-                            <h6 class="mb-3"><i class="fas fa-mobile-alt me-2 text-primary"></i>Mobile Hero Image</h6>
-                            {{ image_upload_field(
-                                field=form.mobile_image,
-                                label="Mobile Image",
-                                hint="JPG / PNG · Recommended 768×1024 px",
-                                current_image=current_hero.mobile_url if current_hero.mobile_url else None
-                            ) }}
-                        </div>
-
-                        <!-- Legacy Section -->
-                        <div class="col-12">
-                            <details>
-                                <summary><h6 class="text-muted"><i class="fas fa-history me-2"></i>Fallback / Legacy Image (Optional)</h6></summary>
-                                <div class="mt-3">
-                                    {{ image_upload_field(
-                                        field=form.banner_image,
-                                        label="Fallback Hero Image",
-                                        hint="Used if no desktop/mobile image is set",
-                                        current_image=current_hero.banner_url if current_hero.banner_url else None
-                                    ) }}
+                    <!-- ── Live Banner Preview ── -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold mb-2">
+                            <i class="fas fa-desktop me-1 text-primary"></i>Banner Preview
+                        </label>
+                        <div class="hero-live-preview" id="heroBannerPreview"
+                             style="{% if current_hero.desktop_url or current_hero.banner_url %}background-image: url('{% set img = current_hero.desktop_url or current_hero.banner_url %}{% if img.startswith('http') %}{{ img }}{% else %}{{ url_for('static', filename=img) }}{% endif %}');{% endif %}">
+                            <div class="hero-preview-overlay">
+                                <div class="hero-preview-text">
+                                    <div class="hero-preview-name">{{ current_hero.name or 'Your Name' }}</div>
+                                    <div class="hero-preview-tagline">{{ current_hero.tagline or 'Your tagline here' }}</div>
                                 </div>
-                            </details>
+                            </div>
+                            <div class="hero-preview-drop-hint" id="heroDropHint">
+                                <i class="fas fa-cloud-upload-alt fa-2x mb-2"></i>
+                                <p class="mb-0 fw-semibold">Drop image here to preview</p>
+                            </div>
                         </div>
+                        <p class="text-muted mt-1" style="font-size:.8rem;">
+                            <i class="fas fa-info-circle me-1"></i>
+                            You can drag an image directly onto the preview above, or use the upload buttons below.
+                        </p>
+                    </div>
 
-                        <div class="col-12">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save me-1"></i>Save Changes
-                            </button>
-                            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary ms-2">Cancel</a>
+                    <!-- ── Text Fields ── -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Name / Headline</label>
+                            {{ form.name(class="form-control", id="heroName", placeholder="e.g. Kshitiz Jaiswal") }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Tagline</label>
+                            {{ form.tagline(class="form-control", id="heroTagline", placeholder="e.g. Unfiltered Commentator") }}
                         </div>
                     </div>
+
+                    <!-- ── Upload Zones Row ── -->
+                    <div class="row g-3 mb-4">
+
+                        <!-- Desktop -->
+                        <div class="col-md-6">
+                            <div class="hero-upload-zone" id="zone_desktop"
+                                 ondragover="heroOver(event,'desktop')"
+                                 ondragleave="heroLeave(event,'desktop')"
+                                 ondrop="heroDrop(event,'desktop')"
+                                 onclick="document.getElementById('desktop_image_input').click()">
+                                <div class="hero-uz-inner" id="inner_desktop">
+                                    <i class="fas fa-desktop hero-uz-icon"></i>
+                                    <div class="hero-uz-label">Desktop Image</div>
+                                    <div class="hero-uz-hint">1920×1080 px · JPG/PNG</div>
+                                    {% if current_hero.desktop_url %}
+                                    <img src="{{ url_for('static', filename=current_hero.desktop_url) if not current_hero.desktop_url.startswith('http') else current_hero.desktop_url }}"
+                                         class="hero-uz-thumb" alt="Current desktop">
+                                    {% else %}
+                                    <span class="hero-uz-cta">Click or drag to upload</span>
+                                    {% endif %}
+                                </div>
+                                <div class="hero-uz-preview" id="preview_desktop" style="display:none;">
+                                    <img id="preview_img_desktop" alt="Preview">
+                                    <button type="button" class="hero-uz-clear" onclick="event.stopPropagation();heroClear('desktop')">
+                                        <i class="fas fa-times"></i> Remove
+                                    </button>
+                                </div>
+                            </div>
+                            {{ form.desktop_image(id="desktop_image_input", class="d-none", accept="image/*",
+                               onchange="heroFileChange(this,'desktop')") }}
+                        </div>
+
+                        <!-- Mobile -->
+                        <div class="col-md-6">
+                            <div class="hero-upload-zone" id="zone_mobile"
+                                 ondragover="heroOver(event,'mobile')"
+                                 ondragleave="heroLeave(event,'mobile')"
+                                 ondrop="heroDrop(event,'mobile')"
+                                 onclick="document.getElementById('mobile_image_input').click()">
+                                <div class="hero-uz-inner" id="inner_mobile">
+                                    <i class="fas fa-mobile-alt hero-uz-icon"></i>
+                                    <div class="hero-uz-label">Mobile Image</div>
+                                    <div class="hero-uz-hint">768×1024 px · JPG/PNG</div>
+                                    {% if current_hero.mobile_url %}
+                                    <img src="{{ url_for('static', filename=current_hero.mobile_url) if not current_hero.mobile_url.startswith('http') else current_hero.mobile_url }}"
+                                         class="hero-uz-thumb" alt="Current mobile">
+                                    {% else %}
+                                    <span class="hero-uz-cta">Click or drag to upload</span>
+                                    {% endif %}
+                                </div>
+                                <div class="hero-uz-preview" id="preview_mobile" style="display:none;">
+                                    <img id="preview_img_mobile" alt="Preview">
+                                    <button type="button" class="hero-uz-clear" onclick="event.stopPropagation();heroClear('mobile')">
+                                        <i class="fas fa-times"></i> Remove
+                                    </button>
+                                </div>
+                            </div>
+                            {{ form.mobile_image(id="mobile_image_input", class="d-none", accept="image/*",
+                               onchange="heroFileChange(this,'mobile')") }}
+                        </div>
+
+                    </div>
+
+                    <!-- ── Save ── -->
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="fas fa-save me-2"></i>Save Changes
+                        </button>
+                        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+
                 </form>
             </div>
+
         </div>
     </div>
 </div>
-{% endblock %}
 
-{% block scripts %}
-{{ image_upload_js() }}
+<style>
+/* ── Live Preview ── */
+.hero-live-preview {
+    width: 100%;
+    height: 220px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #1a0000 0%, #8b0000 50%, #cc0000 100%);
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    overflow: hidden;
+    border: 2px dashed #dee2e6;
+    cursor: default;
+    transition: border-color .2s;
+}
+.hero-live-preview.drag-over {
+    border-color: #cc0000;
+    box-shadow: 0 0 0 3px rgba(204,0,0,.2);
+}
+.hero-preview-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,.3) 100%);
+    display: flex; align-items: center; justify-content: center;
+    pointer-events: none;
+}
+.hero-preview-text { text-align: center; color: #fff; }
+.hero-preview-name  { font-size: 1.5rem; font-weight: 800; text-shadow: 0 2px 6px rgba(0,0,0,.5); }
+.hero-preview-tagline { font-size: .9rem; opacity: .85; margin-top: 4px; }
+.hero-preview-drop-hint {
+    position: absolute; inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center; justify-content: center;
+    background: rgba(0,0,0,.6);
+    color: #fff;
+    pointer-events: none;
+}
+.hero-live-preview.drag-over .hero-preview-drop-hint { display: flex; }
+
+/* ── Upload Zones ── */
+.hero-upload-zone {
+    border: 2px dashed #ced4da;
+    border-radius: 12px;
+    background: #f8f9fa;
+    min-height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: border-color .2s, background .2s;
+    text-align: center;
+}
+.hero-upload-zone:hover,
+.hero-upload-zone.dz-hover {
+    border-color: #cc0000;
+    background: #fff5f5;
+}
+.hero-uz-inner { padding: 18px 16px; width: 100%; }
+.hero-uz-icon  { font-size: 1.8rem; color: #cc0000; margin-bottom: 6px; display: block; }
+.hero-uz-label { font-weight: 700; font-size: .9rem; color: #333; }
+.hero-uz-hint  { font-size: .75rem; color: #888; margin: 2px 0 8px; }
+.hero-uz-cta   { font-size: .78rem; color: #cc0000; font-weight: 600; }
+.hero-uz-thumb {
+    width: 100%; max-height: 70px;
+    object-fit: cover; border-radius: 6px;
+    margin-top: 6px; border: 1px solid #e9ecef;
+}
+
+/* Preview overlay */
+.hero-uz-preview {
+    position: absolute; inset: 0;
+    background: #000;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 8px; padding: 10px;
+}
+.hero-uz-preview img {
+    max-height: 100px; max-width: 100%;
+    object-fit: contain; border-radius: 6px;
+}
+.hero-uz-clear {
+    background: rgba(220,53,69,.9); color: #fff;
+    border: none; border-radius: 6px;
+    padding: 4px 12px; font-size: .78rem; cursor: pointer;
+}
+.hero-uz-clear:hover { background: #dc3545; }
+</style>
+
+<script>
+/* ── Live preview update ── */
+const preview = document.getElementById('heroBannerPreview');
+
+/* Drag onto the big preview */
+preview.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    preview.classList.add('drag-over');
+});
+preview.addEventListener('dragleave', function() {
+    preview.classList.remove('drag-over');
+});
+preview.addEventListener('drop', function(e) {
+    e.preventDefault();
+    preview.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+        setPreviewBg(file);
+        /* Also feed the file into the desktop input */
+        const input = document.getElementById('desktop_image_input');
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        input.files = dt.files;
+        heroShowPreview(file, 'desktop');
+    }
+});
+
+function setPreviewBg(file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        preview.style.backgroundImage = "url('" + e.target.result + "')";
+    };
+    reader.readAsDataURL(file);
+}
+
+/* Live update name/tagline text in preview */
+document.getElementById('heroName').addEventListener('input', function() {
+    document.querySelector('.hero-preview-name').textContent = this.value || 'Your Name';
+});
+document.getElementById('heroTagline').addEventListener('input', function() {
+    document.querySelector('.hero-preview-tagline').textContent = this.value || 'Your tagline here';
+});
+
+/* ── Upload zone helpers ── */
+function heroOver(e, id) {
+    e.preventDefault();
+    document.getElementById('zone_' + id).classList.add('dz-hover');
+}
+function heroLeave(e, id) {
+    document.getElementById('zone_' + id).classList.remove('dz-hover');
+}
+function heroDrop(e, id) {
+    e.preventDefault();
+    document.getElementById('zone_' + id).classList.remove('dz-hover');
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+    const inputId = id === 'desktop' ? 'desktop_image_input' : 'mobile_image_input';
+    const input = document.getElementById(inputId);
+    const dt = new DataTransfer();
+    dt.items.add(file);
+    input.files = dt.files;
+    heroShowPreview(file, id);
+    if (id === 'desktop') setPreviewBg(file);
+}
+function heroFileChange(input, id) {
+    if (input.files && input.files[0]) {
+        heroShowPreview(input.files[0], id);
+        if (id === 'desktop') setPreviewBg(input.files[0]);
+    }
+}
+function heroShowPreview(file, id) {
+    if (!file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        document.getElementById('preview_img_' + id).src = e.target.result;
+        document.getElementById('inner_' + id).style.display = 'none';
+        document.getElementById('preview_' + id).style.display = 'flex';
+    };
+    reader.readAsDataURL(file);
+}
+function heroClear(id) {
+    const inputId = id === 'desktop' ? 'desktop_image_input' : 'mobile_image_input';
+    document.getElementById(inputId).value = '';
+    document.getElementById('inner_' + id).style.display = '';
+    document.getElementById('preview_' + id).style.display = 'none';
+}
+</script>
+
 {% endblock %}

@@ -693,11 +693,13 @@ h1, h2, h3, h4, h5, h6 {
   .hero-bg-mobile {
     background-size: cover;
     background-position: center top;
-    min-height: 100vh;
+    min-height: 55vh;
   }
   
   .hero-section {
-    min-height: 100vh;
+    height: 55vh;
+    min-height: 280px;
+    max-height: 420px;
     background-attachment: scroll !important;
   }
   
