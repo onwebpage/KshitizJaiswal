@@ -647,7 +647,7 @@ def create_payment():
     try:
         import json
         payment_content = SiteContent.query.filter_by(content_key='payment_settings').first()
-        
+
         env_key_id = os.environ.get('RAZORPAY_KEY_ID', '')
         env_key_secret = os.environ.get('RAZORPAY_KEY_SECRET', '')
         if env_key_id and env_key_secret:
@@ -663,16 +663,23 @@ def create_payment():
         else:
             dynamic_client = razorpay_client
 
+        key_in_use = env_key_id[:12] if env_key_id else 'DB/fallback'
+        logging.info(f"[RAZORPAY] create_payment using key: {key_in_use}...")
+
         data = request.json or {}
         amount = int(data.get('amount', 10)) * 100  # Convert to paise
         buyer_name = data.get('name', '')
         buyer_email = data.get('email', '')
         buyer_phone = data.get('phone', '')
-        
+
+        # FIX: receipt must be unique — include timestamp so duplicate amounts don't collide
+        import time
+        receipt = f'sup_{int(time.time())}_{amount // 100}'
+
         order_data = {
             'amount': amount,
             'currency': 'INR',
-            'receipt': f'support_{amount//100}',
+            'receipt': receipt,
             'payment_capture': 1,
             'notes': {
                 'type': 'support',
@@ -681,16 +688,20 @@ def create_payment():
                 'buyer_phone': buyer_phone
             }
         }
-        
+
+        logging.info(f"[RAZORPAY] Creating support order: amount={amount} paise (₹{amount//100}), receipt={receipt}, buyer={buyer_email or buyer_name}")
         order = dynamic_client.order.create(data=order_data)
+        logging.info(f"[RAZORPAY] Support order created: order_id={order['id']}, amount={order['amount']}, status={order['status']}")
+
         return jsonify({
             'status': 'success',
             'order_id': order['id'],
             'amount': order['amount'],
             'currency': order['currency']
         })
-    
+
     except Exception as e:
+        logging.error(f"[RAZORPAY] create_payment FAILED: {type(e).__name__}: {e}", exc_info=True)
         return jsonify({'status': 'error', 'message': str(e)})
 
 @app.route('/admin')
@@ -3839,19 +3850,27 @@ def purchase_course(course_id):
         return jsonify({'success': False, 'message': 'This email already has access to this course. Please log in.'}), 400
 
     try:
+        import time
         amount = int(course.price) * 100
+        receipt = f'crs_{course_id}_{int(time.time())}'
+
         client = get_razorpay_client()
+        logging.info(f"[RAZORPAY] Creating course order: course_id={course_id}, amount={amount} paise (₹{course.price}), buyer={guest_email}, receipt={receipt}")
+
         order = client.order.create(data={
             'amount': amount,
             'currency': 'INR',
+            'receipt': receipt,
             'payment_capture': 1,
             'notes': {
                 'course_id': str(course_id),
+                'course_title': course.title,
                 'buyer_name': guest_name,
                 'buyer_email': guest_email,
                 'buyer_phone': guest_phone
             }
         })
+        logging.info(f"[RAZORPAY] Course order created: order_id={order['id']}, amount={order['amount']}, status={order['status']}")
 
         return jsonify({
             'success': True,
@@ -3861,7 +3880,7 @@ def purchase_course(course_id):
         })
 
     except Exception as e:
-        logging.error(f"Course order creation failed for course {course_id}: {e}")
+        logging.error(f"[RAZORPAY] Course order creation FAILED: course_id={course_id}, error={type(e).__name__}: {e}", exc_info=True)
         return jsonify({'success': False, 'message': str(e)}), 500
 
 @app.route('/course/payment/verify', methods=['POST'])
@@ -3887,12 +3906,15 @@ def verify_course_payment():
         if not guest_phone and course_user.phone: guest_phone = course_user.phone
 
     try:
+        logging.info(f"[RAZORPAY] verify_course_payment: order_id={order_id}, payment_id={payment_id}, course_id={course_id}, buyer={guest_email}")
+
         client = get_razorpay_client()
         client.utility.verify_payment_signature({
             'razorpay_order_id':   order_id,
             'razorpay_payment_id': payment_id,
             'razorpay_signature':  signature
         })
+        logging.info(f"[RAZORPAY] Signature verified OK: order_id={order_id}, payment_id={payment_id}")
 
         course = Course.query.get(course_id)
         if not course:
@@ -3978,8 +4000,10 @@ def verify_course_payment():
         })
 
     except razorpay.errors.SignatureVerificationError:
+        logging.warning(f"[RAZORPAY] Signature MISMATCH: order_id={order_id}, payment_id={payment_id}")
         return jsonify({'success': False, 'message': 'Payment verification failed'}), 400
     except Exception as e:
+        logging.error(f"[RAZORPAY] verify_course_payment FAILED: {type(e).__name__}: {e}", exc_info=True)
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
 
@@ -4080,16 +4104,19 @@ def verify_support_payment():
         signature = data.get('razorpay_signature', '')
 
         if not all([payment_id, order_id, signature]):
+            logging.warning(f"[RAZORPAY] verify_support_payment: missing fields — payment_id={bool(payment_id)}, order_id={bool(order_id)}, signature={bool(signature)}")
             return jsonify({'success': False, 'message': 'Missing payment details'}), 400
 
-        client = get_razorpay_client()
+        logging.info(f"[RAZORPAY] verify_support_payment: order_id={order_id}, payment_id={payment_id}")
 
+        client = get_razorpay_client()
         params_dict = {
             'razorpay_order_id': order_id,
             'razorpay_payment_id': payment_id,
             'razorpay_signature': signature
         }
         client.utility.verify_payment_signature(params_dict)
+        logging.info(f"[RAZORPAY] Support payment signature verified OK: order_id={order_id}, payment_id={payment_id}")
 
         UserActivity.log_activity(
             activity_type='support_payment',
@@ -4101,8 +4128,10 @@ def verify_support_payment():
         return jsonify({'success': True, 'message': 'Thank you for your support!'})
 
     except razorpay.errors.SignatureVerificationError:
+        logging.warning(f"[RAZORPAY] Support payment signature MISMATCH: order_id={order_id}, payment_id={payment_id}")
         return jsonify({'success': False, 'message': 'Payment verification failed'}), 400
     except Exception as e:
+        logging.error(f"[RAZORPAY] verify_support_payment FAILED: {type(e).__name__}: {e}", exc_info=True)
         return jsonify({'success': False, 'message': str(e)}), 500
 
 
@@ -4336,9 +4365,33 @@ def razorpay_webhook():
                 db.session.commit()
                 logging.info(f"Subscription {sub_id}: {terminal_status}")
 
-        elif event == 'payment.failed':
-            # Log failed payments for subscriptions
+        elif event == 'payment.captured':
             pay_entity = event_payload.get('payment', {}).get('entity', {})
+            payment_id = pay_entity.get('id', '')
+            order_id = pay_entity.get('order_id', '')
+            amount = pay_entity.get('amount', 0)
+            method = pay_entity.get('method', '')
+            vpa = pay_entity.get('vpa', '')
+            logging.info(f"[RAZORPAY] payment.captured: payment_id={payment_id}, order_id={order_id}, amount={amount} paise (₹{amount//100}), method={method}, vpa={vpa}")
+
+        elif event == 'payment.failed':
+            pay_entity = event_payload.get('payment', {}).get('entity', {})
+            payment_id = pay_entity.get('id', '')
+            order_id = pay_entity.get('order_id', '')
+            method = pay_entity.get('method', '')
+            error_code = pay_entity.get('error_code', '')
+            error_desc = pay_entity.get('error_description', '')
+            error_reason = pay_entity.get('error_reason', '')
+            error_source = pay_entity.get('error_source', '')
+            error_step = pay_entity.get('error_step', '')
+            amount = pay_entity.get('amount', 0)
+            logging.warning(
+                f"[RAZORPAY] payment.failed: payment_id={payment_id}, order_id={order_id}, "
+                f"method={method}, amount={amount} paise, "
+                f"error_code={error_code}, error_desc={error_desc}, "
+                f"error_reason={error_reason}, error_source={error_source}, error_step={error_step}"
+            )
+            # Update subscription if this is a subscription payment failure
             sub_id = pay_entity.get('subscription_id', '')
             if sub_id:
                 sub = UserSubscription.query.filter_by(razorpay_subscription_id=sub_id).first()
@@ -4346,7 +4399,6 @@ def razorpay_webhook():
                     sub.status = 'pending'
                     sub.updated_at = datetime.utcnow()
                     db.session.commit()
-                logging.warning(f"Payment failed for subscription {sub_id}")
 
         return jsonify({'status': 'ok'}), 200
 

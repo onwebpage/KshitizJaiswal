@@ -712,7 +712,8 @@ async function processSupportPayment() {
             theme: { color: '#CC0000' },
             handler: async function(response) {
                 try {
-                    await fetch('/support/payment/verify', {
+                    console.log('[RAZORPAY] Support payment success:', response.razorpay_payment_id, response.razorpay_order_id);
+                    const vRes = await fetch('/support/payment/verify', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -721,12 +722,22 @@ async function processSupportPayment() {
                             razorpay_signature:  response.razorpay_signature
                         })
                     });
-                } catch(e) { console.warn('Verification call failed', e); }
+                    const vData = await vRes.json();
+                    console.log('[RAZORPAY] Support verify response:', vData);
+                    if (!vData.success) {
+                        console.warn('[RAZORPAY] Support verify returned failure:', vData.message);
+                    }
+                } catch(e) { console.warn('[RAZORPAY] Verification call failed', e); }
                 showSupportSuccess();
             },
             modal: {
                 ondismiss: function() { _setBtnState('supportPayBtn', false, DFLT); }
             }
+        });
+        rzp.on('payment.failed', function(response) {
+            console.error('[RAZORPAY] Support payment.failed:', JSON.stringify(response.error));
+            _setBtnState('supportPayBtn', false, DFLT);
+            alert('Payment failed: ' + (response.error?.description || response.error?.reason || 'Please try a different payment method.'));
         });
         rzp.open();
     } catch(err) {
@@ -786,6 +797,7 @@ async function processSubscription() {
             theme: { color: '#CC0000' },
             handler: async function(response) {
                 try {
+                    console.log('[RAZORPAY] Subscription success:', response.razorpay_payment_id, response.razorpay_subscription_id);
                     const vRes = await fetch('/subscription/verify', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -796,15 +808,21 @@ async function processSubscription() {
                         })
                     });
                     const vData = await vRes.json();
+                    console.log('[RAZORPAY] Subscription verify response:', vData);
                     if (!vData.success) {
-                        console.warn('Subscription verify returned:', vData);
+                        console.warn('[RAZORPAY] Subscription verify returned:', vData);
                     }
-                } catch(e) { console.warn('Subscription verify call failed', e); }
+                } catch(e) { console.warn('[RAZORPAY] Subscription verify call failed', e); }
                 showSubscriptionSuccess();
             },
             modal: {
                 ondismiss: function() { _setBtnState('subPayBtn', false, DFLT); }
             }
+        });
+        rzp.on('payment.failed', function(response) {
+            console.error('[RAZORPAY] Subscription payment.failed:', JSON.stringify(response.error));
+            _setBtnState('subPayBtn', false, DFLT);
+            alert('AutoPay setup failed: ' + (response.error?.description || response.error?.reason || 'Please try a different payment method.'));
         });
         rzp.open();
     } catch(err) {

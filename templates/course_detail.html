@@ -605,29 +605,37 @@ document.getElementById('purchaseForm').addEventListener('submit', async functio
             order_id: data.order_id,
             name: 'Kshitiz Jaiswal',
             description: 'Course Purchase',
-            prefill: { name, email, contact: '+91' + phone },
+            prefill: { name, email, contact: phone ? '+91' + phone : '' },
             theme: { color: '#667eea' },
             handler: async function(paymentResponse) {
-                const verifyResponse = await fetch('/course/payment/verify', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        razorpay_payment_id: paymentResponse.razorpay_payment_id,
-                        razorpay_order_id: paymentResponse.razorpay_order_id,
-                        razorpay_signature: paymentResponse.razorpay_signature,
-                        course_id: _activeCourseId,
-                        name, email, phone
-                    })
-                });
-                const verifyData = await verifyResponse.json();
-                if (verifyData.success) {
-                    showPaymentSuccess(verifyData.redirect_url, email);
-                } else {
-                    showPaymentFailure(verifyData.message || 'Payment verification failed. Please contact support.');
+                try {
+                    console.log('[RAZORPAY] Payment success callback:', paymentResponse.razorpay_payment_id, paymentResponse.razorpay_order_id);
+                    const verifyResponse = await fetch('/course/payment/verify', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            razorpay_payment_id: paymentResponse.razorpay_payment_id,
+                            razorpay_order_id: paymentResponse.razorpay_order_id,
+                            razorpay_signature: paymentResponse.razorpay_signature,
+                            course_id: _activeCourseId,
+                            name, email, phone
+                        })
+                    });
+                    const verifyData = await verifyResponse.json();
+                    console.log('[RAZORPAY] Verify response:', verifyData);
+                    if (verifyData.success) {
+                        showPaymentSuccess(verifyData.redirect_url, email);
+                    } else {
+                        showPaymentFailure(verifyData.message || 'Payment verification failed. Please contact support.');
+                    }
+                } catch(verifyErr) {
+                    console.error('[RAZORPAY] Verify call failed:', verifyErr);
+                    showPaymentFailure('Payment received but verification failed. Please contact support with your payment ID: ' + paymentResponse.razorpay_payment_id);
                 }
             },
             modal: {
                 ondismiss: function() {
+                    console.log('[RAZORPAY] Checkout modal dismissed by user');
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = '<i class="fas fa-lock me-2"></i>Proceed to Payment';
                 }
@@ -635,6 +643,13 @@ document.getElementById('purchaseForm').addEventListener('submit', async functio
         };
 
         const rzp = new Razorpay(options);
+        rzp.on('payment.failed', function(response) {
+            console.error('[RAZORPAY] payment.failed event:', JSON.stringify(response.error));
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-lock me-2"></i>Proceed to Payment';
+            const errMsg = response.error?.description || response.error?.reason || 'Payment failed. Please try a different payment method.';
+            showPaymentFailure(errMsg);
+        });
         rzp.open();
     } catch (error) {
         console.error('Payment error:', error);
