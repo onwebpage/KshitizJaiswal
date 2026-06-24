@@ -113,17 +113,36 @@
         function updateButtons() {
             if (!prevBtn || !nextBtn) return;
             var mx = maxIndex();
-            if (currentIndex <= 0) {
+            var total = totalCards();
+
+            // Always show buttons if there are any cards; disable at boundaries
+            if (total <= 1) {
                 prevBtn.style.display = 'none';
-            } else {
-                prevBtn.style.display = '';
-                prevBtn.style.opacity = '';
-            }
-            if (currentIndex >= mx || mx === 0) {
                 nextBtn.style.display = 'none';
+                return;
+            }
+
+            prevBtn.style.display = '';
+            nextBtn.style.display = '';
+
+            if (currentIndex <= 0) {
+                prevBtn.disabled = true;
+                prevBtn.style.opacity = '0.35';
+                prevBtn.style.cursor  = 'default';
             } else {
-                nextBtn.style.display = '';
+                prevBtn.disabled = false;
+                prevBtn.style.opacity = '';
+                prevBtn.style.cursor  = '';
+            }
+
+            if (currentIndex >= mx) {
+                nextBtn.disabled = true;
+                nextBtn.style.opacity = '0.35';
+                nextBtn.style.cursor  = 'default';
+            } else {
+                nextBtn.disabled = false;
                 nextBtn.style.opacity = '';
+                nextBtn.style.cursor  = '';
             }
         }
 
