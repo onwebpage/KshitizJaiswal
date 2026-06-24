@@ -1,19 +1,24 @@
-/* Mobile-friendly WhatsApp link handler — same-window on phones, new tab on desktop */
+/* WhatsApp link handler — wa.me universal deep links on mobile, WhatsApp Web on desktop */
 (function () {
     'use strict';
 
     function isMobileDevice() {
         return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
-            || (window.matchMedia && window.matchMedia('(max-width: 768px)').matches);
+            || (navigator.maxTouchPoints && navigator.maxTouchPoints > 1);
     }
 
-    function openWhatsApp(url, webFallback) {
-        if (!url || url === '#') return;
+    function openWhatsApp(mobileUrl, desktopFallback) {
+        if (!mobileUrl || mobileUrl === '#') return;
+
         if (isMobileDevice()) {
-            window.location.assign(url);
-            return;
+            // wa.me is the universal deep link: opens the WhatsApp app directly
+            // on Android and iPhone. If WhatsApp is not installed the link
+            // redirects to the App Store / Play Store automatically.
+            window.location.href = mobileUrl;
+        } else {
+            // On desktop open WhatsApp Web in a new tab
+            window.open(desktopFallback || mobileUrl, '_blank', 'noopener,noreferrer');
         }
-        window.open(webFallback || url, '_blank', 'noopener,noreferrer');
     }
 
     function bindWhatsAppLinks() {
@@ -21,18 +26,21 @@
             if (el.dataset.waBound) return;
             el.dataset.waBound = '1';
 
-            var url = el.getAttribute('data-whatsapp-link');
-            var fallback = el.getAttribute('data-whatsapp-fallback') || url;
-            if (!url || url === '#') return;
+            var mobileUrl  = el.getAttribute('data-whatsapp-link');
+            var desktopUrl = el.getAttribute('data-whatsapp-fallback') || mobileUrl;
+            if (!mobileUrl || mobileUrl === '#') return;
+
+            // Keep the href valid so right-click / long-press / copy-link work
+            el.setAttribute('href', mobileUrl);
 
             el.addEventListener('click', function (e) {
                 e.preventDefault();
-                openWhatsApp(url, fallback);
+                openWhatsApp(mobileUrl, desktopUrl);
             });
         });
     }
 
     document.addEventListener('DOMContentLoaded', bindWhatsAppLinks);
-    window.openWhatsApp = openWhatsApp;
-    window.bindWhatsAppLinks = bindWhatsAppLinks;
+    window.openWhatsApp       = openWhatsApp;
+    window.bindWhatsAppLinks  = bindWhatsAppLinks;
 })();

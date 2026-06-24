@@ -488,7 +488,12 @@ def normalize_phone_digits(phone):
 
 
 def _normalize_whatsapp_link(link):
-    """Convert any WhatsApp URL to a mobile-compatible https://api.whatsapp.com form."""
+    """Convert any WhatsApp URL to a mobile-compatible https://wa.me/ universal deep link.
+
+    wa.me links open the WhatsApp app directly on Android/iOS and fall back to
+    WhatsApp Web on desktop — unlike api.whatsapp.com/send which causes
+    'Couldn't Open Link' errors on many mobile browsers.
+    """
     link = (link or '').strip()
     if not link:
         return ''
@@ -498,6 +503,7 @@ def _normalize_whatsapp_link(link):
 
     lower = link.lower()
 
+    # whatsapp:// deep-link scheme → convert to wa.me
     if lower.startswith('whatsapp://'):
         from urllib.parse import urlparse, parse_qs
         parsed = urlparse(link.replace('whatsapp://', 'https://', 1))
@@ -505,54 +511,69 @@ def _normalize_whatsapp_link(link):
         phone = normalize_phone_digits((qs.get('phone') or [''])[0])
         text = (qs.get('text') or [''])[0]
         if phone:
-            base = f'https://api.whatsapp.com/send?phone={phone}'
-            return f'{base}&text={text}' if text else base
+            base = f'https://wa.me/{phone}'
+            return f'{base}?text={text}' if text else base
         return link
 
+    # Group invite links — pass through unchanged
     if 'chat.whatsapp.com' in lower:
         return link
 
+    # /message/ business links → keep as wa.me/message/CODE (universal)
     msg_match = re.match(r'https?://(?:wa\.me|api\.whatsapp\.com)/message/([A-Za-z0-9]+)', link, re.I)
     if msg_match:
-        return f'https://api.whatsapp.com/message/{msg_match.group(1)}'
+        return f'https://wa.me/message/{msg_match.group(1)}'
 
+    # wa.me phone link — normalise digits and rebuild cleanly
     phone_match = re.match(r'https?://wa\.me/(\+?\d[\d\s\-]*)(\?.*)?$', link, re.I)
     if phone_match:
         digits = normalize_phone_digits(phone_match.group(1))
         suffix = phone_match.group(2) or ''
         if digits:
-            base = f'https://api.whatsapp.com/send?phone={digits}'
-            if suffix:
-                if suffix.startswith('?'):
-                    suffix = '&' + suffix[1:]
-                return base + suffix
-            return base
+            return f'https://wa.me/{digits}{suffix}'
 
-    if 'web.whatsapp.com/send' in lower:
-        return link.replace('web.whatsapp.com', 'api.whatsapp.com')
+    # api.whatsapp.com/send?phone= or web.whatsapp.com/send?phone= → wa.me
+    send_match = re.search(r'[?&]phone=(\d+)', link, re.I)
+    if send_match:
+        digits = send_match.group(1)
+        text_match = re.search(r'[?&]text=([^&]*)', link, re.I)
+        base = f'https://wa.me/{digits}'
+        return f'{base}?text={text_match.group(1)}' if text_match else base
 
-    if lower.startswith('https://api.whatsapp.com/'):
+    # Already a clean wa.me link
+    if lower.startswith('https://wa.me/'):
         return link
 
     return link
 
 
 def _whatsapp_web_fallback(primary_url, phone_digits=''):
-    """Build a web.whatsapp.com fallback for desktop browsers without the app."""
-    msg_match = re.search(r'api\.whatsapp\.com/message/([A-Za-z0-9]+)', primary_url)
-    if msg_match:
+    """Build an explicit web.whatsapp.com URL for desktop browsers.
+
+    On desktop the JS handler opens this fallback in a new tab so users
+    without the desktop app can still reach WhatsApp Web.
+    """
+    # Business message links work the same everywhere
+    if 'wa.me/message/' in primary_url.lower() or 'api.whatsapp.com/message/' in primary_url.lower():
         return primary_url
+
+    # Extract phone from wa.me/PHONE or ?phone=PHONE
+    wame_match = re.match(r'https?://wa\.me/(\d+)', primary_url, re.I)
+    if wame_match:
+        return f'https://web.whatsapp.com/send?phone={wame_match.group(1)}'
 
     phone_match = re.search(r'[?&]phone=(\d+)', primary_url)
     if phone_match:
         return f'https://web.whatsapp.com/send?phone={phone_match.group(1)}'
+
     if phone_digits:
         return f'https://web.whatsapp.com/send?phone={phone_digits}'
+
     return primary_url
 
 
 def build_whatsapp_urls(custom_link='', support_phone=''):
-    """Return normalized WhatsApp chat URLs for mobile and desktop fallback."""
+    """Return normalized WhatsApp chat URLs for mobile (wa.me) and desktop fallback."""
     custom_link = (custom_link or '').strip()
     phone_digits = normalize_phone_digits(support_phone)
 
@@ -560,7 +581,7 @@ def build_whatsapp_urls(custom_link='', support_phone=''):
     if custom_link:
         url = _normalize_whatsapp_link(custom_link)
     elif phone_digits:
-        url = f'https://api.whatsapp.com/send?phone={phone_digits}'
+        url = f'https://wa.me/{phone_digits}'
 
     web_url = _whatsapp_web_fallback(url, phone_digits) if url else ''
     return {'url': url, 'web_url': web_url, 'phone_digits': phone_digits}
@@ -571,7 +592,7 @@ _DEFAULT_WA_MESSAGE_CODE = 'TYMT7KS4JVF7F1'
 
 def load_whatsapp_settings():
     """Load WhatsApp support settings from DB with mobile-safe URL normalization."""
-    default_url = f'https://api.whatsapp.com/message/{_DEFAULT_WA_MESSAGE_CODE}'
+    default_url = f'https://wa.me/message/{_DEFAULT_WA_MESSAGE_CODE}'
     result = {
         'support_phone': '',
         'phone_digits': '',
