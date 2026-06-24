@@ -847,24 +847,17 @@ h1, h2, h3, h4, h5, h6 {
 
 .reel-carousel {
   display: flex;
-  animation: slideLeftToRight 40s linear infinite;
   gap: 2rem;
   padding: 0.5rem 0;
   will-change: transform;
   width: max-content;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
-.reel-carousel:hover {
-  animation-play-state: paused;
-}
-
-@keyframes slideLeftToRight {
-  from {
-    transform: translateX(0%);
-  }
-  to {
-    transform: translateX(-50%);
-  }
+.reel-carousel:active {
+  cursor: grabbing;
 }
 
 .reel-item {

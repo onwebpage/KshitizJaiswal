@@ -195,7 +195,6 @@ input[type="submit"], input[type="button"],
   }
 
   .reel-carousel {
-    animation-duration: 25s;
     gap: 1rem;
   }
 
@@ -224,10 +223,6 @@ input[type="submit"], input[type="button"],
 
 /* Touch-friendly: don't pause on touch (hover) */
 @media (hover: none) {
-  .reel-carousel:hover {
-    animation-play-state: running;
-  }
-
   .reel-thumbnail:hover {
     transform: none;
   }
