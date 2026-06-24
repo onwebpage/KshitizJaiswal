@@ -687,36 +687,62 @@
     </script>
 
     <!-- Newsletter Popup (custom — session-only, no Bootstrap modal) -->
+    <style>
+        #nlPopupBox {
+            background:#fff; border-radius:18px; max-width:420px; width:100%;
+            box-shadow:0 24px 64px rgba(0,0,0,0.3); overflow:hidden;
+            animation:nlSlideIn .38s cubic-bezier(.22,1,.36,1) both;
+        }
+        .nl-popup-header { padding:18px 20px 14px; }
+        .nl-popup-icon { width:44px; height:44px; font-size:1.1rem; margin-bottom:8px; }
+        .nl-popup-body { padding:18px 20px 16px; }
+        .nl-input {
+            width:100%; border:1.5px solid #e0e0e0; border-radius:9px;
+            padding:9px 12px; font-size:.88rem; outline:none;
+            transition:border-color .2s; box-sizing:border-box;
+        }
+        .nl-input:focus { border-color:#cc0000; }
+        @media (max-width: 480px) {
+            #newsletterPopup { padding: 10px !important; align-items: flex-end !important; }
+            #nlPopupBox { border-radius:16px 16px 0 0; max-width:100%; }
+            .nl-popup-header { padding:14px 16px 10px; }
+            .nl-popup-icon { width:36px; height:36px; font-size:.95rem; margin-bottom:6px; }
+            #nlPopupTitle { font-size:.98rem !important; }
+            .nl-popup-subtitle { font-size:.78rem !important; }
+            .nl-popup-body { padding:14px 16px 12px; }
+            .nl-input { padding:8px 11px; font-size:.83rem; border-radius:8px; }
+            .nl-row-gap { gap:8px !important; margin-bottom:8px !important; }
+            #newsletterPopupSubmit { padding:9px !important; font-size:.88rem !important; }
+        }
+    </style>
     <div id="newsletterPopup" role="dialog" aria-modal="true" aria-labelledby="nlPopupTitle"
          style="display:none; position:fixed; inset:0; z-index:10400;
                 background:rgba(0,0,0,0.5); backdrop-filter:blur(2px);
                 align-items:center; justify-content:center; padding:16px;">
-        <div style="background:#fff; border-radius:18px; max-width:460px; width:100%;
-                    box-shadow:0 24px 64px rgba(0,0,0,0.3); overflow:hidden;
-                    animation:nlSlideIn .38s cubic-bezier(.22,1,.36,1) both;">
+        <div id="nlPopupBox">
             <!-- Header -->
-            <div style="background:linear-gradient(135deg,#cc0000 0%,#8b0000 100%);
-                        padding:22px 24px 18px; position:relative; text-align:center;">
+            <div class="nl-popup-header" style="background:linear-gradient(135deg,#cc0000 0%,#8b0000 100%);
+                        position:relative; text-align:center;">
                 <button onclick="dismissNewsletterPopup()" aria-label="Close"
-                        style="position:absolute; top:12px; right:14px; background:none; border:none;
-                               color:rgba(255,255,255,0.7); font-size:1.1rem; cursor:pointer;
+                        style="position:absolute; top:10px; right:12px; background:none; border:none;
+                               color:rgba(255,255,255,0.7); font-size:1rem; cursor:pointer;
                                padding:4px 6px; border-radius:6px; line-height:1; transition:color .15s;"
                         onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,0.7)'">
                     <i class="fas fa-times"></i>
                 </button>
-                <div style="width:52px; height:52px; background:rgba(255,255,255,0.15); border-radius:50%;
-                            display:flex; align-items:center; justify-content:center; margin:0 auto 12px;">
-                    <i class="fas fa-envelope-open-text" style="color:#fff; font-size:1.3rem;"></i>
+                <div class="nl-popup-icon" style="background:rgba(255,255,255,0.15); border-radius:50%;
+                            display:flex; align-items:center; justify-content:center; margin:0 auto;">
+                    <i class="fas fa-envelope-open-text" style="color:#fff;"></i>
                 </div>
-                <h5 id="nlPopupTitle" style="color:#fff; margin:0 0 4px; font-size:1.1rem; font-weight:700;">
+                <h5 id="nlPopupTitle" style="color:#fff; margin:8px 0 3px; font-size:1.05rem; font-weight:700;">
                     Join the Inner Circle
                 </h5>
-                <p style="color:rgba(255,255,255,0.8); margin:0; font-size:.85rem;">
+                <p class="nl-popup-subtitle" style="color:rgba(255,255,255,0.8); margin:0; font-size:.82rem;">
                     Weekly insights, exclusive content, zero spam.
                 </p>
             </div>
             <!-- Body -->
-            <div style="padding:24px 24px 20px;">
+            <div class="nl-popup-body">
                 <!-- Success state -->
                 <div id="newsletterPopupSuccess" style="display:none; text-align:center; padding:12px 0 8px;">
                     <i class="fas fa-check-circle" style="color:#22c55e; font-size:2.8rem; margin-bottom:12px; display:block;"></i>
@@ -725,38 +751,23 @@
                 </div>
                 <!-- Form -->
                 <form id="newsletterPopupForm" novalidate style="margin:0;">
-                    <div style="margin-bottom:12px;">
+                    <div style="margin-bottom:10px;">
                         <input type="text" name="name" id="popupName" placeholder="Your Name"
-                               required autocomplete="name"
-                               style="width:100%; border:1.5px solid #e0e0e0; border-radius:9px;
-                                      padding:10px 14px; font-size:.9rem; outline:none; transition:border-color .2s; box-sizing:border-box;"
-                               onfocus="this.style.borderColor='#cc0000'" onblur="this.style.borderColor='#e0e0e0'">
+                               required autocomplete="name" class="nl-input">
                     </div>
-                    <div style="margin-bottom:12px;">
+                    <div style="margin-bottom:10px;">
                         <input type="email" name="email" id="popupEmail" placeholder="your@email.com"
-                               required autocomplete="email"
-                               style="width:100%; border:1.5px solid #e0e0e0; border-radius:9px;
-                                      padding:10px 14px; font-size:.9rem; outline:none; transition:border-color .2s; box-sizing:border-box;"
-                               onfocus="this.style.borderColor='#cc0000'" onblur="this.style.borderColor='#e0e0e0'">
+                               required autocomplete="email" class="nl-input">
                     </div>
-                    <div style="margin-bottom:12px;">
+                    <div style="margin-bottom:10px;">
                         <input type="tel" name="phone" id="popupPhone" placeholder="Phone Number (optional)"
-                               pattern="[0-9+\-\s()]{7,20}"
-                               style="width:100%; border:1.5px solid #e0e0e0; border-radius:9px;
-                                      padding:10px 14px; font-size:.9rem; outline:none; transition:border-color .2s; box-sizing:border-box;"
-                               onfocus="this.style.borderColor='#cc0000'" onblur="this.style.borderColor='#e0e0e0'">
+                               pattern="[0-9+\-\s()]{7,20}" class="nl-input">
                     </div>
-                    <div style="display:flex; gap:10px; margin-bottom:12px;">
+                    <div class="nl-row-gap" style="display:flex; gap:10px; margin-bottom:10px;">
                         <input type="text" name="place" id="popupPlace" placeholder="Your City"
-                               required
-                               style="flex:1.4; border:1.5px solid #e0e0e0; border-radius:9px;
-                                      padding:10px 14px; font-size:.9rem; outline:none; transition:border-color .2s; min-width:0; box-sizing:border-box;"
-                               onfocus="this.style.borderColor='#cc0000'" onblur="this.style.borderColor='#e0e0e0'">
+                               required class="nl-input" style="flex:1.4; min-width:0;">
                         <input type="number" name="age" id="popupAge" placeholder="Age" min="13" max="100"
-                               required
-                               style="flex:1; border:1.5px solid #e0e0e0; border-radius:9px;
-                                      padding:10px 14px; font-size:.9rem; outline:none; transition:border-color .2s; min-width:0; box-sizing:border-box;"
-                               onfocus="this.style.borderColor='#cc0000'" onblur="this.style.borderColor='#e0e0e0'">
+                               required class="nl-input" style="flex:1; min-width:0;">
                     </div>
                     <div id="newsletterPopupError"
                          style="display:none; background:#fff0f0; border:1px solid #fca5a5;
