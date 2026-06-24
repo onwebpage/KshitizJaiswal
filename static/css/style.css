@@ -553,6 +553,10 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Mobile Capsule Navbar */
 @media (max-width: 768px) {
+  body {
+    background-color: #0d0000;
+  }
+
   .custom-navbar {
     background: linear-gradient(135deg,
       rgba(14, 0, 0, 0.97) 0%,
