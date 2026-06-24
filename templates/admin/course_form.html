@@ -1,62 +1,150 @@
-{% extends "admin/dashboard.html" %}
+{% extends "admin/admin_base.html" %}
 {% from 'admin/_image_upload.html' import image_upload_field, image_upload_css, image_upload_js %}
 
+{% block title %}{{ title }} - Admin Panel - Kshitiz Jaiswal{% endblock %}
+
+{% block extra_head %}{{ image_upload_css() }}
+<style>
+.course-form-section {
+    background: #fff;
+    border-radius: 14px;
+    border: 1.5px solid #e5e7eb;
+    padding: 28px;
+    margin-bottom: 20px;
+}
+.course-form-section-title {
+    font-size: .8rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: #9ca3af;
+    margin-bottom: 18px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #f3f4f6;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.course-form-section-title i { color: #cc0000; font-size: .9rem; }
+</style>
+{% endblock %}
+
 {% block admin_content %}
-<h2>{{ title }}</h2>
+<div class="container-fluid p-4">
+    <div class="row justify-content-center">
+        <div class="col-xl-8 col-lg-10 col-md-12">
+            <div class="admin-card">
+                <div class="admin-header">
+                    <h2>{{ title }}</h2>
+                    <a href="{{ url_for('admin_courses') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Courses
+                    </a>
+                </div>
 
-{{ image_upload_css() }}
+                <form method="POST" enctype="multipart/form-data">
+                    {{ form.hidden_tag() }}
+                    {{ form.thumbnail_url(id="thumbnailUrlHidden", type="hidden") }}
 
-<form method="POST" enctype="multipart/form-data">
-    {{ form.hidden_tag() }}
-    
-    <div class="mb-3">
-        {{ form.title.label(class="form-label") }}
-        {{ form.title(class="form-control") }}
-    </div>
-    
-    <div class="mb-3">
-        {{ form.description.label(class="form-label") }}
-        {{ form.description(class="form-control", rows=4) }}
-    </div>
-    
-    <div class="mb-3">
-        {{ image_upload_field(
-            field=form.thumbnail,
-            label="Course Thumbnail",
-            hint="JPG / PNG · Recommended 800×450 px",
-            current_image=course.thumbnail if course and course.thumbnail else None
-        ) }}
-    </div>
+                    <!-- ── Basic Info ── -->
+                    <div class="course-form-section">
+                        <div class="course-form-section-title">
+                            <i class="fas fa-book"></i> Course Details
+                        </div>
 
-    <div class="mb-3">
-        {{ form.preview_video_url.label(class="form-label fw-semibold") }}
-        {{ form.preview_video_url(class="form-control", placeholder="https://www.youtube.com/watch?v=...") }}
-        <small class="form-text text-muted">
-            <i class="fas fa-info-circle me-1"></i>Paste a YouTube URL — this will be shown as a free preview on the course page to help users decide before buying.
-        </small>
-    </div>
-    
-    <div class="mb-3">
-        {{ form.price.label(class="form-label") }}
-        {{ form.price(class="form-control") }}
-    </div>
-    
-    <div class="mb-3">
-        {{ form.is_active.label(class="form-label") }}
-        {{ form.is_active(class="form-select") }}
-    </div>
-    
-    <div class="mb-3">
-        {{ form.sort_order.label(class="form-label") }}
-        {{ form.sort_order(class="form-control") }}
-        <small class="form-text text-muted">Lower numbers appear first</small>
-    </div>
-    
-    <div class="d-flex gap-2">
-        {{ form.submit(class="btn btn-primary") }}
-        <a href="{{ url_for('admin_courses') }}" class="btn btn-secondary">Cancel</a>
-    </div>
-</form>
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">
+                                {{ form.title.label.text }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.title(class="form-control form-control-lg", placeholder="Enter course title") }}
+                            {% for err in form.title.errors %}<div class="invalid-feedback d-block">{{ err }}</div>{% endfor %}
+                        </div>
 
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                {{ form.description.label.text }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.description(class="form-control", rows=5, placeholder="Describe what students will learn in this course...") }}
+                            {% for err in form.description.errors %}<div class="invalid-feedback d-block">{{ err }}</div>{% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- ── Thumbnail ── -->
+                    <div class="course-form-section">
+                        <div class="course-form-section-title">
+                            <i class="fas fa-image"></i> Course Thumbnail
+                        </div>
+                        {{ image_upload_field(
+                            field=form.thumbnail,
+                            label="Drag & Drop or Click to Upload Thumbnail",
+                            hint="JPG / PNG · Recommended 16:9 ratio (e.g. 1280×720 px)",
+                            current_image=course.thumbnail if course and course.thumbnail else None
+                        ) }}
+                    </div>
+
+                    <!-- ── Preview Video ── -->
+                    <div class="course-form-section">
+                        <div class="course-form-section-title">
+                            <i class="fab fa-youtube"></i> Preview Video
+                        </div>
+                        <label class="form-label fw-semibold">{{ form.preview_video_url.label.text }}</label>
+                        {{ form.preview_video_url(class="form-control", placeholder="https://www.youtube.com/watch?v=...") }}
+                        <small class="form-text text-muted">
+                            <i class="fas fa-info-circle me-1"></i>Paste a YouTube URL — shown as a free preview on the course page.
+                        </small>
+                    </div>
+
+                    <!-- ── Pricing & Settings ── -->
+                    <div class="course-form-section">
+                        <div class="course-form-section-title">
+                            <i class="fas fa-sliders-h"></i> Pricing & Settings
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">
+                                    {{ form.price.label.text }} <span class="text-danger">*</span>
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">₹</span>
+                                    {{ form.price(class="form-control", placeholder="0") }}
+                                </div>
+                                {% for err in form.price.errors %}<div class="invalid-feedback d-block">{{ err }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">{{ form.is_active.label.text }}</label>
+                                {{ form.is_active(class="form-select") }}
+                                <small class="form-text text-muted">Inactive courses won't appear on the site.</small>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">{{ form.sort_order.label.text }}</label>
+                                {{ form.sort_order(class="form-control", type="number", min="0") }}
+                                <small class="form-text text-muted">Lower numbers appear first.</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ── Submit ── -->
+                    <div class="d-flex gap-3 flex-wrap">
+                        {{ form.submit(class="btn btn-primary px-5 fw-semibold") }}
+                        <a href="{{ url_for('admin_courses') }}" class="btn btn-outline-secondary px-4">
+                            <i class="fas fa-times me-1"></i>Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
 {{ image_upload_js() }}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.alert.alert-dismissible').forEach(function(el) {
+        setTimeout(function() { try { new bootstrap.Alert(el).close(); } catch(e){} }, 5000);
+    });
+});
+</script>
 {% endblock %}

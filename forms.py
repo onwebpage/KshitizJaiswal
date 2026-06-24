@@ -110,7 +110,8 @@ class ShowForm(FlaskForm):
 class CourseForm(FlaskForm):
     title = StringField('Course Title', validators=[DataRequired(), Length(max=200)])
     description = TextAreaField('Course Description', validators=[DataRequired()])
-    thumbnail = FileField('Course Thumbnail', validators=[FileAllowed(['jpg', 'jpeg', 'png', 'gif'])])
+    thumbnail = FileField('Course Thumbnail', validators=[FileAllowed(['jpg', 'jpeg', 'png', 'gif', 'webp'])])
+    thumbnail_url = StringField('Thumbnail URL', validators=[Optional(), Length(max=500)])
     preview_video_url = StringField('Preview Video URL (YouTube)', validators=[Optional(), Length(max=500)])
     price = IntegerField('Price (₹)', validators=[DataRequired(), NumberRange(min=0)])
     is_active = SelectField('Active', choices=[('1', 'Yes'), ('0', 'No')], default='1')
