@@ -21,7 +21,10 @@
     <div class="rd-video-col">
 
         <!-- Video / Embed -->
-        <div class="rd-video-wrap {% if reel.is_instagram or reel.detected_type == 'youtube_short' %}rd-video-wrap--portrait{% endif %}">
+        {% set is_portrait = reel.is_instagram or reel.detected_type == 'youtube_short' or (reel.thumbnail and not reel.video_url) %}
+        {% set thumb_url = (url_for('static', filename=reel.thumbnail) if reel.thumbnail and not reel.thumbnail.startswith('http') else reel.thumbnail) if reel.thumbnail else '' %}
+        <div class="rd-video-wrap {% if is_portrait %}rd-video-wrap--portrait{% endif %}"
+             {% if thumb_url %}style="--reel-thumb: url('{{ thumb_url }}')"{% endif %}>
             {% if reel.video_url %}
                 {% if reel.is_instagram %}
                 <!-- Instagram: portrait 9:16 -->
@@ -55,8 +58,10 @@
                 </div>
                 {% endif %}
             {% elif reel.thumbnail %}
-            <div class="rd-thumb-wrap">
-                <img src="{{ url_for('static', filename=reel.thumbnail) if reel.thumbnail and not reel.thumbnail.startswith('http') else reel.thumbnail }}"
+            <!-- Thumbnail-only: portrait card with blurred bg -->
+            <div class="rd-thumb-wrap" style="--reel-thumb: url('{{ thumb_url }}')">
+                <div class="rd-thumb-blur-bg"></div>
+                <img src="{{ thumb_url }}"
                      alt="{{ reel.title }}"
                      onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/reel-placeholder.svg') }}'">
                 <div class="rd-thumb-overlay">
@@ -230,29 +235,38 @@
     padding: 0 24px 60px;
 }
 
-/* ── Video wrap ── */
+/* ── Video column ── */
 .rd-video-col { min-width: 0; }
 
+/* Base video wrap — landscape case */
 .rd-video-wrap {
-    border-radius: 16px;
+    border-radius: 14px;
     overflow: hidden;
     background: transparent;
-    box-shadow: 0 8px 32px rgba(0,0,0,.25);
+    box-shadow: 0 4px 24px rgba(0,0,0,.12);
     margin-bottom: 24px;
 }
-/* Portrait wraps must NOT clip overflow so the full-width trick works */
+
+/* Portrait wrap — no shadow, no border-radius, flex center */
 .rd-video-wrap--portrait {
+    background: transparent;
+    box-shadow: none;
+    border-radius: 0;
     overflow: visible;
+    display: flex;
+    justify-content: center;
+    padding: 0;
+    margin-bottom: 24px;
 }
 
-/* YouTube 16:9 landscape */
+/* ── YouTube 16:9 landscape ── */
 .rd-yt-wrap {
     position: relative;
     width: 100%;
     padding-bottom: 56.25%;
     height: 0;
     overflow: hidden;
-    background: #000;
+    background: transparent;
 }
 .rd-yt-wrap iframe {
     position: absolute;
@@ -262,7 +276,7 @@
     border: none;
 }
 
-/* YouTube Short / portrait — 9:16, centred, max 380px wide on desktop */
+/* ── YouTube Short / portrait — 9:16, centred, max 380px wide on desktop ── */
 .rd-yt-portrait {
     position: relative;
     width: 100%;
@@ -270,7 +284,8 @@
     margin: 0 auto;
     aspect-ratio: 9 / 16;
     overflow: hidden;
-    border-radius: 14px;
+    border-radius: 16px;
+    background: transparent;
 }
 .rd-yt-portrait iframe {
     position: absolute;
@@ -281,26 +296,27 @@
     display: block;
 }
 
-/* Portrait wrapper: transparent bg so no black bars bleed outside the video */
-.rd-video-wrap--portrait {
-    background: transparent;
-    box-shadow: none;
-    border-radius: 0;
-    display: flex;
-    justify-content: center;
-    padding: 0;
-    margin-bottom: 24px;
-}
-
-/* Thumbnail placeholder */
+/* ── Thumbnail card (no video URL) ── */
 .rd-thumb-wrap {
     position: relative;
     width: 100%;
+    max-width: 380px;
+    margin: 0 auto;
     aspect-ratio: 9 / 16;
-    max-height: 520px;
-    background: #111;
     overflow: hidden;
-    border-radius: 14px;
+    border-radius: 16px;
+    /* Blurred thumbnail fills the background — set via CSS var */
+    background: linear-gradient(135deg, #2d0000 0%, #5a0000 100%);
+}
+/* Blurred background layer using the thumbnail */
+.rd-thumb-blur-bg {
+    position: absolute;
+    inset: -20px;
+    background-image: var(--reel-thumb, linear-gradient(135deg, #2d0000, #5a0000));
+    background-size: cover;
+    background-position: center;
+    filter: blur(22px) brightness(0.55) saturate(1.2);
+    z-index: 0;
 }
 .rd-thumb-wrap img {
     position: absolute;
@@ -309,50 +325,66 @@
     height: 100%;
     object-fit: cover;
     object-position: center top;
+    z-index: 1;
 }
 .rd-thumb-overlay {
     position: absolute;
     inset: 0;
-    background: rgba(0,0,0,.35);
+    background: linear-gradient(to bottom, rgba(0,0,0,0) 40%, rgba(0,0,0,.5) 100%);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     color: #fff;
     gap: 10px;
+    z-index: 2;
 }
-.rd-thumb-overlay i { font-size: 3.5rem; color: #cc0000; }
-.rd-thumb-overlay p { margin: 0; font-size: .95rem; opacity: .85; }
+.rd-thumb-overlay i { font-size: 3.5rem; color: #fff; filter: drop-shadow(0 2px 8px rgba(204,0,0,.7)); }
+.rd-thumb-overlay p { margin: 0; font-size: .95rem; opacity: .9; text-shadow: 0 1px 4px rgba(0,0,0,.6); }
 
-/* No media */
+/* ── No media ── */
 .rd-no-media {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 320px;
+    height: 280px;
     color: #aaa;
     text-align: center;
     gap: 12px;
+    background: #f8f9fa;
+    border-radius: 14px;
 }
 .rd-no-media i { font-size: 3rem; }
 .rd-no-media h5 { margin: 0; color: #888; }
 .rd-no-media p { margin: 0; font-size: .9rem; }
 
-/* Instagram wrapper */
+/* ── Instagram wrapper ── */
 .ig-video-wrapper {
     position: relative;
     width: 100%;
     max-width: 380px;
     margin: 0 auto;
-    background: #000;
     aspect-ratio: 9/16;
-    border-radius: 14px;
+    border-radius: 16px;
     overflow: hidden;
+    /* Blurred thumbnail background instead of black */
+    background-image: var(--reel-thumb, linear-gradient(135deg, #2d0000, #5a0000));
+    background-size: cover;
+    background-position: center;
 }
 .ig-embed-iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; }
-.ig-top-cover    { position: absolute; top: 0; left: 0; right: 0; height: 68px; background: #000; z-index: 10; pointer-events: none; }
-.ig-brand-cover  { position: absolute; bottom: 0; left: 0; right: 0; height: 175px; background: #000; z-index: 10; pointer-events: none; }
+/* Subtle gradient covers only the very top/bottom for branding elements */
+.ig-top-cover    {
+    position: absolute; top: 0; left: 0; right: 0; height: 56px;
+    background: linear-gradient(to bottom, rgba(20,0,0,.75) 0%, transparent 100%);
+    z-index: 10; pointer-events: none;
+}
+.ig-brand-cover  {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 140px;
+    background: linear-gradient(to top, rgba(20,0,0,.85) 0%, transparent 100%);
+    z-index: 10; pointer-events: none;
+}
 
 /* ── Title block ── */
 .rd-title-block { margin-bottom: 22px; }
@@ -561,12 +593,13 @@
 
     /* Portrait video: full viewport width, max height ~85vh for clean reel feel */
     .rd-yt-portrait,
-    .ig-video-wrapper {
+    .ig-video-wrapper,
+    .rd-thumb-wrap {
         max-width: 100%;
         width: 100%;
         border-radius: 0;
         margin: 0;
-        /* Cap height so video doesn't overflow the screen */
+        /* Cap height so content doesn't overflow the screen */
         max-height: 85vh;
         max-height: 85svh;
         aspect-ratio: 9 / 16;
