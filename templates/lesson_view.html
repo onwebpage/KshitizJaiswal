@@ -18,14 +18,30 @@
                 <div class="video-section">
                     <div class="video-player-wrapper">
                         {% if lesson.video_url %}
-                        <div class="bunny-video-container">
-                            <iframe 
-                                src="{{ lesson.video_url }}" 
-                                title="{{ lesson.title }}" 
+                        {% set _lv = lesson.video_url %}
+                        {% if 'youtu.be/' in _lv %}
+                          {% set _lvid = _lv.split('youtu.be/')[1].split('?')[0].split('&')[0] %}
+                        {% elif 'youtube.com/watch' in _lv %}
+                          {% set _lvid = _lv.split('v=')[1].split('&')[0] if 'v=' in _lv else '' %}
+                        {% elif '/embed/' in _lv %}
+                          {% set _lvid = _lv.split('/embed/')[1].split('?')[0] %}
+                        {% else %}
+                          {% set _lvid = '' %}
+                        {% endif %}
+                        {% if _lvid %}
+                          {% set _lsrc = 'https://www.youtube-nocookie.com/embed/' ~ _lvid ~ '?rel=0&modestbranding=1&showinfo=0&controls=1&vq=hd1080&iv_load_policy=3&fs=1&color=white' %}
+                        {% else %}
+                          {% set _lsrc = _lv %}
+                        {% endif %}
+                        <div class="bunny-video-container" id="videoWrapper" oncontextmenu="return false;">
+                            <iframe
+                                src="{{ _lsrc }}"
+                                title="{{ lesson.title }}"
                                 loading="lazy"
                                 class="bunny-video-iframe"
-                                allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;" 
-                                allowfullscreen="true">
+                                allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen"
+                                allowfullscreen="true"
+                                sandbox="allow-scripts allow-same-origin allow-presentation allow-popups">
                             </iframe>
                         </div>
                         {% else %}
@@ -558,4 +574,15 @@
     background: #94a3b8;
 }
 </style>
+
+<script>
+document.addEventListener('contextmenu', function(e) {
+    if (e.target.closest('#videoWrapper')) e.preventDefault();
+});
+document.addEventListener('keydown', function(e) {
+    if ((e.ctrlKey || e.metaKey) && ['s','u','p'].includes(e.key.toLowerCase())) {
+        e.preventDefault();
+    }
+});
+</script>
 {% endblock %}

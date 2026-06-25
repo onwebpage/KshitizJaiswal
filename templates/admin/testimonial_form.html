@@ -39,10 +39,17 @@
                         </div>
 
                         <div class="col-12">
-                            <label class="form-label fw-semibold">{{ form.text.label.text }} <span class="text-danger">*</span></label>
+                            <label class="form-label fw-semibold">{{ form.text.label.text }}</label>
                             {{ form.text(class="form-control", rows="4", placeholder="Write the testimonial text here (without quotes)...") }}
-                            <small class="text-muted">Quotes will be added automatically on display.</small>
+                            <small class="text-muted">Quotes will be added automatically on display. Leave empty if using video review.</small>
                             {% for err in form.text.errors %}<div class="invalid-feedback d-block">{{ err }}</div>{% endfor %}
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">{{ form.video_url.label.text }}</label>
+                            {{ form.video_url(class="form-control", placeholder="https://www.youtube.com/watch?v=... or leave empty") }}
+                            <small class="text-muted">Paste a YouTube link to show a video review card. If both text and video are added, video takes priority.</small>
+                            {% for err in form.video_url.errors %}<div class="invalid-feedback d-block">{{ err }}</div>{% endfor %}
                         </div>
 
                         <div class="col-md-4">

@@ -3998,6 +3998,35 @@ def course_detail(course_id):
                            curriculum_settings=curriculum_settings, testimonials=testimonials,
                            is_logged_in=is_logged_in)
 
+@app.route('/course/<int:course_id>/start')
+def course_start(course_id):
+    """Redirect to the first lesson of a course"""
+    course = Course.query.get_or_404(course_id)
+    if not course.is_active:
+        abort(404)
+
+    clerk_user_id = get_clerk_user_id()
+    has_access = course.price == 0
+    if not has_access:
+        if clerk_user_id:
+            has_access = UserCourseAccess.has_access(clerk_user_id, course_id)
+        if not has_access:
+            _cu = get_course_user()
+            if _cu:
+                has_access = _cu.has_course_access(course_id)
+    if not has_access:
+        flash('Please purchase this course to access lessons.', 'warning')
+        return redirect(url_for('course_detail', course_id=course_id))
+
+    first_module = Module.query.filter_by(course_id=course_id).order_by(Module.order).first()
+    if first_module:
+        first_lesson = Lesson.query.filter_by(module_id=first_module.id).order_by(Lesson.order).first()
+        if first_lesson:
+            return redirect(url_for('lesson_view', course_id=course_id, lesson_id=first_lesson.id))
+    flash('No lessons available yet.', 'info')
+    return redirect(url_for('course_detail', course_id=course_id))
+
+
 @app.route('/course/<int:course_id>/lesson/<int:lesson_id>')
 def lesson_view(course_id, lesson_id):
     """Lesson viewing page with embedded video"""
@@ -4815,7 +4844,8 @@ def admin_add_testimonial():
         testimonials.append({
             'name':       form.name.data.strip(),
             'role':       form.role.data.strip(),
-            'text':       form.text.data.strip(),
+            'text':       (form.text.data or '').strip(),
+            'video_url':  (form.video_url.data or '').strip(),
             'rating':     int(form.rating.data),
             'is_visible': form.is_visible.data == '1',
             'sort_order': form.sort_order.data or 0,
@@ -4841,7 +4871,8 @@ def admin_edit_testimonial(idx):
         testimonials[idx] = {
             'name':       form.name.data.strip(),
             'role':       form.role.data.strip(),
-            'text':       form.text.data.strip(),
+            'text':       (form.text.data or '').strip(),
+            'video_url':  (form.video_url.data or '').strip(),
             'rating':     int(form.rating.data),
             'is_visible': form.is_visible.data == '1',
             'sort_order': form.sort_order.data or 0,
@@ -4854,6 +4885,7 @@ def admin_edit_testimonial(idx):
         form.name.data       = t.get('name', '')
         form.role.data       = t.get('role', '')
         form.text.data       = t.get('text', '')
+        form.video_url.data  = t.get('video_url', '')
         form.rating.data     = str(t.get('rating', 5))
         form.is_visible.data = '1' if t.get('is_visible', True) else '0'
         form.sort_order.data = t.get('sort_order', 0)

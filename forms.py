@@ -138,7 +138,8 @@ class LessonForm(FlaskForm):
 class TestimonialForm(FlaskForm):
     name = StringField('Name', validators=[DataRequired(), Length(max=100)])
     role = StringField('Role / Location', validators=[DataRequired(), Length(max=100)])
-    text = TextAreaField('Testimonial Text', validators=[DataRequired(), Length(max=500)])
+    text = TextAreaField('Testimonial Text', validators=[Optional(), Length(max=500)])
+    video_url = StringField('Video Review URL (YouTube — optional)', validators=[Optional(), Length(max=500)])
     rating = SelectField('Rating', choices=[('5','★★★★★  5 Stars'), ('4','★★★★  4 Stars'), ('3','★★★  3 Stars')], default='5')
     is_visible = SelectField('Visible on Site?', choices=[('1','Yes — Show'), ('0','No — Hide')], default='1')
     sort_order = IntegerField('Sort Order (lower = first)', validators=[NumberRange(min=0)], default=0)

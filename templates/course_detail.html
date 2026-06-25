@@ -361,7 +361,19 @@ if (pvBtn) {
                         <img src="{{ url_for('static', filename=course.thumbnail) if not course.thumbnail.startswith('http') else course.thumbnail }}" alt="{{ course.title }}">
                     </div>
                     {% endif %}
-                    
+
+                    {% if course.has_access %}
+                    <!-- Enrolled user: show Continue Learning directly, no price -->
+                    <div class="text-center mb-3 p-3" style="background:linear-gradient(135deg,rgba(22,163,74,.12),rgba(22,163,74,.06));border:1px solid rgba(22,163,74,.3);border-radius:12px;">
+                        <div style="color:#16a34a;font-weight:700;font-size:.9rem;margin-bottom:4px;">
+                            <i class="fas fa-check-circle me-1"></i>You're Enrolled!
+                        </div>
+                        <div style="color:#555;font-size:.82rem;">Lifetime access • All lessons unlocked</div>
+                    </div>
+                    <a href="{{ url_for('course_start', course_id=course.id) }}" class="btn-purchase w-100 mb-3">
+                        <i class="fas fa-play-circle me-2"></i>Continue Learning
+                    </a>
+                    {% else %}
                     <div class="price-section mb-4">
                         {% if course.price == 0 %}
                         <div class="price-tag">
@@ -374,18 +386,6 @@ if (pvBtn) {
                         </div>
                         {% endif %}
                     </div>
-                    
-                    {% if course.has_access %}
-                    {% if course.modules and course.modules[0].lessons %}
-                    <a href="{{ url_for('lesson_view', course_id=course.id, lesson_id=course.modules[0].lessons[0].id) }}" class="btn-purchase w-100 mb-3">
-                        <i class="fas fa-play-circle me-2"></i>Start Learning
-                    </a>
-                    {% else %}
-                    <a href="#courseAccordion" class="btn-purchase w-100 mb-3">
-                        <i class="fas fa-book-open me-2"></i>View Course
-                    </a>
-                    {% endif %}
-                    {% else %}
                     <button class="btn-purchase w-100 mb-3" onclick="purchaseCourse({{ course.id }}, {{ course.price }})">
                         <i class="fas fa-shopping-cart me-2"></i>Purchase Course
                     </button>
@@ -438,39 +438,71 @@ if (pvBtn) {
 
         <div class="row g-4 justify-content-center">
             {% for t in testimonials %}
+            {% set _tv = t.get('video_url','') %}
+            {% if _tv %}
+              {% if 'youtu.be/' in _tv %}{% set _tvid = _tv.split('youtu.be/')[1].split('?')[0] %}
+              {% elif 'youtube.com/watch' in _tv %}{% set _tvid = _tv.split('v=')[1].split('&')[0] if 'v=' in _tv else '' %}
+              {% elif '/embed/' in _tv %}{% set _tvid = _tv.split('/embed/')[1].split('?')[0] %}
+              {% else %}{% set _tvid = '' %}{% endif %}
+            {% else %}{% set _tvid = '' %}{% endif %}
             <div class="col-md-6 col-lg-4">
+                {% if _tvid %}
+                <!-- Video Review Card -->
+                <div style="background:#fff;border-radius:18px;overflow:hidden;height:100%;
+                             box-shadow:0 8px 32px rgba(0,0,0,.2);
+                             transition:transform .25s,box-shadow .25s;"
+                     onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 20px 56px rgba(0,0,0,.3)'"
+                     onmouseout="this.style.transform='';this.style.boxShadow='0 8px 32px rgba(0,0,0,.2)'">
+                    <div style="position:relative;padding-bottom:56.25%;height:0;background:#000;">
+                        <iframe src="https://www.youtube-nocookie.com/embed/{{ _tvid }}?rel=0&modestbranding=1&controls=1"
+                                style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;"
+                                allow="accelerometer; autoplay; encrypted-media; picture-in-picture"
+                                allowfullscreen loading="lazy"></iframe>
+                    </div>
+                    <div style="padding:16px 20px;">
+                        <div style="color:#cc0000;font-size:.95rem;margin-bottom:6px;letter-spacing:2px;">
+                            {% for i in range(t.get('rating', 5)) %}★{% endfor %}{% for i in range(5 - t.get('rating', 5)) %}<span style="color:rgba(0,0,0,.15);">★</span>{% endfor %}
+                        </div>
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <div style="width:36px;height:36px;border-radius:50%;flex-shrink:0;
+                                        background:linear-gradient(135deg,#cc0000,#8b0000);
+                                        display:flex;align-items:center;justify-content:center;
+                                        font-size:.95rem;font-weight:700;color:#fff;">{{ t.name[0]|upper }}</div>
+                            <div>
+                                <div style="color:#111;font-weight:600;font-size:.9rem;">{{ t.name }}</div>
+                                {% if t.role %}<div style="color:#cc0000;font-size:.78rem;font-weight:500;">{{ t.role }}</div>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <!-- Text Review Card -->
                 <div style="background:#fff;border:none;
                              border-radius:18px;padding:28px 24px;height:100%;
                              transition:transform .25s,box-shadow .25s;position:relative;
                              box-shadow:0 8px 32px rgba(0,0,0,.2);"
                      onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 20px 56px rgba(0,0,0,.3)'"
                      onmouseout="this.style.transform='';this.style.boxShadow='0 8px 32px rgba(0,0,0,.2)'">
-                    <!-- Quote icon -->
                     <div style="position:absolute;top:18px;right:22px;font-size:2.5rem;
                                 color:rgba(204,0,0,.15);line-height:1;">"</div>
-                    <!-- Stars -->
                     <div style="color:#cc0000;font-size:1rem;margin-bottom:14px;letter-spacing:2px;">
                         {% for i in range(t.get('rating', 5)) %}★{% endfor %}{% for i in range(5 - t.get('rating', 5)) %}<span style="color:rgba(0,0,0,.15);">★</span>{% endfor %}
                     </div>
-                    <!-- Text -->
-                    <p style="color:#333;font-size:.97rem;line-height:1.7;
-                               margin-bottom:22px;font-style:italic;">"{{ t.text }}"</p>
-                    <!-- Author -->
+                    {% if t.text %}
+                    <p style="color:#333;font-size:.97rem;line-height:1.7;margin-bottom:22px;font-style:italic;">"{{ t.text }}"</p>
+                    {% endif %}
                     <div style="display:flex;align-items:center;gap:12px;border-top:1px solid rgba(204,0,0,.15);padding-top:16px;">
                         <div style="width:42px;height:42px;border-radius:50%;flex-shrink:0;
                                     background:linear-gradient(135deg,#cc0000,#8b0000);
                                     display:flex;align-items:center;justify-content:center;
-                                    font-size:1.1rem;font-weight:700;color:#fff;">
-                            {{ t.name[0]|upper }}
-                        </div>
+                                    font-size:1.1rem;font-weight:700;color:#fff;">{{ t.name[0]|upper }}</div>
                         <div>
                             <div style="color:#111;font-weight:600;font-size:.95rem;">{{ t.name }}</div>
-                            {% if t.role %}
-                            <div style="color:#cc0000;font-size:.8rem;font-weight:500;">{{ t.role }}</div>
-                            {% endif %}
+                            {% if t.role %}<div style="color:#cc0000;font-size:.8rem;font-weight:500;">{{ t.role }}</div>{% endif %}
                         </div>
                     </div>
                 </div>
+                {% endif %}
             </div>
             {% endfor %}
         </div>
