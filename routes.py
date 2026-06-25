@@ -2566,6 +2566,69 @@ def admin_users():
 
     return render_template('admin/users.html', enrollments=enrollment_data)
 
+
+@app.route('/admin/course-users')
+def admin_course_users():
+    """Manage CourseUsers — view, reset password, resend credentials."""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    search = request.args.get('search', '').strip()
+    query = CourseUser.query.order_by(CourseUser.created_at.desc())
+    if search:
+        like = f'%{search}%'
+        query = query.filter(
+            db.or_(
+                CourseUser.name.ilike(like),
+                CourseUser.email.ilike(like),
+                CourseUser.phone.ilike(like),
+            )
+        )
+    users = query.all()
+    return render_template('admin/course_users.html', users=users, search=search)
+
+
+@app.route('/admin/course-user/<int:user_id>/reset-password', methods=['POST'])
+def admin_reset_course_user_password(user_id):
+    """Reset a CourseUser's password, show it to admin, optionally email them."""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+
+    user = CourseUser.query.get_or_404(user_id)
+    new_password = CourseUser.generate_password()
+    user.set_password(new_password)
+    user.must_change_password = True
+    db.session.commit()
+
+    send_email = request.form.get('send_email') == '1'
+    email_result = None
+    if send_email and user.email:
+        try:
+            from utils import send_email_credentials
+            login_url = url_for('user_login', _external=True)
+            login_id  = user.email or user.phone
+            ok = send_email_credentials(
+                email=user.email,
+                name=user.name,
+                login_id=login_id,
+                password=new_password,
+                login_url=login_url,
+            )
+            email_result = 'sent' if ok else 'failed'
+        except Exception as _e:
+            logging.error(f'admin_reset_course_user_password email error: {_e}')
+            email_result = 'failed'
+
+    flash(
+        f'Password reset for {user.name}. '
+        f'New password: <strong>{new_password}</strong>. '
+        f'Login ID: {user.email or user.phone}. '
+        + (f'Email {"sent ✅" if email_result == "sent" else "FAILED ❌ — copy password above and share manually"}.'
+           if send_email else 'Email not sent — copy password above and share manually.'),
+        'success' if email_result != 'failed' else 'warning'
+    )
+    return redirect(url_for('admin_course_users', search=request.args.get('search', '')))
+
+
 @app.route('/admin/inner-circle')
 def admin_inner_circle():
     """Inner Circle Members — view, search, filter"""
