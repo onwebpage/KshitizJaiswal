@@ -11,17 +11,23 @@
         align-items: center;
         width: 100%;
     }
-    
-    /* Hide the Clerk branding badge that overlaps */
-    #clerk-signin-container .cl-internal-b3fm6y {
-        display: none !important;
-    }
-    
+
     /* Ensure Clerk card is centered */
     #clerk-signin-container > div {
         width: 100%;
         max-width: 400px;
         margin: 0 auto;
+    }
+
+    /* Hide ALL social/OAuth buttons and divider in Clerk UI */
+    .cl-socialButtonsRoot,
+    .cl-socialButtonsBlockButton,
+    .cl-socialButtonsIconButton,
+    .cl-dividerRow,
+    .cl-dividerText,
+    .cl-dividerLine,
+    .cl-internal-b3fm6y {
+        display: none !important;
     }
 </style>
 
@@ -62,15 +68,10 @@
                 Clerk.mountSignIn(signInDiv, {
                     redirectUrl: afterSignInUrl,
                     afterSignInUrl: afterSignInUrl,
-                    socialProviders: [],
                     appearance: {
                         elements: {
                             formButtonPrimary: 'btn btn-primary w-100',
-                            card: 'border-0',
-                            socialButtonsBlockButton: 'display:none!important',
-                            socialButtonsIconButton: 'display:none!important',
-                            dividerRow: 'display:none!important',
-                            socialButtonsRoot: 'display:none!important'
+                            card: 'border-0'
                         }
                     }
                 });
