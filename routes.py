@@ -3600,6 +3600,65 @@ def user_login():
     return render_template('user_login.html', error=error, next_url=next_url)
 
 
+@app.route('/user/google-callback')
+def user_google_callback():
+    """Handle Google OAuth callback via Clerk — find matching CourseUser by email and log in"""
+    try:
+        import httpx as _httpx
+        from clerk_backend_api import Clerk as _Clerk
+        from clerk_backend_api.security import authenticate_request as _auth_req
+        from clerk_backend_api.security.types import AuthenticateRequestOptions as _AuthOpts
+
+        _secret = os.environ.get('CLERK_SECRET_KEY')
+        if not _secret:
+            flash('Authentication service not configured.', 'danger')
+            return redirect(url_for('user_login'))
+
+        _sdk = _Clerk(bearer_auth=_secret)
+        _httpx_req = _httpx.Request(
+            method=request.method,
+            url=request.url,
+            headers=dict(request.headers)
+        )
+        _state = _sdk.authenticate_request(
+            _httpx_req,
+            _AuthOpts(authorized_parties=[request.host_url.rstrip('/')])
+        )
+
+        if not _state.is_signed_in:
+            flash('Google sign-in failed. Please try again.', 'danger')
+            return redirect(url_for('user_login'))
+
+        _clerk_uid = _state.payload.get('sub') if hasattr(_state, 'payload') and _state.payload else None
+        if not _clerk_uid:
+            flash('Could not retrieve account info. Please try again.', 'danger')
+            return redirect(url_for('user_login'))
+
+        _clerk_user = _sdk.users.get(user_id=_clerk_uid)
+        _email = None
+        if hasattr(_clerk_user, 'email_addresses') and _clerk_user.email_addresses:
+            _email = _clerk_user.email_addresses[0].email_address
+
+        if not _email:
+            flash('No email found on your Google account.', 'danger')
+            return redirect(url_for('user_login'))
+
+        course_user = CourseUser.get_by_identifier(_email)
+        if not course_user:
+            flash(f'No course account found for {_email}. Please purchase a course first.', 'warning')
+            return redirect(url_for('courses'))
+
+        session['course_user_id'] = course_user.id
+        first = course_user.name.split()[0] if course_user.name else 'there'
+        flash(f'Welcome back, {first}!', 'success')
+        return redirect(url_for('my_courses'))
+
+    except Exception as _e:
+        print(f'Google callback error: {_e}')
+        flash('Google sign-in failed. Please try email login instead.', 'danger')
+        return redirect(url_for('user_login'))
+
+
 @app.route('/user/logout')
 def user_logout():
     """Course user logout"""
