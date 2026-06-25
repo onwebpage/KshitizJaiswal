@@ -44,5 +44,5 @@ expertMode = true
 [userenv]
 
 [userenv.shared]
-SMTP_FROM_EMAIL = ""
-SMTP_FROM_NAME = "Kshitiz Jaiswal Courses"
+SMTP_FROM_EMAIL = "noreply@kshitizjaiswal.in"
+SMTP_FROM_NAME = "Kshitiz Jaiswal"
