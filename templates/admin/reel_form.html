@@ -26,6 +26,22 @@
     gap: 8px;
 }
 .reel-form-section-title i { color: #cc0000; font-size: .9rem; }
+.card-layout-btn {
+    background: #f8f9fa;
+    border-color: #dee2e6 !important;
+    color: #6c757d;
+    user-select: none;
+}
+.card-layout-option input:checked + .card-layout-btn {
+    background: linear-gradient(135deg, #cc0000, #8b0000);
+    border-color: #cc0000 !important;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(204,0,0,0.3);
+}
+.card-layout-btn:hover {
+    border-color: #cc0000 !important;
+    color: #cc0000;
+}
 .url-preview-box {
     display: none;
     align-items: center;
@@ -64,7 +80,6 @@
                 <form method="POST" enctype="multipart/form-data" id="reelForm">
                     {{ form.hidden_tag() }}
                     {{ form.thumbnail_url(id="thumbnailUrlHidden", type="hidden") }}
-                    {{ form.card_layout(type="hidden", value="portrait") }}
 
                     <!-- ── Section 1: Platform + URL ── -->
                     <div class="reel-form-section">
@@ -169,7 +184,7 @@
                             </div>
                         </div>
 
-                        <div class="row g-3">
+                        <div class="row g-3 mb-3">
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">{{ form.category_tag.label.text }}</label>
                                 {{ form.category_tag(class="form-select") }}
@@ -179,6 +194,26 @@
                                 {{ form.topic_tag(class="form-control") }}
                                 <small class="form-text text-muted">Groups related reels together (e.g. "Vote Chori Issue").</small>
                             </div>
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label fw-semibold d-block mb-2">
+                                Card Layout
+                                <span class="text-muted fw-normal ms-1" style="font-size:.82rem;">(How the thumbnail card looks on the website)</span>
+                            </label>
+                            <div class="d-flex gap-2 flex-wrap" id="cardLayoutBtns">
+                                {% for value, label in [('standard','Standard (16:9)'), ('portrait','Portrait (9:16)'), ('landscape','Landscape (21:9)')] %}
+                                <label class="card-layout-option" style="cursor:pointer;">
+                                    <input type="radio" name="card_layout" value="{{ value }}" style="display:none;"
+                                        {% if (form.card_layout.data or 'standard') == value %}checked{% endif %}>
+                                    <div class="card-layout-btn px-4 py-2 rounded-3 border fw-semibold" style="font-size:.9rem;transition:all .2s;">
+                                        {% if value == 'portrait' %}<i class="fas fa-mobile-alt me-2"></i>{% elif value == 'landscape' %}<i class="fas fa-tv me-2"></i>{% else %}<i class="fas fa-image me-2"></i>{% endif %}
+                                        {{ label }}
+                                    </div>
+                                </label>
+                                {% endfor %}
+                            </div>
+                            <small class="form-text text-muted mt-1 d-block">Choose based on your thumbnail image orientation.</small>
                         </div>
                     </div>
 

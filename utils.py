@@ -23,8 +23,8 @@ def save_uploaded_file(form_file, folder_name):
         # Resize image if it's an image file
         if file_ext.lower() in ['.jpg', '.jpeg', '.png']:
             img = Image.open(form_file)
-            # Resize to max 800x600 while maintaining aspect ratio
-            img.thumbnail((800, 600), Image.Resampling.LANCZOS)
+            # Resize to max 1080x1920 — supports both portrait (9:16) and landscape (16:9)
+            img.thumbnail((1080, 1920), Image.Resampling.LANCZOS)
             img.save(file_path, optimize=True, quality=85)
         else:
             form_file.save(file_path)

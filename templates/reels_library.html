@@ -97,9 +97,9 @@
         {% if reels %}
         <div class="reels-grid">
             {% for reel in reels %}
-            <div class="reel-grid-item">
+            <div class="reel-grid-item layout-{{ reel.card_layout or 'standard' }}">
                 <a href="{{ url_for('reel_detail', reel_id=reel.id) }}" class="reel-link">
-                    <div class="reel-thumbnail-wrapper">
+                    <div class="reel-thumbnail-wrapper layout-{{ reel.card_layout or 'standard' }}">
                         {% if reel.category_tag %}
                         <div class="reel-category-tag {{ reel.category_tag }}">
                             {% if reel.category_tag == 'trending' %}
@@ -204,10 +204,11 @@
 
 <style>
 .reels-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 2rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
     margin-bottom: 3rem;
+    justify-content: flex-start;
 }
 
 .reel-grid-item {
@@ -217,6 +218,16 @@
     background: #fff;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+    width: 280px;
+    flex-shrink: 0;
+}
+
+.reel-grid-item.layout-portrait {
+    width: 190px;
+}
+
+.reel-grid-item.layout-landscape {
+    width: 360px;
 }
 
 .reel-grid-item:hover {
@@ -228,6 +239,18 @@
     position: relative;
     aspect-ratio: 16/9;
     overflow: hidden;
+}
+
+.reel-thumbnail-wrapper.layout-portrait {
+    aspect-ratio: 9/16;
+}
+
+.reel-thumbnail-wrapper.layout-landscape {
+    aspect-ratio: 16/9;
+}
+
+.reel-thumbnail-wrapper.layout-standard {
+    aspect-ratio: 16/9;
 }
 
 .reel-thumbnail {
@@ -323,6 +346,22 @@
 .reel-category-tag.behind_scenes {
     background: linear-gradient(135deg, #607d8b, #455a64);
     color: #fff;
+}
+
+@media (max-width: 768px) {
+    .reels-grid {
+        justify-content: center;
+        gap: 1rem;
+    }
+    .reel-grid-item { width: calc(50% - 0.5rem); min-width: 140px; }
+    .reel-grid-item.layout-portrait { width: calc(45% - 0.5rem); min-width: 130px; }
+    .reel-grid-item.layout-landscape { width: calc(100% - 0.5rem); max-width: 400px; }
+}
+
+@media (max-width: 480px) {
+    .reel-grid-item { width: calc(50% - 0.5rem); min-width: 130px; }
+    .reel-grid-item.layout-portrait { width: calc(45% - 0.5rem); min-width: 120px; }
+    .reel-grid-item.layout-landscape { width: 100%; }
 }
 
 .search-filter-bar {
