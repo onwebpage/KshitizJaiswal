@@ -262,13 +262,13 @@ def send_email_credentials(email, name, login_id, password, login_url=None):
                 smtp_host     = settings.get('smtp_host', smtp_host).strip() or smtp_host
                 smtp_port     = int(settings.get('smtp_port', smtp_port))
                 smtp_user     = settings.get('smtp_user', '').strip()
-                smtp_password = settings.get('smtp_password', '').strip()
+                smtp_password = settings.get('smtp_password', '').replace(' ', '').strip()
                 from_email    = settings.get('from_email', '').strip()
                 from_name     = settings.get('from_name', from_name).strip()
 
         if not smtp_user or not smtp_password:
             env_user = os.environ.get('SMTP_USER', '').strip()
-            env_pass = os.environ.get('SMTP_PASSWORD', '').strip()
+            env_pass = os.environ.get('SMTP_PASSWORD', '').replace(' ', '').strip()
             if env_user and env_pass:
                 smtp_user     = env_user
                 smtp_password = env_pass
@@ -409,13 +409,13 @@ def send_course_purchase_confirmation(email, name, course_title, amount_paid, my
                 smtp_host     = settings.get('smtp_host', smtp_host).strip() or smtp_host
                 smtp_port     = int(settings.get('smtp_port', smtp_port))
                 smtp_user     = settings.get('smtp_user', '').strip()
-                smtp_password = settings.get('smtp_password', '').strip()
+                smtp_password = settings.get('smtp_password', '').replace(' ', '').strip()
                 from_email    = settings.get('from_email', '').strip()
                 from_name     = settings.get('from_name', from_name).strip()
 
         if not smtp_user or not smtp_password:
             env_user = os.environ.get('SMTP_USER', '').strip()
-            env_pass = os.environ.get('SMTP_PASSWORD', '').strip()
+            env_pass = os.environ.get('SMTP_PASSWORD', '').replace(' ', '').strip()
             if env_user and env_pass:
                 smtp_user     = env_user
                 smtp_password = env_pass
