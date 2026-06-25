@@ -414,23 +414,28 @@
     .footer-nl-input {
         flex: 1 1 160px;
         min-width: 130px;
+        height: 42px;
+        max-height: 42px;
         background: rgba(255,255,255,.08);
         border: 1px solid rgba(255,255,255,.18);
         color: #fff;
         border-radius: 8px;
-        padding: .55rem .9rem;
+        padding: 0 .9rem;
         font-size: .88rem;
         outline: none;
+        box-sizing: border-box;
         transition: border-color .2s;
+        resize: none;
     }
     .footer-nl-input::placeholder { color: rgba(255,255,255,.45); }
-    .footer-nl-input:focus { border-color: #cc0000; background: rgba(255,255,255,.12); }
+    .footer-nl-input:focus { border-color: #cc0000; background: rgba(255,255,255,.12); outline: none; }
     .footer-nl-btn {
         background: #cc0000;
         color: #fff;
         border: none;
         border-radius: 8px;
-        padding: .55rem 1.2rem;
+        height: 42px;
+        padding: 0 1.2rem;
         font-size: .88rem;
         font-weight: 600;
         cursor: pointer;

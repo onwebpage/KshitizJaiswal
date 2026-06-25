@@ -875,17 +875,23 @@ input[type="submit"], input[type="button"],
 /* ── Footer Newsletter Form – Mobile ─────────────────────────── */
 @media (max-width: 767.98px) {
   .footer-nl-fields {
+    flex-direction: column;
     gap: 0.5rem;
+    align-items: stretch;
   }
 
   .footer-nl-input {
+    flex: none;
+    width: 100%;
     height: 44px;
-    font-size: 16px; /* prevents iOS auto-zoom */
+    max-height: 44px;
+    font-size: 16px;
     padding: 0 0.75rem;
     border-radius: 8px;
   }
 
   .footer-nl-btn {
+    width: 100%;
     height: 44px;
     font-size: 15px;
     border-radius: 8px;
