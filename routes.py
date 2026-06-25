@@ -473,6 +473,13 @@ def newsletter_subscribe():
                 form.age.data or 0,
                 phone=phone
             )
+            # Send welcome/thank-you email to subscriber
+            try:
+                from utils import send_subscription_welcome_email
+                send_subscription_welcome_email(form.email.data, form.name.data)
+            except Exception as _mail_err:
+                logging.warning(f"Welcome email failed (non-fatal): {_mail_err}")
+
             if is_ajax:
                 return jsonify({'success': True, 'message': 'Successfully subscribed to newsletter!'})
             flash('Successfully subscribed to newsletter!', 'success')

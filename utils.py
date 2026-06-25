@@ -455,6 +455,64 @@ Kshitiz Jaiswal | Unfiltered Commentator
                             html_body, plain_body, from_email, from_name)
 
 
+def send_subscription_welcome_email(email, name):
+    """Send a thank you / welcome email to a new newsletter subscriber."""
+    import logging
+    from_email, from_name = _get_resend_from()
+
+    plain_body = f"""Hi {name},
+
+Thank you for subscribing to Kshitiz Jaiswal's newsletter!
+
+You're now part of the Inner Circle — you'll get unfiltered commentary and exclusive updates straight to your inbox.
+
+Stay tuned. Sach aaega! 🎙️
+
+– Kshitiz Jaiswal
+"""
+
+    html_body = f"""<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f4;padding:30px 0;">
+  <tr><td align="center">
+    <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+      <tr>
+        <td style="background:#9b1c1c;padding:30px;text-align:center;">
+          <h1 style="color:#ffffff;margin:0;font-size:24px;letter-spacing:1px;">🎙️ Kshitiz Jaiswal</h1>
+          <p style="color:#fca5a5;margin:6px 0 0;font-size:14px;">Unfiltered Commentator</p>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:36px 40px;">
+          <h2 style="color:#1e293b;margin:0 0 12px;">Welcome to the Inner Circle, {name}! 🙌</h2>
+          <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 16px;">
+            Thank you for subscribing. You're now part of a community that believes in unfiltered truth and real commentary.
+          </p>
+          <p style="color:#475569;font-size:15px;line-height:1.7;margin:0 0 24px;">
+            Expect exclusive updates, behind-the-reel insights, and commentary that you won't find anywhere else — straight to your inbox.
+          </p>
+          <div style="background:#fef2f2;border-left:4px solid #dc2626;padding:16px 20px;border-radius:4px;margin-bottom:28px;">
+            <p style="color:#9b1c1c;font-style:italic;margin:0;font-size:15px;">"Reel to sirf ek hissa tha, kahani bahut badi hai."</p>
+          </div>
+          <p style="color:#64748b;font-size:14px;margin:0;">– Kshitiz Jaiswal</p>
+        </td>
+      </tr>
+      <tr>
+        <td style="background:#f8fafc;padding:20px 40px;text-align:center;border-top:1px solid #e2e8f0;">
+          <p style="color:#94a3b8;font-size:12px;margin:0;">You received this email because you subscribed at kshitizjaiswal.in</p>
+        </td>
+      </tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>"""
+
+    return _send_via_resend(email, "Welcome to the Inner Circle! 🎙️", html_body, plain_body, from_email, from_name)
+
+
 def send_whatsapp_credentials(phone, name, login_id, password, login_url=None):
     """Send login credentials to user via WhatsApp (Meta Cloud API)."""
     import logging
