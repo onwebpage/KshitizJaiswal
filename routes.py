@@ -4889,3 +4889,39 @@ def admin_restore_course_access(purchase_id):
                             search=request.args.get('search',''),
                             course=request.args.get('course',''),
                             status=request.args.get('status','')))
+
+
+@app.route('/admin/course-purchase/<int:purchase_id>/resend-email', methods=['POST'])
+def admin_resend_course_email(purchase_id):
+    """Manually resend purchase confirmation email to a buyer."""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+
+    access = UserCourseAccess.query.get_or_404(purchase_id)
+    to_email = access.guest_email
+    if not to_email:
+        flash('No email address on record for this buyer — cannot send email.', 'error')
+        return redirect(url_for('admin_course_purchases'))
+
+    try:
+        from utils import send_course_purchase_confirmation
+        ok = send_course_purchase_confirmation(
+            email=to_email,
+            name=access.guest_name or 'Student',
+            course_title=access.course.title,
+            amount_paid=access.amount_paid,
+            my_courses_url=url_for('my_courses', _external=True),
+            login_url=url_for('user_login', _external=True),
+        )
+        if ok:
+            flash(f'Confirmation email sent to {to_email}.', 'success')
+        else:
+            flash(f'Email failed — check SMTP settings in admin panel.', 'error')
+    except Exception as e:
+        logging.error(f'admin_resend_course_email error: {e}')
+        flash(f'Email error: {e}', 'error')
+
+    return redirect(url_for('admin_course_purchases',
+                            search=request.args.get('search',''),
+                            course=request.args.get('course',''),
+                            status=request.args.get('status','')))

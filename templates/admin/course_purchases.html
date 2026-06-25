@@ -205,25 +205,37 @@
 
             <!-- Actions -->
             <td class="pe-3">
-              {% if not p.access_revoked %}
-              <form method="POST"
-                    action="{{ url_for('admin_revoke_course_access', purchase_id=p.id) }}"
-                    onsubmit="return confirm('Revoke access for {{ p.guest_name or p.guest_email }}? They will no longer be able to access this course.')">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="btn btn-sm btn-outline-danger" title="Revoke Access">
-                  <i class="fas fa-ban me-1"></i>Revoke
-                </button>
-              </form>
-              {% else %}
-              <form method="POST"
-                    action="{{ url_for('admin_restore_course_access', purchase_id=p.id) }}"
-                    onsubmit="return confirm('Restore course access for {{ p.guest_name or p.guest_email }}?')">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="btn btn-sm btn-outline-success" title="Restore Access">
-                  <i class="fas fa-undo me-1"></i>Restore
-                </button>
-              </form>
-              {% endif %}
+              <div class="d-flex flex-column gap-1">
+                {% if p.guest_email %}
+                <form method="POST"
+                      action="{{ url_for('admin_resend_course_email', purchase_id=p.id) }}"
+                      onsubmit="return confirm('Send purchase confirmation email to {{ p.guest_email }}?')">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-sm btn-outline-primary w-100" title="Resend Email">
+                    <i class="fas fa-paper-plane me-1"></i>Send Email
+                  </button>
+                </form>
+                {% endif %}
+                {% if not p.access_revoked %}
+                <form method="POST"
+                      action="{{ url_for('admin_revoke_course_access', purchase_id=p.id) }}"
+                      onsubmit="return confirm('Revoke access for {{ p.guest_name or p.guest_email }}?')">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-sm btn-outline-danger w-100" title="Revoke Access">
+                    <i class="fas fa-ban me-1"></i>Revoke
+                  </button>
+                </form>
+                {% else %}
+                <form method="POST"
+                      action="{{ url_for('admin_restore_course_access', purchase_id=p.id) }}"
+                      onsubmit="return confirm('Restore course access for {{ p.guest_name or p.guest_email }}?')">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-sm btn-outline-success w-100" title="Restore Access">
+                    <i class="fas fa-undo me-1"></i>Restore
+                  </button>
+                </form>
+                {% endif %}
+              </div>
             </td>
           </tr>
           {% endfor %}
