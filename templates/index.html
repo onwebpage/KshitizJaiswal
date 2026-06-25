@@ -20,7 +20,7 @@
         <div class="premium-reels-header">
             <div>
                 <h2 class="premium-reels-title">{{ page_content.reels_section_title or 'Beyond The Reel' }}</h2>
-                <p class="premium-reels-subtitle">{{ page_content.reels_section_subtitle or 'Unfiltered commentary from the field' }}</p>
+                <p class="premium-reels-subtitle" style="color:#ff4444!important;font-weight:700;font-size:1.05rem;">{{ page_content.reels_section_subtitle or 'Unfiltered commentary from the field' }}</p>
             </div>
             <a href="{{ url_for('reels_library') }}" class="btn premium-reels-viewall">
                 View All <i class="fas fa-arrow-right ms-2"></i>
@@ -314,9 +314,12 @@
     text-shadow: 0 2px 12px rgba(0,0,0,.4);
 }
 .premium-reels-subtitle {
-    font-size: .95rem;
-    color: rgba(255,255,255,.6) !important;
+    font-size: 1.05rem;
+    color: #ff4444 !important;
+    font-weight: 700;
     margin: 0;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+    letter-spacing: .2px;
 }
 .premium-reels-viewall {
     background: transparent;
