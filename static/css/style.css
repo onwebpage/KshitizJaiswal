@@ -5527,6 +5527,11 @@ a.reel-card:visited {
     .popular-qs:hover { transform: translateY(-6px); }
 }
 
+/* Home page reels section subtitle */
+.premium-reels-subtitle {
+  color: #dc2626 !important;
+}
+
 /* Reels Library page subtitle */
 .library-subtitle {
   font-size: 1.15rem;
