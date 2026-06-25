@@ -473,12 +473,14 @@ def newsletter_subscribe():
                 form.age.data or 0,
                 phone=phone
             )
-            # Send welcome/thank-you email to subscriber
+            # Send welcome/thank-you email to subscriber (background — non-blocking)
             try:
+                import threading
                 from utils import send_subscription_welcome_email
-                send_subscription_welcome_email(form.email.data, form.name.data)
+                _em, _nm = form.email.data, form.name.data
+                threading.Thread(target=send_subscription_welcome_email, args=(_em, _nm), daemon=True).start()
             except Exception as _mail_err:
-                logging.warning(f"Welcome email failed (non-fatal): {_mail_err}")
+                logging.warning(f"Welcome email thread start failed (non-fatal): {_mail_err}")
 
             if is_ajax:
                 return jsonify({'success': True, 'message': 'Successfully subscribed to newsletter!'})
@@ -2640,30 +2642,26 @@ def admin_create_course_user():
             pass
     db.session.commit()
 
-    # Send credentials email
-    email_result = None
+    # Send credentials email (background — non-blocking)
     if send_email_flag and email:
-        try:
-            from utils import send_email_credentials
-            ok = send_email_credentials(
-                email=email,
-                name=name,
-                login_id=email or phone,
-                password=password,
-                login_url=url_for('user_login', _external=True),
-            )
-            email_result = 'sent' if ok else 'failed'
-        except Exception as _e:
-            logging.error(f'admin_create_course_user email error: {_e}')
-            email_result = 'failed'
+        import threading
+        from utils import send_email_credentials
+        _login_url = url_for('user_login', _external=True)
+        _login_id  = email or phone
+        def _send_creds_bg(_e=email, _n=name, _lid=_login_id, _pw=password, _lu=_login_url):
+            try:
+                send_email_credentials(email=_e, name=_n, login_id=_lid, password=_pw, login_url=_lu)
+            except Exception as _ex:
+                logging.error(f'admin_create_course_user bg email error: {_ex}')
+        threading.Thread(target=_send_creds_bg, daemon=True).start()
 
     flash(
         f'User <strong>{name}</strong> created. '
         f'Login ID: <strong>{email or phone}</strong> | '
         f'Password: <strong>{password}</strong>. '
-        + (f'Email {"sent ✅" if email_result == "sent" else "FAILED ❌ — share password manually"}.'
-           if send_email_flag else 'Email not sent — share password manually.'),
-        'success' if email_result != 'failed' else 'warning'
+        + ('Email is being sent in background ✅.' if send_email_flag and email
+           else 'Email not sent — share password manually.'),
+        'success'
     )
     return redirect(url_for('admin_course_users'))
 
@@ -2681,31 +2679,32 @@ def admin_reset_course_user_password(user_id):
     db.session.commit()
 
     send_email = request.form.get('send_email') == '1'
-    email_result = None
+
     if send_email and user.email:
-        try:
-            from utils import send_email_credentials
-            login_url = url_for('user_login', _external=True)
-            login_id  = user.email or user.phone
-            ok = send_email_credentials(
-                email=user.email,
-                name=user.name,
-                login_id=login_id,
-                password=new_password,
-                login_url=login_url,
-            )
-            email_result = 'sent' if ok else 'failed'
-        except Exception as _e:
-            logging.error(f'admin_reset_course_user_password email error: {_e}')
-            email_result = 'failed'
+        import threading
+        from utils import send_email_credentials
+        login_url = url_for('user_login', _external=True)
+        login_id  = user.email or user.phone
+        def _send_bg():
+            try:
+                send_email_credentials(
+                    email=user.email,
+                    name=user.name,
+                    login_id=login_id,
+                    password=new_password,
+                    login_url=login_url,
+                )
+            except Exception as _e:
+                logging.error(f'admin_reset_course_user_password bg email error: {_e}')
+        threading.Thread(target=_send_bg, daemon=True).start()
 
     flash(
         f'Password reset for {user.name}. '
         f'New password: <strong>{new_password}</strong>. '
         f'Login ID: {user.email or user.phone}. '
-        + (f'Email {"sent ✅" if email_result == "sent" else "FAILED ❌ — copy password above and share manually"}.'
-           if send_email else 'Email not sent — copy password above and share manually.'),
-        'success' if email_result != 'failed' else 'warning'
+        + ('Email is being sent in background ✅.' if send_email and user.email
+           else 'Email not sent — copy password above and share manually.'),
+        'success'
     )
     return redirect(url_for('admin_course_users', search=request.args.get('search', '')))
 
@@ -4127,17 +4126,19 @@ def verify_course_payment():
             buyer_name  = buyer_name or course_user.name
         if buyer_email:
             try:
+                import threading
                 from utils import send_course_purchase_confirmation
-                send_course_purchase_confirmation(
-                    email=buyer_email,
-                    name=buyer_name or 'Student',
-                    course_title=course.title,
-                    amount_paid=course.price,
-                    my_courses_url=url_for('my_courses', _external=True),
-                    login_url=url_for('user_login', _external=True),
-                )
+                _be, _bn, _ct = buyer_email, buyer_name or 'Student', course.title
+                _cp = course.price
+                _mc = url_for('my_courses', _external=True)
+                _lu = url_for('user_login', _external=True)
+                threading.Thread(
+                    target=send_course_purchase_confirmation,
+                    kwargs=dict(email=_be, name=_bn, course_title=_ct, amount_paid=_cp, my_courses_url=_mc, login_url=_lu),
+                    daemon=True
+                ).start()
             except Exception as _mail_err:
-                logging.warning(f"Purchase confirmation email failed (non-fatal): {_mail_err}")
+                logging.warning(f"Purchase confirmation email thread failed (non-fatal): {_mail_err}")
 
         # Auto-create CourseUser ONLY for truly new / unregistered buyers
         already_logged_in = bool(clerk_user_id or course_user)
@@ -4172,24 +4173,23 @@ def verify_course_payment():
                         import logging as _log
                         _log.info(f"CourseUser created for {guest_email or guest_phone}")
 
+                        import threading as _threading
                         from utils import send_whatsapp_credentials, send_email_credentials
                         login_id   = guest_email or guest_phone
                         _login_url = url_for('user_login', _external=True)
-                        send_whatsapp_credentials(
-                            phone=guest_phone,
-                            name=guest_name or 'User',
-                            login_id=login_id,
-                            password=auto_password,
-                            login_url=_login_url
-                        )
+                        _gp, _gn, _lid, _ap, _lu = guest_phone, guest_name or 'User', login_id, auto_password, _login_url
+                        _threading.Thread(
+                            target=send_whatsapp_credentials,
+                            kwargs=dict(phone=_gp, name=_gn, login_id=_lid, password=_ap, login_url=_lu),
+                            daemon=True
+                        ).start()
                         if guest_email:
-                            send_email_credentials(
-                                email=guest_email,
-                                name=guest_name or 'User',
-                                login_id=login_id,
-                                password=auto_password,
-                                login_url=_login_url
-                            )
+                            _ge = guest_email
+                            _threading.Thread(
+                                target=send_email_credentials,
+                                kwargs=dict(email=_ge, name=_gn, login_id=_lid, password=_ap, login_url=_lu),
+                                daemon=True
+                            ).start()
                         # Always return credentials in response so success screen can display them
                         new_credentials = {'login_id': login_id, 'password': auto_password}
                     else:

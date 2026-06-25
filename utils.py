@@ -259,7 +259,11 @@ def _get_resend_from():
 def _send_via_resend(to_email, subject, html_body, plain_body, from_email, from_name):
     """Send an email via Resend API. Returns True on success, False on failure."""
     import logging, os
-    import resend
+    try:
+        import resend
+    except ImportError:
+        logging.error("resend package not installed — cannot send email.")
+        return False
     api_key = os.environ.get('RESEND_API_KEY', '').strip()
     if not api_key:
         logging.warning("RESEND_API_KEY not set — skipping email delivery.")
@@ -269,13 +273,23 @@ def _send_via_resend(to_email, subject, html_body, plain_body, from_email, from_
         return False
     resend.api_key = api_key
     try:
-        resend.Emails.send({
-            "from": f"{from_name} <{from_email}>",
-            "to": [to_email],
-            "subject": subject,
-            "html": html_body,
-            "text": plain_body,
-        })
+        import httpx
+        with httpx.Client(timeout=15.0) as client:
+            resp = client.post(
+                "https://api.resend.com/emails",
+                headers={
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "from": f"{from_name} <{from_email}>",
+                    "to": [to_email],
+                    "subject": subject,
+                    "html": html_body,
+                    "text": plain_body,
+                },
+            )
+            resp.raise_for_status()
         logging.info(f"Resend: email sent to {to_email} — {subject}")
         return True
     except Exception as e:
