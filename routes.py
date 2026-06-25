@@ -2584,7 +2584,81 @@ def admin_course_users():
             )
         )
     users = query.all()
-    return render_template('admin/course_users.html', users=users, search=search)
+    courses = Course.query.filter_by(is_active=True).order_by(Course.sort_order).all()
+    return render_template('admin/course_users.html', users=users, search=search, courses=courses)
+
+
+@app.route('/admin/course-users/create', methods=['POST'])
+def admin_create_course_user():
+    """Admin: manually create a CourseUser and optionally grant course access + email credentials."""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+
+    name  = request.form.get('name', '').strip()
+    email = request.form.get('email', '').strip().lower() or None
+    phone = request.form.get('phone', '').strip() or None
+    course_ids = request.form.getlist('course_ids')
+    send_email_flag = request.form.get('send_email') == '1'
+
+    if not name or (not email and not phone):
+        flash('Name and at least one of Email / Phone is required.', 'warning')
+        return redirect(url_for('admin_course_users'))
+
+    # Check duplicate
+    if email and CourseUser.get_by_identifier(email):
+        flash(f'A user with email {email} already exists.', 'warning')
+        return redirect(url_for('admin_course_users'))
+
+    password = CourseUser.generate_password()
+    user = CourseUser(name=name, email=email, phone=phone, must_change_password=False)
+    user.set_password(password)
+    db.session.add(user)
+    db.session.flush()
+
+    # Grant selected courses
+    for cid in course_ids:
+        try:
+            cid_int = int(cid)
+            access = UserCourseAccess(
+                course_id=cid_int,
+                clerk_user_id=None,
+                guest_email=email,
+                guest_name=name,
+                payment_status='manual',
+                account_created=True,
+                access_revoked=False,
+            )
+            db.session.add(access)
+        except Exception:
+            pass
+    db.session.commit()
+
+    # Send credentials email
+    email_result = None
+    if send_email_flag and email:
+        try:
+            from utils import send_email_credentials
+            ok = send_email_credentials(
+                email=email,
+                name=name,
+                login_id=email or phone,
+                password=password,
+                login_url=url_for('user_login', _external=True),
+            )
+            email_result = 'sent' if ok else 'failed'
+        except Exception as _e:
+            logging.error(f'admin_create_course_user email error: {_e}')
+            email_result = 'failed'
+
+    flash(
+        f'User <strong>{name}</strong> created. '
+        f'Login ID: <strong>{email or phone}</strong> | '
+        f'Password: <strong>{password}</strong>. '
+        + (f'Email {"sent ✅" if email_result == "sent" else "FAILED ❌ — share password manually"}.'
+           if send_email_flag else 'Email not sent — share password manually.'),
+        'success' if email_result != 'failed' else 'warning'
+    )
+    return redirect(url_for('admin_course_users'))
 
 
 @app.route('/admin/course-user/<int:user_id>/reset-password', methods=['POST'])

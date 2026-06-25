@@ -6,7 +6,63 @@
 <div class="container-fluid p-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2><i class="fas fa-users me-2"></i>Course Users</h2>
-        <span class="badge bg-primary fs-6">{{ users|length }} users</span>
+        <div class="d-flex gap-2 align-items-center">
+            <span class="badge bg-primary fs-6">{{ users|length }} users</span>
+            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createUserModal">
+                <i class="fas fa-user-plus me-1"></i>Create User
+            </button>
+        </div>
+    </div>
+
+    <!-- Create User Modal -->
+    <div class="modal fade" id="createUserModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title"><i class="fas fa-user-plus me-2"></i>Create Course User</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="post" action="{{ url_for('admin_create_course_user') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Full Name <span class="text-danger">*</span></label>
+                            <input type="text" name="name" class="form-control" placeholder="e.g. Kshitiz Jaiswal" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Email</label>
+                            <input type="email" name="email" class="form-control" placeholder="user@example.com">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Phone (optional)</label>
+                            <input type="text" name="phone" class="form-control" placeholder="+91 98765 43210">
+                        </div>
+                        {% if courses %}
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Grant Access To</label>
+                            {% for c in courses %}
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="course_ids" value="{{ c.id }}" id="course_{{ c.id }}" checked>
+                                <label class="form-check-label" for="course_{{ c.id }}">{{ c.title }} (₹{{ c.price }})</label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="send_email" value="1" id="createSendEmail" checked>
+                            <label class="form-check-label" for="createSendEmail">Send login credentials via email</label>
+                        </div>
+                        <div class="alert alert-info mt-3 mb-0 small">
+                            <i class="fas fa-info-circle me-1"></i>A random password will be generated and shown after creation.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-success"><i class="fas fa-user-plus me-1"></i>Create User</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
