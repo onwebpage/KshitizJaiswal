@@ -8,7 +8,7 @@
         <!-- Header -->
         <div class="library-header text-center mb-5">
             <h1 class="section-title">Beyond The Reel</h1>
-            <p class="section-subtitle">"Reel to sirf ek hissa tha, kahani bahut badi hai."</p>
+            <p class="library-subtitle">"Reel to sirf ek hissa tha, kahani bahut badi hai."</p>
         </div>
 
         <!-- Search and Filter Bar -->
@@ -117,7 +117,7 @@
                             {% endif %}
                         </div>
                         {% endif %}
-                        <img src="{{ url_for('static', filename=reel.thumbnail) if reel.thumbnail and not reel.thumbnail.startswith('http') else (reel.thumbnail if reel.thumbnail else '') }}" 
+                        <img src="{{ url_for('static', filename=reel.thumbnail) if reel.thumbnail and not reel.thumbnail.startswith('http') else (reel.thumbnail or url_for('static', filename='img/reel-placeholder.svg')) }}" 
                              alt="{{ reel.title }}" class="reel-thumbnail"
                              onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/reel-placeholder.svg') }}'">
                         <div class="reel-overlay">

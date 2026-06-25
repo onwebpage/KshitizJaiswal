@@ -5526,3 +5526,12 @@ a.reel-card:visited {
     .popular-qs { transform: none; }
     .popular-qs:hover { transform: translateY(-6px); }
 }
+
+/* Reels Library page subtitle */
+.library-subtitle {
+  font-size: 1.15rem;
+  color: #1e293b;
+  font-style: italic;
+  margin-bottom: 2rem;
+  opacity: 1;
+}

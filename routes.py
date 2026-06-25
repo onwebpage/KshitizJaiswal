@@ -1047,8 +1047,8 @@ def admin_edit_reel(reel_id):
         # Process sources
         sources = [s.strip() for s in (form.sources.data or '').split('\n') if s.strip()]
         
-        # Handle thumbnail URL fallback on edit
-        if not reel.thumbnail and form.thumbnail_url.data:
+        # Handle thumbnail URL — always allow URL field to override existing thumbnail
+        if not form.thumbnail.data and form.thumbnail_url.data:
             reel.thumbnail = form.thumbnail_url.data
 
         reel.title = form.title.data
