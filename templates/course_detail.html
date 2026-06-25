@@ -74,7 +74,7 @@
 {% else %}
   {% set _embed = _pv %}
 {% endif %}
-<section class="py-5" style="background:linear-gradient(135deg,#0f0f0f 0%,#1a1a2e 50%,#16213e 100%);">
+<section class="py-5" style="background:linear-gradient(135deg,#1a0000 0%,#2d0000 50%,#1a0000 100%);">
     <div class="container">
         <div class="text-center mb-4">
             <span style="display:inline-flex;align-items:center;gap:8px;background:rgba(204,0,0,.15);
@@ -481,7 +481,7 @@ if (pvBtn) {
 <div class="modal fade" id="purchaseModal" tabindex="-1" aria-labelledby="purchaseModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content" style="border-radius:16px; overflow:hidden; border:none;">
-            <div class="modal-header" style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); border:none; padding:24px 28px;">
+            <div class="modal-header" style="background:linear-gradient(135deg,#cc0000 0%,#8b0000 100%); border:none; padding:24px 28px;">
                 <div>
                     <h5 class="modal-title text-white fw-bold mb-1" id="purchaseModalLabel"><i class="fas fa-shopping-cart me-2"></i>Complete Your Purchase</h5>
                     <p class="text-white-50 mb-0 small" id="purchaseModalCourseName"></p>
@@ -490,7 +490,7 @@ if (pvBtn) {
             </div>
             <div class="modal-body p-4">
                 <div class="price-display text-center mb-4 p-3" style="background:#f8fafc; border-radius:12px;">
-                    <span style="font-size:2rem; font-weight:700; color:#667eea;">₹<span id="purchaseModalPrice"></span></span>
+                    <span style="font-size:2rem; font-weight:700; color:#cc0000;">₹<span id="purchaseModalPrice"></span></span>
                     <p class="text-muted small mb-0 mt-1"><i class="fas fa-infinity me-1"></i>Lifetime Access</p>
                 </div>
                 <form id="purchaseForm" novalidate>
@@ -510,7 +510,7 @@ if (pvBtn) {
                             <input type="tel" class="form-control" id="buyerPhone" placeholder="10-digit mobile number" maxlength="10">
                         </div>
                     </div>
-                    <button type="submit" class="btn w-100 fw-bold py-3" style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); color:white; border-radius:12px; font-size:1.05rem; border:none;">
+                    <button type="submit" class="btn w-100 fw-bold py-3" style="background:linear-gradient(135deg,#cc0000 0%,#8b0000 100%); color:white; border-radius:12px; font-size:1.05rem; border:none;">
                         <i class="fas fa-lock me-2"></i>Proceed to Payment
                     </button>
                     <p class="text-center text-muted small mt-3 mb-0">
@@ -800,7 +800,7 @@ function showPaymentFailure(message) {
 
 <style>
 .course-detail-hero {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #cc0000 0%, #8b0000 100%);
     position: relative;
 }
 
@@ -861,7 +861,7 @@ function showPaymentFailure(message) {
 }
 
 .module-card:hover {
-    box-shadow: 0 4px 16px rgba(102,126,234,0.10), 0 1px 4px rgba(15,23,42,0.06);
+    box-shadow: 0 4px 16px rgba(204,0,0,0.10), 0 1px 4px rgba(15,23,42,0.06);
     transform: translateY(-1px);
 }
 
@@ -901,7 +901,7 @@ function showPaymentFailure(message) {
     width: 40px;
     height: 40px;
     min-width: 40px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #cc0000 0%, #8b0000 100%);
     color: white;
     border-radius: 10px;
     display: flex;
@@ -909,7 +909,7 @@ function showPaymentFailure(message) {
     justify-content: center;
     font-weight: 700;
     font-size: 1rem;
-    box-shadow: 0 3px 8px rgba(102,126,234,0.30);
+    box-shadow: 0 3px 8px rgba(204,0,0,0.30);
     letter-spacing: -0.01em;
 }
 
@@ -933,10 +933,10 @@ function showPaymentFailure(message) {
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    color: #667eea;
+    color: #cc0000;
     font-size: 0.78rem;
     font-weight: 600;
-    background: #eef2ff;
+    background: #fff0f0;
     border-radius: 20px;
     padding: 2px 9px;
     line-height: 1.6;
@@ -953,7 +953,7 @@ function showPaymentFailure(message) {
 
 .module-header[aria-expanded="true"] .collapse-icon {
     transform: rotate(180deg);
-    color: #667eea;
+    color: #cc0000;
 }
 
 /* ── Module Body & Description ───────────────── */
@@ -969,7 +969,7 @@ function showPaymentFailure(message) {
     padding: 12px 16px;
     background: #f8fafc;
     border-radius: 8px;
-    border-left: 3px solid #c7d2fe;
+    border-left: 3px solid rgba(204,0,0,0.3);
 }
 
 /* ── Lessons List ────────────────────────────── */
@@ -1013,7 +1013,7 @@ function showPaymentFailure(message) {
 }
 
 .lesson-icon .fa-play-circle {
-    color: #667eea;
+    color: #cc0000;
     font-size: 1.05rem;
 }
 
@@ -1042,7 +1042,7 @@ function showPaymentFailure(message) {
 }
 
 .lesson-title:hover {
-    color: #667eea;
+    color: #cc0000;
 }
 
 .lesson-title.locked {
@@ -1120,19 +1120,19 @@ function showPaymentFailure(message) {
 
 .price-currency {
     font-size: 1.5rem;
-    color: #667eea;
+    color: #cc0000;
     font-weight: 700;
     margin-right: 4px;
 }
 
 .price-amount {
     font-size: 2.5rem;
-    color: #667eea;
+    color: #cc0000;
     font-weight: 700;
 }
 
 .btn-purchase {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #cc0000 0%, #8b0000 100%);
     color: white;
     padding: 16px 28px;
     border-radius: 12px;
@@ -1149,7 +1149,7 @@ function showPaymentFailure(message) {
 
 .btn-purchase:hover {
     transform: translateY(-2px);
-    box-shadow: 0 12px 24px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 12px 24px rgba(204, 0, 0, 0.4);
     color: white;
 }
 
