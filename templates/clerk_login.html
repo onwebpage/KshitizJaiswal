@@ -62,10 +62,15 @@
                 Clerk.mountSignIn(signInDiv, {
                     redirectUrl: afterSignInUrl,
                     afterSignInUrl: afterSignInUrl,
+                    socialProviders: [],
                     appearance: {
                         elements: {
                             formButtonPrimary: 'btn btn-primary w-100',
-                            card: 'border-0'
+                            card: 'border-0',
+                            socialButtonsBlockButton: 'display:none!important',
+                            socialButtonsIconButton: 'display:none!important',
+                            dividerRow: 'display:none!important',
+                            socialButtonsRoot: 'display:none!important'
                         }
                     }
                 });

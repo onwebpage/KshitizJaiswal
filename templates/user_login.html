@@ -28,11 +28,11 @@
                         <form method="POST" action="{{ url_for('user_login') }}{% if next_url %}?next={{ next_url }}{% endif %}">
                             <div class="mb-4">
                                 <label class="form-label fw-semibold text-dark">
-                                    <i class="fas fa-user me-1 text-primary"></i>Email or Mobile Number
+                                    <i class="fas fa-envelope me-1 text-primary"></i>Enter your email
                                 </label>
-                                <input type="text" name="identifier" class="form-control form-control-lg"
-                                    placeholder="your@email.com or 9876543210"
-                                    autocomplete="username" autofocus
+                                <input type="email" name="identifier" class="form-control form-control-lg"
+                                    placeholder="your@email.com"
+                                    autocomplete="email" autofocus
                                     style="border-radius:12px;border:2px solid #e2e8f0;font-size:0.95rem;">
                             </div>
                             <div class="mb-4">
