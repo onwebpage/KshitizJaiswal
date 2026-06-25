@@ -3109,26 +3109,15 @@ def admin_email_broadcast():
             flash('No subscribers found to send to.', 'warning')
             return redirect(url_for('admin_email_broadcast'))
 
-        # Load SMTP settings from DB (configured via WhatsApp/Email Settings page)
-        email_content = SiteContent.query.filter_by(content_key='email_settings').first()
-        email_settings = json.loads(email_content.content_data) if email_content else {}
+        # Send broadcast via Resend
+        import resend as _resend
+        from utils import _get_resend_from
+        resend_api_key = os.environ.get('RESEND_API_KEY', '').strip()
+        from_email, from_name = _get_resend_from()
 
-        smtp_host     = (email_settings.get('smtp_host', '') or os.environ.get('SMTP_HOST', '')).strip()
-        smtp_port_str = email_settings.get('smtp_port', '') or os.environ.get('SMTP_PORT', '587')
-        smtp_user     = (email_settings.get('smtp_user', '') or os.environ.get('SMTP_USER', '')).strip()
-        smtp_password = (email_settings.get('smtp_password', '') or os.environ.get('SMTP_PASSWORD', '')).strip()
-        from_name     = (email_settings.get('from_name', '') or 'Kshitiz Jaiswal').strip()
-        from_email    = (email_settings.get('from_email', '') or smtp_user).strip()
-
-        try:
-            smtp_port = int(smtp_port_str)
-        except (ValueError, TypeError):
-            smtp_port = 587
-
-        if not smtp_host or not smtp_user or not smtp_password:
+        if not resend_api_key:
             flash(
-                f'SMTP not configured. Please set SMTP credentials in '
-                f'WhatsApp Settings → Email Settings first. '
+                f'Resend API key not configured. Please add RESEND_API_KEY in Secrets. '
                 f'Email would have been sent to {len(subscriber_emails)} subscribers.',
                 'warning'
             )
@@ -3137,53 +3126,48 @@ def admin_email_broadcast():
                                    subscriber_count=len(subscriber_emails),
                                    preview_mode=True)
 
-        # Send actual emails via SMTP
-        import smtplib
-        from email.mime.text import MIMEText
-        from email.mime.multipart import MIMEMultipart
+        if not from_email:
+            flash(
+                f'From email not configured. Please set it in Email Settings. '
+                f'Email would have been sent to {len(subscriber_emails)} subscribers.',
+                'warning'
+            )
+            return render_template('admin/email_broadcast.html',
+                                   subject=subject, message=message,
+                                   subscriber_count=len(subscriber_emails),
+                                   preview_mode=True)
 
+        _resend.api_key = resend_api_key
         html_body = (
             f'<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">'
             f'<h2 style="color:#8B0000;">{subject}</h2>'
             f'<div style="white-space:pre-wrap;line-height:1.7;color:#333;">{message}</div>'
             f'<hr style="margin-top:30px;border:none;border-top:1px solid #eee;">'
             f'<p style="color:#999;font-size:12px;margin-top:12px;">'
-            f'You are receiving this because you subscribed to Kshitiz Jaiswal\'s newsletter. '
+            f'You are receiving this because you subscribed to Kshitiz Jaiswal\'s newsletter.'
             f'</p></div>'
         )
 
         sent = 0
         failed = 0
-        try:
-            server = smtplib.SMTP(smtp_host, smtp_port, timeout=15)
-            server.ehlo()
-            server.starttls()
-            server.login(smtp_user, smtp_password)
+        for addr in subscriber_emails:
+            try:
+                _resend.Emails.send({
+                    "from": f"{from_name} <{from_email}>",
+                    "to": [addr],
+                    "subject": subject,
+                    "html": html_body,
+                    "text": message,
+                })
+                sent += 1
+            except Exception as _e:
+                logging.warning(f'Resend: email to {addr} failed: {_e}')
+                failed += 1
 
-            for addr in subscriber_emails:
-                try:
-                    msg = MIMEMultipart('alternative')
-                    msg['Subject'] = subject
-                    msg['From']    = f'{from_name} <{from_email}>'
-                    msg['To']      = addr
-                    msg.attach(MIMEText(message, 'plain', 'utf-8'))
-                    msg.attach(MIMEText(html_body, 'html', 'utf-8'))
-                    server.sendmail(from_email, addr, msg.as_string())
-                    sent += 1
-                except Exception as _e:
-                    logging.warning(f'Email to {addr} failed: {_e}')
-                    failed += 1
-
-            server.quit()
-
-            if failed:
-                flash(f'Sent to {sent} subscribers. {failed} failed — check logs.', 'warning')
-            else:
-                flash(f'Email sent successfully to {sent} subscribers!', 'success')
-
-        except Exception as exc:
-            logging.error(f'SMTP broadcast error: {exc}')
-            flash(f'SMTP connection failed: {exc}. Check your email settings.', 'error')
+        if failed:
+            flash(f'Sent to {sent} subscribers. {failed} failed — check logs.', 'warning')
+        else:
+            flash(f'Email sent successfully to {sent} subscribers via Resend!', 'success')
 
         return redirect(url_for('admin_email_broadcast'))
 

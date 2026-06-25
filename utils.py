@@ -235,58 +235,62 @@ def normalize_table_name(table_name):
     legacy_mapping = get_legacy_table_name_mapping()
     return legacy_mapping.get(table_name, table_name)
 
-def send_email_credentials(email, name, login_id, password, login_url=None):
-    """Send login credentials to user via email (SMTP).
-    Priority: DB settings (admin panel) → environment variables (SMTP_USER / SMTP_PASSWORD).
-    """
-    import logging
-    import os
-    import smtplib
-    from email.mime.multipart import MIMEMultipart
-    from email.mime.text import MIMEText
+def _get_resend_from():
+    """Return (from_email, from_name) for Resend, checking DB then env vars."""
+    import json, os
+    from_email = ''
+    from_name  = 'Kshitiz Jaiswal Courses'
     try:
         from models import SiteContent
-        import json
-
-        smtp_host     = 'smtp.gmail.com'
-        smtp_port     = 587
-        smtp_user     = ''
-        smtp_password = ''
-        from_email    = ''
-        from_name     = 'Kshitiz Jaiswal Courses'
-
         email_content = SiteContent.query.filter_by(content_key='email_settings').first()
         if email_content:
             settings = json.loads(email_content.content_data)
-            if settings.get('enabled'):
-                smtp_host     = settings.get('smtp_host', smtp_host).strip() or smtp_host
-                smtp_port     = int(settings.get('smtp_port', smtp_port))
-                smtp_user     = settings.get('smtp_user', '').strip()
-                smtp_password = settings.get('smtp_password', '').replace(' ', '').strip()
-                from_email    = settings.get('from_email', '').strip()
-                from_name     = settings.get('from_name', from_name).strip()
+            from_email = settings.get('from_email', '').strip()
+            from_name  = settings.get('from_name', from_name).strip() or from_name
+    except Exception:
+        pass
+    if not from_email:
+        from_email = os.environ.get('SMTP_FROM_EMAIL', '').strip()
+    if not from_name:
+        from_name = os.environ.get('SMTP_FROM_NAME', 'Kshitiz Jaiswal Courses').strip()
+    return from_email, from_name
 
-        if not smtp_user or not smtp_password:
-            env_user = os.environ.get('SMTP_USER', '').strip()
-            env_pass = os.environ.get('SMTP_PASSWORD', '').replace(' ', '').strip()
-            if env_user and env_pass:
-                smtp_user     = env_user
-                smtp_password = env_pass
-                smtp_host     = os.environ.get('SMTP_HOST', 'smtp.gmail.com').strip()
-                smtp_port     = int(os.environ.get('SMTP_PORT', '587'))
-                from_email    = os.environ.get('SMTP_FROM_EMAIL', smtp_user).strip()
-                from_name     = os.environ.get('SMTP_FROM_NAME', 'Kshitiz Jaiswal Courses').strip()
 
-        if not smtp_user or not smtp_password:
-            logging.warning("Email SMTP credentials missing — skipping email delivery.")
-            return False
+def _send_via_resend(to_email, subject, html_body, plain_body, from_email, from_name):
+    """Send an email via Resend API. Returns True on success, False on failure."""
+    import logging, os
+    import resend
+    api_key = os.environ.get('RESEND_API_KEY', '').strip()
+    if not api_key:
+        logging.warning("RESEND_API_KEY not set — skipping email delivery.")
+        return False
+    if not from_email:
+        logging.warning("From email not configured — skipping email delivery.")
+        return False
+    resend.api_key = api_key
+    try:
+        resend.Emails.send({
+            "from": f"{from_name} <{from_email}>",
+            "to": [to_email],
+            "subject": subject,
+            "html": html_body,
+            "text": plain_body,
+        })
+        logging.info(f"Resend: email sent to {to_email} — {subject}")
+        return True
+    except Exception as e:
+        logging.error(f"Resend send error: {e}")
+        return False
 
-        from_email = from_email or smtp_user
 
-        login_url = login_url or 'https://your-site.com/user/login'
-        first_name = (name or 'Student').split()[0]
+def send_email_credentials(email, name, login_id, password, login_url=None):
+    """Send login credentials to user via Resend."""
+    import logging
+    login_url  = login_url or 'https://your-site.com/user/login'
+    first_name = (name or 'Student').split()[0]
+    from_email, from_name = _get_resend_from()
 
-        plain_body = f"""Hello {first_name},
+    plain_body = f"""Hello {first_name},
 
 Your account has been created for Kshitiz Jaiswal Courses.
 
@@ -304,7 +308,7 @@ Kshitiz Jaiswal | Unfiltered Commentator
 {login_url}
 """
 
-        html_body = f"""<!DOCTYPE html>
+    html_body = f"""<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,Helvetica,sans-serif;">
@@ -365,76 +369,20 @@ Kshitiz Jaiswal | Unfiltered Commentator
 </body>
 </html>"""
 
-        msg = MIMEMultipart('alternative')
-        msg['Subject'] = f"Your login details for Kshitiz Jaiswal Courses"
-        msg['From']    = f"{from_name} <{from_email}>"
-        msg['To']      = email
-        msg['Reply-To'] = from_email
-        msg['X-Priority'] = '1'
-        msg['Importance'] = 'high'
-        msg.attach(MIMEText(plain_body, 'plain'))
-        msg.attach(MIMEText(html_body, 'html'))
-
-        with smtplib.SMTP(smtp_host, smtp_port, timeout=15) as server:
-            server.ehlo()
-            server.starttls()
-            server.ehlo()
-            server.login(smtp_user, smtp_password)
-            server.sendmail(from_email, [email], msg.as_string())
-
-        logging.info(f"Email credentials sent to {email}")
-        return True
-
-    except Exception as e:
-        logging.error(f"send_email_credentials error: {e}")
-        return False
+    return _send_via_resend(email, "Your login details for Kshitiz Jaiswal Courses",
+                            html_body, plain_body, from_email, from_name)
 
 
 def send_course_purchase_confirmation(email, name, course_title, amount_paid, my_courses_url=None, login_url=None):
-    """Send a purchase confirmation email after every successful course payment."""
-    import logging, os, smtplib, json
-    from email.mime.multipart import MIMEMultipart
-    from email.mime.text import MIMEText
-    try:
-        from models import SiteContent
+    """Send a purchase confirmation email after every successful course payment via Resend."""
+    import logging
+    from_email, from_name = _get_resend_from()
+    my_courses_url = my_courses_url or login_url or 'https://your-site.com/my-courses'
+    login_url      = login_url or 'https://your-site.com/user/login'
+    first_name     = (name or 'Student').split()[0]
+    amount_str     = f"₹{int(amount_paid):,}" if amount_paid else ''
 
-        smtp_host  = 'smtp.gmail.com'; smtp_port = 587
-        smtp_user  = ''; smtp_password = ''
-        from_email = ''; from_name = 'Kshitiz Jaiswal Courses'
-
-        email_content = SiteContent.query.filter_by(content_key='email_settings').first()
-        if email_content:
-            settings = json.loads(email_content.content_data)
-            if settings.get('enabled'):
-                smtp_host     = settings.get('smtp_host', smtp_host).strip() or smtp_host
-                smtp_port     = int(settings.get('smtp_port', smtp_port))
-                smtp_user     = settings.get('smtp_user', '').strip()
-                smtp_password = settings.get('smtp_password', '').replace(' ', '').strip()
-                from_email    = settings.get('from_email', '').strip()
-                from_name     = settings.get('from_name', from_name).strip()
-
-        if not smtp_user or not smtp_password:
-            env_user = os.environ.get('SMTP_USER', '').strip()
-            env_pass = os.environ.get('SMTP_PASSWORD', '').replace(' ', '').strip()
-            if env_user and env_pass:
-                smtp_user     = env_user
-                smtp_password = env_pass
-                smtp_host     = os.environ.get('SMTP_HOST', 'smtp.gmail.com').strip()
-                smtp_port     = int(os.environ.get('SMTP_PORT', '587'))
-                from_email    = os.environ.get('SMTP_FROM_EMAIL', smtp_user).strip()
-                from_name     = os.environ.get('SMTP_FROM_NAME', 'Kshitiz Jaiswal Courses').strip()
-
-        if not smtp_user or not smtp_password:
-            logging.warning("Email SMTP credentials missing — skipping purchase confirmation.")
-            return False
-
-        from_email     = from_email or smtp_user
-        my_courses_url = my_courses_url or login_url or 'https://your-site.com/my-courses'
-        login_url      = login_url or 'https://your-site.com/user/login'
-        first_name     = (name or 'Student').split()[0]
-        amount_str     = f"₹{int(amount_paid):,}" if amount_paid else ''
-
-        plain_body = f"""Hello {first_name},
+    plain_body = f"""Hello {first_name},
 
 Thank you for purchasing "{course_title}"!
 
@@ -447,7 +395,7 @@ Kshitiz Jaiswal | Unfiltered Commentator
 {login_url}
 """
 
-        html_body = f"""<!DOCTYPE html>
+    html_body = f"""<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#f4f4f4;font-family:Arial,Helvetica,sans-serif;">
@@ -503,25 +451,8 @@ Kshitiz Jaiswal | Unfiltered Commentator
 </body>
 </html>"""
 
-        msg = MIMEMultipart('alternative')
-        msg['Subject']  = f"Purchase Confirmed: {course_title}"
-        msg['From']     = f"{from_name} <{from_email}>"
-        msg['To']       = email
-        msg['Reply-To'] = from_email
-        msg.attach(MIMEText(plain_body, 'plain'))
-        msg.attach(MIMEText(html_body, 'html'))
-
-        with smtplib.SMTP(smtp_host, smtp_port, timeout=15) as server:
-            server.ehlo(); server.starttls(); server.ehlo()
-            server.login(smtp_user, smtp_password)
-            server.sendmail(from_email, [email], msg.as_string())
-
-        logging.info(f"Purchase confirmation email sent to {email} for '{course_title}'")
-        return True
-
-    except Exception as e:
-        logging.error(f"send_course_purchase_confirmation error: {e}")
-        return False
+    return _send_via_resend(email, f"Purchase Confirmed: {course_title}",
+                            html_body, plain_body, from_email, from_name)
 
 
 def send_whatsapp_credentials(phone, name, login_id, password, login_url=None):
