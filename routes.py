@@ -4125,16 +4125,21 @@ def verify_course_payment():
                                 password=auto_password,
                                 login_url=_login_url
                             )
+                        # Always return credentials in response so success screen can display them
+                        new_credentials = {'login_id': login_id, 'password': auto_password}
                     else:
                         session['course_user_id'] = existing_user.id
+                        new_credentials = None
             except Exception as _e:
                 import logging as _log
                 _log.error(f"CourseUser creation error after payment: {_e}")
+                new_credentials = None
 
         return jsonify({
             'success': True,
             'message': 'Payment successful! Your course access has been activated.',
-            'redirect_url': url_for('my_courses')
+            'redirect_url': url_for('my_courses'),
+            'credentials': new_credentials,
         })
 
     except razorpay.errors.SignatureVerificationError:

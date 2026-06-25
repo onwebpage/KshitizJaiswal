@@ -624,7 +624,7 @@ document.getElementById('purchaseForm').addEventListener('submit', async functio
                     const verifyData = await verifyResponse.json();
                     console.log('[RAZORPAY] Verify response:', verifyData);
                     if (verifyData.success) {
-                        showPaymentSuccess(verifyData.redirect_url, email);
+                        showPaymentSuccess(verifyData.redirect_url, email, verifyData.credentials);
                     } else {
                         showPaymentFailure(verifyData.message || 'Payment verification failed. Please contact support.');
                     }
@@ -674,7 +674,7 @@ const _MY_COURSES_URL = "{{ url_for('my_courses') }}";
 const _LOGIN_URL      = "{{ url_for('user_login') }}";
 const _COURSES_URL    = "{{ url_for('courses') }}";
 
-function showPaymentSuccess(redirectUrl, email) {
+function showPaymentSuccess(redirectUrl, email, credentials) {
     const overlay = document.createElement('div');
     overlay.id = 'paymentSuccessOverlay';
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.8);z-index:9999;display:flex;align-items:center;justify-content:center;padding:12px;overflow-y:auto;backdrop-filter:blur(4px);';
@@ -692,6 +692,30 @@ function showPaymentSuccess(redirectUrl, email) {
                 Chat with us on WhatsApp
             </a>
         </div>` : '';
+
+    const credSection = credentials ? `
+        <div style="background:linear-gradient(135deg,#fefce8,#fef08a33);border:2px solid #fbbf24;border-radius:14px;padding:18px 20px;margin-bottom:12px;text-align:left;">
+            <p style="font-weight:700;color:#92400e;margin:0 0 12px;font-size:0.95rem;display:flex;align-items:center;gap:8px;">
+                <i class="fas fa-key" style="color:#d97706;"></i> Save Your Login Details
+            </p>
+            <div style="background:#fff;border-radius:10px;padding:12px 14px;font-size:0.85rem;line-height:1.9;border:1px solid #fde68a;">
+                <div><span style="color:#78716c;min-width:80px;display:inline-block;">Login ID:</span> <strong style="color:#1e293b;font-family:monospace;">${credentials.login_id}</strong></div>
+                <div><span style="color:#78716c;min-width:80px;display:inline-block;">Password:</span> <strong style="color:#1e293b;font-family:monospace;font-size:1rem;letter-spacing:1px;">${credentials.password}</strong></div>
+                <div style="margin-top:4px;"><span style="color:#78716c;min-width:80px;display:inline-block;">Login at:</span> <a href="${_LOGIN_URL}" style="color:#2563eb;">${window.location.origin}${_LOGIN_URL}</a></div>
+            </div>
+            <p style="color:#92400e;font-size:0.75rem;margin:8px 0 0;"><i class="fas fa-camera me-1"></i>Screenshot karo ya copy karo — email bhi bheja gaya hai ${email ? '(<strong>' + email + '</strong>)' : ''}.</p>
+        </div>` : `
+        <div style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1px solid #93c5fd;border-radius:14px;padding:16px 20px;margin-bottom:12px;text-align:left;">
+            <div style="display:flex;align-items:flex-start;gap:12px;">
+                <div style="width:42px;height:42px;background:linear-gradient(135deg,#3b82f6,#2563eb);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <i class="fas fa-envelope" style="color:#fff;font-size:1rem;"></i>
+                </div>
+                <div>
+                    <p style="font-weight:700;color:#1d4ed8;margin:0 0 4px;font-size:0.95rem;">Login Details Emailed!</p>
+                    <p style="color:#1e40af;font-size:0.82rem;margin:0;line-height:1.5;">Your login credentials have been sent to <strong>${email}</strong>. Check inbox &amp; spam.</p>
+                </div>
+            </div>
+        </div>`;
 
     overlay.innerHTML = `
         <div style="background:#fff;border-radius:24px;max-width:460px;width:100%;padding:36px 28px;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,0.4);margin:auto;">
@@ -713,17 +737,7 @@ function showPaymentSuccess(redirectUrl, email) {
                     </div>
                 </div>
             </div>
-            <div style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1px solid #93c5fd;border-radius:14px;padding:16px 20px;margin-bottom:20px;text-align:left;">
-                <div style="display:flex;align-items:flex-start;gap:12px;">
-                    <div style="width:42px;height:42px;background:linear-gradient(135deg,#3b82f6,#2563eb);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                        <i class="fas fa-envelope" style="color:#fff;font-size:1rem;"></i>
-                    </div>
-                    <div>
-                        <p style="font-weight:700;color:#1d4ed8;margin:0 0 4px;font-size:0.95rem;">Login Credentials Sent!</p>
-                        <p style="color:#1e40af;font-size:0.82rem;margin:0;line-height:1.5;">Your username &amp; password have been emailed to <strong>${email}</strong>. Check your inbox (and spam folder).</p>
-                    </div>
-                </div>
-            </div>
+            ${credSection}
 
             <a href="${_MY_COURSES_URL}"
                style="display:flex;align-items:center;justify-content:center;gap:10px;background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;text-decoration:none;padding:16px;border-radius:14px;font-weight:700;font-size:1.05rem;margin-bottom:10px;box-shadow:0 8px 24px rgba(124,58,237,0.38);">
