@@ -321,8 +321,34 @@ def reels_library():
     
     # Paginate results
     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
-    reels = [reel.to_dict() for reel in pagination.items]
-    
+
+    # Tag each reel with a resolved platform (youtube / instagram / unknown)
+    from utils import get_video_info
+    def _resolve_platform(r):
+        vtype = r.get('video_type', 'auto') or 'auto'
+        if vtype in ('youtube', 'youtube_short'):
+            return 'youtube'
+        if vtype == 'instagram':
+            return 'instagram'
+        # auto-detect from URL
+        url = r.get('video_url', '') or ''
+        if url:
+            info = get_video_info(url, 'auto')
+            t = info.get('video_type', 'unknown')
+            if t in ('youtube', 'youtube_short'):
+                return 'youtube'
+            if t == 'instagram':
+                return 'instagram'
+        return 'unknown'
+
+    reels_raw = [reel.to_dict() for reel in pagination.items]
+    for r in reels_raw:
+        r['platform'] = _resolve_platform(r)
+
+    youtube_reels   = [r for r in reels_raw if r['platform'] == 'youtube']
+    instagram_reels = [r for r in reels_raw if r['platform'] == 'instagram']
+    other_reels     = [r for r in reels_raw if r['platform'] == 'unknown']
+
     # Get all topics for filter dropdown
     topics = db.session.query(Reel.topic_tag).filter(Reel.topic_tag != None, Reel.topic_tag != '').distinct().all()
     topic_list = [t[0] for t in topics]
@@ -332,7 +358,10 @@ def reels_library():
     category_list = [c[0] for c in categories]
     
     return render_template('reels_library.html',
-                         reels=reels,
+                         reels=reels_raw,
+                         youtube_reels=youtube_reels,
+                         instagram_reels=instagram_reels,
+                         other_reels=other_reels,
                          pagination=pagination,
                          topics=topic_list,
                          categories=category_list,

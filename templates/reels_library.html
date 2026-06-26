@@ -93,50 +93,108 @@
             </p>
         </div>
 
-        <!-- Reels Grid -->
-        {% if reels %}
-        <div class="reels-grid">
-            {% for reel in reels %}
-            <div class="reel-grid-item layout-{{ reel.card_layout or 'standard' }}">
-                <a href="{{ url_for('reel_detail', reel_id=reel.id) }}" class="reel-link">
-                    <div class="reel-thumbnail-wrapper layout-{{ reel.card_layout or 'standard' }}">
-                        {% if reel.category_tag %}
-                        <div class="reel-category-tag {{ reel.category_tag }}">
-                            {% if reel.category_tag == 'trending' %}
-                                🔥 Trending
-                            {% elif reel.category_tag == 'new' %}
-                                🆕 New
-                            {% elif reel.category_tag == 'fan_favourite' %}
-                                ❤ Fan Favourite
-                            {% elif reel.category_tag == 'exclusive' %}
-                                ⭐ Exclusive
-                            {% elif reel.category_tag == 'must_watch' %}
-                                👀 Must Watch
-                            {% elif reel.category_tag == 'behind_scenes' %}
-                                🎬 BTS
-                            {% endif %}
-                        </div>
+        {% macro reel_card(reel) %}
+        <div class="reel-grid-item layout-{{ reel.card_layout or 'standard' }}">
+            <a href="{{ url_for('reel_detail', reel_id=reel.id) }}" class="reel-link">
+                <div class="reel-thumbnail-wrapper layout-{{ reel.card_layout or 'standard' }}">
+                    {% if reel.category_tag %}
+                    <div class="reel-category-tag {{ reel.category_tag }}">
+                        {% if reel.category_tag == 'trending' %}🔥 Trending
+                        {% elif reel.category_tag == 'new' %}🆕 New
+                        {% elif reel.category_tag == 'fan_favourite' %}❤ Fan Favourite
+                        {% elif reel.category_tag == 'exclusive' %}⭐ Exclusive
+                        {% elif reel.category_tag == 'must_watch' %}👀 Must Watch
+                        {% elif reel.category_tag == 'behind_scenes' %}🎬 BTS
                         {% endif %}
-                        <img src="{{ url_for('static', filename=reel.thumbnail) if reel.thumbnail and not reel.thumbnail.startswith('http') else (reel.thumbnail or url_for('static', filename='img/reel-placeholder.svg')) }}" 
-                             alt="{{ reel.title }}" class="reel-thumbnail"
-                             onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/reel-placeholder.svg') }}'">
-                        <div class="reel-overlay">
-                            <i class="fas fa-play-circle fa-3x"></i>
-                        </div>
                     </div>
-                    <div class="reel-info">
-                        <h6 class="reel-grid-title">{{ reel.title }}</h6>
-                        <div class="reel-meta-info">
-                            {% if reel.topic_tag %}
-                            <span class="badge bg-secondary me-2">{{ reel.topic_tag }}</span>
-                            {% endif %}
-                            <span class="text-muted"><i class="fas fa-eye me-1"></i>{{ reel.view_count }}</span>
-                        </div>
+                    {% endif %}
+                    <img src="{{ url_for('static', filename=reel.thumbnail) if reel.thumbnail and not reel.thumbnail.startswith('http') else (reel.thumbnail or url_for('static', filename='img/reel-placeholder.svg')) }}"
+                         alt="{{ reel.title }}" class="reel-thumbnail"
+                         onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/reel-placeholder.svg') }}'">
+                    <div class="reel-overlay">
+                        <i class="fas fa-play-circle fa-3x"></i>
                     </div>
-                </a>
-            </div>
-            {% endfor %}
+                </div>
+                <div class="reel-info">
+                    <h6 class="reel-grid-title">{{ reel.title }}</h6>
+                    <div class="reel-meta-info">
+                        {% if reel.topic_tag %}
+                        <span class="badge bg-secondary me-2">{{ reel.topic_tag }}</span>
+                        {% endif %}
+                        <span class="text-muted"><i class="fas fa-eye me-1"></i>{{ reel.view_count }}</span>
+                    </div>
+                </div>
+            </a>
         </div>
+        {% endmacro %}
+
+        {% if reels %}
+
+        {% if true %}
+        <!-- Two-column platform layout -->
+        <div class="platform-columns-wrapper">
+
+            <!-- YouTube Column -->
+            <div class="platform-column platform-col-youtube">
+                <div class="platform-col-header platform-col-header--yt">
+                    <i class="fab fa-youtube"></i>
+                    <span>YouTube</span>
+                    <span class="platform-count">{{ youtube_reels|length }}</span>
+                </div>
+                {% if youtube_reels %}
+                <div class="reels-grid reels-grid--col">
+                    {% for reel in youtube_reels %}{{ reel_card(reel) }}{% endfor %}
+                </div>
+                {% else %}
+                <div class="platform-empty">
+                    <i class="fab fa-youtube fa-2x mb-2 opacity-25"></i>
+                    <p class="text-muted small mb-0">No YouTube reels yet</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Divider -->
+            <div class="platform-divider"></div>
+
+            <!-- Instagram Column -->
+            <div class="platform-column platform-col-instagram">
+                <div class="platform-col-header platform-col-header--ig">
+                    <i class="fab fa-instagram"></i>
+                    <span>Instagram</span>
+                    <span class="platform-count">{{ instagram_reels|length }}</span>
+                </div>
+                {% if instagram_reels %}
+                <div class="reels-grid reels-grid--col">
+                    {% for reel in instagram_reels %}{{ reel_card(reel) }}{% endfor %}
+                </div>
+                {% else %}
+                <div class="platform-empty">
+                    <i class="fab fa-instagram fa-2x mb-2 opacity-25"></i>
+                    <p class="text-muted small mb-0">No Instagram reels yet</p>
+                </div>
+                {% endif %}
+            </div>
+
+        </div>
+
+        {% if other_reels %}
+        <div class="mt-5">
+            <div class="platform-col-header platform-col-header--other mb-3" style="display:inline-flex;">
+                <i class="fas fa-film"></i><span>Other</span>
+                <span class="platform-count">{{ other_reels|length }}</span>
+            </div>
+            <div class="reels-grid">
+                {% for reel in other_reels %}{{ reel_card(reel) }}{% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <!-- Fallback: no platform info, show flat grid -->
+        <div class="reels-grid">
+            {% for reel in reels %}{{ reel_card(reel) }}{% endfor %}
+        </div>
+        {% endif %}
 
         <!-- Pagination -->
         {% if pagination.pages > 1 %}
@@ -149,7 +207,6 @@
                     </a>
                 </li>
                 {% endif %}
-
                 {% for page_num in pagination.iter_pages(left_edge=2, right_edge=2, left_current=2, right_current=2) %}
                     {% if page_num %}
                         <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
@@ -159,7 +216,6 @@
                         <li class="page-item disabled"><span class="page-link">...</span></li>
                     {% endif %}
                 {% endfor %}
-
                 {% if pagination.has_next %}
                 <li class="page-item">
                     <a class="page-link" href="{{ url_for('reels_library', page=pagination.next_num, search=current_search, sort=current_sort, category=current_category, topic=current_topic) }}">
@@ -203,6 +259,71 @@
 </section>
 
 <style>
+/* ── Platform two-column layout ─────────────────────── */
+.platform-columns-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 2px 1fr;
+    gap: 0 2rem;
+    margin-bottom: 3rem;
+    align-items: start;
+}
+.platform-column { min-width: 0; }
+.platform-divider {
+    background: linear-gradient(to bottom, transparent, #dee2e6 15%, #dee2e6 85%, transparent);
+    border-radius: 2px;
+    align-self: stretch;
+    margin-top: 3.5rem;
+}
+.platform-col-header {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    font-size: 1.15rem;
+    font-weight: 700;
+    padding: .5rem .75rem .5rem 0;
+    margin-bottom: 1.25rem;
+    border-bottom: 3px solid transparent;
+}
+.platform-col-header--yt  { color: #cc0000; border-color: #cc0000; }
+.platform-col-header--ig  {
+    color: #c13584;
+    border-color: #c13584;
+}
+.platform-col-header--other { color: #6c757d; border-color: #adb5bd; }
+.platform-count {
+    margin-left: auto;
+    background: #f0f0f0;
+    color: #555;
+    font-size: .75rem;
+    font-weight: 600;
+    border-radius: 20px;
+    padding: 2px 10px;
+}
+.platform-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+    color: #adb5bd;
+}
+.reels-grid--col {
+    justify-content: flex-start;
+}
+@media (max-width: 768px) {
+    .platform-columns-wrapper {
+        grid-template-columns: 1fr;
+    }
+    .platform-divider {
+        height: 2px;
+        background: linear-gradient(to right, transparent, #dee2e6 15%, #dee2e6 85%, transparent);
+        align-self: auto;
+        margin: 1rem 0;
+        margin-top: 0;
+    }
+}
+
+/* ── Reels grid ─────────────────────────────────────── */
 .reels-grid {
     display: flex;
     flex-wrap: wrap;
