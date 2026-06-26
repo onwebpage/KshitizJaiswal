@@ -40,24 +40,25 @@
 }
 
 .course-card {
-    background: white;
+    background: linear-gradient(160deg, #1a0000 0%, #2d0000 60%, #1a0000 100%);
     border-radius: 16px;
     overflow: hidden;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.35), 0 1px 4px rgba(0,0,0,0.2);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border: 1px solid rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(204,0,0,0.25);
+    position: relative;
 }
 
 .course-card:hover {
     transform: translateY(-8px);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 24px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(204,0,0,0.4);
 }
 
 .course-card-image {
     position: relative;
     height: 220px;
     overflow: hidden;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    background: linear-gradient(135deg, #0d0000 0%, #3d0000 100%);
 }
 
 .course-card-image img {
@@ -255,24 +256,25 @@
 }
 
 .course-card {
-    background: white;
+    background: linear-gradient(160deg, #1a0000 0%, #2d0000 60%, #1a0000 100%);
     border-radius: 16px;
     overflow: hidden;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.35), 0 1px 4px rgba(0,0,0,0.2);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border: 1px solid rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(204,0,0,0.25);
+    position: relative;
 }
 
 .course-card:hover {
     transform: translateY(-8px);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 24px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(204,0,0,0.4);
 }
 
 .course-card-image {
     position: relative;
     height: 220px;
     overflow: hidden;
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    background: linear-gradient(135deg, #0d0000 0%, #3d0000 100%);
 }
 
 .course-card-image img {
@@ -326,12 +328,12 @@
     font-size: 1.25rem;
     font-weight: 700;
     margin-bottom: 12px;
-    color: #1e293b;
+    color: #ffffff;
     line-height: 1.4;
 }
 
 .course-description {
-    color: #64748b;
+    color: rgba(255,255,255,0.65);
     font-size: 0.95rem;
     line-height: 1.6;
     margin-bottom: 16px;
@@ -342,20 +344,20 @@
     display: flex;
     gap: 20px;
     padding: 16px 0;
-    border-top: 1px solid #e2e8f0;
-    border-bottom: 1px solid #e2e8f0;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 
 .stat-item {
     display: flex;
     align-items: center;
     gap: 8px;
-    color: #64748b;
+    color: rgba(255,255,255,0.75);
     font-size: 0.9rem;
 }
 
 .stat-item i {
-    color: #667eea;
+    color: #ff6666;
     font-size: 1rem;
 }
 
@@ -372,32 +374,34 @@
 
 .price-value {
     font-size: 1.75rem;
-    color: #667eea;
+    color: #ff8888;
+    text-shadow: 0 0 20px rgba(204,0,0,0.4);
 }
 
 .btn-know-more {
     flex: 1;
     text-align: center;
-    background: transparent;
-    color: #667eea;
+    background: rgba(255,255,255,0.07);
+    color: rgba(255,255,255,0.85);
     padding: 11px 16px;
     border-radius: 10px;
     text-decoration: none;
     font-weight: 600;
     font-size: 0.88rem;
-    border: 2px solid #667eea;
+    border: 1.5px solid rgba(255,255,255,0.2);
     display: inline-flex;
     align-items: center;
     justify-content: center;
     transition: all 0.3s ease;
     white-space: nowrap;
+    backdrop-filter: blur(4px);
 }
 
 .btn-know-more:hover {
-    background: #667eea;
+    background: rgba(255,255,255,0.15);
     color: white;
+    border-color: rgba(255,255,255,0.4);
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.35);
 }
 
 .btn-buy-now.btn-course-action {
@@ -593,13 +597,13 @@
         font-size: 1.05rem;
         font-weight: 700;
         margin-bottom: 6px;
-        color: #1a1a1a;
+        color: #ffffff;
         line-height: 1.35;
     }
 
     .course-description {
         font-size: 0.85rem;
-        color: #64748b;
+        color: rgba(255,255,255,0.6);
         margin-bottom: 12px;
         line-height: 1.5;
     }
@@ -608,24 +612,24 @@
         display: flex;
         gap: 8px;
         padding: 10px 0;
-        border-top: 1px solid #f1f5f9;
-        border-bottom: 1px solid #f1f5f9;
+        border-top: 1px solid rgba(255,255,255,0.1);
+        border-bottom: 1px solid rgba(255,255,255,0.1);
         margin-bottom: 12px;
     }
 
     .stat-item {
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
+        background: rgba(255,255,255,0.07);
+        border: 1px solid rgba(255,255,255,0.12);
         border-radius: 50px;
         padding: 5px 10px;
         font-size: 0.78rem;
         gap: 5px;
-        color: #475569;
+        color: rgba(255,255,255,0.75);
     }
 
     .stat-item i {
         font-size: 0.78rem;
-        color: #cc0000;
+        color: #ff6666;
     }
 
     .course-price {
@@ -635,7 +639,7 @@
     .price-value {
         font-size: 1.6rem;
         font-weight: 800;
-        color: #cc0000;
+        color: #ff8888;
         letter-spacing: -0.5px;
     }
 
@@ -645,9 +649,9 @@
         padding: 11px 16px;
         border-radius: 12px;
         font-size: 0.88rem;
-        border: 2px solid #e2e8f0;
-        color: #475569;
-        background: #f8fafc;
+        border: 1.5px solid rgba(255,255,255,0.2);
+        color: rgba(255,255,255,0.85);
+        background: rgba(255,255,255,0.07);
         font-weight: 600;
         justify-content: center;
         display: inline-flex;

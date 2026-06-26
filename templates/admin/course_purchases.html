@@ -190,6 +190,17 @@
               {% else %}
                 <span class="badge bg-success">Active</span>
               {% endif %}
+              {% if p.expires_at %}
+                <div class="small text-muted mt-1">
+                  <i class="fas fa-clock me-1"></i>
+                  Expires: <strong>{{ p.expires_at.strftime('%d %b %Y') }}</strong>
+                  {% if p.expires_at < now %}
+                    <span class="badge bg-danger ms-1" style="font-size:9px;">EXPIRED</span>
+                  {% endif %}
+                </div>
+              {% else %}
+                <div class="small text-muted mt-1"><i class="fas fa-infinity me-1"></i>Lifetime</div>
+              {% endif %}
             </td>
 
             <!-- Account Created -->
@@ -216,6 +227,13 @@
                   </button>
                 </form>
                 {% endif %}
+
+                <!-- Set Expiry Button -->
+                <button class="btn btn-sm btn-outline-warning w-100"
+                        data-bs-toggle="modal" data-bs-target="#expiryModal{{ p.id }}">
+                  <i class="fas fa-clock me-1"></i>Set Expiry
+                </button>
+
                 {% if not p.access_revoked %}
                 <form method="POST"
                       action="{{ url_for('admin_revoke_course_access', purchase_id=p.id) }}"
@@ -235,6 +253,39 @@
                   </button>
                 </form>
                 {% endif %}
+              </div>
+
+              <!-- Set Expiry Modal -->
+              <div class="modal fade" id="expiryModal{{ p.id }}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-sm">
+                  <div class="modal-content">
+                    <div class="modal-header bg-warning text-dark">
+                      <h6 class="modal-title fw-bold">
+                        <i class="fas fa-clock me-2"></i>Set Access Expiry
+                      </h6>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form method="POST" action="{{ url_for('admin_set_course_expiry', purchase_id=p.id) }}">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <div class="modal-body">
+                        <p class="small text-muted mb-2">
+                          <strong>{{ p.guest_name or p.guest_email or 'User' }}</strong><br>
+                          Course: {{ p.course.title }}
+                        </p>
+                        <label class="form-label small fw-semibold">Expiry Date</label>
+                        <input type="date" name="expires_at" class="form-control form-control-sm"
+                               value="{{ p.expires_at.strftime('%Y-%m-%d') if p.expires_at else '' }}">
+                        <div class="form-text">Leave blank to grant <strong>lifetime access</strong>.</div>
+                      </div>
+                      <div class="modal-footer py-2">
+                        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-sm btn-warning">
+                          <i class="fas fa-save me-1"></i>Save Expiry
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
               </div>
             </td>
           </tr>

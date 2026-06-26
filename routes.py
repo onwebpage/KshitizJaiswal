@@ -5104,6 +5104,7 @@ def admin_course_purchases():
         'accounts_created': UserCourseAccess.query.filter_by(account_created=True).count(),
     }
 
+    from datetime import datetime as _dt_now
     return render_template(
         'admin/course_purchases.html',
         purchases=purchases,
@@ -5113,6 +5114,7 @@ def admin_course_purchases():
         search=search,
         course_filter=course_filter,
         status_filter=status_filter,
+        now=_dt_now.utcnow(),
     )
 
 
@@ -5138,6 +5140,29 @@ def admin_restore_course_access(purchase_id):
     access.access_revoked = False
     db.session.commit()
     flash(f'Access restored for {access.guest_name or access.guest_email}.', 'success')
+    return redirect(url_for('admin_course_purchases',
+                            search=request.args.get('search',''),
+                            course=request.args.get('course',''),
+                            status=request.args.get('status','')))
+
+
+@app.route('/admin/course-purchase/<int:purchase_id>/set-expiry', methods=['POST'])
+def admin_set_course_expiry(purchase_id):
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    access = UserCourseAccess.query.get_or_404(purchase_id)
+    expires_val = request.form.get('expires_at', '').strip()
+    if expires_val:
+        try:
+            from datetime import datetime as _dt
+            access.expires_at = _dt.strptime(expires_val, '%Y-%m-%d')
+            flash(f'Access expiry set to {expires_val} for {access.guest_name or access.guest_email or "user"}.', 'success')
+        except ValueError:
+            flash('Invalid date format.', 'error')
+    else:
+        access.expires_at = None
+        flash(f'Expiry removed — lifetime access granted to {access.guest_name or access.guest_email or "user"}.', 'success')
+    db.session.commit()
     return redirect(url_for('admin_course_purchases',
                             search=request.args.get('search',''),
                             course=request.args.get('course',''),
