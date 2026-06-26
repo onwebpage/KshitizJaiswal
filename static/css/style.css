@@ -1662,7 +1662,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .social-links-large {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 1rem;
 }
 
@@ -1674,6 +1674,8 @@ h1, h2, h3, h4, h5, h6 {
   text-decoration: none;
   transition: var(--transition);
   border: 2px solid var(--gray-200);
+  min-width: 0;
+  overflow: hidden;
 }
 
 .social-link-large:hover {
@@ -1724,12 +1726,25 @@ h1, h2, h3, h4, h5, h6 {
   text-align: center;
 }
 
+.social-link-large > div {
+  min-width: 0;
+  overflow: hidden;
+}
+
 .social-link-large h5 {
   margin-bottom: 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .social-link-large small {
   opacity: 0.7;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 /* Response Info */

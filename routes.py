@@ -422,6 +422,40 @@ def reel_detail(reel_id):
     
     return render_template('reel_detail.html', reel=reel_data, related_reels=related_reels)
 
+_DEFAULT_CONTACT_PAGE_CONFIG = {
+    "heading": "Follow The Journey",
+    "subtitle": "Stay updated with latest content",
+}
+
+_DEFAULT_CONTACT_STATS = [
+    {"id": 1, "icon": "fas fa-clock",      "icon_color": "text-primary", "title": "24-48 Hours",   "description": "Average Response Time", "sort_order": 0, "is_enabled": True},
+    {"id": 2, "icon": "fas fa-shield-alt", "icon_color": "text-success", "title": "Confidential",  "description": "Your Privacy Matters",  "sort_order": 1, "is_enabled": True},
+    {"id": 3, "icon": "fas fa-heart",      "icon_color": "text-danger",  "title": "Genuine",       "description": "Real Conversations",    "sort_order": 2, "is_enabled": True},
+]
+
+def _get_contact_page_config():
+    rec = SiteContent.query.filter_by(content_key='contact_page_config').first()
+    if not rec:
+        rec = SiteContent(content_key='contact_page_config', content_data=json.dumps(_DEFAULT_CONTACT_PAGE_CONFIG))
+        db.session.add(rec)
+        db.session.commit()
+        return dict(_DEFAULT_CONTACT_PAGE_CONFIG)
+    return json.loads(rec.content_data)
+
+def _get_contact_stats(enabled_only=False):
+    rec = SiteContent.query.filter_by(content_key='contact_stats').first()
+    if not rec:
+        stats = [dict(s) for s in _DEFAULT_CONTACT_STATS]
+        rec = SiteContent(content_key='contact_stats', content_data=json.dumps(stats))
+        db.session.add(rec)
+        db.session.commit()
+    else:
+        stats = json.loads(rec.content_data)
+    if enabled_only:
+        stats = [s for s in stats if s.get('is_enabled', True)]
+    stats.sort(key=lambda s: s.get('sort_order', 0))
+    return stats
+
 _DEFAULT_CONTACT_CARDS = [
     {"id": 1, "icon": "fas fa-question-circle", "title": "General Questions",
      "description": "Man me kuch hai? toh pouch loh…",
@@ -456,13 +490,157 @@ def _get_contact_cards(enabled_only=False):
 def contact():
     """Contact page"""
     cards = _get_contact_cards(enabled_only=True)
+    page_config = _get_contact_page_config()
+    contact_stats = _get_contact_stats(enabled_only=True)
     platform_colors = {
         name.lower(): color
         for name, _icon, color, _order in SocialLink.DEFAULT_PLATFORMS
     }
     social_links = SocialLink.get_active_links()
     return render_template('contact.html', cards=cards,
-                           social_links=social_links, platform_colors=platform_colors)
+                           page_config=page_config,
+                           contact_stats=contact_stats,
+                           social_links=social_links,
+                           platform_colors=platform_colors)
+
+# ── Admin: Contact Page Settings (heading / subtitle) ────────────────────────
+
+@app.route('/admin/contact-page-settings', methods=['GET', 'POST'])
+def admin_contact_page_settings():
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    if request.method == 'POST':
+        config = {
+            'heading':  request.form.get('heading', 'Follow The Journey').strip(),
+            'subtitle': request.form.get('subtitle', '').strip(),
+        }
+        rec = SiteContent.query.filter_by(content_key='contact_page_config').first()
+        if rec:
+            rec.content_data = json.dumps(config)
+        else:
+            db.session.add(SiteContent(content_key='contact_page_config', content_data=json.dumps(config)))
+        db.session.commit()
+        flash('Contact page settings saved!', 'success')
+        return redirect(url_for('admin_contact_page_settings'))
+    config = _get_contact_page_config()
+    return render_template('admin/contact_page_settings.html', config=config)
+
+# ── Admin: Contact Stats ──────────────────────────────────────────────────────
+
+@app.route('/admin/contact-stats')
+def admin_contact_stats():
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    stats = _get_contact_stats()
+    return render_template('admin/contact_stats.html', stats=stats)
+
+@app.route('/admin/contact-stats/add', methods=['GET', 'POST'])
+def admin_add_contact_stat():
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    if request.method == 'POST':
+        rec = SiteContent.query.filter_by(content_key='contact_stats').first()
+        stats = json.loads(rec.content_data) if rec else []
+        max_id = max((s.get('id', 0) for s in stats), default=0)
+        stats.append({
+            'id': max_id + 1,
+            'icon':        request.form.get('icon', 'fas fa-star').strip(),
+            'icon_color':  request.form.get('icon_color', 'text-primary').strip(),
+            'title':       request.form.get('title', '').strip(),
+            'description': request.form.get('description', '').strip(),
+            'sort_order':  len(stats),
+            'is_enabled':  request.form.get('is_enabled') == '1',
+        })
+        if rec:
+            rec.content_data = json.dumps(stats)
+        else:
+            db.session.add(SiteContent(content_key='contact_stats', content_data=json.dumps(stats)))
+        db.session.commit()
+        flash('Stat item added!', 'success')
+        return redirect(url_for('admin_contact_stats'))
+    return render_template('admin/contact_stat_form.html', stat=None, title='Add Stat Item')
+
+@app.route('/admin/contact-stats/edit/<int:stat_id>', methods=['GET', 'POST'])
+def admin_edit_contact_stat(stat_id):
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    rec = SiteContent.query.filter_by(content_key='contact_stats').first()
+    stats = json.loads(rec.content_data) if rec else []
+    stat = next((s for s in stats if s.get('id') == stat_id), None)
+    if stat is None:
+        flash('Stat item not found.', 'error')
+        return redirect(url_for('admin_contact_stats'))
+    if request.method == 'POST':
+        stat['icon']        = request.form.get('icon', stat['icon']).strip()
+        stat['icon_color']  = request.form.get('icon_color', stat.get('icon_color', 'text-primary')).strip()
+        stat['title']       = request.form.get('title', stat['title']).strip()
+        stat['description'] = request.form.get('description', stat['description']).strip()
+        stat['is_enabled']  = request.form.get('is_enabled') == '1'
+        rec.content_data = json.dumps(stats)
+        db.session.commit()
+        flash('Stat item updated!', 'success')
+        return redirect(url_for('admin_contact_stats'))
+    return render_template('admin/contact_stat_form.html', stat=stat, title='Edit Stat Item')
+
+@app.route('/admin/contact-stats/delete/<int:stat_id>')
+def admin_delete_contact_stat(stat_id):
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    rec = SiteContent.query.filter_by(content_key='contact_stats').first()
+    if rec:
+        stats = [s for s in json.loads(rec.content_data) if s.get('id') != stat_id]
+        rec.content_data = json.dumps(stats)
+        db.session.commit()
+        flash('Stat item deleted.', 'success')
+    return redirect(url_for('admin_contact_stats'))
+
+@app.route('/admin/contact-stats/toggle/<int:stat_id>')
+def admin_toggle_contact_stat(stat_id):
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    rec = SiteContent.query.filter_by(content_key='contact_stats').first()
+    if rec:
+        stats = json.loads(rec.content_data)
+        for s in stats:
+            if s.get('id') == stat_id:
+                s['is_enabled'] = not s.get('is_enabled', True)
+                break
+        rec.content_data = json.dumps(stats)
+        db.session.commit()
+    return redirect(url_for('admin_contact_stats'))
+
+@app.route('/admin/contact-stats/reorder', methods=['POST'])
+def admin_reorder_contact_stats():
+    if 'admin_logged_in' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    data = request.get_json(silent=True) or {}
+    order = data.get('order', [])
+    rec = SiteContent.query.filter_by(content_key='contact_stats').first()
+    if rec and order:
+        stats = json.loads(rec.content_data)
+        pos_map = {int(sid): idx for idx, sid in enumerate(order)}
+        for s in stats:
+            s['sort_order'] = pos_map.get(s.get('id'), 999)
+        stats.sort(key=lambda s: s['sort_order'])
+        rec.content_data = json.dumps(stats)
+        db.session.commit()
+    return jsonify({'success': True})
+
+# ── Admin: Social Links reorder (AJAX) ───────────────────────────────────────
+
+@app.route('/admin/social-links/reorder', methods=['POST'])
+def admin_reorder_social_links():
+    if 'admin_logged_in' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    data = request.get_json(silent=True) or {}
+    order = data.get('order', [])
+    if order:
+        for idx, link_id in enumerate(order):
+            lnk = SocialLink.query.get(int(link_id))
+            if lnk:
+                lnk.sort_order = idx
+        db.session.commit()
+    return jsonify({'success': True})
 
 # ── Admin: Contact Cards ──────────────────────────────────────────────────────
 

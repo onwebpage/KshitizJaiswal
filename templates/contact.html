@@ -40,11 +40,11 @@
                     </div>
                 </div>
                 
-                <!-- Social Media -->
+                <!-- Follow The Journey -->
                 <div class="social-section">
                     <div class="text-center mb-4">
-                        <h3>Follow The Journey</h3>
-                        <p class="text-muted">Stay updated with latest content</p>
+                        <h3>{{ page_config.heading }}</h3>
+                        <p class="text-muted">{{ page_config.subtitle }}</p>
                     </div>
 
                     {% if social_links %}
@@ -55,10 +55,10 @@
                         <a href="{{ link.url or '#' }}" target="_blank" rel="noopener"
                            class="social-link-large"
                            style="border-color:{{ brand }}20; background:{{ brand }}08;">
-                            <i class="{{ link.icon_class }}" style="color:{{ brand }};"></i>
+                            <i class="{{ link.icon_class }}" style="color:{{ brand }}; flex-shrink:0;"></i>
                             <div>
                                 <h5 style="color:#1a1a2e;">{{ link.platform }}</h5>
-                                <small class="text-muted">{{ link.url or 'Coming soon' }}</small>
+                                <small class="text-muted" title="{{ link.url or 'Coming soon' }}">{{ link.url or 'Coming soon' }}</small>
                             </div>
                         </a>
                         {% endfor %}
@@ -71,32 +71,25 @@
                     {% endif %}
                 </div>
                 
-                <!-- Response Time -->
+                <!-- Response Stats -->
+                {% if contact_stats %}
                 <div class="response-info">
-                    <div class="row">
-                        <div class="col-md-4 text-center">
+                    <div class="row g-4">
+                        {% set stat_count = contact_stats | length %}
+                    {% set stat_col = 4 if stat_count == 3 else (6 if stat_count == 2 else (12 if stat_count == 1 else 3)) %}
+                    {% for stat in contact_stats %}
+                        <div class="col-md-{{ stat_col }} text-center">
                             <div class="response-stat">
-                                <i class="fas fa-clock text-primary"></i>
-                                <h4>24-48 Hours</h4>
-                                <p class="text-muted">Average Response Time</p>
+                                <i class="{{ stat.icon }} {{ stat.icon_color }}"></i>
+                                <h4>{{ stat.title }}</h4>
+                                <p class="text-muted">{{ stat.description }}</p>
                             </div>
                         </div>
-                        <div class="col-md-4 text-center">
-                            <div class="response-stat">
-                                <i class="fas fa-shield-alt text-success"></i>
-                                <h4>Confidential</h4>
-                                <p class="text-muted">Your Privacy Matters</p>
-                            </div>
-                        </div>
-                        <div class="col-md-4 text-center">
-                            <div class="response-stat">
-                                <i class="fas fa-heart text-danger"></i>
-                                <h4>Genuine</h4>
-                                <p class="text-muted">Real Conversations</p>
-                            </div>
-                        </div>
+                        {% endfor %}
                     </div>
                 </div>
+                {% endif %}
+
             </div>
         </div>
     </div>

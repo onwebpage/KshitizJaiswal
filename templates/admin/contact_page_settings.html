@@ -1,0 +1,79 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Contact Page Settings - Admin{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid p-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1"><i class="fas fa-cog me-2"></i>Contact Page Settings</h2>
+            <p class="text-muted mb-0">Edit the "Follow The Journey" section heading &amp; subtitle.</p>
+        </div>
+        <a href="{{ url_for('contact') }}" target="_blank" class="btn btn-outline-secondary">
+            <i class="fas fa-external-link-alt me-1"></i>View Contact Page
+        </a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}{% for category, message in messages %}
+            <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show">
+                {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}{% endif %}
+    {% endwith %}
+
+    <div class="row g-4">
+        <!-- Heading / Subtitle editor -->
+        <div class="col-lg-7">
+            <div class="admin-card">
+                <h5 class="mb-3"><i class="fas fa-heading me-2 text-primary"></i>"Follow The Journey" Section</h5>
+                <form method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Section Heading</label>
+                        <input type="text" name="heading" class="form-control"
+                               value="{{ config.heading }}" placeholder="Follow The Journey" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Subtitle</label>
+                        <input type="text" name="subtitle" class="form-control"
+                               value="{{ config.subtitle }}" placeholder="Stay updated with latest content">
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>Save Changes
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Quick links to related admins -->
+        <div class="col-lg-5">
+            <div class="admin-card">
+                <h5 class="mb-3"><i class="fas fa-link me-2 text-primary"></i>Related Settings</h5>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('admin_social_links') }}" class="btn btn-outline-primary text-start">
+                        <i class="fab fa-instagram me-2"></i>Social Media Links
+                        <small class="d-block text-muted fw-normal">Add / edit / reorder social cards</small>
+                    </a>
+                    <a href="{{ url_for('admin_contact_cards') }}" class="btn btn-outline-primary text-start">
+                        <i class="fas fa-address-card me-2"></i>Contact Cards
+                        <small class="d-block text-muted fw-normal">General Questions, Collaboration…</small>
+                    </a>
+                    <a href="{{ url_for('admin_contact_stats') }}" class="btn btn-outline-primary text-start">
+                        <i class="fas fa-chart-bar me-2"></i>Response Stats
+                        <small class="d-block text-muted fw-normal">24-48 Hours, Confidential, Genuine…</small>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelectorAll('.alert.alert-dismissible').forEach(el =>
+    setTimeout(() => { try { new bootstrap.Alert(el).close(); } catch(e){} }, 4000));
+</script>
+{% endblock %}

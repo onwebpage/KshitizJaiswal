@@ -1,0 +1,182 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}{{ title }} - Admin{% endblock %}
+
+{% block extra_head %}
+<style>
+.icon-picker-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(58px, 1fr));
+    gap: 6px;
+    max-height: 220px;
+    overflow-y: auto;
+    padding: 8px;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    background: #fafafa;
+}
+.icon-option {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 8px 4px; border-radius: 6px; cursor: pointer;
+    border: 2px solid transparent; transition: all .15s;
+    font-size: .68rem; color: #555; background: #fff;
+}
+.icon-option:hover { border-color: #cc0000; background: #fff0f0; color: #cc0000; }
+.icon-option.selected { border-color: #cc0000; background: #cc0000; color: #fff; }
+.icon-option i { font-size: 1.2rem; margin-bottom: 3px; }
+.stat-preview-circle {
+    width: 56px; height: 56px; border-radius: 50%; background: #f3f4f6;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem; margin: 0 auto 8px; transition: all .2s;
+}
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid p-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="admin-card">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="mb-0"><i class="fas fa-chart-bar me-2"></i>{{ title }}</h2>
+                    <a href="{{ url_for('admin_contact_stats') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Back
+                    </a>
+                </div>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}{% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show">
+                            {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}{% endif %}
+                {% endwith %}
+
+                <form method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <!-- Icon picker -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold"><i class="fas fa-icons me-1"></i>Icon</label>
+                        <div class="text-center mb-3">
+                            <div class="stat-preview-circle">
+                                <i id="icon-preview-i" class="{{ stat.icon if stat else 'fas fa-star' }} {{ stat.icon_color if stat else 'text-primary' }}"></i>
+                            </div>
+                            <small class="text-muted">Preview</small>
+                        </div>
+                        <input type="text" id="icon-input" name="icon" class="form-control font-monospace mb-2"
+                               value="{{ stat.icon if stat else 'fas fa-star' }}" placeholder="e.g. fas fa-clock">
+                        <small class="form-text text-muted mb-2 d-block">
+                            Any <a href="https://fontawesome.com/icons" target="_blank">Font Awesome</a> class, or pick below:
+                        </small>
+                        <div class="icon-picker-grid" id="icon-grid">
+                            {% set icons = [
+                                ('fas fa-clock',       'Clock'),
+                                ('fas fa-shield-alt',  'Shield'),
+                                ('fas fa-heart',       'Heart'),
+                                ('fas fa-star',        'Star'),
+                                ('fas fa-bolt',        'Bolt'),
+                                ('fas fa-check-circle','Check'),
+                                ('fas fa-thumbs-up',   'Thumbs'),
+                                ('fas fa-fire',        'Fire'),
+                                ('fas fa-trophy',      'Trophy'),
+                                ('fas fa-lock',        'Lock'),
+                                ('fas fa-globe',       'Globe'),
+                                ('fas fa-users',       'Users'),
+                                ('fas fa-smile',       'Smile'),
+                                ('fas fa-handshake',   'Shake'),
+                                ('fas fa-infinity',    'Infinity'),
+                                ('fas fa-gem',         'Gem'),
+                            ] %}
+                            {% set cur_icon = stat.icon if stat else 'fas fa-star' %}
+                            {% for cls, label in icons %}
+                            <div class="icon-option {% if cur_icon == cls %}selected{% endif %}"
+                                 data-icon="{{ cls }}" title="{{ label }}">
+                                <i class="{{ cls }}"></i><span>{{ label }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Icon colour -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold"><i class="fas fa-palette me-1"></i>Icon Colour</label>
+                        <select name="icon_color" id="color-select" class="form-select">
+                            {% set colors = [
+                                ('text-primary',   '🔵 Blue'),
+                                ('text-success',   '🟢 Green'),
+                                ('text-danger',    '🔴 Red'),
+                                ('text-warning',   '🟡 Yellow'),
+                                ('text-info',      '🩵 Cyan'),
+                                ('text-dark',      '⚫ Dark'),
+                                ('text-secondary', '⚪ Grey'),
+                            ] %}
+                            {% set cur_color = stat.icon_color if stat else 'text-primary' %}
+                            {% for cls, label in colors %}
+                            <option value="{{ cls }}" {% if cur_color == cls %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Title -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold"><i class="fas fa-heading me-1"></i>Title <span class="text-danger">*</span></label>
+                        <input type="text" name="title" class="form-control"
+                               value="{{ stat.title if stat else '' }}"
+                               placeholder="e.g. 24-48 Hours" required>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold"><i class="fas fa-align-left me-1"></i>Description</label>
+                        <input type="text" name="description" class="form-control"
+                               value="{{ stat.description if stat else '' }}"
+                               placeholder="e.g. Average Response Time">
+                    </div>
+
+                    <!-- Visibility -->
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold"><i class="fas fa-toggle-on me-1"></i>Visibility</label>
+                        <select name="is_enabled" class="form-select">
+                            <option value="1" {% if not stat or stat.is_enabled %}selected{% endif %}>✅ Enabled</option>
+                            <option value="0" {% if stat and not stat.is_enabled %}selected{% endif %}>🚫 Disabled</option>
+                        </select>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="fas fa-save me-1"></i>{{ 'Save Changes' if stat else 'Add Stat' }}
+                        </button>
+                        <a href="{{ url_for('admin_contact_stats') }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const iconInput  = document.getElementById('icon-input');
+    const colorSel   = document.getElementById('color-select');
+    const previewI   = document.getElementById('icon-preview-i');
+    const options    = document.querySelectorAll('.icon-option');
+
+    function updatePreview() {
+        previewI.className = (iconInput.value.trim() || 'fas fa-star') + ' ' + colorSel.value;
+    }
+
+    function setIcon(cls) {
+        iconInput.value = cls;
+        options.forEach(o => o.classList.toggle('selected', o.dataset.icon === cls));
+        updatePreview();
+    }
+
+    options.forEach(o => o.addEventListener('click', () => setIcon(o.dataset.icon)));
+    iconInput.addEventListener('input', () => { options.forEach(o => o.classList.toggle('selected', o.dataset.icon === iconInput.value.trim())); updatePreview(); });
+    colorSel.addEventListener('change', updatePreview);
+});
+</script>
+{% endblock %}
