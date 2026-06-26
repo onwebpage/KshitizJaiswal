@@ -3347,7 +3347,7 @@ def admin_content_manager():
                     break
                 tb_value   = request.form.get(f'tb_value_{tb_idx}', '').strip()
                 tb_label   = request.form.get(f'tb_label_{tb_idx}', '').strip()
-                tb_active  = request.form.get(f'tb_active_{tb_idx}', '0') == '1'
+                tb_active  = '1' in request.form.getlist(f'tb_active_{tb_idx}')
                 if tb_icon.strip() or tb_label:
                     trust_items.append({'icon': tb_icon.strip(), 'value': tb_value, 'label': tb_label, 'is_active': tb_active})
                 tb_idx += 1
