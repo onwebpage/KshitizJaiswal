@@ -496,6 +496,36 @@ class DataManager:
                 return True
         return False
 
+class StudentReview(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    location = db.Column(db.String(100))
+    rating = db.Column(db.Integer, default=5)
+    review_text = db.Column(db.Text)
+    profile_image = db.Column(db.String(500))
+    review_type = db.Column(db.String(10), default='text')  # 'text' or 'video'
+    video_path = db.Column(db.String(500))
+    video_thumbnail = db.Column(db.String(500))
+    is_enabled = db.Column(db.Boolean, default=True, nullable=False)
+    sort_order = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'location': self.location or '',
+            'rating': self.rating or 5,
+            'review_text': self.review_text or '',
+            'profile_image': self.profile_image or '',
+            'review_type': self.review_type or 'text',
+            'video_path': self.video_path or '',
+            'video_thumbnail': self.video_thumbnail or '',
+            'is_enabled': self.is_enabled,
+            'sort_order': self.sort_order,
+        }
+
+
 class Course(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)

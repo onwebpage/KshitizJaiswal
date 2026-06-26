@@ -33,6 +33,59 @@ def save_uploaded_file(form_file, folder_name):
     
     return None
 
+def save_video_file(form_file, folder_name, max_duration=15):
+    """
+    Save an uploaded video, validate duration via ffprobe,
+    and extract a thumbnail via ffmpeg.
+    Returns (video_rel_path, thumbnail_rel_path, error_msg).
+    On error, error_msg is non-empty and paths are None.
+    """
+    import subprocess, tempfile
+    allowed_ext = {'.mp4', '.mov', '.webm'}
+    if not form_file or not form_file.filename:
+        return None, None, 'No file provided.'
+    _, file_ext = os.path.splitext(form_file.filename)
+    if file_ext.lower() not in allowed_ext:
+        return None, None, f'Only MP4, MOV, and WebM are allowed (got {file_ext}).'
+
+    random_hex = secrets.token_hex(8)
+    filename = random_hex + file_ext.lower()
+    folder_path = os.path.join(current_app.config['UPLOAD_FOLDER'], folder_name)
+    os.makedirs(folder_path, exist_ok=True)
+    file_path = os.path.join(folder_path, filename)
+    form_file.save(file_path)
+
+    # Validate duration with ffprobe
+    try:
+        probe = subprocess.run(
+            ['ffprobe', '-v', 'error', '-show_entries', 'format=duration',
+             '-of', 'default=noprint_wrappers=1:nokey=1', file_path],
+            capture_output=True, text=True, timeout=15
+        )
+        duration = float(probe.stdout.strip())
+        if duration > max_duration:
+            os.remove(file_path)
+            return None, None, f'Video is {duration:.1f}s — maximum is {max_duration}s.'
+    except Exception:
+        pass  # if ffprobe fails, allow the upload
+
+    # Extract thumbnail at 0.5s
+    thumb_filename = random_hex + '_thumb.jpg'
+    thumb_path = os.path.join(folder_path, thumb_filename)
+    try:
+        subprocess.run(
+            ['ffmpeg', '-y', '-ss', '0.5', '-i', file_path,
+             '-vframes', '1', '-q:v', '2', thumb_path],
+            capture_output=True, timeout=20
+        )
+    except Exception:
+        thumb_path = None
+
+    video_rel = f'uploads/{folder_name}/{filename}'
+    thumb_rel = f'uploads/{folder_name}/{thumb_filename}' if thumb_path and os.path.exists(thumb_path) else None
+    return video_rel, thumb_rel, None
+
+
 def format_number(num):
     """Format number with K, M suffixes"""
     if num >= 1000000:

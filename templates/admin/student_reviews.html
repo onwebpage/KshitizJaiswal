@@ -1,0 +1,155 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Student Reviews - Admin{% endblock %}
+
+{% block extra_head %}
+<style>
+.review-card {
+    background: #fff;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: box-shadow .2s;
+    cursor: grab;
+}
+.review-card:active { cursor: grabbing; }
+.review-card.sortable-ghost { opacity: .4; background: #f0f4ff; }
+.review-card.sortable-chosen { box-shadow: 0 8px 24px rgba(0,0,0,.15); }
+.drag-handle { color: #9ca3af; font-size: 1.1rem; flex-shrink: 0; cursor: grab; }
+.review-avatar {
+    width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
+    object-fit: cover; border: 2px solid #e5e7eb;
+}
+.review-avatar-letter {
+    width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
+    background: linear-gradient(135deg,#cc0000,#8b0000);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem; font-weight: 700; color: #fff;
+}
+.review-info { flex: 1; min-width: 0; }
+.review-name { font-weight: 700; font-size: .97rem; color: #111; }
+.review-location { font-size: .8rem; color: #cc0000; font-weight: 500; }
+.review-stars { color: #f59e0b; font-size: .85rem; letter-spacing: 1px; }
+.review-text-preview { font-size: .83rem; color: #6b7280; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 300px; }
+.review-type-badge { font-size: .72rem; font-weight: 700; padding: 2px 9px; border-radius: 50px; }
+.badge-text  { background: #e0f2fe; color: #0369a1; }
+.badge-video { background: #fce7f3; color: #be185d; }
+.video-thumb-sm { width: 72px; height: 44px; object-fit: cover; border-radius: 8px; border: 1px solid #e5e7eb; flex-shrink: 0; }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid p-4">
+    <div class="admin-card">
+        <div class="admin-header">
+            <div>
+                <h2><i class="fas fa-star me-2 text-warning"></i>Student Reviews</h2>
+                <p class="text-muted mb-0 small">Drag rows to reorder. Changes save automatically.</p>
+            </div>
+            <a href="{{ url_for('admin_add_student_review') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>Add Review
+            </a>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% for cat, msg in messages %}
+            <div class="alert alert-{{ 'danger' if cat == 'error' else cat }} alert-dismissible fade show mx-3 mt-2" role="alert">
+              {{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          {% endfor %}
+        {% endwith %}
+
+        <div class="p-3">
+            {% if not reviews %}
+            <div class="text-center py-5 text-muted">
+                <i class="fas fa-star fa-3x mb-3 opacity-25"></i>
+                <p>No reviews yet. <a href="{{ url_for('admin_add_student_review') }}">Add your first review.</a></p>
+            </div>
+            {% else %}
+            <div id="reviewList">
+                {% for r in reviews %}
+                <div class="review-card" data-id="{{ r.id }}">
+                    <div class="drag-handle"><i class="fas fa-grip-vertical"></i></div>
+
+                    {% if r.review_type == 'video' and r.video_thumbnail %}
+                    <img src="{{ url_for('static', filename=r.video_thumbnail) }}" class="video-thumb-sm"
+                         onerror="this.src='{{ url_for('static', filename='img/reel-placeholder.svg') }}'">
+                    {% elif r.profile_image %}
+                    <img src="{{ url_for('static', filename=r.profile_image) }}" class="review-avatar"
+                         onerror="this.src='{{ url_for('static', filename='img/reel-placeholder.svg') }}'">
+                    {% else %}
+                    <div class="review-avatar-letter">{{ r.name[0]|upper }}</div>
+                    {% endif %}
+
+                    <div class="review-info">
+                        <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                            <span class="review-name">{{ r.name }}</span>
+                            <span class="review-type-badge {{ 'badge-video' if r.review_type == 'video' else 'badge-text' }}">
+                                <i class="fas {{ 'fa-video' if r.review_type == 'video' else 'fa-quote-left' }} me-1"></i>{{ r.review_type|title }}
+                            </span>
+                            {% if r.is_enabled %}
+                            <span class="badge bg-success" style="font-size:.68rem;">Live</span>
+                            {% else %}
+                            <span class="badge bg-secondary" style="font-size:.68rem;">Hidden</span>
+                            {% endif %}
+                        </div>
+                        {% if r.location %}<div class="review-location"><i class="fas fa-map-marker-alt me-1"></i>{{ r.location }}</div>{% endif %}
+                        <div class="review-stars">{% for i in range(r.rating or 5) %}★{% endfor %}{% for i in range(5 - (r.rating or 5)) %}<span style="color:#e5e7eb;">★</span>{% endfor %}</div>
+                        {% if r.review_type == 'text' and r.review_text %}
+                        <div class="review-text-preview">"{{ r.review_text }}"</div>
+                        {% elif r.review_type == 'video' and r.video_path %}
+                        <div class="review-text-preview"><i class="fas fa-film me-1"></i>{{ r.video_path.split('/')[-1] }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex flex-column gap-1 flex-shrink-0">
+                        <a href="{{ url_for('admin_edit_student_review', review_id=r.id) }}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-edit me-1"></i>Edit
+                        </a>
+                        <form method="POST" action="{{ url_for('admin_toggle_student_review', review_id=r.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button class="btn btn-sm w-100 {{ 'btn-outline-secondary' if r.is_enabled else 'btn-outline-success' }}">
+                                <i class="fas {{ 'fa-eye-slash' if r.is_enabled else 'fa-eye' }} me-1"></i>{{ 'Hide' if r.is_enabled else 'Show' }}
+                            </button>
+                        </form>
+                        <form method="POST" action="{{ url_for('admin_delete_student_review', review_id=r.id) }}"
+                              onsubmit="return confirm('Delete review by {{ r.name }}?')">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button class="btn btn-sm btn-outline-danger w-100"><i class="fas fa-trash me-1"></i>Delete</button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<script>
+const list = document.getElementById('reviewList');
+if (list) {
+    Sortable.create(list, {
+        handle: '.drag-handle',
+        animation: 150,
+        ghostClass: 'sortable-ghost',
+        chosenClass: 'sortable-chosen',
+        onEnd: function() {
+            const order = [...list.querySelectorAll('.review-card')].map(el => parseInt(el.dataset.id));
+            fetch('{{ url_for("admin_reorder_student_reviews") }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
+                body: JSON.stringify(order)
+            });
+        }
+    });
+}
+</script>
+{% endblock %}

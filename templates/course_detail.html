@@ -414,9 +414,80 @@ if (pvBtn) {
     </div>
 </section>
 
-<!-- Testimonials Section -->
-{% if testimonials %}
-<section class="py-5" style="background:linear-gradient(135deg,#cc0000 0%,#8b0000 60%,#6b0000 100%);">
+<!-- Student Reviews Section -->
+{% set _all_reviews = student_reviews if student_reviews else [] %}
+{% if _all_reviews %}
+<section class="py-5 sr-section">
+<style>
+.sr-section { background: linear-gradient(135deg,#cc0000 0%,#8b0000 60%,#6b0000 100%); }
+.sr-carousel { position: relative; overflow: hidden; }
+.sr-track { display: flex; gap: 20px; transition: transform .45s cubic-bezier(.4,0,.2,1); will-change: transform; }
+.sr-slide { flex: 0 0 calc(33.333% - 14px); min-width: calc(33.333% - 14px); }
+@media(max-width:991px){ .sr-slide{ flex: 0 0 calc(50% - 10px); min-width:calc(50% - 10px); } }
+@media(max-width:600px){ .sr-slide{ flex: 0 0 calc(100%); min-width:100%; } }
+.sr-card {
+    background:#fff; border-radius:18px; overflow:hidden; height:100%;
+    box-shadow:0 8px 32px rgba(0,0,0,.22); transition:transform .25s,box-shadow .25s;
+    display:flex; flex-direction:column;
+}
+.sr-card:hover { transform:translateY(-4px); box-shadow:0 20px 56px rgba(0,0,0,.32); }
+.sr-stars { color:#f59e0b; font-size:.95rem; letter-spacing:2px; }
+.sr-star-empty { color:rgba(0,0,0,.12); }
+.sr-avatar {
+    width:44px; height:44px; border-radius:50%; object-fit:cover;
+    border:2px solid rgba(204,0,0,.2); flex-shrink:0;
+}
+.sr-avatar-letter {
+    width:44px; height:44px; border-radius:50%; flex-shrink:0;
+    background:linear-gradient(135deg,#cc0000,#8b0000);
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.1rem; font-weight:700; color:#fff;
+}
+.sr-nav-btn {
+    width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,.15);
+    border:1.5px solid rgba(255,255,255,.3); color:#fff; font-size:1.1rem;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    transition:background .2s; backdrop-filter:blur(4px);
+    flex-shrink:0;
+}
+.sr-nav-btn:hover { background:rgba(255,255,255,.28); }
+.sr-nav-btn:disabled { opacity:.3; cursor:default; }
+.sr-dots { display:flex; gap:6px; justify-content:center; margin-top:20px; }
+.sr-dot { width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,.3); cursor:pointer; transition:all .25s; border:none; padding:0; }
+.sr-dot.active { background:#fff; width:22px; border-radius:4px; }
+
+/* Video card */
+.sr-video-wrap { position:relative; padding-bottom:56.25%; height:0; background:#000; cursor:pointer; }
+.sr-video-poster { position:absolute; inset:0; background:#000 center/cover no-repeat; }
+.sr-video-poster-overlay { position:absolute; inset:0; background:rgba(0,0,0,.25); }
+.sr-play-btn {
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+}
+.sr-play-circle {
+    width:60px; height:60px; border-radius:50%;
+    background:linear-gradient(135deg,#cc0000,#8b0000);
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 6px 24px rgba(204,0,0,.5),0 0 0 6px rgba(204,0,0,.15);
+    transition:transform .2s;
+}
+.sr-play-circle:hover { transform:scale(1.1); }
+.sr-play-circle i { color:#fff; font-size:1.3rem; margin-left:3px; }
+
+/* Video lightbox */
+.sr-lightbox {
+    display:none; position:fixed; inset:0; z-index:9999;
+    background:rgba(0,0,0,.85); backdrop-filter:blur(6px);
+    align-items:center; justify-content:center; padding:20px;
+}
+.sr-lightbox.open { display:flex; }
+.sr-lightbox-inner { position:relative; width:100%; max-width:720px; }
+.sr-lightbox-close {
+    position:absolute; top:-44px; right:0; background:none; border:none;
+    color:#fff; font-size:1.6rem; cursor:pointer; line-height:1;
+}
+.sr-lightbox-video { width:100%; border-radius:14px; max-height:80vh; background:#000; }
+</style>
+
     <div class="container">
         <div class="text-center mb-5">
             <span style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.15);
@@ -432,78 +503,182 @@ if (pvBtn) {
             </p>
         </div>
 
-        <div class="row g-4 justify-content-center">
-            {% for t in testimonials %}
-            {% set _tv = t.get('video_url','') %}
-            {% if _tv %}
-              {% if 'youtu.be/' in _tv %}{% set _tvid = _tv.split('youtu.be/')[1].split('?')[0] %}
-              {% elif 'youtube.com/watch' in _tv %}{% set _tvid = _tv.split('v=')[1].split('&')[0] if 'v=' in _tv else '' %}
-              {% elif '/embed/' in _tv %}{% set _tvid = _tv.split('/embed/')[1].split('?')[0] %}
-              {% else %}{% set _tvid = '' %}{% endif %}
-            {% else %}{% set _tvid = '' %}{% endif %}
-            <div class="col-md-6 col-lg-4">
-                {% if _tvid %}
-                <!-- Video Review Card -->
-                <div style="background:#fff;border-radius:18px;overflow:hidden;height:100%;
-                             box-shadow:0 8px 32px rgba(0,0,0,.2);
-                             transition:transform .25s,box-shadow .25s;"
-                     onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 20px 56px rgba(0,0,0,.3)'"
-                     onmouseout="this.style.transform='';this.style.boxShadow='0 8px 32px rgba(0,0,0,.2)'">
-                    <div style="position:relative;padding-bottom:56.25%;height:0;background:#000;">
-                        <iframe src="https://www.youtube-nocookie.com/embed/{{ _tvid }}?rel=0&modestbranding=1&controls=1"
-                                style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;"
-                                allow="accelerometer; autoplay; encrypted-media; picture-in-picture"
-                                allowfullscreen loading="lazy"></iframe>
-                    </div>
-                    <div style="padding:16px 20px;">
-                        <div style="color:#cc0000;font-size:.95rem;margin-bottom:6px;letter-spacing:2px;">
-                            {% for i in range(t.get('rating', 5)) %}★{% endfor %}{% for i in range(5 - t.get('rating', 5)) %}<span style="color:rgba(0,0,0,.15);">★</span>{% endfor %}
-                        </div>
-                        <div style="display:flex;align-items:center;gap:10px;">
-                            <div style="width:36px;height:36px;border-radius:50%;flex-shrink:0;
-                                        background:linear-gradient(135deg,#cc0000,#8b0000);
-                                        display:flex;align-items:center;justify-content:center;
-                                        font-size:.95rem;font-weight:700;color:#fff;">{{ t.name[0]|upper }}</div>
-                            <div>
-                                <div style="color:#111;font-weight:600;font-size:.9rem;">{{ t.name }}</div>
-                                {% if t.role %}<div style="color:#cc0000;font-size:.78rem;font-weight:500;">{{ t.role }}</div>{% endif %}
+        <!-- Carousel -->
+        <div style="position:relative;">
+            <div class="sr-carousel" id="srCarousel">
+                <div class="sr-track" id="srTrack">
+                    {% for r in _all_reviews %}
+                    <div class="sr-slide">
+                        {% if r.review_type == 'video' and r.video_path %}
+                        <!-- ── Uploaded Video Review Card ── -->
+                        <div class="sr-card">
+                            <div class="sr-video-wrap"
+                                 onclick="srOpenLightbox('{{ url_for('static', filename=r.video_path) }}')"
+                                 {% if r.video_thumbnail %}
+                                 style="background-image:url('{{ url_for('static', filename=r.video_thumbnail) }}');"
+                                 {% endif %}>
+                                {% if r.video_thumbnail %}
+                                <div class="sr-video-poster-overlay"></div>
+                                {% endif %}
+                                <div class="sr-play-btn">
+                                    <div class="sr-play-circle"><i class="fas fa-play"></i></div>
+                                </div>
+                            </div>
+                            <div style="padding:16px 20px 20px;flex:1;display:flex;flex-direction:column;">
+                                <div class="sr-stars mb-2">
+                                    {% for i in range(r.rating or 5) %}★{% endfor %}{% for i in range(5 - (r.rating or 5)) %}<span class="sr-star-empty">★</span>{% endfor %}
+                                </div>
+                                <div style="display:flex;align-items:center;gap:10px;margin-top:auto;">
+                                    {% if r.profile_image %}
+                                    <img src="{{ url_for('static', filename=r.profile_image) }}" class="sr-avatar"
+                                         onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                                    <div class="sr-avatar-letter" style="display:none;">{{ r.name[0]|upper }}</div>
+                                    {% else %}
+                                    <div class="sr-avatar-letter">{{ r.name[0]|upper }}</div>
+                                    {% endif %}
+                                    <div>
+                                        <div style="color:#111;font-weight:600;font-size:.9rem;">{{ r.name }}</div>
+                                        {% if r.location %}<div style="color:#cc0000;font-size:.78rem;font-weight:500;"><i class="fas fa-map-marker-alt me-1"></i>{{ r.location }}</div>{% endif %}
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-                {% else %}
-                <!-- Text Review Card -->
-                <div style="background:#fff;border:none;
-                             border-radius:18px;padding:28px 24px;height:100%;
-                             transition:transform .25s,box-shadow .25s;position:relative;
-                             box-shadow:0 8px 32px rgba(0,0,0,.2);"
-                     onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 20px 56px rgba(0,0,0,.3)'"
-                     onmouseout="this.style.transform='';this.style.boxShadow='0 8px 32px rgba(0,0,0,.2)'">
-                    <div style="position:absolute;top:18px;right:22px;font-size:2.5rem;
-                                color:rgba(204,0,0,.15);line-height:1;">"</div>
-                    <div style="color:#cc0000;font-size:1rem;margin-bottom:14px;letter-spacing:2px;">
-                        {% for i in range(t.get('rating', 5)) %}★{% endfor %}{% for i in range(5 - t.get('rating', 5)) %}<span style="color:rgba(0,0,0,.15);">★</span>{% endfor %}
-                    </div>
-                    {% if t.text %}
-                    <p style="color:#333;font-size:.97rem;line-height:1.7;margin-bottom:22px;font-style:italic;">"{{ t.text }}"</p>
-                    {% endif %}
-                    <div style="display:flex;align-items:center;gap:12px;border-top:1px solid rgba(204,0,0,.15);padding-top:16px;">
-                        <div style="width:42px;height:42px;border-radius:50%;flex-shrink:0;
-                                    background:linear-gradient(135deg,#cc0000,#8b0000);
-                                    display:flex;align-items:center;justify-content:center;
-                                    font-size:1.1rem;font-weight:700;color:#fff;">{{ t.name[0]|upper }}</div>
-                        <div>
-                            <div style="color:#111;font-weight:600;font-size:.95rem;">{{ t.name }}</div>
-                            {% if t.role %}<div style="color:#cc0000;font-size:.8rem;font-weight:500;">{{ t.role }}</div>{% endif %}
+                        {% else %}
+                        <!-- ── Text Review Card ── -->
+                        <div class="sr-card" style="padding:26px 22px;position:relative;">
+                            <div style="position:absolute;top:16px;right:20px;font-size:2.5rem;color:rgba(204,0,0,.12);line-height:1;font-family:Georgia,serif;">"</div>
+                            <div class="sr-stars mb-3">
+                                {% for i in range(r.rating or 5) %}★{% endfor %}{% for i in range(5 - (r.rating or 5)) %}<span class="sr-star-empty">★</span>{% endfor %}
+                            </div>
+                            {% if r.review_text %}
+                            <p style="color:#333;font-size:.96rem;line-height:1.75;font-style:italic;flex:1;margin-bottom:20px;">"{{ r.review_text }}"</p>
+                            {% endif %}
+                            <div style="display:flex;align-items:center;gap:12px;border-top:1px solid rgba(204,0,0,.12);padding-top:16px;margin-top:auto;">
+                                {% if r.profile_image %}
+                                <img src="{{ url_for('static', filename=r.profile_image) }}" class="sr-avatar"
+                                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                                <div class="sr-avatar-letter" style="display:none;">{{ r.name[0]|upper }}</div>
+                                {% else %}
+                                <div class="sr-avatar-letter">{{ r.name[0]|upper }}</div>
+                                {% endif %}
+                                <div>
+                                    <div style="color:#111;font-weight:700;font-size:.95rem;">{{ r.name }}</div>
+                                    {% if r.location %}<div style="color:#cc0000;font-size:.8rem;font-weight:500;"><i class="fas fa-map-marker-alt me-1"></i>{{ r.location }}</div>{% endif %}
+                                </div>
+                            </div>
                         </div>
+                        {% endif %}
                     </div>
+                    {% endfor %}
                 </div>
-                {% endif %}
             </div>
-            {% endfor %}
+
+            <!-- Nav buttons -->
+            {% if _all_reviews|length > 1 %}
+            <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-top:24px;">
+                <button class="sr-nav-btn" id="srPrev" onclick="srMove(-1)" aria-label="Previous">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <div class="sr-dots" id="srDots"></div>
+                <button class="sr-nav-btn" id="srNext" onclick="srMove(1)" aria-label="Next">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+            {% endif %}
         </div>
     </div>
 </section>
+
+<!-- Video Lightbox -->
+<div class="sr-lightbox" id="srLightbox" onclick="srCloseLightbox(event)">
+    <div class="sr-lightbox-inner">
+        <button class="sr-lightbox-close" onclick="srCloseLightbox(null,true)">
+            <i class="fas fa-times"></i>
+        </button>
+        <video id="srLightboxVideo" class="sr-lightbox-video" controls playsinline
+               style="display:none;">
+        </video>
+    </div>
+</div>
+
+<script>
+// ── Carousel ─────────────────────────────────────────
+(function(){
+    const track = document.getElementById('srTrack');
+    const dots  = document.getElementById('srDots');
+    if (!track) return;
+
+    const slides = track.querySelectorAll('.sr-slide');
+    const total  = slides.length;
+    let current  = 0;
+
+    function visibleCount() {
+        const w = window.innerWidth;
+        if (w <= 600) return 1;
+        if (w <= 991) return 2;
+        return Math.min(3, total);
+    }
+
+    function maxIndex() { return Math.max(0, total - visibleCount()); }
+
+    function go(idx) {
+        current = Math.max(0, Math.min(idx, maxIndex()));
+        const slideW = slides[0].getBoundingClientRect().width + 20;
+        track.style.transform = `translateX(-${current * slideW}px)`;
+        if (dots) {
+            dots.querySelectorAll('.sr-dot').forEach((d,i) => d.classList.toggle('active', i === current));
+        }
+        if (document.getElementById('srPrev')) {
+            document.getElementById('srPrev').disabled = current === 0;
+            document.getElementById('srNext').disabled = current >= maxIndex();
+        }
+    }
+
+    window.srMove = function(dir) { go(current + dir); };
+
+    // Build dots
+    if (dots && total > 1) {
+        for (let i = 0; i <= maxIndex(); i++) {
+            const d = document.createElement('button');
+            d.className = 'sr-dot' + (i === 0 ? ' active' : '');
+            d.onclick = () => go(i);
+            dots.appendChild(d);
+        }
+    }
+
+    window.addEventListener('resize', () => go(current));
+    go(0);
+
+    // Touch swipe
+    let tx = 0;
+    track.addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, {passive:true});
+    track.addEventListener('touchend',   e => {
+        const diff = tx - e.changedTouches[0].clientX;
+        if (Math.abs(diff) > 40) srMove(diff > 0 ? 1 : -1);
+    }, {passive:true});
+})();
+
+// ── Video lightbox ────────────────────────────────────
+function srOpenLightbox(src) {
+    const lb  = document.getElementById('srLightbox');
+    const vid = document.getElementById('srLightboxVideo');
+    vid.src = src;
+    vid.style.display = 'block';
+    lb.classList.add('open');
+    vid.play().catch(()=>{});
+}
+function srCloseLightbox(e, force) {
+    if (!force && e && e.target !== document.getElementById('srLightbox')) return;
+    const lb  = document.getElementById('srLightbox');
+    const vid = document.getElementById('srLightboxVideo');
+    vid.pause();
+    vid.src = '';
+    lb.classList.remove('open');
+}
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') srCloseLightbox(null, true);
+});
+</script>
 {% endif %}
 
 <!-- Course Purchase Modal -->

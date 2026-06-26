@@ -1,8 +1,8 @@
 from flask import render_template, request, jsonify, redirect, url_for, flash, session, abort
 from app import app, db, _error_log, log_app_error
-from models import DataManager, AdminUser, SiteContent, Reel, Opinion, Subscriber, SubscriptionTier, UserSubscription, Course, Module, Lesson, UserCourseAccess, SocialLink, ColumnVisibility, UserActivity, SiteConfig, CourseUser
+from models import DataManager, AdminUser, SiteContent, Reel, Opinion, Subscriber, SubscriptionTier, UserSubscription, Course, Module, Lesson, UserCourseAccess, SocialLink, ColumnVisibility, UserActivity, SiteConfig, CourseUser, StudentReview
 from forms import NewsletterForm, PollVoteForm, AdminLoginForm, ReelForm, OpinionForm, HeroContentForm, PaymentSettingsForm, SubscriptionTierForm, CourseForm, ModuleForm, LessonForm, SocialLinkForm
-from utils import save_uploaded_file, calculate_poll_percentages, get_youtube_embed_url, get_video_info, slugify, load_whatsapp_settings
+from utils import save_uploaded_file, save_video_file, calculate_poll_percentages, get_youtube_embed_url, get_video_info, slugify, load_whatsapp_settings
 from clerk_auth import clerk_auth_required, get_clerk_user, get_clerk_user_id
 import razorpay
 import os
@@ -4037,6 +4037,9 @@ def course_detail(course_id):
     except Exception:
         course_features_list = _default_features
 
+    # Fetch student reviews for this course page
+    student_reviews = StudentReview.query.filter_by(is_enabled=True).order_by(StudentReview.sort_order, StudentReview.id).all()
+
     razorpay_key = os.environ.get('RAZORPAY_KEY_ID', '')
     if not razorpay_key:
         payment_content = SiteContent.query.filter_by(content_key='payment_settings').first()
@@ -4053,7 +4056,8 @@ def course_detail(course_id):
 
     return render_template('course_detail.html', course=course_data, razorpay_key=razorpay_key,
                            curriculum_settings=curriculum_settings, testimonials=testimonials,
-                           is_logged_in=is_logged_in, course_features=course_features_list)
+                           is_logged_in=is_logged_in, course_features=course_features_list,
+                           student_reviews=student_reviews)
 
 @app.route('/course/<int:course_id>/start')
 def course_start(course_id):
@@ -4961,6 +4965,135 @@ def admin_delete_testimonial(idx):
     else:
         flash('Testimonial not found.', 'error')
     return redirect(url_for('admin_testimonials'))
+
+# ── STUDENT REVIEWS MANAGER ─────────────────────────────────────────────────
+
+@app.route('/admin/student-reviews')
+def admin_student_reviews():
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    reviews = StudentReview.query.order_by(StudentReview.sort_order, StudentReview.id).all()
+    return render_template('admin/student_reviews.html', reviews=reviews, title='Student Reviews')
+
+@app.route('/admin/student-review/add', methods=['GET', 'POST'])
+def admin_add_student_review():
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    if request.method == 'POST':
+        name = request.form.get('name', '').strip()
+        if not name:
+            flash('Reviewer name is required.', 'error')
+            return redirect(url_for('admin_add_student_review'))
+
+        review_type = request.form.get('review_type', 'text')
+        review = StudentReview(
+            name=name,
+            location=request.form.get('location', '').strip(),
+            rating=int(request.form.get('rating', 5)),
+            review_text=request.form.get('review_text', '').strip() if review_type == 'text' else '',
+            review_type=review_type,
+            is_enabled=request.form.get('is_enabled') == '1',
+            sort_order=int(request.form.get('sort_order', 0) or 0),
+        )
+
+        # Profile image
+        if 'profile_image' in request.files and request.files['profile_image'].filename:
+            review.profile_image = save_uploaded_file(request.files['profile_image'], 'reviews')
+
+        # Video upload
+        if review_type == 'video' and 'video_file' in request.files and request.files['video_file'].filename:
+            vpath, tpath, err = save_video_file(request.files['video_file'], 'reviews')
+            if err:
+                flash(f'Video error: {err}', 'error')
+                return redirect(url_for('admin_add_student_review'))
+            review.video_path = vpath
+            review.video_thumbnail = tpath
+
+        db.session.add(review)
+        db.session.commit()
+        flash(f'Review by "{name}" added!', 'success')
+        return redirect(url_for('admin_student_reviews'))
+
+    count = StudentReview.query.count()
+    return render_template('admin/student_review_form.html', review=None, title='Add Student Review', next_order=count)
+
+@app.route('/admin/student-review/<int:review_id>/edit', methods=['GET', 'POST'])
+def admin_edit_student_review(review_id):
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    review = StudentReview.query.get_or_404(review_id)
+    if request.method == 'POST':
+        name = request.form.get('name', '').strip()
+        if not name:
+            flash('Reviewer name is required.', 'error')
+            return redirect(url_for('admin_edit_student_review', review_id=review_id))
+
+        review_type = request.form.get('review_type', 'text')
+        review.name = name
+        review.location = request.form.get('location', '').strip()
+        review.rating = int(request.form.get('rating', 5))
+        review.review_type = review_type
+        review.review_text = request.form.get('review_text', '').strip() if review_type == 'text' else ''
+        review.is_enabled = request.form.get('is_enabled') == '1'
+        review.sort_order = int(request.form.get('sort_order', 0) or 0)
+
+        # Profile image
+        if 'profile_image' in request.files and request.files['profile_image'].filename:
+            review.profile_image = save_uploaded_file(request.files['profile_image'], 'reviews')
+
+        # Video upload (only replace if new file provided)
+        if review_type == 'video' and 'video_file' in request.files and request.files['video_file'].filename:
+            vpath, tpath, err = save_video_file(request.files['video_file'], 'reviews')
+            if err:
+                flash(f'Video error: {err}', 'error')
+                return redirect(url_for('admin_edit_student_review', review_id=review_id))
+            review.video_path = vpath
+            review.video_thumbnail = tpath
+        elif review_type == 'text':
+            review.video_path = None
+            review.video_thumbnail = None
+
+        db.session.commit()
+        flash(f'Review by "{name}" updated!', 'success')
+        return redirect(url_for('admin_student_reviews'))
+
+    return render_template('admin/student_review_form.html', review=review, title='Edit Student Review')
+
+@app.route('/admin/student-review/<int:review_id>/delete', methods=['POST'])
+def admin_delete_student_review(review_id):
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    review = StudentReview.query.get_or_404(review_id)
+    name = review.name
+    db.session.delete(review)
+    db.session.commit()
+    flash(f'Review by "{name}" deleted.', 'success')
+    return redirect(url_for('admin_student_reviews'))
+
+@app.route('/admin/student-review/<int:review_id>/toggle', methods=['POST'])
+def admin_toggle_student_review(review_id):
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    review = StudentReview.query.get_or_404(review_id)
+    review.is_enabled = not review.is_enabled
+    db.session.commit()
+    state = 'enabled' if review.is_enabled else 'disabled'
+    flash(f'Review by "{review.name}" {state}.', 'success')
+    return redirect(url_for('admin_student_reviews'))
+
+@app.route('/admin/student-reviews/reorder', methods=['POST'])
+def admin_reorder_student_reviews():
+    if 'admin_logged_in' not in session:
+        return ('', 401)
+    order = request.json or []
+    for pos, rid in enumerate(order):
+        r = StudentReview.query.get(rid)
+        if r:
+            r.sort_order = pos
+    db.session.commit()
+    return ('', 204)
+
+# ── END STUDENT REVIEWS ──────────────────────────────────────────────────────
 
 @app.route('/admin/testimonial/<int:idx>/toggle', methods=['POST'])
 def admin_toggle_testimonial(idx):

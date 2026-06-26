@@ -46,8 +46,11 @@
             <a href="{{ url_for('admin_social_links') }}" class="admin-nav-item {{ 'active' if request.endpoint in ['admin_social_links', 'admin_add_social_link', 'admin_edit_social_link'] else '' }}">
                 <i class="fas fa-share-alt me-2"></i>Social Media Controls
             </a>
+            <a href="{{ url_for('admin_student_reviews') }}" class="admin-nav-item {{ 'active' if request.endpoint in ['admin_student_reviews', 'admin_add_student_review', 'admin_edit_student_review'] else '' }}">
+                <i class="fas fa-star me-2"></i>Student Reviews
+            </a>
             <a href="{{ url_for('admin_testimonials') }}" class="admin-nav-item {{ 'active' if request.endpoint in ['admin_testimonials', 'admin_add_testimonial', 'admin_edit_testimonial'] else '' }}">
-                <i class="fas fa-quote-right me-2"></i>Testimonials
+                <i class="fas fa-quote-right me-2"></i>Testimonials (Legacy)
             </a>
             <a href="{{ url_for('admin_announcement') }}" class="admin-nav-item {{ 'active' if request.endpoint == 'admin_announcement' else '' }}">
                 <i class="fas fa-bullhorn me-2"></i>Announcement Banner

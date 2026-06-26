@@ -1,0 +1,331 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}{{ title }} - Admin{% endblock %}
+
+{% block extra_head %}
+<style>
+.form-section {
+    background: #fff;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 24px 28px;
+    margin-bottom: 18px;
+}
+.form-section-title {
+    font-size: .78rem; font-weight: 700; letter-spacing: .08em;
+    text-transform: uppercase; color: #9ca3af;
+    margin-bottom: 18px; padding-bottom: 10px;
+    border-bottom: 1px solid #f3f4f6;
+    display: flex; align-items: center; gap: 8px;
+}
+.form-section-title i { color: #cc0000; }
+
+/* Star rating picker */
+.star-picker { display: flex; gap: 6px; flex-direction: row-reverse; justify-content: flex-end; }
+.star-picker input { display: none; }
+.star-picker label { font-size: 1.6rem; color: #d1d5db; cursor: pointer; transition: color .15s; }
+.star-picker input:checked ~ label,
+.star-picker label:hover,
+.star-picker label:hover ~ label { color: #f59e0b; }
+
+/* Review type toggle */
+.type-toggle { display: flex; gap: 0; border: 1.5px solid #e5e7eb; border-radius: 10px; overflow: hidden; }
+.type-toggle input[type=radio] { display: none; }
+.type-toggle label {
+    flex: 1; padding: 10px 0; text-align: center; cursor: pointer;
+    font-weight: 600; font-size: .9rem; color: #6b7280;
+    background: #f9fafb; transition: all .2s;
+}
+.type-toggle input:checked + label { background: #cc0000; color: #fff; }
+
+/* Drop zones */
+.dropzone {
+    border: 2px dashed #d1d5db; border-radius: 12px; background: #f9fafb;
+    min-height: 130px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: border-color .2s, background .2s; position: relative; overflow: hidden;
+}
+.dropzone.dz-hover { border-color: #cc0000; background: #fff5f5; }
+.dropzone-inner { text-align: center; padding: 20px; width: 100%; }
+.dropzone-icon { font-size: 1.8rem; color: #9ca3af; margin-bottom: 8px; }
+.dropzone-preview-wrap {
+    position: absolute; inset: 0; background: #000;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+}
+.dropzone-preview-img { max-height: 110px; max-width: 100%; object-fit: contain; border-radius: 6px; }
+.dropzone-preview-video { max-height: 110px; max-width: 90%; border-radius: 6px; }
+</style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid p-4">
+    <div class="row justify-content-center">
+        <div class="col-xl-7 col-lg-9">
+            <div class="admin-card">
+                <div class="admin-header">
+                    <h2>{{ title }}</h2>
+                    <a href="{{ url_for('admin_student_reviews') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Back
+                    </a>
+                </div>
+
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                  {% for cat, msg in messages %}
+                    <div class="alert alert-{{ 'danger' if cat == 'error' else cat }} alert-dismissible fade show mx-3 mt-2">
+                      {{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                  {% endfor %}
+                {% endwith %}
+
+                <form method="POST" enctype="multipart/form-data" class="p-3">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <!-- ── Review Type ── -->
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fas fa-toggle-on"></i> Review Type</div>
+                        <div class="type-toggle">
+                            <input type="radio" name="review_type" id="rt_text" value="text"
+                                   {{ 'checked' if not review or review.review_type == 'text' }}>
+                            <label for="rt_text"><i class="fas fa-quote-left me-2"></i>Text Review</label>
+                            <input type="radio" name="review_type" id="rt_video" value="video"
+                                   {{ 'checked' if review and review.review_type == 'video' }}>
+                            <label for="rt_video"><i class="fas fa-video me-2"></i>Video Review</label>
+                        </div>
+                        <small class="form-text text-muted mt-2 d-block">Only one type is active per review.</small>
+                    </div>
+
+                    <!-- ── Reviewer Info ── -->
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fas fa-user"></i> Reviewer Info</div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Name <span class="text-danger">*</span></label>
+                                <input type="text" name="name" class="form-control"
+                                       value="{{ review.name if review else '' }}" required placeholder="e.g. Priya Sharma">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Location / City</label>
+                                <input type="text" name="location" class="form-control"
+                                       value="{{ review.location or '' if review else '' }}" placeholder="e.g. Mumbai">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Rating</label>
+                            <div class="star-picker">
+                                {% for star in [5,4,3,2,1] %}
+                                <input type="radio" name="rating" id="star{{ star }}" value="{{ star }}"
+                                       {{ 'checked' if (review.rating if review else 5) == star }}>
+                                <label for="star{{ star }}" title="{{ star }} stars">★</label>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <!-- Profile Image -->
+                        <div class="mb-1">
+                            <label class="form-label fw-semibold"><i class="fas fa-image me-1 text-primary"></i>Profile Photo <span class="text-muted fw-normal">(optional)</span></label>
+                            <div class="dropzone" id="zone_profile"
+                                 ondragover="dzOver(event,'profile')" ondragleave="dzLeave(event,'profile')" ondrop="dzDropImg(event,'profile')">
+                                <div class="dropzone-inner" id="inner_profile">
+                                    <div class="dropzone-icon"><i class="fas fa-user-circle"></i></div>
+                                    <p class="mb-1 fw-semibold text-muted small">Drag & drop photo</p>
+                                    <label for="profile_image" class="btn btn-sm btn-outline-primary">Browse</label>
+                                    <p class="text-muted mt-1 mb-0" style="font-size:.75rem;">JPG, PNG · shows as circular avatar</p>
+                                </div>
+                                <div class="dropzone-preview-wrap" id="prevwrap_profile" style="display:none;">
+                                    <img id="preview_profile" class="dropzone-preview-img" alt="Preview">
+                                    <button type="button" class="btn btn-sm btn-danger" onclick="dzClearImg('profile')">Remove</button>
+                                </div>
+                            </div>
+                            <input type="file" name="profile_image" id="profile_image" class="d-none"
+                                   accept="image/*" onchange="dzOnChangeImg(this,'profile')">
+                            {% if review and review.profile_image %}
+                            <div class="mt-2" id="current_profile">
+                                <small class="text-muted">Current:</small>
+                                <img src="{{ url_for('static', filename=review.profile_image) }}" alt="Current"
+                                     style="width:50px;height:50px;border-radius:50%;object-fit:cover;border:2px solid #e5e7eb;margin-left:8px;"
+                                     onerror="this.style.display='none'">
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- ── Text Review Content ── -->
+                    <div class="form-section" id="textSection" style="{{ 'display:none;' if review and review.review_type == 'video' else '' }}">
+                        <div class="form-section-title"><i class="fas fa-quote-left"></i> Review Text</div>
+                        <label class="form-label fw-semibold">Review Content</label>
+                        <textarea name="review_text" class="form-control" rows="4"
+                                  placeholder="Share what the student said about the course...">{{ review.review_text or '' if review else '' }}</textarea>
+                    </div>
+
+                    <!-- ── Video Review Content ── -->
+                    <div class="form-section" id="videoSection" style="{{ '' if review and review.review_type == 'video' else 'display:none;' }}">
+                        <div class="form-section-title"><i class="fas fa-video"></i> Video Review</div>
+
+                        <div class="alert alert-info py-2 mb-3" style="font-size:.82rem;">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Max <strong>15 seconds</strong>. Accepted formats: <strong>MP4, MOV, WebM</strong>.
+                            A thumbnail is auto-generated.
+                        </div>
+
+                        <div class="dropzone" id="zone_video"
+                             ondragover="dzOver(event,'video')" ondragleave="dzLeave(event,'video')" ondrop="dzDropVid(event,'video')">
+                            <div class="dropzone-inner" id="inner_video">
+                                <div class="dropzone-icon"><i class="fas fa-film"></i></div>
+                                <p class="mb-1 fw-semibold text-muted small">Drag & drop video</p>
+                                <label for="video_file" class="btn btn-sm btn-outline-danger">Browse</label>
+                                <p class="text-muted mt-1 mb-0" style="font-size:.75rem;">MP4 / MOV / WebM · max 15 seconds</p>
+                            </div>
+                            <div class="dropzone-preview-wrap" id="prevwrap_video" style="display:none;">
+                                <video id="preview_video" class="dropzone-preview-video" controls muted></video>
+                                <button type="button" class="btn btn-sm btn-danger" onclick="dzClearVid()">Remove</button>
+                            </div>
+                        </div>
+                        <input type="file" name="video_file" id="video_file" class="d-none"
+                               accept="video/mp4,video/quicktime,video/webm" onchange="dzOnChangeVid(this)">
+
+                        {% if review and review.video_path %}
+                        <div class="mt-3 d-flex align-items-center gap-3" id="current_video">
+                            {% if review.video_thumbnail %}
+                            <img src="{{ url_for('static', filename=review.video_thumbnail) }}" alt="Thumb"
+                                 style="width:80px;height:50px;object-fit:cover;border-radius:8px;border:1px solid #e5e7eb;">
+                            {% endif %}
+                            <div>
+                                <small class="text-muted d-block">Current video: <strong>{{ review.video_path.split('/')[-1] }}</strong></small>
+                                <small class="text-muted">Upload a new file to replace it.</small>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- ── Settings ── -->
+                    <div class="form-section">
+                        <div class="form-section-title"><i class="fas fa-sliders-h"></i> Settings</div>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Visibility</label>
+                                <select name="is_enabled" class="form-select">
+                                    <option value="1" {{ 'selected' if not review or review.is_enabled }}>Visible (Live)</option>
+                                    <option value="0" {{ 'selected' if review and not review.is_enabled }}>Hidden</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Sort Order</label>
+                                <input type="number" name="sort_order" class="form-control" min="0"
+                                       value="{{ review.sort_order if review else (next_order|default(0)) }}">
+                                <small class="form-text text-muted">Lower = appears first. Or drag to reorder.</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-3">
+                        <button type="submit" class="btn btn-primary px-5 fw-semibold">
+                            <i class="fas fa-save me-2"></i>Save Review
+                        </button>
+                        <a href="{{ url_for('admin_student_reviews') }}" class="btn btn-outline-secondary px-4">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ── Review type toggle ──────────────────────────────
+document.querySelectorAll('input[name="review_type"]').forEach(function(radio) {
+    radio.addEventListener('change', function() {
+        document.getElementById('textSection').style.display = this.value === 'text' ? '' : 'none';
+        document.getElementById('videoSection').style.display = this.value === 'video' ? '' : 'none';
+    });
+});
+
+// ── Shared drag helpers ─────────────────────────────
+function dzOver(e, id) {
+    e.preventDefault();
+    document.getElementById('zone_' + id).classList.add('dz-hover');
+}
+function dzLeave(e, id) {
+    document.getElementById('zone_' + id).classList.remove('dz-hover');
+}
+
+// ── Image drop zone ─────────────────────────────────
+function dzDropImg(e, id) {
+    e.preventDefault();
+    document.getElementById('zone_' + id).classList.remove('dz-hover');
+    const file = e.dataTransfer.files[0];
+    if (!file || !file.type.startsWith('image/')) return;
+    const dt = new DataTransfer(); dt.items.add(file);
+    document.getElementById('profile_image').files = dt.files;
+    showImgPreview(file, id);
+}
+function dzOnChangeImg(input, id) {
+    if (input.files && input.files[0]) showImgPreview(input.files[0], id);
+}
+function showImgPreview(file, id) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        document.getElementById('preview_' + id).src = e.target.result;
+        document.getElementById('inner_' + id).style.display = 'none';
+        document.getElementById('prevwrap_' + id).style.display = 'flex';
+        const cur = document.getElementById('current_' + id);
+        if (cur) cur.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+}
+function dzClearImg(id) {
+    document.getElementById('profile_image').value = '';
+    document.getElementById('inner_' + id).style.display = '';
+    document.getElementById('prevwrap_' + id).style.display = 'none';
+    const cur = document.getElementById('current_' + id);
+    if (cur) cur.style.display = '';
+}
+
+// ── Video drop zone ─────────────────────────────────
+function dzDropVid(e, id) {
+    e.preventDefault();
+    document.getElementById('zone_video').classList.remove('dz-hover');
+    const file = e.dataTransfer.files[0];
+    if (!file) return;
+    const dt = new DataTransfer(); dt.items.add(file);
+    document.getElementById('video_file').files = dt.files;
+    showVidPreview(file);
+}
+function dzOnChangeVid(input) {
+    if (input.files && input.files[0]) showVidPreview(input.files[0]);
+}
+function showVidPreview(file) {
+    const url = URL.createObjectURL(file);
+    const vid = document.getElementById('preview_video');
+    vid.src = url;
+    document.getElementById('inner_video').style.display = 'none';
+    document.getElementById('prevwrap_video').style.display = 'flex';
+    const cur = document.getElementById('current_video');
+    if (cur) cur.style.display = 'none';
+}
+function dzClearVid() {
+    document.getElementById('video_file').value = '';
+    const vid = document.getElementById('preview_video');
+    vid.src = ''; vid.load();
+    document.getElementById('inner_video').style.display = '';
+    document.getElementById('prevwrap_video').style.display = 'none';
+    const cur = document.getElementById('current_video');
+    if (cur) cur.style.display = '';
+}
+
+// Click-anywhere on zone
+['zone_profile', 'zone_video'].forEach(function(zid) {
+    const zone = document.getElementById(zid);
+    if (!zone) return;
+    zone.addEventListener('click', function(e) {
+        if (e.target.tagName === 'BUTTON' || e.target.tagName === 'LABEL' ||
+            e.target.closest('button') || e.target.closest('label')) return;
+        const inner = zone.querySelector('.dropzone-inner');
+        if (inner && inner.style.display === 'none') return;
+        const target = zid === 'zone_profile' ? 'profile_image' : 'video_file';
+        document.getElementById(target).click();
+    });
+});
+</script>
+{% endblock %}
