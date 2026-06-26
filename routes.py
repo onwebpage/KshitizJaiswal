@@ -1446,7 +1446,7 @@ def admin_delete_reel(reel_id):
     db.session.delete(reel)
     db.session.commit()
     flash('Reel deleted successfully!', 'success')
-    return redirect(url_for('admin_dashboard'))
+    return redirect(url_for('admin_dashboard') + '#reels')
 
 
 @app.route('/admin/reel/<int:reel_id>/toggle-visible', methods=['POST'])
