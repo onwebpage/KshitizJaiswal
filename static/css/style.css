@@ -4608,7 +4608,7 @@ h1, h2, h3, h4, h5, h6 {
     border-radius: 18px !important;
     padding: 1.5rem !important;
 }
-.custom-support-card .tier-title { color: #fff; font-size: 1.2rem; }
+.custom-support-card .tier-title { color: #fff; font-size: .9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .custom-support-card .tier-description { color: rgba(255,255,255,.8); margin-bottom: .75rem; }
 
 .custom-amount-input-group { gap: .5rem; }
@@ -5539,4 +5539,12 @@ a.reel-card:visited {
   font-style: italic;
   margin-bottom: 2rem;
   opacity: 1;
+}
+
+/* Support section — single-line heading & custom card title on desktop */
+@media (min-width: 992px) {
+  .support-section-bg .section-title {
+    white-space: nowrap;
+    font-size: 2rem;
+  }
 }
