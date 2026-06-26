@@ -16,65 +16,27 @@
                 <!-- Contact Options -->
                 <div class="contact-grid">
                     <div class="row g-4">
+                        {% for card in cards %}
                         <div class="col-lg-6">
                             <div class="contact-card">
                                 <div class="contact-icon">
-                                    <i class="fas fa-question-circle"></i>
+                                    <i class="{{ card.icon }}"></i>
                                 </div>
                                 <div class="contact-content">
-                                    <h4>General Questions</h4>
-                                    <p class="text-muted mb-3">Man me kuch hai? toh pouch loh…</p>
-                                    <a href="mailto:{{ emails.general }}" class="contact-email">
-                                        <i class="fas fa-envelope me-2"></i>{{ emails.general }}
+                                    <h4>{{ card.title }}</h4>
+                                    <p class="text-muted mb-3">{{ card.description }}</p>
+                                    <a href="mailto:{{ card.email }}" class="contact-email">
+                                        <i class="fas fa-envelope me-2"></i>{{ card.email }}
                                     </a>
                                 </div>
                             </div>
                         </div>
-                        
-                        <div class="col-lg-6">
-                            <div class="contact-card">
-                                <div class="contact-icon">
-                                    <i class="fas fa-search"></i>
-                                </div>
-                                <div class="contact-content">
-                                    <h4>Sources & Research</h4>
-                                    <p class="text-muted mb-3">Tumeh doubt hai meri reel ke sources peh?</p>
-                                    <a href="mailto:{{ emails.sources }}" class="contact-email">
-                                        <i class="fas fa-envelope me-2"></i>{{ emails.sources }}
-                                    </a>
-                                </div>
-                            </div>
+                        {% else %}
+                        <div class="col-12 text-center py-4 text-muted">
+                            <i class="fas fa-envelope fa-3x mb-3 d-block"></i>
+                            <p>Contact information coming soon!</p>
                         </div>
-                        
-                        <div class="col-lg-6">
-                            <div class="contact-card">
-                                <div class="contact-icon">
-                                    <i class="fas fa-handshake"></i>
-                                </div>
-                                <div class="contact-content">
-                                    <h4>Collaboration</h4>
-                                    <p class="text-muted mb-3">Kernah collaborate Ya Chatteh ho aau mei?</p>
-                                    <a href="mailto:{{ emails.collaborate }}" class="contact-email">
-                                        <i class="fas fa-envelope me-2"></i>{{ emails.collaborate }}
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="col-lg-6">
-                            <div class="contact-card">
-                                <div class="contact-icon">
-                                    <i class="fas fa-comment-alt"></i>
-                                </div>
-                                <div class="contact-content">
-                                    <h4>Feedback & Tips</h4>
-                                    <p class="text-muted mb-3">Chahteh ho keru suddhar? ya dena hai raaz?</p>
-                                    <a href="mailto:{{ emails.feedback }}" class="contact-email">
-                                        <i class="fas fa-envelope me-2"></i>{{ emails.feedback }}
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
+                        {% endfor %}
                     </div>
                 </div>
                 

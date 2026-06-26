@@ -34,6 +34,9 @@
             <a href="{{ url_for('admin_shows') }}" class="admin-nav-item {{ 'active' if request.endpoint in ['admin_shows', 'admin_add_show', 'admin_edit_show'] else '' }}">
                 <i class="fas fa-calendar-alt me-2"></i>Upcoming Shows
             </a>
+            <a href="{{ url_for('admin_contact_cards') }}" class="admin-nav-item {{ 'active' if request.endpoint in ['admin_contact_cards', 'admin_add_contact_card', 'admin_edit_contact_card'] else '' }}">
+                <i class="fas fa-address-card me-2"></i>Contact Cards
+            </a>
             <a href="{{ url_for('admin_site_settings') }}" class="admin-nav-item {{ 'active' if request.endpoint == 'admin_site_settings' else '' }}">
                 <i class="fas fa-cogs me-2"></i>Site Settings
             </a>

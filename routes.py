@@ -422,22 +422,157 @@ def reel_detail(reel_id):
     
     return render_template('reel_detail.html', reel=reel_data, related_reels=related_reels)
 
+_DEFAULT_CONTACT_CARDS = [
+    {"id": 1, "icon": "fas fa-question-circle", "title": "General Questions",
+     "description": "Man me kuch hai? toh pouch loh…",
+     "email": "ask@kshitizjaiswal.in", "sort_order": 0, "is_enabled": True},
+    {"id": 2, "icon": "fas fa-search", "title": "Sources & Research",
+     "description": "Tumeh doubt hai meri reel ke sources peh?",
+     "email": "sources@kshitizjaiswal.in", "sort_order": 1, "is_enabled": True},
+    {"id": 3, "icon": "fas fa-handshake", "title": "Collaboration",
+     "description": "Kernah collaborate Ya Chatteh ho aau mei?",
+     "email": "invite@kshitizjaiswal.in", "sort_order": 2, "is_enabled": True},
+    {"id": 4, "icon": "fas fa-comment-alt", "title": "Feedback & Tips",
+     "description": "Chahteh ho keru suddhar? ya dena hai raaz?",
+     "email": "feedback@kshitizjaiswal.in", "sort_order": 3, "is_enabled": True},
+]
+
+def _get_contact_cards(enabled_only=False):
+    """Load contact cards from DB, seeding defaults on first run."""
+    rec = SiteContent.query.filter_by(content_key='contact_cards').first()
+    if not rec:
+        cards = _DEFAULT_CONTACT_CARDS[:]
+        rec = SiteContent(content_key='contact_cards', content_data=json.dumps(cards))
+        db.session.add(rec)
+        db.session.commit()
+    else:
+        cards = json.loads(rec.content_data)
+    if enabled_only:
+        cards = [c for c in cards if c.get('is_enabled', True)]
+    cards.sort(key=lambda c: c.get('sort_order', 0))
+    return cards
+
 @app.route('/contact')
 def contact():
     """Contact page"""
-    contact_emails = {
-        'general': 'ask@kshitizjaiswal.in',
-        'sources': 'sources@kshitizjaiswal.in',
-        'collaborate': 'invite@kshitizjaiswal.in',
-        'feedback': 'feedback@kshitizjaiswal.in'
-    }
+    cards = _get_contact_cards(enabled_only=True)
     platform_colors = {
         name.lower(): color
         for name, _icon, color, _order in SocialLink.DEFAULT_PLATFORMS
     }
     social_links = SocialLink.get_active_links()
-    return render_template('contact.html', emails=contact_emails,
+    return render_template('contact.html', cards=cards,
                            social_links=social_links, platform_colors=platform_colors)
+
+# ── Admin: Contact Cards ──────────────────────────────────────────────────────
+
+@app.route('/admin/contact-cards')
+def admin_contact_cards():
+    """Admin: manage contact cards"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    cards = _get_contact_cards()
+    return render_template('admin/contact_cards.html', cards=cards)
+
+@app.route('/admin/contact-cards/add', methods=['GET', 'POST'])
+def admin_add_contact_card():
+    """Admin: add a new contact card"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    if request.method == 'POST':
+        rec = SiteContent.query.filter_by(content_key='contact_cards').first()
+        cards = json.loads(rec.content_data) if rec else []
+        max_id = max((c.get('id', 0) for c in cards), default=0)
+        new_card = {
+            'id': max_id + 1,
+            'icon': request.form.get('icon', 'fas fa-envelope').strip(),
+            'title': request.form.get('title', '').strip(),
+            'description': request.form.get('description', '').strip(),
+            'email': request.form.get('email', '').strip(),
+            'sort_order': len(cards),
+            'is_enabled': request.form.get('is_enabled') == '1',
+        }
+        cards.append(new_card)
+        if rec:
+            rec.content_data = json.dumps(cards)
+        else:
+            rec = SiteContent(content_key='contact_cards', content_data=json.dumps(cards))
+            db.session.add(rec)
+        db.session.commit()
+        flash('Contact card added successfully!', 'success')
+        return redirect(url_for('admin_contact_cards'))
+    return render_template('admin/contact_card_form.html', card=None, title='Add Contact Card')
+
+@app.route('/admin/contact-cards/edit/<int:card_id>', methods=['GET', 'POST'])
+def admin_edit_contact_card(card_id):
+    """Admin: edit an existing contact card"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    rec = SiteContent.query.filter_by(content_key='contact_cards').first()
+    cards = json.loads(rec.content_data) if rec else []
+    card = next((c for c in cards if c.get('id') == card_id), None)
+    if card is None:
+        flash('Contact card not found.', 'error')
+        return redirect(url_for('admin_contact_cards'))
+    if request.method == 'POST':
+        card['icon'] = request.form.get('icon', card['icon']).strip()
+        card['title'] = request.form.get('title', card['title']).strip()
+        card['description'] = request.form.get('description', card['description']).strip()
+        card['email'] = request.form.get('email', card['email']).strip()
+        card['is_enabled'] = request.form.get('is_enabled') == '1'
+        rec.content_data = json.dumps(cards)
+        db.session.commit()
+        flash('Contact card updated successfully!', 'success')
+        return redirect(url_for('admin_contact_cards'))
+    return render_template('admin/contact_card_form.html', card=card, title='Edit Contact Card')
+
+@app.route('/admin/contact-cards/delete/<int:card_id>')
+def admin_delete_contact_card(card_id):
+    """Admin: delete a contact card"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    rec = SiteContent.query.filter_by(content_key='contact_cards').first()
+    if rec:
+        cards = json.loads(rec.content_data)
+        cards = [c for c in cards if c.get('id') != card_id]
+        rec.content_data = json.dumps(cards)
+        db.session.commit()
+        flash('Contact card deleted.', 'success')
+    return redirect(url_for('admin_contact_cards'))
+
+@app.route('/admin/contact-cards/toggle/<int:card_id>')
+def admin_toggle_contact_card(card_id):
+    """Admin: toggle enabled/disabled for a contact card"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    rec = SiteContent.query.filter_by(content_key='contact_cards').first()
+    if rec:
+        cards = json.loads(rec.content_data)
+        for c in cards:
+            if c.get('id') == card_id:
+                c['is_enabled'] = not c.get('is_enabled', True)
+                break
+        rec.content_data = json.dumps(cards)
+        db.session.commit()
+    return redirect(url_for('admin_contact_cards'))
+
+@app.route('/admin/contact-cards/reorder', methods=['POST'])
+def admin_reorder_contact_cards():
+    """Admin: save drag-and-drop order (AJAX JSON: {order: [id, id, ...]})"""
+    if 'admin_logged_in' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    data = request.get_json(silent=True) or {}
+    order = data.get('order', [])
+    rec = SiteContent.query.filter_by(content_key='contact_cards').first()
+    if rec and order:
+        cards = json.loads(rec.content_data)
+        id_to_pos = {int(card_id): idx for idx, card_id in enumerate(order)}
+        for c in cards:
+            c['sort_order'] = id_to_pos.get(c.get('id'), 999)
+        cards.sort(key=lambda c: c['sort_order'])
+        rec.content_data = json.dumps(cards)
+        db.session.commit()
+    return jsonify({'success': True})
 
 @app.route('/resources')
 def resources():
