@@ -1,630 +1,30 @@
-{% extends "base.html" %}
+{% extends "admin/admin_base.html" %}
 {% block title %}Content Manager — Admin Panel{% endblock %}
 
-{% block content %}
-<div class="admin-section">
-    <!-- Sidebar -->
-    <div class="admin-sidebar">
-        <div class="admin-header">
-            <h4><i class="fas fa-cog me-2"></i>Admin Panel</h4>
-            <a href="{{ url_for('admin_logout') }}" class="btn btn-sm btn-outline-danger">
-                <i class="fas fa-sign-out-alt me-1"></i>Logout
-            </a>
-        </div>
-        <div class="admin-nav">
-            <a href="{{ url_for('admin_dashboard') }}" class="admin-nav-item">
-                <i class="fas fa-home me-2"></i>Dashboard
-            </a>
-            <hr class="my-2">
-            <div class="admin-nav-section-title"><small class="text-muted">CONTENT MANAGEMENT</small></div>
-            <a href="{{ url_for('admin_content_manager') }}" class="admin-nav-item active">
-                <i class="fas fa-layer-group me-2"></i>Content Manager
-            </a>
-            <a href="{{ url_for('admin_page_content') }}" class="admin-nav-item">
-                <i class="fas fa-file-alt me-2"></i>Page Content
-            </a>
-            <a href="{{ url_for('admin_hero_content') }}" class="admin-nav-item">
-                <i class="fas fa-image me-2"></i>Hero Section
-            </a>
-            <a href="{{ url_for('admin_resources') }}" class="admin-nav-item">
-                <i class="fas fa-graduation-cap me-2"></i>Learning Resources
-            </a>
-            <a href="{{ url_for('admin_shows') }}" class="admin-nav-item">
-                <i class="fas fa-calendar-alt me-2"></i>Upcoming Shows
-            </a>
-            <a href="{{ url_for('admin_site_settings') }}" class="admin-nav-item">
-                <i class="fas fa-cogs me-2"></i>Site Settings
-            </a>
-            <a href="{{ url_for('admin_section_visibility') }}" class="admin-nav-item">
-                <i class="fas fa-toggle-on me-2"></i>Section Visibility
-            </a>
-            <a href="{{ url_for('admin_statistics_section') }}" class="admin-nav-item">
-                <i class="fas fa-chart-bar me-2"></i>Statistics Section
-            </a>
-            <a href="{{ url_for('admin_social_links') }}" class="admin-nav-item">
-                <i class="fas fa-share-alt me-2"></i>Social Links
-            </a>
-            <hr class="my-2">
-            <div class="admin-nav-section-title"><small class="text-muted">MEDIA & POSTS</small></div>
-            <a href="{{ url_for('admin_dashboard') }}#reels" class="admin-nav-item">
-                <i class="fas fa-video me-2"></i>Manage Reels
-            </a>
-            <a href="{{ url_for('admin_dashboard') }}#opinions" class="admin-nav-item">
-                <i class="fas fa-poll me-2"></i>Manage Opinions
-            </a>
-            <a href="{{ url_for('admin_media_library') }}" class="admin-nav-item">
-                <i class="fas fa-images me-2"></i>Media Library
-            </a>
-            <hr class="my-2">
-            <div class="admin-nav-section-title"><small class="text-muted">REVENUE & COURSES</small></div>
-            <a href="{{ url_for('admin_subscription_tiers') }}" class="admin-nav-item">
-                <i class="fas fa-crown me-2"></i>Subscription Tiers
-            </a>
-            <a href="{{ url_for('admin_payment_settings') }}" class="admin-nav-item">
-                <i class="fas fa-credit-card me-2"></i>Payment Settings
-            </a>
-            <a href="{{ url_for('admin_whatsapp_settings') }}" class="admin-nav-item">
-                <i class="fab fa-whatsapp me-2"></i>WhatsApp Settings
-            </a>
-            <a href="{{ url_for('admin_courses') }}" class="admin-nav-item">
-                <i class="fas fa-book me-2"></i>Courses
-            </a>
-            <hr class="my-2">
-            <div class="admin-nav-section-title"><small class="text-muted">USERS & ANALYTICS</small></div>
-            <a href="{{ url_for('admin_dashboard') }}#subscribers" class="admin-nav-item">
-                <i class="fas fa-users me-2"></i>Subscribers
-            </a>
-            <a href="{{ url_for('admin_users') }}" class="admin-nav-item">
-                <i class="fas fa-user-shield me-2"></i>User Management
-            </a>
-            <a href="{{ url_for('admin_analytics') }}" class="admin-nav-item">
-                <i class="fas fa-chart-line me-2"></i>Analytics
-            </a>
-        </div>
-    </div>
-
-    <!-- Main Content -->
-    <div class="admin-content">
-        <div class="admin-header">
-            <div>
-                <h2><i class="fas fa-layer-group me-2 text-primary"></i>Content Manager</h2>
-                <p class="text-muted mb-0 small">Edit every section of the homepage from one place. Changes save instantly.</p>
-            </div>
-            <a href="/" target="_blank" class="btn btn-outline-secondary btn-sm">
-                <i class="fas fa-external-link-alt me-1"></i>View Website
-            </a>
-        </div>
-
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show mb-4">
-                    <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-triangle' }} me-2"></i>{{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-
-        <!-- Section Tab Navigation -->
-        <div class="cm-tabs-wrapper mb-4">
-            <ul class="nav nav-pills cm-nav-pills flex-nowrap overflow-auto" id="cmTabs" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link cm-tab-btn" id="tab-reels" data-bs-toggle="pill" data-bs-target="#pane-reels" type="button" data-hash="reels">
-                        <i class="fas fa-film me-1"></i>Reels
-                        <span class="vis-dot {{ 'dot-on' if visibility.reels else 'dot-off' }}"></span>
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link cm-tab-btn" id="tab-support" data-bs-toggle="pill" data-bs-target="#pane-support" type="button" data-hash="support">
-                        <i class="fas fa-heart me-1"></i>Support
-                        <span class="vis-dot {{ 'dot-on' if visibility.support else 'dot-off' }}"></span>
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link cm-tab-btn" id="tab-statistics" data-bs-toggle="pill" data-bs-target="#pane-statistics" type="button" data-hash="statistics">
-                        <i class="fas fa-chart-bar me-1"></i>Statistics
-                        <span class="vis-dot {{ 'dot-on' if visibility.statistics else 'dot-off' }}"></span>
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link cm-tab-btn" id="tab-testimonials" data-bs-toggle="pill" data-bs-target="#pane-testimonials" type="button" data-hash="testimonials">
-                        <i class="fas fa-quote-left me-1"></i>Testimonials
-                        <span class="vis-dot {{ 'dot-on' if visibility.testimonials else 'dot-off' }}"></span>
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link cm-tab-btn" id="tab-courses" data-bs-toggle="pill" data-bs-target="#pane-courses" type="button" data-hash="courses">
-                        <i class="fas fa-graduation-cap me-1"></i>Courses
-                        <span class="vis-dot {{ 'dot-on' if visibility.courses else 'dot-off' }}"></span>
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link cm-tab-btn" id="tab-newsletter" data-bs-toggle="pill" data-bs-target="#pane-newsletter" type="button" data-hash="newsletter">
-                        <i class="fas fa-envelope me-1"></i>Newsletter
-                        <span class="vis-dot {{ 'dot-on' if visibility.newsletter else 'dot-off' }}"></span>
-                    </button>
-                </li>
-            </ul>
-            <p class="text-muted small mt-2 mb-0"><span class="vis-dot dot-on" style="display:inline-block;vertical-align:middle;"></span> = visible on site &nbsp;&nbsp; <span class="vis-dot dot-off" style="display:inline-block;vertical-align:middle;"></span> = hidden</p>
-        </div>
-
-        <!-- Tab Content -->
-        <div class="tab-content" id="cmTabContent">
-
-            <!-- ═══════════════════════════ REELS TAB ═══════════════════════════ -->
-            <div class="tab-pane fade" id="pane-reels" role="tabpanel">
-                <form method="POST" action="{{ url_for('admin_content_manager') }}#reels">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <input type="hidden" name="action" value="reels">
-
-                    {% include 'admin/_cm_vis_header.html' ignore missing %}
-                    <div class="cm-vis-header {{ 'vis-on' if visibility.reels else 'vis-off' }}">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="cm-section-icon" style="background:linear-gradient(135deg,#cc0000,#8b0000)"><i class="fas fa-film"></i></div>
-                            <div>
-                                <h5 class="mb-0 fw-bold">Beyond the Reels Section</h5>
-                                <small class="text-muted">Section heading, subtitle, and button text on the homepage reel carousel.</small>
-                            </div>
-                        </div>
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="form-check form-switch mb-0">
-                                <input class="form-check-input" type="checkbox" name="section_reels_visible" id="vis_reels" role="switch" {{ 'checked' if visibility.reels }}>
-                                <label class="form-check-label fw-semibold" for="vis_reels">Show section</label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row g-4 mt-1">
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Section Heading</label>
-                            <input type="text" class="form-control" name="reels_section_title" value="{{ pc.reels_section_title or 'Beyond The Reel' }}" placeholder="Beyond The Reel">
-                            <div class="form-text">The large title above the reel carousel.</div>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">"View Library" Button Text</label>
-                            <input type="text" class="form-control" name="reels_button_text" value="{{ pc.reels_button_text or 'View Full Library' }}" placeholder="View Full Library">
-                            <div class="form-text">Text on the button that links to the full reel library.</div>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label fw-semibold">Section Subtitle</label>
-                            <textarea class="form-control" name="reels_section_subtitle" rows="2" placeholder="&quot;Reel to sirf ek hissa tha, kahani bahut badi hai.&quot;">{{ pc.reels_section_subtitle or '' }}</textarea>
-                            <div class="form-text">Appears below the heading. Leave empty to hide.</div>
-                        </div>
-                        <div class="col-12 d-flex justify-content-between align-items-center pt-2 border-top">
-                            <a href="{{ url_for('admin_dashboard') }}#reels" class="btn btn-outline-secondary btn-sm">
-                                <i class="fas fa-video me-1"></i>Manage Individual Reels
-                            </a>
-                            <button type="submit" class="btn btn-primary rounded-pill px-4">
-                                <i class="fas fa-save me-2"></i>Save Reels Section
-                            </button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-
-            <!-- ═══════════════════════════ SUPPORT TAB ═══════════════════════════ -->
-            <div class="tab-pane fade" id="pane-support" role="tabpanel">
-                <form method="POST" action="{{ url_for('admin_content_manager') }}#support">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <input type="hidden" name="action" value="support">
-
-                    <div class="cm-vis-header {{ 'vis-on' if visibility.support else 'vis-off' }}">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="cm-section-icon" style="background:linear-gradient(135deg,#cc0000,#8b0000)"><i class="fas fa-heart"></i></div>
-                            <div>
-                                <h5 class="mb-0 fw-bold">Friends of Kshitiz — Support Now</h5>
-                                <small class="text-muted">Section heading, subtitle, custom support card, and footer stats.</small>
-                            </div>
-                        </div>
-                        <div class="form-check form-switch mb-0">
-                            <input class="form-check-input" type="checkbox" name="section_support_visible" id="vis_support" role="switch" {{ 'checked' if visibility.support }}>
-                            <label class="form-check-label fw-semibold" for="vis_support">Show section</label>
-                        </div>
-                    </div>
-
-                    <div class="row g-4 mt-1">
-                        <div class="col-12"><h6 class="cm-group-label">Section Header</h6></div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Section Heading</label>
-                            <input type="text" class="form-control" name="support_section_title" value="{{ pc.support_section_title or 'Friends of Kshitiz — Support Now' }}" placeholder="Friends of Kshitiz — Support Now">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Section Subtitle</label>
-                            <input type="text" class="form-control" name="support_section_subtitle" value="{{ pc.support_section_subtitle or 'Aapki marzi, aapka support.' }}" placeholder="Aapki marzi, aapka support.">
-                        </div>
-
-                        <div class="col-12 mt-2"><h6 class="cm-group-label">Custom Supporter Card (Aapki Marzi)</h6></div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Card Title</label>
-                            <input type="text" class="form-control" name="custom_support_button_text" value="{{ pc.custom_support_button_text or 'Custom Supporter' }}" placeholder="Custom Supporter — Aapki marzi…">
-                            <div class="form-text">The heading on the custom amount card.</div>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Card Subtitle</label>
-                            <input type="text" class="form-control" name="custom_support_subtitle" value="{{ pc.custom_support_subtitle or 'Choose your own amount' }}" placeholder="Choose your own amount">
-                            <div class="form-text">The description below the card title.</div>
-                        </div>
-
-                        <!-- ── Support Trust Bar ── -->
-                        <div class="col-12 mt-3">
-                            <div class="d-flex align-items-center justify-content-between mb-1">
-                                <h6 class="cm-group-label mb-0"><i class="fas fa-shield-alt me-2 text-danger"></i>Support Trust Bar</h6>
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="form-check form-switch mb-0">
-                                        <input class="form-check-input" type="checkbox" id="trust_bar_enabled" name="trust_bar_enabled" value="1" role="switch" {{ 'checked' if trust_bar_data.enabled }}>
-                                        <label class="form-check-label fw-semibold" for="trust_bar_enabled">Show trust bar</label>
-                                    </div>
-                                    <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="addTrustBarRow()">
-                                        <i class="fas fa-plus me-1"></i>Add Item
-                                    </button>
-                                </div>
-                            </div>
-                            <small class="text-muted d-block mb-3">The strip of trust signals displayed below the support section (e.g. "127+ Supporters", "100% Secure via Razorpay").</small>
-
-                            <div class="row g-2 mb-1 d-none d-md-flex px-1">
-                                <div class="col-1"></div>
-                                <div class="col-md-2"><small class="text-muted text-uppercase fw-semibold">Icon</small></div>
-                                <div class="col-md-2"><small class="text-muted text-uppercase fw-semibold">Value</small></div>
-                                <div class="col-md-4"><small class="text-muted text-uppercase fw-semibold">Label / Description</small></div>
-                                <div class="col-md-1 text-center"><small class="text-muted text-uppercase fw-semibold">Show</small></div>
-                                <div class="col-md-1"></div>
-                            </div>
-
-                            <div id="trustBarRows">
-                                {% for item in trust_bar_data['items'] %}
-                                {% set i = loop.index0 %}
-                                <div class="stat-row" data-tb-idx="{{ i }}">
-                                    <div class="stat-drag-handle"><i class="fas fa-grip-vertical"></i></div>
-                                    <div class="stat-row-fields row g-2 align-items-center flex-1">
-                                        <div class="col-6 col-md-2">
-                                            <div class="input-group input-group-sm">
-                                                <span class="input-group-text tb-icon-preview"><i class="{{ item.icon or 'fas fa-check' }}"></i></span>
-                                                <input type="text" class="form-control form-control-sm" name="tb_icon_{{ i }}" value="{{ item.icon or '' }}" placeholder="fas fa-…" oninput="previewTbIcon(this)">
-                                            </div>
-                                        </div>
-                                        <div class="col-6 col-md-2">
-                                            <input type="text" class="form-control form-control-sm" name="tb_value_{{ i }}" value="{{ item.value or '' }}" placeholder="e.g. 127+">
-                                        </div>
-                                        <div class="col-10 col-md-4">
-                                            <input type="text" class="form-control form-control-sm" name="tb_label_{{ i }}" value="{{ item.label or '' }}" placeholder="e.g. Supporters">
-                                        </div>
-                                        <div class="col-2 col-md-1 text-center">
-                                            <input type="hidden" name="tb_active_{{ i }}" value="0">
-                                            <input type="checkbox" class="form-check-input" name="tb_active_{{ i }}" value="1" {{ 'checked' if item.is_active }}>
-                                        </div>
-                                        <div class="col-12 col-md-1 text-end">
-                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('.stat-row').remove(); reindexTrustBar();" title="Remove">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-
-                        <div class="col-12 d-flex justify-content-between align-items-center pt-2 border-top">
-                            <a href="{{ url_for('admin_subscription_tiers') }}" class="btn btn-outline-secondary btn-sm">
-                                <i class="fas fa-crown me-1"></i>Manage Subscription Tiers
-                            </a>
-                            <button type="submit" class="btn btn-primary rounded-pill px-4">
-                                <i class="fas fa-save me-2"></i>Save Support Section
-                            </button>
-                        </div>
-                    </div>
-                </form>
-
-                {% if subscription_tiers %}
-                <div class="mt-4 p-4 rounded-3" style="background:#f8fafc;border:1px solid #e2e8f0;">
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <h6 class="fw-bold mb-0"><i class="fas fa-crown me-2 text-warning"></i>Current Subscription Tiers</h6>
-                        <a href="{{ url_for('admin_subscription_tiers') }}" class="btn btn-sm btn-outline-primary">Edit Tiers</a>
-                    </div>
-                    <div class="row g-3">
-                        {% for tier in subscription_tiers %}
-                        <div class="col-md-4">
-                            <div class="p-3 bg-white rounded-2 border {{ 'border-primary' if tier.is_popular else '' }}">
-                                {% if tier.is_popular %}<span class="badge bg-primary mb-1">Most Popular</span>{% endif %}
-                                <div class="d-flex align-items-center gap-2 mb-1">
-                                    <i class="{{ tier.icon }} text-danger"></i>
-                                    <strong>{{ tier.name }}</strong>
-                                </div>
-                                <div class="text-primary fw-bold">₹{{ tier.price }}/{{ tier.period }}</div>
-                                <small class="text-muted">{{ tier.description[:60] }}{% if tier.description|length > 60 %}…{% endif %}</small>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                {% endif %}
-            </div>
-
-            <!-- ═══════════════════════════ STATISTICS TAB ═══════════════════════════ -->
-            <div class="tab-pane fade" id="pane-statistics" role="tabpanel">
-                <form method="POST" action="{{ url_for('admin_content_manager') }}#statistics" id="statsForm">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <input type="hidden" name="action" value="statistics">
-
-                    <div class="cm-vis-header {{ 'vis-on' if visibility.statistics else 'vis-off' }}">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="cm-section-icon" style="background:linear-gradient(135deg,#0ea5e9,#0284c7)"><i class="fas fa-chart-bar"></i></div>
-                            <div>
-                                <h5 class="mb-0 fw-bold">By the Numbers — Statistics</h5>
-                                <small class="text-muted">Add, remove, reorder stats blocks. Drag to reorder. Each block shows one number on the homepage.</small>
-                            </div>
-                        </div>
-                        <div class="form-check form-switch mb-0">
-                            <input class="form-check-input" type="checkbox" name="section_statistics_visible" id="vis_statistics" role="switch" {{ 'checked' if visibility.statistics }}>
-                            <label class="form-check-label fw-semibold" for="vis_statistics">Show section</label>
-                        </div>
-                    </div>
-
-                    <div class="row g-3 mt-1">
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Section Heading</label>
-                            <input type="text" class="form-control" name="stats_title" value="{{ stats_data.title or 'By the Numbers' }}" placeholder="By the Numbers">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Section Subtitle</label>
-                            <input type="text" class="form-control" name="stats_subtitle" value="{{ stats_data.subtitle or '' }}" placeholder="The reach keeps growing — thanks to you.">
-                        </div>
-                    </div>
-
-                    <!-- Live DB info strip -->
-                    <div class="d-flex gap-3 my-3 p-3 rounded-2" style="background:#f0f9ff;border:1px solid #bae6fd;">
-                        <div><i class="fas fa-database text-info me-1"></i><strong>Live values:</strong></div>
-                        <div><i class="fas fa-users text-primary me-1"></i>Subscribers: <strong class="text-primary">{{ live_subscriber_count }}</strong></div>
-                        <div><i class="fas fa-film text-danger me-1"></i>Visible Reels: <strong class="text-danger">{{ live_reel_count }}</strong></div>
-                        <div class="ms-auto"><small class="text-muted">Set a stat's Auto Source to pull these values live.</small></div>
-                    </div>
-
-                    <!-- Stat Rows — drag to reorder -->
-                    <div class="d-flex align-items-center justify-content-between mb-2">
-                        <h6 class="fw-bold mb-0"><i class="fas fa-list me-2 text-secondary"></i>Stat Cards</h6>
-                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="addStatRow()">
-                            <i class="fas fa-plus me-1"></i>Add Stat
-                        </button>
-                    </div>
-
-                    <div class="row g-2 mb-1 d-none d-md-flex px-2">
-                        <div class="col-1"></div>
-                        <div class="col-md-2"><small class="text-muted text-uppercase fw-semibold">Icon</small></div>
-                        <div class="col-md-3"><small class="text-muted text-uppercase fw-semibold">Label</small></div>
-                        <div class="col-md-2"><small class="text-muted text-uppercase fw-semibold">Value</small></div>
-                        <div class="col-md-2"><small class="text-muted text-uppercase fw-semibold">Auto Source</small></div>
-                        <div class="col-md-1 text-center"><small class="text-muted text-uppercase fw-semibold">Show</small></div>
-                        <div class="col-md-1"></div>
-                    </div>
-
-                    <div id="statsRows">
-                        {% for stat in stats_data.stats %}
-                        {% set i = loop.index0 %}
-                        <div class="stat-row" data-idx="{{ i }}">
-                            <div class="stat-drag-handle"><i class="fas fa-grip-vertical"></i></div>
-                            <div class="stat-row-fields row g-2 align-items-center flex-1">
-                                <div class="col-6 col-md-2">
-                                    <div class="input-group input-group-sm">
-                                        <span class="input-group-text stat-icon-preview"><i class="{{ stat.icon or 'fas fa-chart-bar' }}"></i></span>
-                                        <input type="text" class="form-control form-control-sm" name="stat_icon_{{ i }}" value="{{ stat.icon or '' }}" placeholder="fas fa-…" oninput="previewIcon(this)">
-                                    </div>
-                                </div>
-                                <div class="col-6 col-md-3">
-                                    <input type="text" class="form-control form-control-sm" name="stat_label_{{ i }}" value="{{ stat.label or '' }}" placeholder="Label (e.g. Total Views)">
-                                </div>
-                                <div class="col-6 col-md-2">
-                                    <input type="text" class="form-control form-control-sm stat-value-input" name="stat_value_{{ i }}" value="{{ stat.value or '' }}" placeholder="e.g. 1.2M+" {{ 'disabled' if stat.auto }}>
-                                </div>
-                                <div class="col-6 col-md-2">
-                                    <select class="form-select form-select-sm" name="stat_auto_{{ i }}" onchange="handleAutoChange(this)">
-                                        <option value="" {{ 'selected' if not stat.auto }}>Manual value</option>
-                                        <option value="subscriber_count" {{ 'selected' if stat.auto == 'subscriber_count' }}>Live Subscribers ({{ live_subscriber_count }})</option>
-                                        <option value="reel_count" {{ 'selected' if stat.auto == 'reel_count' }}>Live Reel Count ({{ live_reel_count }})</option>
-                                    </select>
-                                </div>
-                                <div class="col-2 col-md-1 text-center">
-                                    <div class="form-check form-switch d-flex justify-content-center mb-0">
-                                        <input class="form-check-input" type="checkbox" name="stat_visible_{{ i }}" value="1" {{ 'checked' if stat.get('visible', '1') != '0' }}>
-                                    </div>
-                                </div>
-                                <div class="col-2 col-md-1 text-end">
-                                    <button type="button" class="btn btn-sm btn-outline-danger rounded-pill" onclick="removeStatRow(this)" title="Delete">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-
-                    <div id="statsEmpty" class="{{ 'd-none' if stats_data.stats else '' }} text-center py-5 text-muted">
-                        <i class="fas fa-chart-bar fa-3x mb-3 opacity-25"></i>
-                        <p>No stats yet. Click <strong>Add Stat</strong> to create one.</p>
-                    </div>
-
-                    <div class="d-flex justify-content-between align-items-center pt-3 border-top mt-3">
-                        <small class="text-muted">
-                            <i class="fas fa-grip-vertical me-1 text-secondary"></i>Drag the <strong>⠿</strong> handle to reorder.
-                            Icon must be a valid <a href="https://fontawesome.com/search?m=free" target="_blank">Font Awesome</a> class (e.g. <code>fas fa-heart</code>).
-                        </small>
-                        <button type="submit" class="btn btn-primary rounded-pill px-4" onclick="renumberStatRows()">
-                            <i class="fas fa-save me-2"></i>Save Statistics
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-            <!-- ═══════════════════════════ TESTIMONIALS TAB ═══════════════════════════ -->
-            <div class="tab-pane fade" id="pane-testimonials" role="tabpanel">
-                <form method="POST" action="{{ url_for('admin_content_manager') }}#testimonials">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <input type="hidden" name="action" value="testimonials">
-
-                    <div class="cm-vis-header {{ 'vis-on' if visibility.testimonials else 'vis-off' }}">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="cm-section-icon" style="background:linear-gradient(135deg,#7c3aed,#4f46e5)"><i class="fas fa-quote-left"></i></div>
-                            <div>
-                                <h5 class="mb-0 fw-bold">What People Say — Testimonials</h5>
-                                <small class="text-muted">Section heading and all 3 testimonial cards (text, name, role).</small>
-                            </div>
-                        </div>
-                        <div class="form-check form-switch mb-0">
-                            <input class="form-check-input" type="checkbox" name="section_testimonials_visible" id="vis_testimonials" role="switch" {{ 'checked' if visibility.testimonials }}>
-                            <label class="form-check-label fw-semibold" for="vis_testimonials">Show section</label>
-                        </div>
-                    </div>
-
-                    <div class="row g-4 mt-1">
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Section Heading</label>
-                            <input type="text" class="form-control" name="testimonials_section_title" value="{{ pc.testimonials_section_title or 'What People Say' }}" placeholder="What People Say">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Section Subtitle</label>
-                            <input type="text" class="form-control" name="testimonials_section_subtitle" value="{{ pc.testimonials_section_subtitle or 'Real voices from the community.' }}" placeholder="Real voices from the community.">
-                        </div>
-
-                        {% for n in [1, 2, 3] %}
-                        <div class="col-12"><h6 class="cm-group-label">Testimonial {{ n }}</h6></div>
-                        <div class="col-12">
-                            <label class="form-label fw-semibold">Quote Text</label>
-                            <textarea class="form-control" name="testimonial{{ n }}_text" rows="3" placeholder="What did this person say?">{{ pc['testimonial' ~ n ~ '_text'] or '' }}</textarea>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Name</label>
-                            <input type="text" class="form-control" name="testimonial{{ n }}_name" value="{{ pc['testimonial' ~ n ~ '_name'] or '' }}" placeholder="e.g. Rahul S.">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Role / Location</label>
-                            <input type="text" class="form-control" name="testimonial{{ n }}_role" value="{{ pc['testimonial' ~ n ~ '_role'] or '' }}" placeholder="e.g. Viewer, Mumbai">
-                        </div>
-                        {% if not loop.last %}<div class="col-12"><hr class="my-1"></div>{% endif %}
-                        {% endfor %}
-
-                        <div class="col-12 d-flex justify-content-end pt-2 border-top">
-                            <button type="submit" class="btn btn-primary rounded-pill px-4">
-                                <i class="fas fa-save me-2"></i>Save Testimonials
-                            </button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-
-            <!-- ═══════════════════════════ COURSES TAB ═══════════════════════════ -->
-            <div class="tab-pane fade" id="pane-courses" role="tabpanel">
-                <form method="POST" action="{{ url_for('admin_content_manager') }}#courses">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <input type="hidden" name="action" value="courses">
-
-                    <div class="cm-vis-header {{ 'vis-on' if visibility.courses else 'vis-off' }}">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="cm-section-icon" style="background:linear-gradient(135deg,#059669,#047857)"><i class="fas fa-graduation-cap"></i></div>
-                            <div>
-                                <h5 class="mb-0 fw-bold">Learn From Kshitiz — Courses Teaser</h5>
-                                <small class="text-muted">Section heading, subtitle, and "View All Courses" button text on the homepage.</small>
-                            </div>
-                        </div>
-                        <div class="form-check form-switch mb-0">
-                            <input class="form-check-input" type="checkbox" name="section_courses_visible" id="vis_courses" role="switch" {{ 'checked' if visibility.courses }}>
-                            <label class="form-check-label fw-semibold" for="vis_courses">Show section</label>
-                        </div>
-                    </div>
-
-                    <div class="alert alert-info mt-3 mb-0" style="border-radius:10px;">
-                        <i class="fas fa-info-circle me-2"></i>
-                        The courses shown here are automatically pulled from your active courses. To add, edit, or remove courses, use the <a href="{{ url_for('admin_courses') }}" class="alert-link">Courses admin page</a>. The first 3 active courses appear on the homepage.
-                    </div>
-
-                    <div class="row g-4 mt-1">
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Section Heading</label>
-                            <input type="text" class="form-control" name="courses_section_title" value="{{ pc.courses_section_title or 'Learn From Kshitiz' }}" placeholder="Learn From Kshitiz">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">"View All" Button Text</label>
-                            <input type="text" class="form-control" name="courses_button_text" value="{{ pc.courses_button_text or 'View All Courses' }}" placeholder="View All Courses">
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label fw-semibold">Section Subtitle</label>
-                            <textarea class="form-control" name="courses_section_subtitle" rows="2" placeholder="Structured courses on commentary, media literacy, and critical thinking.">{{ pc.courses_section_subtitle or '' }}</textarea>
-                        </div>
-
-                        <div class="col-12 d-flex justify-content-between align-items-center pt-2 border-top">
-                            <a href="{{ url_for('admin_courses') }}" class="btn btn-outline-secondary btn-sm">
-                                <i class="fas fa-book me-1"></i>Manage Courses
-                            </a>
-                            <button type="submit" class="btn btn-primary rounded-pill px-4">
-                                <i class="fas fa-save me-2"></i>Save Courses Section
-                            </button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-
-            <!-- ═══════════════════════════ NEWSLETTER TAB ═══════════════════════════ -->
-            <div class="tab-pane fade" id="pane-newsletter" role="tabpanel">
-                <form method="POST" action="{{ url_for('admin_content_manager') }}#newsletter">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <input type="hidden" name="action" value="newsletter">
-
-                    <div class="cm-vis-header {{ 'vis-on' if visibility.newsletter else 'vis-off' }}">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="cm-section-icon" style="background:linear-gradient(135deg,#d97706,#b45309)"><i class="fas fa-envelope-open-text"></i></div>
-                            <div>
-                                <h5 class="mb-0 fw-bold">Join the Inner Circle — Newsletter</h5>
-                                <small class="text-muted">Section heading, subtitle, subscribe button text, and privacy note.</small>
-                            </div>
-                        </div>
-                        <div class="form-check form-switch mb-0">
-                            <input class="form-check-input" type="checkbox" name="section_newsletter_visible" id="vis_newsletter" role="switch" {{ 'checked' if visibility.newsletter }}>
-                            <label class="form-check-label fw-semibold" for="vis_newsletter">Show section</label>
-                        </div>
-                    </div>
-
-                    <div class="row g-4 mt-1">
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Section Heading</label>
-                            <input type="text" class="form-control" name="newsletter_section_title" value="{{ pc.newsletter_section_title or 'Join the Inner Circle' }}" placeholder="Join the Inner Circle">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Subscribe Button Text</label>
-                            <input type="text" class="form-control" name="newsletter_button_text" value="{{ pc.newsletter_button_text or 'Subscribe Free' }}" placeholder="Subscribe Free">
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label fw-semibold">Section Subtitle</label>
-                            <textarea class="form-control" name="newsletter_section_subtitle" rows="2" placeholder="Get unfiltered commentary, behind-the-reel insights…">{{ pc.newsletter_section_subtitle or '' }}</textarea>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label fw-semibold">Privacy Note (below the subscribe button)</label>
-                            <input type="text" class="form-control" name="newsletter_privacy_text" value="{{ pc.newsletter_privacy_text or 'No spam. Unsubscribe anytime.' }}" placeholder="No spam. Unsubscribe anytime.">
-                            <div class="form-text">Appears with a shield icon below the subscription form.</div>
-                        </div>
-
-                        <div class="col-12 d-flex justify-content-between align-items-center pt-2 border-top">
-                            <a href="{{ url_for('admin_dashboard') }}#subscribers" class="btn btn-outline-secondary btn-sm">
-                                <i class="fas fa-users me-1"></i>View Subscribers
-                            </a>
-                            <button type="submit" class="btn btn-primary rounded-pill px-4">
-                                <i class="fas fa-save me-2"></i>Save Newsletter Section
-                            </button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-
-        </div><!-- /tab-content -->
-    </div><!-- /admin-content -->
-</div>
-
+{% block extra_head %}
 <style>
-/* ── Tab Pills ───────────────────────────── */
-.cm-tabs-wrapper { background:#fff; border-radius:14px; padding:20px 20px 12px; box-shadow:0 1px 4px rgba(0,0,0,.07); border:1px solid #e2e8f0; }
-.cm-nav-pills { gap:6px; padding-bottom:4px; }
+/* ── Tab Pills ───────────────────────────────────────────────── */
+.cm-tabs-wrapper {
+    background:#fff;
+    border-radius:14px;
+    padding:18px 20px 14px;
+    box-shadow:0 1px 4px rgba(0,0,0,.07);
+    border:1px solid #e2e8f0;
+    margin-bottom:20px;
+}
+.cm-nav-pills {
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    list-style:none;
+    padding:0;
+    margin:0 0 10px;
+}
 .cm-tab-btn {
     border-radius:10px !important;
     font-size:.88rem;
     font-weight:600;
-    padding:8px 16px;
+    padding:9px 18px;
     color:#475569;
     background:#f1f5f9;
     border:1px solid #e2e8f0;
@@ -633,16 +33,22 @@
     gap:6px;
     white-space:nowrap;
     transition:all .2s;
+    cursor:pointer;
 }
 .cm-tab-btn:hover { background:#e2e8f0; color:#1e293b; }
-.cm-tab-btn.active { background:linear-gradient(135deg,#cc0000,#8b0000); color:#fff; border-color:transparent; box-shadow:0 4px 12px rgba(204,0,0,.3); }
+.cm-tab-btn.active {
+    background:linear-gradient(135deg,#cc0000,#8b0000);
+    color:#fff;
+    border-color:transparent;
+    box-shadow:0 4px 12px rgba(204,0,0,.3);
+}
 
-/* ── Visibility Dot ──────────────────────── */
+/* ── Visibility Dot ──────────────────────────────────────────── */
 .vis-dot { width:8px; height:8px; border-radius:50%; display:inline-block; }
 .dot-on  { background:#22c55e; box-shadow:0 0 4px rgba(34,197,94,.6); }
 .dot-off { background:#94a3b8; }
 
-/* ── Section Visibility Header Bar ──────── */
+/* ── Section Visibility Header Bar ──────────────────────────── */
 .cm-vis-header {
     display:flex;
     align-items:center;
@@ -658,11 +64,10 @@
 .cm-section-icon {
     width:44px; height:44px; border-radius:10px;
     display:flex; align-items:center; justify-content:center;
-    color:#fff; font-size:1.2rem;
-    flex-shrink:0;
+    color:#fff; font-size:1.2rem; flex-shrink:0;
 }
 
-/* ── Group Labels ────────────────────────── */
+/* ── Group Labels ────────────────────────────────────────────── */
 .cm-group-label {
     font-weight:700;
     color:#1e293b;
@@ -674,11 +79,17 @@
     margin-bottom:0;
 }
 
-/* ── Tab Pane Card Look ──────────────────── */
-.tab-pane { background:#fff; border-radius:14px; padding:24px; box-shadow:0 1px 4px rgba(0,0,0,.07); border:1px solid #e2e8f0; }
+/* ── Tab Pane Card ───────────────────────────────────────────── */
+.tab-pane {
+    background:#fff;
+    border-radius:14px;
+    padding:24px;
+    box-shadow:0 1px 4px rgba(0,0,0,.07);
+    border:1px solid #e2e8f0;
+}
 
-/* ── Stat Rows ───────────────────────────── */
-#statsRows { display:flex; flex-direction:column; gap:8px; }
+/* ── Stat / Trust Bar Rows ───────────────────────────────────── */
+#statsRows,#trustBarRows { display:flex; flex-direction:column; gap:8px; }
 .stat-row {
     display:flex;
     align-items:center;
@@ -690,19 +101,544 @@
     transition:box-shadow .2s, background .2s;
 }
 .stat-row:hover { background:#f1f5f9; box-shadow:0 2px 8px rgba(0,0,0,.06); }
-.stat-drag-handle {
-    color:#94a3b8;
-    cursor:grab;
-    font-size:1rem;
-    padding:0 4px;
-    flex-shrink:0;
-}
+.stat-drag-handle { color:#94a3b8; cursor:grab; font-size:1rem; padding:0 4px; flex-shrink:0; }
 .stat-drag-handle:active { cursor:grabbing; }
 .stat-row-fields { flex:1; min-width:0; }
 .stat-icon-preview i { color:#cc0000; font-size:.9rem; }
 .sortable-ghost { opacity:.4; background:#eef2ff !important; border:2px dashed #667eea !important; }
 .sortable-drag   { box-shadow:0 8px 24px rgba(0,0,0,.2); }
 </style>
+{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid p-4">
+
+    <!-- Page header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1"><i class="fas fa-layer-group me-2 text-primary"></i>Content Manager</h2>
+            <p class="text-muted mb-0 small">Edit every section of the homepage from one place. Changes save instantly.</p>
+        </div>
+        <a href="/" target="_blank" class="btn btn-outline-secondary">
+            <i class="fas fa-external-link-alt me-1"></i>View Website
+        </a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}{% for category, message in messages %}
+        <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show mb-3">
+            <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-triangle' }} me-2"></i>{{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}{% endif %}
+    {% endwith %}
+
+    <!-- Section Tab Navigation -->
+    <div class="cm-tabs-wrapper">
+        <ul class="cm-nav-pills" id="cmTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link cm-tab-btn" id="tab-reels" data-bs-toggle="pill" data-bs-target="#pane-reels" type="button" data-hash="reels">
+                    <i class="fas fa-film"></i>Reels
+                    <span class="vis-dot {{ 'dot-on' if visibility.reels else 'dot-off' }}"></span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link cm-tab-btn" id="tab-support" data-bs-toggle="pill" data-bs-target="#pane-support" type="button" data-hash="support">
+                    <i class="fas fa-heart"></i>Support
+                    <span class="vis-dot {{ 'dot-on' if visibility.support else 'dot-off' }}"></span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link cm-tab-btn" id="tab-statistics" data-bs-toggle="pill" data-bs-target="#pane-statistics" type="button" data-hash="statistics">
+                    <i class="fas fa-chart-bar"></i>Statistics
+                    <span class="vis-dot {{ 'dot-on' if visibility.statistics else 'dot-off' }}"></span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link cm-tab-btn" id="tab-testimonials" data-bs-toggle="pill" data-bs-target="#pane-testimonials" type="button" data-hash="testimonials">
+                    <i class="fas fa-quote-left"></i>Testimonials
+                    <span class="vis-dot {{ 'dot-on' if visibility.testimonials else 'dot-off' }}"></span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link cm-tab-btn" id="tab-courses" data-bs-toggle="pill" data-bs-target="#pane-courses" type="button" data-hash="courses">
+                    <i class="fas fa-graduation-cap"></i>Courses
+                    <span class="vis-dot {{ 'dot-on' if visibility.courses else 'dot-off' }}"></span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link cm-tab-btn" id="tab-newsletter" data-bs-toggle="pill" data-bs-target="#pane-newsletter" type="button" data-hash="newsletter">
+                    <i class="fas fa-envelope"></i>Newsletter
+                    <span class="vis-dot {{ 'dot-on' if visibility.newsletter else 'dot-off' }}"></span>
+                </button>
+            </li>
+        </ul>
+        <p class="text-muted small mb-0">
+            <span class="vis-dot dot-on" style="display:inline-block;vertical-align:middle;"></span>&nbsp;= visible on site
+            &nbsp;&nbsp;
+            <span class="vis-dot dot-off" style="display:inline-block;vertical-align:middle;"></span>&nbsp;= hidden
+        </p>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content" id="cmTabContent">
+
+        <!-- ═══════════════════════════ REELS TAB ═══════════════════════════ -->
+        <div class="tab-pane fade" id="pane-reels" role="tabpanel">
+            <form method="POST" action="{{ url_for('admin_content_manager') }}#reels">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="reels">
+
+                <div class="cm-vis-header {{ 'vis-on' if visibility.reels else 'vis-off' }}">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="cm-section-icon" style="background:linear-gradient(135deg,#cc0000,#8b0000)"><i class="fas fa-film"></i></div>
+                        <div>
+                            <h5 class="mb-0 fw-bold">Beyond the Reels Section</h5>
+                            <small class="text-muted">Section heading, subtitle, and button text on the homepage reel carousel.</small>
+                        </div>
+                    </div>
+                    <div class="form-check form-switch mb-0">
+                        <input class="form-check-input" type="checkbox" name="section_reels_visible" id="vis_reels" role="switch" {{ 'checked' if visibility.reels }}>
+                        <label class="form-check-label fw-semibold" for="vis_reels">Show section</label>
+                    </div>
+                </div>
+
+                <div class="row g-4 mt-1">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Section Heading</label>
+                        <input type="text" class="form-control" name="reels_section_title" value="{{ pc.reels_section_title or 'Beyond The Reel' }}" placeholder="Beyond The Reel">
+                        <div class="form-text">The large title above the reel carousel.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">"View Library" Button Text</label>
+                        <input type="text" class="form-control" name="reels_button_text" value="{{ pc.reels_button_text or 'View Full Library' }}" placeholder="View Full Library">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Section Subtitle</label>
+                        <textarea class="form-control" name="reels_section_subtitle" rows="2" placeholder='"Reel to sirf ek hissa tha, kahani bahut badi hai."'>{{ pc.reels_section_subtitle or '' }}</textarea>
+                        <div class="form-text">Appears below the heading. Leave empty to hide.</div>
+                    </div>
+                    <div class="col-12 d-flex justify-content-between align-items-center pt-2 border-top">
+                        <a href="{{ url_for('admin_dashboard') }}#reels" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-video me-1"></i>Manage Individual Reels
+                        </a>
+                        <button type="submit" class="btn btn-primary rounded-pill px-4">
+                            <i class="fas fa-save me-2"></i>Save Reels Section
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- ═══════════════════════════ SUPPORT TAB ═══════════════════════════ -->
+        <div class="tab-pane fade" id="pane-support" role="tabpanel">
+            <form method="POST" action="{{ url_for('admin_content_manager') }}#support">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="support">
+
+                <div class="cm-vis-header {{ 'vis-on' if visibility.support else 'vis-off' }}">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="cm-section-icon" style="background:linear-gradient(135deg,#cc0000,#8b0000)"><i class="fas fa-heart"></i></div>
+                        <div>
+                            <h5 class="mb-0 fw-bold">Friends of Kshitiz — Support Now</h5>
+                            <small class="text-muted">Section heading, subtitle, custom support card, and trust bar.</small>
+                        </div>
+                    </div>
+                    <div class="form-check form-switch mb-0">
+                        <input class="form-check-input" type="checkbox" name="section_support_visible" id="vis_support" role="switch" {{ 'checked' if visibility.support }}>
+                        <label class="form-check-label fw-semibold" for="vis_support">Show section</label>
+                    </div>
+                </div>
+
+                <div class="row g-4 mt-1">
+                    <div class="col-12"><h6 class="cm-group-label">Section Header</h6></div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Section Heading</label>
+                        <input type="text" class="form-control" name="support_section_title" value="{{ pc.support_section_title or 'Friends of Kshitiz — Support Now' }}" placeholder="Friends of Kshitiz — Support Now">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Section Subtitle</label>
+                        <input type="text" class="form-control" name="support_section_subtitle" value="{{ pc.support_section_subtitle or 'Aapki marzi, aapka support.' }}" placeholder="Aapki marzi, aapka support.">
+                    </div>
+
+                    <div class="col-12 mt-2"><h6 class="cm-group-label">Custom Supporter Card (Aapki Marzi)</h6></div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Card Title</label>
+                        <input type="text" class="form-control" name="custom_support_button_text" value="{{ pc.custom_support_button_text or 'Custom Supporter' }}" placeholder="Custom Supporter — Aapki marzi…">
+                        <div class="form-text">The heading on the custom amount card.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Card Subtitle</label>
+                        <input type="text" class="form-control" name="custom_support_subtitle" value="{{ pc.custom_support_subtitle or 'Choose your own amount' }}" placeholder="Choose your own amount">
+                        <div class="form-text">The description below the card title.</div>
+                    </div>
+
+                    <!-- ── Support Trust Bar ── -->
+                    <div class="col-12 mt-3">
+                        <div class="d-flex align-items-center justify-content-between mb-1 flex-wrap gap-2">
+                            <h6 class="cm-group-label mb-0"><i class="fas fa-shield-alt me-2 text-danger"></i>Support Trust Bar</h6>
+                            <div class="d-flex align-items-center gap-3 flex-wrap">
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input" type="checkbox" id="trust_bar_enabled" name="trust_bar_enabled" value="1" role="switch" {{ 'checked' if trust_bar_data.enabled }}>
+                                    <label class="form-check-label fw-semibold" for="trust_bar_enabled">Show trust bar</label>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3" onclick="addTrustBarRow()">
+                                    <i class="fas fa-plus me-1"></i>Add Item
+                                </button>
+                            </div>
+                        </div>
+                        <small class="text-muted d-block mb-3">Strip of trust signals below the support section (e.g. "127+ Supporters", "100% Secure via Razorpay").</small>
+
+                        <div class="row g-2 mb-1 d-none d-md-flex px-1">
+                            <div class="col-1"></div>
+                            <div class="col-md-2"><small class="text-muted text-uppercase fw-semibold">Icon</small></div>
+                            <div class="col-md-2"><small class="text-muted text-uppercase fw-semibold">Value</small></div>
+                            <div class="col-md-4"><small class="text-muted text-uppercase fw-semibold">Label / Description</small></div>
+                            <div class="col-md-1 text-center"><small class="text-muted text-uppercase fw-semibold">Show</small></div>
+                            <div class="col-md-1"></div>
+                        </div>
+
+                        <div id="trustBarRows">
+                            {% for item in trust_bar_data['items'] %}
+                            {% set i = loop.index0 %}
+                            <div class="stat-row" data-tb-idx="{{ i }}">
+                                <div class="stat-drag-handle"><i class="fas fa-grip-vertical"></i></div>
+                                <div class="stat-row-fields row g-2 align-items-center flex-1">
+                                    <div class="col-6 col-md-2">
+                                        <div class="input-group input-group-sm">
+                                            <span class="input-group-text tb-icon-preview"><i class="{{ item.icon or 'fas fa-check' }}"></i></span>
+                                            <input type="text" class="form-control form-control-sm" name="tb_icon_{{ i }}" value="{{ item.icon or '' }}" placeholder="fas fa-…" oninput="previewTbIcon(this)">
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-md-2">
+                                        <input type="text" class="form-control form-control-sm" name="tb_value_{{ i }}" value="{{ item.value or '' }}" placeholder="e.g. 127+">
+                                    </div>
+                                    <div class="col-10 col-md-4">
+                                        <input type="text" class="form-control form-control-sm" name="tb_label_{{ i }}" value="{{ item.label or '' }}" placeholder="e.g. Supporters">
+                                    </div>
+                                    <div class="col-2 col-md-1 text-center">
+                                        <input type="hidden" name="tb_active_{{ i }}" value="0">
+                                        <input type="checkbox" class="form-check-input" name="tb_active_{{ i }}" value="1" {{ 'checked' if item.is_active }}>
+                                    </div>
+                                    <div class="col-12 col-md-1 text-end">
+                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('.stat-row').remove(); reindexTrustBar();" title="Remove">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="col-12 d-flex justify-content-between align-items-center pt-2 border-top flex-wrap gap-2">
+                        <a href="{{ url_for('admin_subscription_tiers') }}" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-crown me-1"></i>Manage Subscription Tiers
+                        </a>
+                        <button type="submit" class="btn btn-primary rounded-pill px-4">
+                            <i class="fas fa-save me-2"></i>Save Support Section
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            {% if subscription_tiers %}
+            <div class="mt-4 p-4 rounded-3" style="background:#f8fafc;border:1px solid #e2e8f0;">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h6 class="fw-bold mb-0"><i class="fas fa-crown me-2 text-warning"></i>Current Subscription Tiers</h6>
+                    <a href="{{ url_for('admin_subscription_tiers') }}" class="btn btn-sm btn-outline-primary">Edit Tiers</a>
+                </div>
+                <div class="row g-3">
+                    {% for tier in subscription_tiers %}
+                    <div class="col-md-4">
+                        <div class="p-3 bg-white rounded-2 border {{ 'border-primary' if tier.is_popular else '' }}">
+                            {% if tier.is_popular %}<span class="badge bg-primary mb-1">Most Popular</span>{% endif %}
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <i class="{{ tier.icon }} text-danger"></i>
+                                <strong>{{ tier.name }}</strong>
+                            </div>
+                            <div class="text-primary fw-bold">₹{{ tier.price }}/{{ tier.period }}</div>
+                            <small class="text-muted">{{ tier.description[:60] }}{% if tier.description|length > 60 %}…{% endif %}</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- ═══════════════════════════ STATISTICS TAB ═══════════════════════════ -->
+        <div class="tab-pane fade" id="pane-statistics" role="tabpanel">
+            <form method="POST" action="{{ url_for('admin_content_manager') }}#statistics" id="statsForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="statistics">
+
+                <div class="cm-vis-header {{ 'vis-on' if visibility.statistics else 'vis-off' }}">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="cm-section-icon" style="background:linear-gradient(135deg,#0ea5e9,#0284c7)"><i class="fas fa-chart-bar"></i></div>
+                        <div>
+                            <h5 class="mb-0 fw-bold">By the Numbers — Statistics</h5>
+                            <small class="text-muted">Add, remove, reorder stats blocks. Drag to reorder. Each block shows one number on the homepage.</small>
+                        </div>
+                    </div>
+                    <div class="form-check form-switch mb-0">
+                        <input class="form-check-input" type="checkbox" name="section_statistics_visible" id="vis_statistics" role="switch" {{ 'checked' if visibility.statistics }}>
+                        <label class="form-check-label fw-semibold" for="vis_statistics">Show section</label>
+                    </div>
+                </div>
+
+                <div class="row g-3 mt-1">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Section Heading</label>
+                        <input type="text" class="form-control" name="stats_title" value="{{ stats_data.title or 'By the Numbers' }}" placeholder="By the Numbers">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Section Subtitle</label>
+                        <input type="text" class="form-control" name="stats_subtitle" value="{{ stats_data.subtitle or '' }}" placeholder="The reach keeps growing — thanks to you.">
+                    </div>
+                </div>
+
+                <div class="d-flex gap-3 my-3 p-3 rounded-2" style="background:#f0f9ff;border:1px solid #bae6fd;">
+                    <div><i class="fas fa-database text-info me-1"></i><strong>Live values:</strong></div>
+                    <div><i class="fas fa-users text-primary me-1"></i>Subscribers: <strong class="text-primary">{{ live_subscriber_count }}</strong></div>
+                    <div><i class="fas fa-film text-danger me-1"></i>Visible Reels: <strong class="text-danger">{{ live_reel_count }}</strong></div>
+                    <div class="ms-auto d-none d-md-block"><small class="text-muted">Set a stat's Auto Source to pull these values live.</small></div>
+                </div>
+
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <h6 class="fw-bold mb-0"><i class="fas fa-list me-2 text-secondary"></i>Stat Cards</h6>
+                    <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="addStatRow()">
+                        <i class="fas fa-plus me-1"></i>Add Stat
+                    </button>
+                </div>
+
+                <div class="row g-2 mb-1 d-none d-md-flex px-2">
+                    <div class="col-1"></div>
+                    <div class="col-md-2"><small class="text-muted text-uppercase fw-semibold">Icon</small></div>
+                    <div class="col-md-3"><small class="text-muted text-uppercase fw-semibold">Label</small></div>
+                    <div class="col-md-2"><small class="text-muted text-uppercase fw-semibold">Value</small></div>
+                    <div class="col-md-2"><small class="text-muted text-uppercase fw-semibold">Auto Source</small></div>
+                    <div class="col-md-1 text-center"><small class="text-muted text-uppercase fw-semibold">Show</small></div>
+                </div>
+
+                <div id="statsRows">
+                    {% for stat in stats_data.stats %}
+                    {% set i = loop.index0 %}
+                    <div class="stat-row" data-idx="{{ i }}">
+                        <div class="stat-drag-handle"><i class="fas fa-grip-vertical"></i></div>
+                        <div class="stat-row-fields row g-2 align-items-center flex-1">
+                            <div class="col-6 col-md-2">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text stat-icon-preview"><i class="{{ stat.icon or 'fas fa-chart-bar' }}"></i></span>
+                                    <input type="text" class="form-control form-control-sm" name="stat_icon_{{ i }}" value="{{ stat.icon or '' }}" placeholder="fas fa-…" oninput="previewIcon(this)">
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <input type="text" class="form-control form-control-sm" name="stat_label_{{ i }}" value="{{ stat.label or '' }}" placeholder="Label (e.g. Total Views)">
+                            </div>
+                            <div class="col-6 col-md-2">
+                                <input type="text" class="form-control form-control-sm stat-value-input" name="stat_value_{{ i }}" value="{{ stat.value or '' }}" placeholder="e.g. 1.2M+" {{ 'disabled' if stat.auto }}>
+                            </div>
+                            <div class="col-6 col-md-2">
+                                <select class="form-select form-select-sm" name="stat_auto_{{ i }}" onchange="handleAutoChange(this)">
+                                    <option value="" {{ 'selected' if not stat.auto }}>Manual value</option>
+                                    <option value="subscriber_count" {{ 'selected' if stat.auto == 'subscriber_count' }}>Live Subscribers ({{ live_subscriber_count }})</option>
+                                    <option value="reel_count" {{ 'selected' if stat.auto == 'reel_count' }}>Live Reel Count ({{ live_reel_count }})</option>
+                                </select>
+                            </div>
+                            <div class="col-2 col-md-1 text-center">
+                                <div class="form-check form-switch d-flex justify-content-center mb-0">
+                                    <input class="form-check-input" type="checkbox" name="stat_visible_{{ i }}" value="1" {{ 'checked' if stat.get('visible', '1') != '0' }}>
+                                </div>
+                            </div>
+                            <div class="col-2 col-md-1 text-end">
+                                <button type="button" class="btn btn-sm btn-outline-danger rounded-pill" onclick="removeStatRow(this)" title="Delete">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div id="statsEmpty" class="{{ 'd-none' if stats_data.stats else '' }} text-center py-5 text-muted">
+                    <i class="fas fa-chart-bar fa-3x mb-3 opacity-25"></i>
+                    <p>No stats yet. Click <strong>Add Stat</strong> to create one.</p>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center pt-3 border-top mt-3 flex-wrap gap-2">
+                    <small class="text-muted">
+                        <i class="fas fa-grip-vertical me-1 text-secondary"></i>Drag the ⠿ handle to reorder.
+                        Icon: <a href="https://fontawesome.com/search?m=free" target="_blank">Font Awesome</a> class (e.g. <code>fas fa-heart</code>).
+                    </small>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4" onclick="renumberStatRows()">
+                        <i class="fas fa-save me-2"></i>Save Statistics
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- ═══════════════════════════ TESTIMONIALS TAB ═══════════════════════════ -->
+        <div class="tab-pane fade" id="pane-testimonials" role="tabpanel">
+            <form method="POST" action="{{ url_for('admin_content_manager') }}#testimonials">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="testimonials">
+
+                <div class="cm-vis-header {{ 'vis-on' if visibility.testimonials else 'vis-off' }}">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="cm-section-icon" style="background:linear-gradient(135deg,#7c3aed,#4f46e5)"><i class="fas fa-quote-left"></i></div>
+                        <div>
+                            <h5 class="mb-0 fw-bold">What People Say — Testimonials</h5>
+                            <small class="text-muted">Section heading and all 3 testimonial cards (text, name, role).</small>
+                        </div>
+                    </div>
+                    <div class="form-check form-switch mb-0">
+                        <input class="form-check-input" type="checkbox" name="section_testimonials_visible" id="vis_testimonials" role="switch" {{ 'checked' if visibility.testimonials }}>
+                        <label class="form-check-label fw-semibold" for="vis_testimonials">Show section</label>
+                    </div>
+                </div>
+
+                <div class="row g-4 mt-1">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Section Heading</label>
+                        <input type="text" class="form-control" name="testimonials_section_title" value="{{ pc.testimonials_section_title or 'What People Say' }}" placeholder="What People Say">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Section Subtitle</label>
+                        <input type="text" class="form-control" name="testimonials_section_subtitle" value="{{ pc.testimonials_section_subtitle or 'Real voices from the community.' }}" placeholder="Real voices from the community.">
+                    </div>
+
+                    {% for n in [1, 2, 3] %}
+                    <div class="col-12"><h6 class="cm-group-label">Testimonial {{ n }}</h6></div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Quote Text</label>
+                        <textarea class="form-control" name="testimonial{{ n }}_text" rows="3" placeholder="What did this person say?">{{ pc['testimonial' ~ n ~ '_text'] or '' }}</textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Name</label>
+                        <input type="text" class="form-control" name="testimonial{{ n }}_name" value="{{ pc['testimonial' ~ n ~ '_name'] or '' }}" placeholder="e.g. Rahul S.">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Role / Location</label>
+                        <input type="text" class="form-control" name="testimonial{{ n }}_role" value="{{ pc['testimonial' ~ n ~ '_role'] or '' }}" placeholder="e.g. Viewer, Mumbai">
+                    </div>
+                    {% if not loop.last %}<div class="col-12"><hr class="my-1"></div>{% endif %}
+                    {% endfor %}
+
+                    <div class="col-12 d-flex justify-content-end pt-2 border-top">
+                        <button type="submit" class="btn btn-primary rounded-pill px-4">
+                            <i class="fas fa-save me-2"></i>Save Testimonials
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- ═══════════════════════════ COURSES TAB ═══════════════════════════ -->
+        <div class="tab-pane fade" id="pane-courses" role="tabpanel">
+            <form method="POST" action="{{ url_for('admin_content_manager') }}#courses">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="courses">
+
+                <div class="cm-vis-header {{ 'vis-on' if visibility.courses else 'vis-off' }}">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="cm-section-icon" style="background:linear-gradient(135deg,#059669,#047857)"><i class="fas fa-graduation-cap"></i></div>
+                        <div>
+                            <h5 class="mb-0 fw-bold">Learn From Kshitiz — Courses Teaser</h5>
+                            <small class="text-muted">Section heading, subtitle, and "View All Courses" button text on the homepage.</small>
+                        </div>
+                    </div>
+                    <div class="form-check form-switch mb-0">
+                        <input class="form-check-input" type="checkbox" name="section_courses_visible" id="vis_courses" role="switch" {{ 'checked' if visibility.courses }}>
+                        <label class="form-check-label fw-semibold" for="vis_courses">Show section</label>
+                    </div>
+                </div>
+
+                <div class="alert alert-info mt-3 mb-0" style="border-radius:10px;">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Courses are pulled automatically from your active courses. To add or edit them, use the <a href="{{ url_for('admin_courses') }}" class="alert-link">Courses admin page</a>. The first 3 active courses appear on the homepage.
+                </div>
+
+                <div class="row g-4 mt-1">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Section Heading</label>
+                        <input type="text" class="form-control" name="courses_section_title" value="{{ pc.courses_section_title or 'Learn From Kshitiz' }}" placeholder="Learn From Kshitiz">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">"View All" Button Text</label>
+                        <input type="text" class="form-control" name="courses_button_text" value="{{ pc.courses_button_text or 'View All Courses' }}" placeholder="View All Courses">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Section Subtitle</label>
+                        <textarea class="form-control" name="courses_section_subtitle" rows="2" placeholder="Structured courses on commentary, media literacy, and critical thinking.">{{ pc.courses_section_subtitle or '' }}</textarea>
+                    </div>
+
+                    <div class="col-12 d-flex justify-content-between align-items-center pt-2 border-top">
+                        <a href="{{ url_for('admin_courses') }}" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-book me-1"></i>Manage Courses
+                        </a>
+                        <button type="submit" class="btn btn-primary rounded-pill px-4">
+                            <i class="fas fa-save me-2"></i>Save Courses Section
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- ═══════════════════════════ NEWSLETTER TAB ═══════════════════════════ -->
+        <div class="tab-pane fade" id="pane-newsletter" role="tabpanel">
+            <form method="POST" action="{{ url_for('admin_content_manager') }}#newsletter">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="newsletter">
+
+                <div class="cm-vis-header {{ 'vis-on' if visibility.newsletter else 'vis-off' }}">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="cm-section-icon" style="background:linear-gradient(135deg,#d97706,#b45309)"><i class="fas fa-envelope-open-text"></i></div>
+                        <div>
+                            <h5 class="mb-0 fw-bold">Join the Inner Circle — Newsletter</h5>
+                            <small class="text-muted">Section heading, subtitle, subscribe button text, and privacy note.</small>
+                        </div>
+                    </div>
+                    <div class="form-check form-switch mb-0">
+                        <input class="form-check-input" type="checkbox" name="section_newsletter_visible" id="vis_newsletter" role="switch" {{ 'checked' if visibility.newsletter }}>
+                        <label class="form-check-label fw-semibold" for="vis_newsletter">Show section</label>
+                    </div>
+                </div>
+
+                <div class="row g-4 mt-1">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Section Heading</label>
+                        <input type="text" class="form-control" name="newsletter_section_title" value="{{ pc.newsletter_section_title or 'Join the Inner Circle' }}" placeholder="Join the Inner Circle">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Subscribe Button Text</label>
+                        <input type="text" class="form-control" name="newsletter_button_text" value="{{ pc.newsletter_button_text or 'Subscribe Free' }}" placeholder="Subscribe Free">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Section Subtitle</label>
+                        <textarea class="form-control" name="newsletter_section_subtitle" rows="2" placeholder="Get unfiltered commentary, behind-the-reel insights…">{{ pc.newsletter_section_subtitle or '' }}</textarea>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Privacy Note (below the subscribe button)</label>
+                        <input type="text" class="form-control" name="newsletter_privacy_text" value="{{ pc.newsletter_privacy_text or 'No spam. Unsubscribe anytime.' }}" placeholder="No spam. Unsubscribe anytime.">
+                        <div class="form-text">Appears with a shield icon below the subscription form.</div>
+                    </div>
+
+                    <div class="col-12 d-flex justify-content-between align-items-center pt-2 border-top">
+                        <a href="{{ url_for('admin_dashboard') }}#subscribers" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-users me-1"></i>View Subscribers
+                        </a>
+                        <button type="submit" class="btn btn-primary rounded-pill px-4">
+                            <i class="fas fa-save me-2"></i>Save Newsletter Section
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+    </div><!-- /tab-content -->
+</div>
+{% endblock %}
 
 {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
@@ -713,18 +649,18 @@
     const validTabs = ['reels','support','statistics','testimonials','courses','newsletter'];
     const target = validTabs.includes(hash) ? hash : 'reels';
     const btn = document.querySelector(`[data-hash="${target}"]`);
-    if (btn) {
-        btn.click();
-    } else {
-        document.getElementById('tab-reels').click();
-    }
-    // Update hash when switching tabs
+    if (btn) btn.click();
+    else { const fb = document.getElementById('tab-reels'); if(fb) fb.click(); }
     document.querySelectorAll('.cm-tab-btn').forEach(btn => {
         btn.addEventListener('shown.bs.tab', () => {
             history.replaceState(null, null, '#' + btn.dataset.hash);
         });
     });
 })();
+
+// Auto-dismiss flash alerts
+document.querySelectorAll('.alert-dismissible').forEach(el =>
+    setTimeout(() => { try { new bootstrap.Alert(el).close(); } catch(e){} }, 4500));
 
 // ── Statistics: SortableJS drag-drop ────────────────
 const statsRowsEl = document.getElementById('statsRows');
@@ -737,13 +673,12 @@ if (statsRowsEl) {
     });
 }
 
-// ── Statistics: Add / Remove / Renumber ─────────────
 let statRowCount = {{ stats_data.stats | length }};
 
 function addStatRow() {
     const container = document.getElementById('statsRows');
     const emptyEl   = document.getElementById('statsEmpty');
-    emptyEl.classList.add('d-none');
+    if(emptyEl) emptyEl.classList.add('d-none');
     const idx = statRowCount++;
     const row = document.createElement('div');
     row.className = 'stat-row';
@@ -786,8 +721,9 @@ function addStatRow() {
 
 function removeStatRow(btn) {
     btn.closest('.stat-row').remove();
-    const remaining = document.querySelectorAll('.stat-row').length;
-    document.getElementById('statsEmpty').classList.toggle('d-none', remaining > 0);
+    const remaining = document.querySelectorAll('#statsRows .stat-row').length;
+    const emptyEl = document.getElementById('statsEmpty');
+    if(emptyEl) emptyEl.classList.toggle('d-none', remaining > 0);
 }
 
 function renumberStatRows() {
@@ -876,5 +812,4 @@ function previewTbIcon(input) {
     if (icon) icon.className = input.value.trim() || 'fas fa-check';
 }
 </script>
-{% endblock %}
 {% endblock %}
