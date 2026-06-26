@@ -5548,3 +5548,29 @@ a.reel-card:visited {
     font-size: 2rem;
   }
 }
+
+/* Support tiers — 4 cards in one row on desktop */
+.support-tiers-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+.support-tier-col {
+  flex: 1 1 220px;
+  min-width: 0;
+  max-width: 320px;
+}
+@media (max-width: 991px) {
+  .support-tier-col {
+    flex: 1 1 calc(50% - 1rem);
+    max-width: calc(50% - 0.625rem);
+  }
+}
+@media (max-width: 575px) {
+  .support-tier-col {
+    flex: 1 1 100%;
+    max-width: 100%;
+  }
+}

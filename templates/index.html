@@ -1,5 +1,28 @@
 {% extends "base.html" %}
 
+{% block extra_head %}
+<style>
+.support-tiers-row {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 1.25rem !important;
+  justify-content: center !important;
+  margin-bottom: 1.5rem !important;
+}
+.support-tier-col {
+  flex: 1 1 200px !important;
+  min-width: 0 !important;
+  max-width: 290px !important;
+}
+@media (max-width: 991px) {
+  .support-tier-col { flex: 1 1 calc(50% - 1rem) !important; max-width: calc(50% - 0.625rem) !important; }
+}
+@media (max-width: 575px) {
+  .support-tier-col { flex: 1 1 100% !important; max-width: 100% !important; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
 {% set hero_img = content.hero.desktop_url or content.hero.banner_url or content.hero.mobile_url %}
 <!-- Hero Section -->
@@ -103,12 +126,12 @@
         {% set rzp_links = {} %}
         <div id="supportContent">
         <div class="row justify-content-center">
-            <div class="col-lg-10">
+            <div class="col-lg-12">
                 <div class="support-tiers-container">
-                    <div class="row g-4 justify-content-center">
+                    <div class="support-tiers-row">
 
                         {% for tier in subscription_tiers %}
-                        <div class="col-lg-4 col-md-6">
+                        <div class="support-tier-col">
                             <div class="support-tier-card {% if tier.is_popular %}popular-tier{% endif %}">
                                 {% if tier.is_popular %}
                                 <div class="popular-badge">Most Popular</div>
@@ -144,7 +167,7 @@
                         {% endfor %}
 
                         <!-- Custom Amount Card -->
-                        <div class="col-lg-4 col-md-6">
+                        <div class="support-tier-col">
                             <div class="support-tier-card custom-support-card">
                                 <div class="tier-icon">
                                     <i class="fas fa-heart"></i>
