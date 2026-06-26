@@ -351,9 +351,9 @@
         // Don't show on admin pages
         if (window.location.pathname.startsWith('/admin')) return;
 
-        // Already accepted
+        // Already accepted (check both localStorage and cookie)
         try {
-            if (localStorage.getItem('disclaimerAccepted') === 'true') {
+            if (typeof _isDisclaimerAccepted === 'function' && _isDisclaimerAccepted()) {
                 disclaimerShown = true;
                 return;
             }

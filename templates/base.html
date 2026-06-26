@@ -611,6 +611,22 @@
     #disclaimerPopup { pointer-events:auto; }
     </style>
     <script>
+    function _setDisclaimerCookie() {
+        try {
+            var d = new Date();
+            d.setFullYear(d.getFullYear() + 1);
+            document.cookie = 'disclaimerAccepted=true; expires=' + d.toUTCString() + '; path=/; SameSite=Lax';
+        } catch(e) {}
+    }
+    function _isDisclaimerAccepted() {
+        try {
+            if (localStorage.getItem('disclaimerAccepted') === 'true') return true;
+        } catch(e) {}
+        try {
+            if (document.cookie.split(';').some(function(c){ return c.trim() === 'disclaimerAccepted=true'; })) return true;
+        } catch(e) {}
+        return false;
+    }
     function _showDisclaimerPopup() {
         var el = document.getElementById('disclaimerPopup');
         if (!el) return;
@@ -670,6 +686,7 @@
         var el = document.getElementById('disclaimerPopup');
         if (el) el.style.display = 'none';
         try { localStorage.setItem('disclaimerAccepted', 'true'); } catch(e) {}
+        _setDisclaimerCookie();
     }
     function acceptDisclaimer() {
         var cb = document.getElementById('disclaimerAgreeCheck');
@@ -677,6 +694,7 @@
         var el = document.getElementById('disclaimerPopup');
         if (el) el.style.display = 'none';
         try { localStorage.setItem('disclaimerAccepted', 'true'); } catch(e) {}
+        _setDisclaimerCookie();
         if (window.dataLayer) { window.dataLayer.push({'event':'disclaimer_accepted'}); }
     }
     /* Backdrop click: shake instead of dismiss (user must agree first) */
