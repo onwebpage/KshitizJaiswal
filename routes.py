@@ -2208,6 +2208,8 @@ def admin_add_course():
             description=form.description.data,
             thumbnail=thumbnail_path,
             preview_video_url=form.preview_video_url.data or '',
+            preview_title=form.preview_title.data or '',
+            preview_subtitle=form.preview_subtitle.data or '',
             price=form.price.data,
             is_active=bool(int(form.is_active.data)),
             sort_order=form.sort_order.data
@@ -2238,6 +2240,8 @@ def admin_edit_course(course_id):
         course.title = form.title.data
         course.description = form.description.data
         course.preview_video_url = form.preview_video_url.data or ''
+        course.preview_title = form.preview_title.data or ''
+        course.preview_subtitle = form.preview_subtitle.data or ''
         course.price = form.price.data
         course.is_active = bool(int(form.is_active.data))
         course.sort_order = form.sort_order.data
@@ -2249,6 +2253,8 @@ def admin_edit_course(course_id):
     form.title.data = course.title
     form.description.data = course.description
     form.preview_video_url.data = course.preview_video_url or ''
+    form.preview_title.data = course.preview_title or ''
+    form.preview_subtitle.data = course.preview_subtitle or ''
     form.price.data = course.price
     form.is_active.data = '1' if course.is_active else '0'
     form.sort_order.data = course.sort_order

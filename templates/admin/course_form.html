@@ -84,13 +84,25 @@
                     <!-- ── Preview Video ── -->
                     <div class="course-form-section">
                         <div class="course-form-section-title">
-                            <i class="fab fa-youtube"></i> Preview Video
+                            <i class="fab fa-youtube"></i> Free Preview Section
                         </div>
-                        <label class="form-label fw-semibold">{{ form.preview_video_url.label.text }}</label>
-                        {{ form.preview_video_url(class="form-control", placeholder="https://www.youtube.com/watch?v=...") }}
-                        <small class="form-text text-muted">
-                            <i class="fas fa-info-circle me-1"></i>Paste a YouTube URL — shown as a free preview on the course page.
-                        </small>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">{{ form.preview_video_url.label.text }}</label>
+                            {{ form.preview_video_url(class="form-control", placeholder="https://www.youtube.com/watch?v=...") }}
+                            <small class="form-text text-muted">
+                                <i class="fas fa-info-circle me-1"></i>Paste a YouTube URL — shown as a free preview on the course page.
+                            </small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">{{ form.preview_title.label.text }}</label>
+                            {{ form.preview_title(class="form-control", placeholder="e.g. Course Demo — Puri Samajh Lo!") }}
+                            <small class="form-text text-muted">Heading shown above the free preview video. Leave blank to hide.</small>
+                        </div>
+                        <div class="mb-0">
+                            <label class="form-label fw-semibold">{{ form.preview_subtitle.label.text }}</label>
+                            {{ form.preview_subtitle(class="form-control", rows=2, placeholder="e.g. Ek baar dekh lo — kya sikhoge, kaise sikhoge.") }}
+                            <small class="form-text text-muted">Short description shown below the preview heading.</small>
+                        </div>
                     </div>
 
                     <!-- ── Pricing & Settings ── -->

@@ -502,6 +502,8 @@ class Course(db.Model):
     description = db.Column(db.Text)
     thumbnail = db.Column(db.String(500))
     preview_video_url = db.Column(db.String(500))
+    preview_title = db.Column(db.String(300))
+    preview_subtitle = db.Column(db.Text)
     price = db.Column(db.Integer, nullable=False)  # Price in rupees
     is_active = db.Column(db.Boolean, default=True)
     sort_order = db.Column(db.Integer, default=0)
