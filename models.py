@@ -24,11 +24,31 @@ class Reel(db.Model):
     is_featured = db.Column(db.Boolean, default=False)  # For homepage featured reels
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    def _auto_thumbnail(self):
+        """Return a YouTube thumbnail URL computed from video_url (always, as a fallback source)."""
+        url = self.video_url or ''
+        if not url:
+            return ''
+        import re as _re
+        yt_patterns = [
+            r'(?:https?://)?(?:www\.)?youtube\.com/shorts/([A-Za-z0-9_-]+)',
+            r'(?:https?://)?(?:www\.)?youtube\.com/watch\?v=([A-Za-z0-9_-]+)',
+            r'(?:https?://)?youtu\.be/([A-Za-z0-9_-]+)',
+            r'(?:https?://)?(?:www\.)?youtube\.com/embed/([A-Za-z0-9_-]+)',
+        ]
+        for pat in yt_patterns:
+            m = _re.search(pat, url)
+            if m:
+                vid = m.group(1).split('?')[0]
+                return f'https://img.youtube.com/vi/{vid}/hqdefault.jpg'
+        return ''
+
     def to_dict(self):
         return {
             'id': self.id,
             'title': self.title,
             'thumbnail': self.thumbnail or '',
+            'auto_thumbnail': self._auto_thumbnail(),
             'video_url': self.video_url or '',
             'video_type': self.video_type or 'auto',
             'card_layout': self.card_layout or 'standard',

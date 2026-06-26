@@ -108,9 +108,13 @@
                         {% endif %}
                     </div>
                     {% endif %}
-                    <img src="{{ url_for('static', filename=reel.thumbnail) if reel.thumbnail and not reel.thumbnail.startswith('http') else (reel.thumbnail or url_for('static', filename='img/reel-placeholder.svg')) }}"
+                    {% set _thumb = reel.thumbnail %}
+                    {% set _auto = reel.auto_thumbnail %}
+                    {% set _placeholder = url_for('static', filename='img/reel-placeholder.svg') %}
+                    <img src="{% if _thumb %}{{ url_for('static', filename=_thumb) if not _thumb.startswith('http') else _thumb }}{% elif _auto %}{{ _auto }}{% else %}{{ _placeholder }}{% endif %}"
                          alt="{{ reel.title }}" class="reel-thumbnail"
-                         onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/reel-placeholder.svg') }}'">
+                         data-auto-thumb="{{ _auto }}"
+                         onerror="var a=this.dataset.autoThumb;if(a&&this.src!==a){this.onerror=function(){this.src='{{ _placeholder }}'};this.src=a;}else{this.onerror=null;this.src='{{ _placeholder }}'}">
                     <div class="reel-overlay">
                         <i class="fas fa-play-circle fa-3x"></i>
                     </div>
