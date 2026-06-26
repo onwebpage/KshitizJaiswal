@@ -71,7 +71,7 @@
                     class="preel-img"
                     loading="lazy"
                     draggable="false"
-                    data-auto-thumb="{{ _auto }}"
+                    data-auto-thumb="{% if not _thumb %}{{ _auto }}{% endif %}"
                     onerror="var a=this.dataset.autoThumb;if(a&&this.src!==a){this.onerror=function(){this.src='{{ _placeholder }}'};this.src=a;}else{this.onerror=null;this.src='{{ _placeholder }}'}">
                 <div class="preel-gradient"></div>
                 {% if platform == 'youtube' %}
