@@ -399,22 +399,14 @@ if (pvBtn) {
                     {% endif %}
                     
                     <div class="features-list mt-4">
+                        {% for feat in course_features %}
+                        {% if feat %}
                         <div class="feature-item">
                             <i class="fas fa-check-circle"></i>
-                            <span>Lifetime access</span>
+                            <span>{{ feat }}</span>
                         </div>
-                        <div class="feature-item">
-                            <i class="fas fa-check-circle"></i>
-                            <span>Mobile & desktop friendly</span>
-                        </div>
-                        <div class="feature-item">
-                            <i class="fas fa-check-circle"></i>
-                            <span>Certificate of completion</span>
-                        </div>
-                        <div class="feature-item">
-                            <i class="fas fa-check-circle"></i>
-                            <span>Learn at your own pace</span>
-                        </div>
+                        {% endif %}
+                        {% endfor %}
                     </div>
                 </div>
             </div>

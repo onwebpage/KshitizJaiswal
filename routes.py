@@ -2203,6 +2203,9 @@ def admin_add_course():
         elif form.thumbnail_url.data:
             thumbnail_path = form.thumbnail_url.data
         
+        import json as _json
+        features_raw = form.course_features.data or ''
+        features_list = [l.strip() for l in features_raw.splitlines() if l.strip()]
         course = Course(
             title=form.title.data,
             description=form.description.data,
@@ -2210,6 +2213,7 @@ def admin_add_course():
             preview_video_url=form.preview_video_url.data or '',
             preview_title=form.preview_title.data or '',
             preview_subtitle=form.preview_subtitle.data or '',
+            course_features=_json.dumps(features_list),
             price=form.price.data,
             is_active=bool(int(form.is_active.data)),
             sort_order=form.sort_order.data
@@ -2237,11 +2241,15 @@ def admin_edit_course(course_id):
         elif form.thumbnail_url.data:
             course.thumbnail = form.thumbnail_url.data
         
+        import json as _json
+        features_raw = form.course_features.data or ''
+        features_list = [l.strip() for l in features_raw.splitlines() if l.strip()]
         course.title = form.title.data
         course.description = form.description.data
         course.preview_video_url = form.preview_video_url.data or ''
         course.preview_title = form.preview_title.data or ''
         course.preview_subtitle = form.preview_subtitle.data or ''
+        course.course_features = _json.dumps(features_list)
         course.price = form.price.data
         course.is_active = bool(int(form.is_active.data))
         course.sort_order = form.sort_order.data
@@ -2250,11 +2258,17 @@ def admin_edit_course(course_id):
         flash(f'Course "{course.title}" updated successfully!', 'success')
         return redirect(url_for('admin_courses'))
     
+    import json as _json
     form.title.data = course.title
     form.description.data = course.description
     form.preview_video_url.data = course.preview_video_url or ''
     form.preview_title.data = course.preview_title or ''
     form.preview_subtitle.data = course.preview_subtitle or ''
+    try:
+        _feats = _json.loads(course.course_features) if course.course_features else []
+    except Exception:
+        _feats = []
+    form.course_features.data = '\n'.join(_feats)
     form.price.data = course.price
     form.is_active.data = '1' if course.is_active else '0'
     form.sort_order.data = course.sort_order
@@ -4015,6 +4029,14 @@ def course_detail(course_id):
     course_data = course.to_dict()
     course_data['has_access'] = has_access
 
+    # Parse course features for sidebar bullets
+    _default_features = ['Lifetime access', 'Mobile & desktop friendly', 'Certificate of completion', 'Learn at your own pace']
+    try:
+        _parsed = json.loads(course.course_features) if course.course_features else []
+        course_features_list = _parsed if _parsed else _default_features
+    except Exception:
+        course_features_list = _default_features
+
     razorpay_key = os.environ.get('RAZORPAY_KEY_ID', '')
     if not razorpay_key:
         payment_content = SiteContent.query.filter_by(content_key='payment_settings').first()
@@ -4031,7 +4053,7 @@ def course_detail(course_id):
 
     return render_template('course_detail.html', course=course_data, razorpay_key=razorpay_key,
                            curriculum_settings=curriculum_settings, testimonials=testimonials,
-                           is_logged_in=is_logged_in)
+                           is_logged_in=is_logged_in, course_features=course_features_list)
 
 @app.route('/course/<int:course_id>/start')
 def course_start(course_id):

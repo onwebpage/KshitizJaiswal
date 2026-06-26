@@ -105,6 +105,19 @@
                         </div>
                     </div>
 
+                    <!-- ── Course Features ── -->
+                    <div class="course-form-section">
+                        <div class="course-form-section-title">
+                            <i class="fas fa-check-circle"></i> Course Features (Sidebar Bullets)
+                        </div>
+                        <label class="form-label fw-semibold">{{ form.course_features.label.text }}</label>
+                        {{ form.course_features(class="form-control", rows=5,
+                            placeholder="Lifetime access\nMobile & desktop friendly\nCertificate of completion\nLearn at your own pace") }}
+                        <small class="form-text text-muted">
+                            <i class="fas fa-info-circle me-1"></i>Each line becomes one bullet point shown below the purchase button. Leave blank to use default bullets.
+                        </small>
+                    </div>
+
                     <!-- ── Pricing & Settings ── -->
                     <div class="course-form-section">
                         <div class="course-form-section-title">
