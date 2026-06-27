@@ -227,7 +227,7 @@ def index():
         # Resolve auto values and filter to only active stats for frontend display
         _support_total_cache = None
         active_stats = []
-        for idx, stat in enumerate(sorted(stats_data['stats'], key=lambda s: s.get('sort_order', idx))):
+        for idx, stat in enumerate(sorted(stats_data['stats'], key=lambda s: s.get('sort_order', 9999))):
             if not stat.get('is_active', True):
                 continue
             if stat.get('auto') == 'subscriber_count':
