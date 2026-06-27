@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>{% block title %}{% if seo_config and seo_config.get(request.endpoint, {}).get('title') %}{{ seo_config[request.endpoint]['title'] }}{% else %}Kshitiz Jaiswal - Unfiltered Commentator{% endif %}{% endblock %}</title>
+    {%- set _site_title = site_settings.get('site_title', 'Kshitiz Jaiswal') if site_settings else 'Kshitiz Jaiswal' -%}
+    {%- set _site_tagline = site_settings.get('site_tagline', 'Unfiltered Commentator') if site_settings else 'Unfiltered Commentator' -%}
+    <title>{% block title %}{% if seo_config and seo_config.get(request.endpoint, {}).get('title') %}{{ seo_config[request.endpoint]['title'] }}{% else %}{{ _site_title }} - {{ _site_tagline }}{% endif %}{% endblock %}</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -32,11 +34,11 @@
     <!-- Meta Tags -->
     {%- set _ep = request.endpoint -%}
     {%- set _seo_ep = seo_config.get(_ep, {}) if seo_config else {} -%}
-    {%- set _default_desc = 'Kshitiz Jaiswal - Unfiltered Commentator. The content here is selective, but the truth is never biased.' -%}
-    {%- set _default_title = 'Kshitiz Jaiswal - Unfiltered Commentator' -%}
+    {%- set _default_desc = _site_title ~ ' - ' ~ _site_tagline ~ '. The content here is selective, but the truth is never biased.' -%}
+    {%- set _default_title = _site_title ~ ' - ' ~ _site_tagline -%}
     <meta name="description" content="{% block meta_description %}{{ _seo_ep.get('description', _default_desc) or _default_desc }}{% endblock %}">
-    <meta name="keywords" content="{% block meta_keywords %}Kshitiz Jaiswal, commentator, truth, unfiltered, social commentary{% endblock %}">
-    <meta name="author" content="Kshitiz Jaiswal">
+    <meta name="keywords" content="{% block meta_keywords %}{{ _site_title }}, commentator, truth, unfiltered, social commentary{% endblock %}">
+    <meta name="author" content="{{ _site_title }}">
     <meta name="robots" content="index, follow">
     
     <!-- Open Graph -->
@@ -142,7 +144,7 @@
         <div class="container">
             <a class="navbar-brand" href="{{ url_for('index') }}">
                 <span class="brand-icon"><i class="fas fa-microphone-alt"></i></span>
-                <span class="brand-text">Kshitiz Jaiswal</span>
+                <span class="brand-text">{{ _site_title }}</span>
             </a>
 
             <button class="navbar-toggler nav-hamburger" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -280,7 +282,7 @@
                     <div class="footer-brand">
                         <h4 class="footer-brand-title">
                             <i class="fas fa-microphone-alt me-2"></i>
-                            Kshitiz Jaiswal
+                            {{ _site_title }}
                         </h4>
                         <p class="footer-description">Unfiltered Commentator. The content here is selective, but the truth is never biased.</p>
                         
@@ -360,7 +362,7 @@
             <div class="footer-bottom">
                 <div class="row align-items-center">
                     <div class="col-md-6">
-                        <p class="footer-copyright">&copy; Kshitiz Jaiswal. All rights reserved. Jaiswal Communication.</p>
+                        <p class="footer-copyright">&copy; {{ _site_title }}. All rights reserved.</p>
                     </div>
                     <div class="col-md-6 text-md-end">
                         <div class="footer-stats">
