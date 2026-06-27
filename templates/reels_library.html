@@ -127,6 +127,42 @@
 </section>
 
 <style>
+/* ══════════════════════════════════════════════════
+   BEYOND THE REEL PAGE — Premium dark theme
+   matches site-wide maroon/dark-red palette
+   ══════════════════════════════════════════════════ */
+
+/* ── Page section background ────────────────────── */
+.reels-showcase-section {
+    background: linear-gradient(135deg, #0f0f0f 0%, #1a0000 50%, #0f0f0f 100%);
+    position: relative;
+    min-height: 60vh;
+}
+.reels-showcase-section::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>') repeat;
+    opacity: 0.45;
+    pointer-events: none;
+    z-index: 0;
+}
+.reels-showcase-section::after {
+    content: '';
+    position: absolute;
+    top: -80px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 800px;
+    height: 400px;
+    background: radial-gradient(ellipse, rgba(204,0,0,.18) 0%, rgba(139,0,0,.08) 45%, transparent 70%);
+    border-radius: 50%;
+    filter: blur(40px);
+    pointer-events: none;
+    z-index: 0;
+}
+.reels-showcase-section .container { position: relative; z-index: 1; }
+
 /* ── Container ──────────────────────────────────── */
 .showcase-container { max-width: 1280px; }
 
@@ -141,7 +177,7 @@
     gap: 0.75rem;
     margin-bottom: 1.5rem;
     padding-bottom: 0.875rem;
-    border-bottom: 2px solid #f0f0f0;
+    border-bottom: 1px solid rgba(204,0,0,.3);
 }
 
 .platform-section-title {
@@ -152,20 +188,21 @@
     font-weight: 800;
     letter-spacing: -0.01em;
 }
-
 .platform-section-title i { font-size: 1.4rem; }
-
-.ig-title { color: #c13584; }
-.yt-title { color: #cc0000; }
+.ig-title { color: #e1599d; }
+.yt-title { color: #ff4444; }
 
 .platform-total-badge {
     font-size: 0.72rem;
     font-weight: 600;
-    background: #f0f0f0;
-    color: #555;
+    background: rgba(255,255,255,.1);
+    color: rgba(255,255,255,.75);
+    border: 1px solid rgba(255,255,255,.15);
     padding: 2px 10px;
     border-radius: 20px;
     margin-left: 0.25rem;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
 }
 
 /* ── View All buttons ───────────────────────────── */
@@ -177,33 +214,39 @@
     font-weight: 600;
     padding: 0.45rem 1.1rem;
     border-radius: 50px;
-    border: 2px solid transparent;
+    border: 1.5px solid transparent;
     text-decoration: none;
     transition: all 0.22s ease;
     white-space: nowrap;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
 }
 .ig-view-all {
-    color: #c13584;
-    border-color: #c13584;
-    background: transparent;
+    color: #e1599d;
+    border-color: rgba(225,89,157,.55);
+    background: rgba(225,89,157,.08);
 }
 .ig-view-all:hover {
     background: #c13584;
+    border-color: #c13584;
     color: #fff;
     text-decoration: none;
+    box-shadow: 0 4px 18px rgba(193,53,132,.35);
 }
 .yt-view-all {
-    color: #cc0000;
-    border-color: #cc0000;
-    background: transparent;
+    color: #ff4444;
+    border-color: rgba(255,68,68,.45);
+    background: rgba(204,0,0,.08);
 }
 .yt-view-all:hover {
     background: #cc0000;
+    border-color: #cc0000;
     color: #fff;
     text-decoration: none;
+    box-shadow: 0 4px 18px rgba(204,0,0,.4);
 }
 
-/* ── Showcase grid (CSS Grid, responsive) ───────── */
+/* ── Showcase grid ───────────────────────────────── */
 .showcase-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -216,52 +259,76 @@
     .showcase-grid { grid-template-columns: repeat(2, 1fr); gap: 0.875rem; }
 }
 
-/* ── Showcase card ──────────────────────────────── */
+/* ── Showcase card — glassmorphism dark ─────────── */
 .showcase-card {
     display: block;
     text-decoration: none;
-    border-radius: 14px;
+    border-radius: 16px;
     overflow: hidden;
-    background: #fff;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    background: linear-gradient(135deg, rgba(255,255,255,.06) 0%, rgba(255,255,255,.02) 100%);
+    border: 1px solid rgba(255,255,255,.1);
+    box-shadow: 0 8px 28px rgba(0,0,0,.45), 0 2px 8px rgba(0,0,0,.3);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transition: transform 0.28s cubic-bezier(.23,1,.32,1), box-shadow 0.28s ease, border-color 0.28s ease;
     color: inherit;
+    position: relative;
+}
+.showcase-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,.04) 0%, transparent 60%);
+    border-radius: 16px;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0;
+    transition: opacity 0.28s ease;
 }
 .showcase-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 12px 32px rgba(0,0,0,0.14);
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 52px rgba(0,0,0,.6), 0 4px 16px rgba(204,0,0,.15);
+    border-color: rgba(204,0,0,.4);
     color: inherit;
     text-decoration: none;
 }
+.showcase-card:hover::before { opacity: 1; }
 
 .showcase-card-thumb {
     position: relative;
     aspect-ratio: 16/9;
     overflow: hidden;
     background: #111;
+    z-index: 1;
 }
 .showcase-card-thumb img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.3s ease;
+    transition: transform 0.38s cubic-bezier(.23,1,.32,1);
     display: block;
 }
-.showcase-card:hover .showcase-card-thumb img { transform: scale(1.07); }
+.showcase-card:hover .showcase-card-thumb img { transform: scale(1.08); }
 
 .showcase-card-play {
     position: absolute;
     inset: 0;
-    background: rgba(0,0,0,0.42);
+    background: linear-gradient(to bottom, rgba(0,0,0,.1) 0%, rgba(0,0,0,.5) 100%);
     display: flex;
     align-items: center;
     justify-content: center;
     opacity: 0;
     transition: opacity 0.25s ease;
+    z-index: 2;
 }
 .showcase-card:hover .showcase-card-play { opacity: 1; }
-.showcase-card-play i { font-size: 2.8rem; color: #fff; }
+.showcase-card-play i {
+    font-size: 2.8rem;
+    color: #fff;
+    filter: drop-shadow(0 0 12px rgba(204,0,0,.6));
+}
 
+/* ── Category tags ───────────────────────────────── */
 .showcase-tag {
     position: absolute;
     top: 10px;
@@ -270,22 +337,28 @@
     border-radius: 20px;
     font-size: 0.72rem;
     font-weight: 600;
-    z-index: 2;
-    background: rgba(255,255,255,0.95);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    z-index: 3;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 2px 8px rgba(0,0,0,.35);
 }
-.showcase-tag.trending   { background: linear-gradient(135deg,#ff6b6b,#ff5252); color:#fff; }
-.showcase-tag.new        { background: linear-gradient(135deg,#4CAF50,#45a049); color:#fff; }
+.showcase-tag.trending      { background: linear-gradient(135deg,#ff6b6b,#ff5252); color:#fff; }
+.showcase-tag.new           { background: linear-gradient(135deg,#4CAF50,#45a049); color:#fff; }
 .showcase-tag.fan_favourite { background: linear-gradient(135deg,#e91e63,#c2185b); color:#fff; }
-.showcase-tag.exclusive  { background: linear-gradient(135deg,#ffd700,#ffb300); color:#000; }
-.showcase-tag.must_watch { background: linear-gradient(135deg,#9c27b0,#7b1fa2); color:#fff; }
+.showcase-tag.exclusive     { background: linear-gradient(135deg,#ffd700,#ffb300); color:#000; }
+.showcase-tag.must_watch    { background: linear-gradient(135deg,#9c27b0,#7b1fa2); color:#fff; }
 .showcase-tag.behind_scenes { background: linear-gradient(135deg,#607d8b,#455a64); color:#fff; }
 
-.showcase-card-body { padding: 0.875rem 1rem; }
+/* ── Card body ───────────────────────────────────── */
+.showcase-card-body {
+    padding: 0.875rem 1rem;
+    position: relative;
+    z-index: 1;
+}
 .showcase-card-title {
     font-size: 0.92rem;
     font-weight: 700;
-    color: #1a1a1a;
+    color: rgba(255,255,255,.92);
     margin: 0 0 0.3rem;
     line-height: 1.4;
     display: -webkit-box;
@@ -294,20 +367,27 @@
     overflow: hidden;
 }
 .showcase-card-topic {
-    font-size: 0.75rem;
-    color: #888;
-    background: #f5f5f5;
+    font-size: 0.72rem;
+    color: rgba(255,255,255,.55);
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.12);
     padding: 2px 8px;
     border-radius: 10px;
     display: inline-block;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
 }
 
-/* ── WhatsApp CTA ───────────────────────────────── */
+/* ── Empty state ─────────────────────────────────── */
+.no-results h4 { color: rgba(255,255,255,.7); }
+.no-results .text-muted { color: rgba(255,255,255,.4) !important; }
+
+/* ── WhatsApp CTA ────────────────────────────────── */
 .reels-wa-banner {
     background: linear-gradient(135deg,#1a0000 0%,#3d0000 50%,#1a0000 100%);
     border-radius: 18px;
     padding: 2px;
-    box-shadow: 0 8px 28px rgba(204,0,0,0.18);
+    box-shadow: 0 8px 28px rgba(204,0,0,.22);
 }
 .reels-wa-inner {
     background: linear-gradient(135deg,#140000 0%,#2d0505 60%,#1a0000 100%);
@@ -317,7 +397,7 @@
     align-items: center;
     gap: 20px;
     flex-wrap: wrap;
-    border: 1px solid rgba(204,0,0,0.25);
+    border: 1px solid rgba(204,0,0,.28);
 }
 .reels-wa-icon {
     width: 56px; height: 56px;
@@ -329,10 +409,11 @@
     flex-shrink: 0;
     font-size: 1.6rem;
     color: #fff;
+    box-shadow: 0 4px 16px rgba(37,211,102,.35);
 }
 .reels-wa-text { flex: 1; color: #fff; min-width: 180px; }
 .reels-wa-text h5 { font-size: 1.05rem; font-weight: 700; margin-bottom: 4px; }
-.reels-wa-text p  { font-size: 0.88rem; opacity: 0.78; margin: 0; }
+.reels-wa-text p  { font-size: 0.88rem; opacity: 0.75; margin: 0; }
 .reels-wa-btn {
     display: inline-flex;
     align-items: center;
@@ -345,14 +426,14 @@
     text-decoration: none;
     white-space: nowrap;
     transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
-    box-shadow: 0 4px 16px rgba(37,211,102,0.3);
+    box-shadow: 0 4px 16px rgba(37,211,102,.35);
     flex-shrink: 0;
 }
 .reels-wa-btn:hover {
     background: #128C7E;
     color: #fff;
     transform: translateY(-2px);
-    box-shadow: 0 8px 22px rgba(37,211,102,0.4);
+    box-shadow: 0 8px 22px rgba(37,211,102,.45);
     text-decoration: none;
 }
 @media (max-width: 768px) {
