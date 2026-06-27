@@ -149,9 +149,18 @@
                     </div>
 
                     <!-- ── Submit ── -->
-                    <div class="d-flex gap-3 flex-wrap">
-                        {{ form.submit(class="btn btn-primary px-5 fw-semibold") }}
-                        <a href="{{ url_for('admin_courses') }}" class="btn btn-outline-secondary px-4">
+                    <input type="hidden" name="_action" id="courseAction" value="save">
+                    <div class="d-flex gap-2 flex-wrap align-items-center">
+                        <button type="submit" class="btn btn-primary px-4 fw-semibold" onclick="setCourseAction('save')">
+                            <i class="fas fa-save me-2"></i>Save
+                        </button>
+                        <button type="submit" class="btn btn-success px-4 fw-semibold" onclick="setCourseAction('save_and_add')">
+                            <i class="fas fa-plus-circle me-2"></i>Save &amp; Add Another
+                        </button>
+                        <button type="submit" class="btn btn-outline-primary px-4 fw-semibold" onclick="setCourseAction('save_and_stay')">
+                            <i class="fas fa-edit me-2"></i>Save &amp; Stay Here
+                        </button>
+                        <a href="{{ url_for('admin_courses') }}" class="btn btn-outline-secondary px-4 ms-auto">
                             <i class="fas fa-times me-1"></i>Cancel
                         </a>
                     </div>
@@ -166,6 +175,10 @@
 <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
 {{ image_upload_js() }}
 <script>
+function setCourseAction(action) {
+    var el = document.getElementById('courseAction');
+    if (el) el.value = action;
+}
 document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.alert.alert-dismissible').forEach(function(el) {
         setTimeout(function() { try { new bootstrap.Alert(el).close(); } catch(e){} }, 5000);

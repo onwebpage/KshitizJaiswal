@@ -85,8 +85,8 @@
             <div class="admin-card">
                 <div class="admin-header">
                     <h2>{{ title }}</h2>
-                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
-                        <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                    <a href="{{ url_for('admin_content_manager') }}#reels" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Reels
                     </a>
                 </div>
 
@@ -290,11 +290,18 @@
                     </div>
 
                     <!-- ── Submit ── -->
-                    <div class="d-flex gap-3 flex-wrap">
-                        <button type="submit" class="btn btn-primary px-5 fw-semibold">
-                            <i class="fas fa-save me-2"></i>Save Reel
+                    <input type="hidden" name="_action" id="reelAction" value="save">
+                    <div class="d-flex gap-2 flex-wrap align-items-center">
+                        <button type="submit" class="btn btn-primary px-4 fw-semibold" onclick="setReelAction('save')">
+                            <i class="fas fa-save me-2"></i>Save
                         </button>
-                        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary px-4">
+                        <button type="submit" class="btn btn-success px-4 fw-semibold" onclick="setReelAction('save_and_add')">
+                            <i class="fas fa-plus-circle me-2"></i>Save &amp; Add Another
+                        </button>
+                        <button type="submit" class="btn btn-outline-primary px-4 fw-semibold" onclick="setReelAction('save_and_stay')">
+                            <i class="fas fa-edit me-2"></i>Save &amp; Stay Here
+                        </button>
+                        <a href="{{ url_for('admin_content_manager') }}#reels" class="btn btn-outline-secondary px-4 ms-auto">
                             <i class="fas fa-times me-1"></i>Cancel
                         </a>
                     </div>
@@ -444,6 +451,11 @@
     if (typeSelect) {
         typeSelect.addEventListener('change', updateUI);
     }
+
+    window.setReelAction = function(action) {
+        var el = document.getElementById('reelAction');
+        if (el) el.value = action;
+    };
 
     // Run on load
     document.addEventListener('DOMContentLoaded', function () {

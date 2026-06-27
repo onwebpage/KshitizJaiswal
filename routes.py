@@ -1434,7 +1434,12 @@ def admin_add_reel():
         db.session.commit()
         
         flash('Reel added successfully!', 'success')
-        return redirect(url_for('admin_dashboard'))
+        _action = request.form.get('_action', 'save')
+        if _action == 'save_and_add':
+            return redirect(url_for('admin_add_reel'))
+        elif _action == 'save_and_stay':
+            return redirect(url_for('admin_edit_reel', reel_id=new_reel.id))
+        return redirect(url_for('admin_content_manager') + '#reels')
     
     return render_template('admin/reel_form.html', form=form, title='Add New Reel')
 
@@ -1521,7 +1526,12 @@ def admin_edit_reel(reel_id):
         db.session.commit()
         
         flash('Reel updated successfully!', 'success')
-        return redirect(url_for('admin_dashboard'))
+        _action = request.form.get('_action', 'save')
+        if _action == 'save_and_add':
+            return redirect(url_for('admin_add_reel'))
+        elif _action == 'save_and_stay':
+            return redirect(url_for('admin_edit_reel', reel_id=reel_id))
+        return redirect(url_for('admin_content_manager') + '#reels')
     
     # Pre-populate form with existing data
     if request.method == 'GET':
@@ -1549,7 +1559,7 @@ def admin_delete_reel(reel_id):
     db.session.delete(reel)
     db.session.commit()
     flash('Reel deleted successfully!', 'success')
-    return redirect(url_for('admin_dashboard') + '#reels')
+    return redirect(url_for('admin_content_manager') + '#reels')
 
 
 @app.route('/admin/reel/<int:reel_id>/toggle-visible', methods=['POST'])
@@ -2658,6 +2668,11 @@ def admin_add_course():
         db.session.commit()
         
         flash(f'Course "{course.title}" added successfully!', 'success')
+        _action = request.form.get('_action', 'save')
+        if _action == 'save_and_add':
+            return redirect(url_for('admin_add_course'))
+        elif _action == 'save_and_stay':
+            return redirect(url_for('admin_edit_course', course_id=course.id))
         return redirect(url_for('admin_courses'))
     
     return render_template('admin/course_form.html', form=form, title='Add New Course')
@@ -2692,6 +2707,11 @@ def admin_edit_course(course_id):
         
         db.session.commit()
         flash(f'Course "{course.title}" updated successfully!', 'success')
+        _action = request.form.get('_action', 'save')
+        if _action == 'save_and_add':
+            return redirect(url_for('admin_add_course'))
+        elif _action == 'save_and_stay':
+            return redirect(url_for('admin_edit_course', course_id=course_id))
         return redirect(url_for('admin_courses'))
     
     import json as _json
