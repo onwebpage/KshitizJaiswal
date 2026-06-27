@@ -760,30 +760,11 @@ h1, h2, h3, h4, h5, h6 {
 /* Resources Page Styles */
 .resources-hero {
   background: linear-gradient(135deg, #1a0000 0%, #4a0000 40%, #8b0000 100%);
-  padding: 36px 0 36px;
+  padding: 28px 0 28px;
   text-align: center;
   color: var(--white);
   position: relative;
   overflow: hidden;
-}
-
-.resources-hero::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background:
-    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(204,0,0,.35) 0%, transparent 70%),
-    url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60"><defs><pattern id="g" width="60" height="60" patternUnits="userSpaceOnUse"><path d="M 60 0 L 0 0 0 60" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1"/></pattern></defs><rect width="60" height="60" fill="url(%23g)"/></svg>') repeat;
-  z-index: 1;
-}
-
-.resources-hero::after {
-  content: '';
-  position: absolute;
-  bottom: -2px; left: 0; right: 0;
-  height: 60px;
-  background: linear-gradient(to bottom, transparent, rgba(0,0,0,.15));
-  z-index: 1;
 }
 
 .resources-hero .container {
@@ -791,80 +772,40 @@ h1, h2, h3, h4, h5, h6 {
   z-index: 2;
 }
 
-.resources-hero-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  background: rgba(255,255,255,.1);
-  border: 1px solid rgba(255,255,255,.25);
-  border-radius: 50px;
-  padding: 5px 16px;
-  font-size: .78rem;
-  font-weight: 700;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,.85);
-  margin-bottom: 18px;
-  backdrop-filter: blur(6px);
-}
-
 .resources-hero-title {
-  font-size: 3.5rem;
+  font-size: 3rem;
   font-weight: 900;
   color: var(--white);
-  margin-bottom: .6rem;
+  margin: 0 0 10px;
   letter-spacing: -.5px;
   line-height: 1.1;
   text-shadow: 0 4px 24px rgba(0,0,0,.4);
 }
 
-.resources-hero-accent {
-  display: block;
-  width: 52px;
-  height: 4px;
-  border-radius: 2px;
-  background: linear-gradient(90deg, #cc0000, #ff4444);
-  margin: 14px auto 20px;
-  box-shadow: 0 2px 12px rgba(204,0,0,.6);
-}
-
 .resources-hero-subtitle {
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   color: rgba(255, 255, 255, 0.78);
-  margin-bottom: 0;
+  margin: 0;
   max-width: 500px;
   margin-left: auto;
   margin-right: auto;
   font-style: italic;
-  line-height: 1.6;
+  line-height: 1.5;
 }
 
 @media (max-width: 767.98px) {
   .resources-hero {
-    padding: 12px 0 28px;
-  }
-  
-  .resources-hero-badge {
-    font-size: .72rem;
-    padding: 4px 13px;
-    margin-bottom: 12px;
+    padding: 14px 16px 20px;
   }
 
   .resources-hero-title {
-    font-size: 1.85rem;
-    letter-spacing: -.3px;
-    margin-bottom: .4rem;
+    font-size: 1.75rem;
+    letter-spacing: -.2px;
+    margin-bottom: 8px;
   }
 
-  .resources-hero-accent {
-    width: 38px;
-    height: 3px;
-    margin: 10px auto 14px;
-  }
-  
   .resources-hero-subtitle {
-    font-size: .93rem;
-    padding: 0 12px;
+    font-size: .9rem;
   }
 }
 
