@@ -23,24 +23,8 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   BEYOND THE REEL — Premium card carousel
+   BEYOND THE REEL — Premium vertical reel card carousel
    ═══════════════════════════════════════════════════════════════════ */
-
-/* Dynamic card width — set by server based on reel count */
-{% if content and content.reels %}
-{% set _rc = content.reels | length %}
-{% if _rc == 1 %}
-:root { --preel-card-w: calc(88vw - 116px); }
-{% elif _rc == 2 %}
-:root { --preel-card-w: calc(47vw - 62px); }
-{% elif _rc == 3 %}
-:root { --preel-card-w: calc(31vw - 44px); }
-{% else %}
-:root { --preel-card-w: calc(23.5vw - 34px); }
-{% endif %}
-{% else %}
-:root { --preel-card-w: calc(23.5vw - 34px); }
-{% endif %}
 
 /* Section */
 .premium-reels-section {
@@ -105,21 +89,21 @@
     text-decoration: none;
 }
 
-/* Full-bleed: breaks out of Bootstrap container */
+/* Full-bleed container — 90% wide, centred */
 .preel-full-bleed {
-    width: 100%;
-    padding: 0 12px;
+    width: 90%;
+    margin: 0 auto;
     box-sizing: border-box;
 }
 
-/* Carousel wrap — flex row: [arrow] [overflow] [arrow] */
+/* Carousel wrap — flex row so arrows sit right against card edges */
 .preel-carousel-wrap {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
 }
 
-/* Overflow clip */
+/* Overflow clip — fills remaining space, max-width set per-instance via inline style */
 .preel-carousel-overflow {
     flex: 1;
     min-width: 0;
@@ -129,7 +113,7 @@
 /* Scrolling track */
 .preel-carousel {
     display: flex;
-    gap: 16px;
+    gap: 24px;
     width: max-content;
     will-change: transform;
     user-select: none;
@@ -137,9 +121,10 @@
     transition: transform 0.42s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-/* Arrow buttons — flex children, naturally adjacent to the track */
+/* Arrow buttons — flex-shrink siblings, sit just outside card area */
 .preel-nav-btn {
     flex-shrink: 0;
+    position: static;
     width: 48px;
     height: 48px;
     border-radius: 50%;
@@ -155,8 +140,6 @@
     box-shadow: 0 4px 20px rgba(0,0,0,.55);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
-    position: static;
-    transform: none;
 }
 .preel-nav-btn:hover {
     background: rgba(204,0,0,.95);
@@ -170,11 +153,11 @@
     pointer-events: none;
 }
 
-/* Card */
+/* Card — fixed 275px wide, 9:16 vertical reel format */
 .preel-card {
     flex-shrink: 0;
-    width: var(--preel-card-w, calc(23.5vw - 34px));
-    border-radius: 20px;
+    width: 275px;
+    border-radius: 24px;
     overflow: hidden;
     display: block;
     text-decoration: none;
@@ -190,10 +173,10 @@
     z-index: 5;
 }
 
-/* Thumbnail — fixed clamp height, image fills via object-fit */
+/* Thumbnail — enforce 9:16 aspect ratio (vertical reel / Instagram / Shorts) */
 .preel-thumb {
     position: relative;
-    height: clamp(300px, 42vh, 500px);
+    aspect-ratio: 9 / 16;
     background: linear-gradient(160deg, #0e0e20 0%, #171730 60%, #0b0b1c 100%);
     overflow: hidden;
 }
@@ -207,7 +190,7 @@
 }
 .preel-card:hover .preel-img { transform: scale(1.06); }
 
-/* Premium placeholder — hide the default SVG text, show dark gradient */
+/* Premium placeholder */
 .preel-img[src$="reel-placeholder.svg"] {
     object-fit: contain;
     padding: 28% 30%;
@@ -233,7 +216,7 @@
     z-index: 2;
 }
 .preel-title {
-    font-size: clamp(.88rem, 1.2vw, 1.05rem);
+    font-size: .95rem;
     font-weight: 700;
     color: #fff;
     margin: 0 0 4px;
@@ -320,31 +303,30 @@
     z-index: 4;
 }
 
-/* Tablet — 2 cards */
+/* Tablet — 3 cards visible + partial 4th */
 @media (max-width: 1100px) {
-    :root { --preel-card-w: calc(46vw - 52px); }
-    .preel-carousel { gap: 14px; }
-    .preel-full-bleed { padding: 0 8px; }
-    .preel-carousel-wrap { gap: 8px; }
+    .preel-card { width: 230px; border-radius: 20px; }
+    .preel-carousel { gap: 20px; }
+    .preel-carousel-wrap { gap: 10px; }
     .preel-nav-btn { width: 42px; height: 42px; font-size: .92rem; }
 }
 
-/* Mobile — 1 card + partial 2nd */
+/* Mobile — 1.2 cards visible */
 @media (max-width: 700px) {
     .premium-reels-section { padding: 40px 0 56px; }
     .premium-reels-header { margin-bottom: 24px; }
-    :root { --preel-card-w: calc(83vw - 46px); }
-    .preel-carousel { gap: 12px; }
-    .preel-full-bleed { padding: 0 4px; }
-    .preel-carousel-wrap { gap: 6px; }
-    .preel-nav-btn { width: 38px; height: 38px; font-size: .85rem; }
+    .preel-full-bleed { width: 94%; }
+    .preel-card { width: 78vw; border-radius: 18px; }
+    .preel-carousel { gap: 16px; }
+    .preel-carousel-wrap { gap: 8px; }
+    .preel-nav-btn { width: 36px; height: 36px; font-size: .82rem; }
     .preel-title { font-size: .9rem; }
     .preel-title-block { padding: 12px 14px 16px; }
     .preel-play-btn { width: 50px; height: 50px; font-size: 1.1rem; }
 }
 @media (max-width: 420px) {
-    :root { --preel-card-w: calc(88vw - 42px); }
-    .preel-nav-btn { width: 34px; height: 34px; font-size: .8rem; }
+    .preel-card { width: 82vw; }
+    .preel-nav-btn { width: 32px; height: 32px; font-size: .78rem; }
 }
 </style>
 {% endblock %}
@@ -429,7 +411,9 @@
             <button class="preel-nav-btn preel-nav-prev" id="reelPrev" aria-label="Previous reels">
                 <i class="fas fa-chevron-left"></i>
             </button>
-            <div class="preel-carousel-overflow">
+            {%- set _rc = content.reels | length -%}
+            {%- set _ow = _rc * 275 + (_rc - 1) * 24 -%}
+            <div class="preel-carousel-overflow" style="max-width:{{ _ow }}px">
                 <div class="preel-carousel" id="reelCarousel">
                     {% for reel in content.reels %}{{ premium_reel_card(reel) }}{% endfor %}
                 </div>
