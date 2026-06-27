@@ -1963,7 +1963,8 @@ def admin_add_subscription_tier():
             icon=form.icon.data or 'fas fa-heart',
             benefits=json.dumps(benefits),
             is_popular=(form.is_popular.data == '1'),
-            sort_order=form.sort_order.data
+            sort_order=form.sort_order.data,
+            payment_link=form.payment_link.data.strip() or None
         )
         
         db.session.add(new_tier)
@@ -2011,7 +2012,8 @@ def admin_edit_subscription_tier(tier_id):
         tier.benefits = json.dumps(benefits)
         tier.is_popular = (form.is_popular.data == '1')
         tier.sort_order = form.sort_order.data
-        
+        tier.payment_link = form.payment_link.data.strip() or None
+
         db.session.commit()
         
         flash('Subscription tier updated successfully!', 'success')

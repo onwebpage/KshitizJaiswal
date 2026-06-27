@@ -125,6 +125,7 @@ class SubscriptionTier(db.Model):
     is_active = db.Column(db.Boolean, default=True)
     sort_order = db.Column(db.Integer, default=0)
     razorpay_plan_id = db.Column(db.String(100))  # Cached Razorpay Plan ID for autopay
+    payment_link = db.Column(db.Text)             # Direct Razorpay auto-pay link
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def to_dict(self):
@@ -139,7 +140,8 @@ class SubscriptionTier(db.Model):
             'is_popular': self.is_popular,
             'is_active': self.is_active,
             'sort_order': self.sort_order,
-            'razorpay_plan_id': self.razorpay_plan_id or ''
+            'razorpay_plan_id': self.razorpay_plan_id or '',
+            'payment_link': self.payment_link or ''
         }
 
 

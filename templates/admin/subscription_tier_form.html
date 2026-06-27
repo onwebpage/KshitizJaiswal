@@ -1,241 +1,204 @@
-{% extends "base.html" %}
-
+{% extends "admin/admin_base.html" %}
 {% block title %}{{ title }} - Admin{% endblock %}
 
-{% block content %}
-<div class="admin-section">
-    <div class="container-fluid">
-        <div class="row">
-            <!-- Sidebar -->
-            <div class="col-lg-3 col-md-4">
-                <div class="admin-sidebar">
-                    <div class="admin-header">
-                        <h4><i class="fas fa-cog me-2"></i>Admin Panel</h4>
-                        <a href="{{ url_for('admin_logout') }}" class="btn btn-sm btn-outline-danger">
-                            <i class="fas fa-sign-out-alt me-1"></i>Logout
-                        </a>
+{% block admin_content %}
+<div class="container-fluid p-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1"><i class="fas fa-crown me-2 text-warning"></i>{{ title }}</h2>
+            <p class="text-muted mb-0 small">{{ 'Update tier details and auto-pay link.' if tier else 'Create a new subscription tier.' }}</p>
+        </div>
+        <a href="{{ url_for('admin_subscription_tiers') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Back to Tiers
+        </a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}{% for category, message in messages %}
+        <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show mb-3">
+            <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-triangle' }} me-2"></i>{{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}{% endif %}
+    {% endwith %}
+
+    <div class="row g-4">
+        <!-- Form -->
+        <div class="col-lg-8">
+            <form method="POST" enctype="multipart/form-data">
+                {{ form.hidden_tag() }}
+
+                <!-- Basic Information -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-bottom py-3">
+                        <h6 class="mb-0 fw-bold"><i class="fas fa-info-circle me-2 text-primary"></i>Basic Information</h6>
                     </div>
-                    
-                    <div class="admin-nav">
-                        <a href="{{ url_for('admin_dashboard') }}" class="admin-nav-item">
-                            <i class="fas fa-home me-2"></i>Dashboard
-                        </a>
-                        <a href="{{ url_for('admin_subscription_tiers') }}" class="admin-nav-item">
-                            <i class="fas fa-arrow-left me-2"></i>Back to Tiers
-                        </a>
-                        <a href="{{ url_for('admin_subscription_tiers') }}" class="admin-nav-item">
-                            <i class="fas fa-crown me-2"></i>Subscription Tiers
-                        </a>
+                    <div class="card-body p-4">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                {{ form.name.label(class="form-label fw-semibold") }}
+                                {{ form.name(class="form-control", placeholder="e.g. Chai Buddy") }}
+                                {% if form.name.errors %}<div class="text-danger small mt-1">{% for e in form.name.errors %}{{ e }}{% endfor %}</div>{% endif %}
+                            </div>
+                            <div class="col-md-3">
+                                {{ form.price.label(class="form-label fw-semibold") }}
+                                <div class="input-group">
+                                    <span class="input-group-text">₹</span>
+                                    {{ form.price(class="form-control", placeholder="10") }}
+                                </div>
+                                {% if form.price.errors %}<div class="text-danger small mt-1">{% for e in form.price.errors %}{{ e }}{% endfor %}</div>{% endif %}
+                            </div>
+                            <div class="col-md-3">
+                                {{ form.period.label(class="form-label fw-semibold") }}
+                                {{ form.period(class="form-select") }}
+                                {% if form.period.errors %}<div class="text-danger small mt-1">{% for e in form.period.errors %}{{ e }}{% endfor %}</div>{% endif %}
+                            </div>
+                            <div class="col-12">
+                                {{ form.description.label(class="form-label fw-semibold") }}
+                                {{ form.description(class="form-control", rows="3", placeholder="Brief description of what supporters get…") }}
+                                {% if form.description.errors %}<div class="text-danger small mt-1">{% for e in form.description.errors %}{{ e }}{% endfor %}</div>{% endif %}
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-            
-            <!-- Main Content -->
-            <div class="col-lg-9 col-md-8">
-                <div class="admin-content">
-                    <div class="admin-header">
-                        <h2><i class="fas fa-crown me-2"></i>{{ title }}</h2>
+
+                <!-- Auto-Pay Link -->
+                <div class="card border-0 shadow-sm mb-4" style="border-left: 4px solid #0ea5e9 !important;">
+                    <div class="card-header bg-white border-bottom py-3">
+                        <h6 class="mb-0 fw-bold"><i class="fas fa-link me-2 text-info"></i>Auto-Pay Link</h6>
                     </div>
-                    
-                    {% with messages = get_flashed_messages(with_categories=true) %}
-                        {% if messages %}
-                            {% for category, message in messages %}
-                                <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show">
-                                    {{ message }}
-                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                                </div>
-                            {% endfor %}
+                    <div class="card-body p-4">
+                        <label class="form-label fw-semibold">Razorpay Payment / Subscription Link</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="fas fa-link text-info"></i></span>
+                            {{ form.payment_link(class="form-control", placeholder="https://rzp.io/l/your-link or https://pages.razorpay.com/…", id="payment_link_input") }}
+                        </div>
+                        <div class="form-text mt-1">
+                            Paste your Razorpay Payment Link or Subscription Page URL here.
+                            When set, the <strong>Support button</strong> for this tier opens this link directly.
+                            <a href="https://razorpay.com/payment-links/" target="_blank" class="ms-1">Create a link on Razorpay →</a>
+                        </div>
+                        {% if form.payment_link.errors %}<div class="text-danger small mt-1">{% for e in form.payment_link.errors %}{{ e }}{% endfor %}</div>{% endif %}
+
+                        {% if tier and tier.payment_link %}
+                        <div class="mt-3 p-3 rounded-2" style="background:#f0f9ff;border:1px solid #bae6fd;">
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <i class="fas fa-check-circle text-info"></i>
+                                <strong class="text-info">Link set:</strong>
+                                <a href="{{ tier.payment_link }}" target="_blank" class="text-truncate" style="max-width:400px;">{{ tier.payment_link }}</a>
+                                <a href="{{ tier.payment_link }}" target="_blank" class="btn btn-sm btn-outline-info ms-auto">
+                                    <i class="fas fa-external-link-alt me-1"></i>Test Link
+                                </a>
+                            </div>
+                        </div>
                         {% endif %}
-                    {% endwith %}
-                    
-                    <div class="admin-card">
-                        <form method="POST" enctype="multipart/form-data">
-                            {{ form.hidden_tag() }}
-                            
-                            <div class="row g-4">
-                                <!-- Basic Information -->
-                                <div class="col-12">
-                                    <h5 class="border-bottom pb-2 mb-3">Basic Information</h5>
-                                </div>
-                                
-                                <div class="col-md-6">
-                                    {{ form.name.label(class="form-label") }}
-                                    {{ form.name(class="form-control") }}
-                                    {% if form.name.errors %}
-                                        <div class="text-danger">
-                                            {% for error in form.name.errors %}
-                                                <small>{{ error }}</small>
-                                            {% endfor %}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                                
-                                <div class="col-md-3">
-                                    {{ form.price.label(class="form-label") }}
-                                    {{ form.price(class="form-control") }}
-                                    {% if form.price.errors %}
-                                        <div class="text-danger">
-                                            {% for error in form.price.errors %}
-                                                <small>{{ error }}</small>
-                                            {% endfor %}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                                
-                                <div class="col-md-3">
-                                    {{ form.period.label(class="form-label") }}
-                                    {{ form.period(class="form-control") }}
-                                    {% if form.period.errors %}
-                                        <div class="text-danger">
-                                            {% for error in form.period.errors %}
-                                                <small>{{ error }}</small>
-                                            {% endfor %}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                                
-                                <div class="col-12">
-                                    {{ form.description.label(class="form-label") }}
-                                    {{ form.description(class="form-control", rows="3") }}
-                                    {% if form.description.errors %}
-                                        <div class="text-danger">
-                                            {% for error in form.description.errors %}
-                                                <small>{{ error }}</small>
-                                            {% endfor %}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                                
-                                <!-- Appearance Settings -->
-                                <div class="col-12 mt-5">
-                                    <h5 class="border-bottom pb-2 mb-3">Appearance Settings</h5>
-                                </div>
-                                
-                                <div class="col-md-6">
-                                    {{ form.icon.label(class="form-label") }}
-                                    {{ form.icon(class="form-control") }}
-                                    <small class="form-text text-muted">Use Font Awesome classes like: fas fa-coffee, fas fa-heart, fas fa-star</small>
-                                    {% if form.icon.errors %}
-                                        <div class="text-danger">
-                                            {% for error in form.icon.errors %}
-                                                <small>{{ error }}</small>
-                                            {% endfor %}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                                
-                                <div class="col-md-3">
-                                    {{ form.is_popular.label(class="form-label") }}
-                                    {{ form.is_popular(class="form-select") }}
-                                    <small class="form-text text-muted">Only one tier can be popular</small>
-                                    {% if form.is_popular.errors %}
-                                        <div class="text-danger">
-                                            {% for error in form.is_popular.errors %}
-                                                <small>{{ error }}</small>
-                                            {% endfor %}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                                
-                                <div class="col-md-3">
-                                    {{ form.sort_order.label(class="form-label") }}
-                                    {{ form.sort_order(class="form-control") }}
-                                    <small class="form-text text-muted">Display order (0 = first)</small>
-                                    {% if form.sort_order.errors %}
-                                        <div class="text-danger">
-                                            {% for error in form.sort_order.errors %}
-                                                <small>{{ error }}</small>
-                                            {% endfor %}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                                
-                                <!-- Benefits -->
-                                <div class="col-12 mt-5">
-                                    <h5 class="border-bottom pb-2 mb-3">Benefits (Features)</h5>
-                                </div>
-                                
-                                <div class="col-md-6">
-                                    {{ form.benefit1.label(class="form-label") }}
-                                    {{ form.benefit1(class="form-control") }}
-                                    {% if form.benefit1.errors %}
-                                        <div class="text-danger">
-                                            {% for error in form.benefit1.errors %}
-                                                <small>{{ error }}</small>
-                                            {% endfor %}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                                
-                                <div class="col-md-6">
-                                    {{ form.benefit2.label(class="form-label") }}
-                                    {{ form.benefit2(class="form-control") }}
-                                    {% if form.benefit2.errors %}
-                                        <div class="text-danger">
-                                            {% for error in form.benefit2.errors %}
-                                                <small>{{ error }}</small>
-                                            {% endfor %}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                                
-                                <div class="col-md-6">
-                                    {{ form.benefit3.label(class="form-label") }}
-                                    {{ form.benefit3(class="form-control") }}
-                                    {% if form.benefit3.errors %}
-                                        <div class="text-danger">
-                                            {% for error in form.benefit3.errors %}
-                                                <small>{{ error }}</small>
-                                            {% endfor %}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                                
-                                <div class="col-md-6">
-                                    {{ form.benefit4.label(class="form-label") }}
-                                    {{ form.benefit4(class="form-control") }}
-                                    {% if form.benefit4.errors %}
-                                        <div class="text-danger">
-                                            {% for error in form.benefit4.errors %}
-                                                <small>{{ error }}</small>
-                                            {% endfor %}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                                
-                                <!-- Submit Button -->
-                                <div class="col-12 mt-5">
-                                    <hr>
-                                    <button type="submit" class="btn btn-primary btn-lg me-3">
-                                        <i class="fas fa-save me-2"></i>{{ 'Update Tier' if tier else 'Create Tier' }}
-                                    </button>
-                                    <a href="{{ url_for('admin_subscription_tiers') }}" class="btn btn-secondary btn-lg">
-                                        <i class="fas fa-times me-2"></i>Cancel
-                                    </a>
-                                </div>
-                            </div>
-                        </form>
                     </div>
-                    
-                    <!-- Preview Card -->
-                    <div class="admin-card mt-4">
-                        <h5><i class="fas fa-eye me-2"></i>Preview</h5>
-                        <div class="subscription-tier-preview">
-                            <div class="support-tier-card" style="max-width: 350px;">
-                                <div class="tier-icon">
-                                    <i class="fas fa-heart" id="preview-icon"></i>
+                </div>
+
+                <!-- Appearance -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-bottom py-3">
+                        <h6 class="mb-0 fw-bold"><i class="fas fa-palette me-2 text-purple" style="color:#7c3aed"></i>Appearance</h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                {{ form.icon.label(class="form-label fw-semibold") }}
+                                <div class="input-group">
+                                    <span class="input-group-text" id="icon-preview-box"><i class="fas fa-heart" id="icon-preview"></i></span>
+                                    {{ form.icon(class="form-control", placeholder="fas fa-heart", oninput="document.getElementById('icon-preview').className=this.value||'fas fa-heart'") }}
                                 </div>
-                                <h4 class="tier-title" id="preview-name">Tier Name</h4>
-                                <div class="tier-price-container">
-                                    <span class="tier-currency">₹</span>
-                                    <span class="tier-amount" id="preview-price">0</span>
-                                    <span class="tier-period">/<span id="preview-period">week</span></span>
-                                </div>
-                                <p class="tier-description" id="preview-description">Tier description</p>
-                                <ul class="tier-benefits" id="preview-benefits">
-                                    <li><i class="fas fa-check"></i> Benefit 1</li>
-                                </ul>
+                                <div class="form-text">Font Awesome class, e.g. <code>fas fa-coffee</code>, <code>fas fa-star</code></div>
+                                {% if form.icon.errors %}<div class="text-danger small mt-1">{% for e in form.icon.errors %}{{ e }}{% endfor %}</div>{% endif %}
                             </div>
+                            <div class="col-md-3">
+                                {{ form.is_popular.label(class="form-label fw-semibold") }}
+                                {{ form.is_popular(class="form-select") }}
+                                <div class="form-text">Only one tier can be popular</div>
+                                {% if form.is_popular.errors %}<div class="text-danger small mt-1">{% for e in form.is_popular.errors %}{{ e }}{% endfor %}</div>{% endif %}
+                            </div>
+                            <div class="col-md-3">
+                                {{ form.sort_order.label(class="form-label fw-semibold") }}
+                                {{ form.sort_order(class="form-control") }}
+                                <div class="form-text">0 = first</div>
+                                {% if form.sort_order.errors %}<div class="text-danger small mt-1">{% for e in form.sort_order.errors %}{{ e }}{% endfor %}</div>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Benefits -->
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header bg-white border-bottom py-3">
+                        <h6 class="mb-0 fw-bold"><i class="fas fa-list-check me-2 text-success"></i>Benefits / Features</h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                {{ form.benefit1.label(class="form-label fw-semibold") }}
+                                {{ form.benefit1(class="form-control", placeholder="e.g. Early access to reels") }}
+                                {% if form.benefit1.errors %}<div class="text-danger small mt-1">{% for e in form.benefit1.errors %}{{ e }}{% endfor %}</div>{% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.benefit2.label(class="form-label fw-semibold") }}
+                                {{ form.benefit2(class="form-control", placeholder="Optional") }}
+                                {% if form.benefit2.errors %}<div class="text-danger small mt-1">{% for e in form.benefit2.errors %}{{ e }}{% endfor %}</div>{% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.benefit3.label(class="form-label fw-semibold") }}
+                                {{ form.benefit3(class="form-control", placeholder="Optional") }}
+                                {% if form.benefit3.errors %}<div class="text-danger small mt-1">{% for e in form.benefit3.errors %}{{ e }}{% endfor %}</div>{% endif %}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.benefit4.label(class="form-label fw-semibold") }}
+                                {{ form.benefit4(class="form-control", placeholder="Optional") }}
+                                {% if form.benefit4.errors %}<div class="text-danger small mt-1">{% for e in form.benefit4.errors %}{{ e }}{% endfor %}</div>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit -->
+                <div class="d-flex gap-3">
+                    <button type="submit" class="btn btn-primary btn-lg px-5 rounded-pill">
+                        <i class="fas fa-save me-2"></i>{{ 'Update Tier' if tier else 'Create Tier' }}
+                    </button>
+                    <a href="{{ url_for('admin_subscription_tiers') }}" class="btn btn-outline-secondary btn-lg rounded-pill px-4">
+                        <i class="fas fa-times me-1"></i>Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Live Preview -->
+        <div class="col-lg-4">
+            <div class="sticky-top" style="top:24px;">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom py-3">
+                        <h6 class="mb-0 fw-bold"><i class="fas fa-eye me-2"></i>Live Preview</h6>
+                    </div>
+                    <div class="card-body p-4 d-flex justify-content-center">
+                        <div class="support-tier-card text-center" style="max-width:280px;width:100%;padding:28px 20px;border-radius:16px;background:#fff;box-shadow:0 4px 20px rgba(0,0,0,.12);border:1px solid #e2e8f0;">
+                            <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,#cc0000,#8b0000);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+                                <i class="fas fa-heart text-white" id="preview-icon" style="font-size:1.3rem;"></i>
+                            </div>
+                            <h5 class="fw-bold mb-1" id="preview-name" style="color:#1e293b;">Tier Name</h5>
+                            <div class="mb-2" style="font-size:1.5rem;font-weight:800;color:#cc0000;">
+                                ₹<span id="preview-price">0</span><span style="font-size:.9rem;font-weight:500;color:#64748b;">/<span id="preview-period">week</span></span>
+                            </div>
+                            <p class="text-muted small mb-3" id="preview-description">Tier description</p>
+                            <ul class="text-start list-unstyled small mb-4" id="preview-benefits" style="padding-left:4px;">
+                                <li class="mb-1"><i class="fas fa-check text-success me-2"></i>Benefit 1</li>
+                            </ul>
+                            <div id="preview-link-badge" class="d-none mb-3">
+                                <span class="badge bg-info text-white px-3 py-2 rounded-pill">
+                                    <i class="fas fa-link me-1"></i>Auto-Pay Link Set
+                                </span>
+                            </div>
+                            <button class="btn btn-danger rounded-pill w-100" style="background:linear-gradient(135deg,#cc0000,#8b0000);border:none;">
+                                Support Now
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -245,79 +208,53 @@
 </div>
 
 <script>
-// Live preview functionality
 document.addEventListener('DOMContentLoaded', function() {
-    const nameField = document.getElementById('name');
-    const priceField = document.getElementById('price');
-    const periodField = document.getElementById('period');
-    const descriptionField = document.getElementById('description');
-    const iconField = document.getElementById('icon');
-    const benefit1Field = document.getElementById('benefit1');
-    const benefit2Field = document.getElementById('benefit2');
-    const benefit3Field = document.getElementById('benefit3');
-    const benefit4Field = document.getElementById('benefit4');
-    
+    const fields = {
+        name:        document.getElementById('name'),
+        price:       document.getElementById('price'),
+        period:      document.getElementById('period'),
+        description: document.getElementById('description'),
+        icon:        document.getElementById('icon'),
+        benefit1:    document.getElementById('benefit1'),
+        benefit2:    document.getElementById('benefit2'),
+        benefit3:    document.getElementById('benefit3'),
+        benefit4:    document.getElementById('benefit4'),
+        payment_link: document.getElementById('payment_link_input'),
+    };
+
     function updatePreview() {
-        // Update name
-        document.getElementById('preview-name').textContent = nameField.value || 'Tier Name';
-        
-        // Update price
-        document.getElementById('preview-price').textContent = priceField.value || '0';
-        
-        // Update period
-        document.getElementById('preview-period').textContent = periodField.value || 'week';
-        
-        // Update description
-        document.getElementById('preview-description').textContent = descriptionField.value || 'Tier description';
-        
-        // Update icon
-        const iconElement = document.getElementById('preview-icon');
-        iconElement.className = iconField.value || 'fas fa-heart';
-        
-        // Update benefits
-        const benefitsList = document.getElementById('preview-benefits');
-        const benefits = [benefit1Field.value, benefit2Field.value, benefit3Field.value, benefit4Field.value].filter(b => b.trim());
-        
-        benefitsList.innerHTML = '';
-        benefits.forEach(benefit => {
-            const li = document.createElement('li');
-            li.innerHTML = '<i class="fas fa-check"></i> ' + benefit;
-            benefitsList.appendChild(li);
-        });
-        
-        if (benefits.length === 0) {
-            benefitsList.innerHTML = '<li><i class="fas fa-check"></i> No benefits specified</li>';
+        document.getElementById('preview-name').textContent        = fields.name.value        || 'Tier Name';
+        document.getElementById('preview-price').textContent       = fields.price.value       || '0';
+        document.getElementById('preview-period').textContent      = fields.period.value      || 'week';
+        document.getElementById('preview-description').textContent = fields.description.value || 'Tier description';
+        document.getElementById('preview-icon').className          = (fields.icon.value.trim() || 'fas fa-heart') + ' text-white';
+
+        const benefits = [fields.benefit1, fields.benefit2, fields.benefit3, fields.benefit4]
+            .map(f => f.value.trim()).filter(Boolean);
+        const ul = document.getElementById('preview-benefits');
+        ul.innerHTML = benefits.length
+            ? benefits.map(b => `<li class="mb-1"><i class="fas fa-check text-success me-2"></i>${b}</li>`).join('')
+            : '<li class="mb-1"><i class="fas fa-check text-success me-2"></i>Benefit 1</li>';
+
+        const linkBadge = document.getElementById('preview-link-badge');
+        if (fields.payment_link && fields.payment_link.value.trim()) {
+            linkBadge.classList.remove('d-none');
+        } else {
+            linkBadge.classList.add('d-none');
         }
     }
-    
-    // Add event listeners
-    [nameField, priceField, periodField, descriptionField, iconField, benefit1Field, benefit2Field, benefit3Field, benefit4Field].forEach(field => {
-        if (field) {
-            field.addEventListener('input', updatePreview);
-            field.addEventListener('change', updatePreview);
-        }
+
+    Object.values(fields).forEach(f => {
+        if (f) { f.addEventListener('input', updatePreview); f.addEventListener('change', updatePreview); }
     });
-    
-    // Initial preview update
     updatePreview();
 });
 </script>
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Auto-hide flash messages after 5 seconds
-        const flashAlerts = document.querySelectorAll('.alert.alert-dismissible');
-        flashAlerts.forEach(function(alert) {
-            setTimeout(function() {
-                if (alert && alert.parentNode) {
-                    const alertInstance = new bootstrap.Alert(alert);
-                    alertInstance.close();
-                }
-            }, 5000);
-        });
-    });
+document.querySelectorAll('.alert-dismissible').forEach(el =>
+    setTimeout(() => { try { new bootstrap.Alert(el).close(); } catch(e){} }, 5000));
 </script>
 {% endblock %}

@@ -85,6 +85,7 @@ class SubscriptionTierForm(FlaskForm):
     benefit4 = StringField('Benefit 4', validators=[Length(max=100)])
     is_popular = SelectField('Mark as Popular?', choices=[('0', 'No'), ('1', 'Yes')], default='0')
     sort_order = IntegerField('Sort Order', validators=[NumberRange(min=0)], default=0)
+    payment_link = StringField('Auto-Pay Link (Razorpay)', validators=[Length(max=1000)])
     submit = SubmitField('Save Tier')
 
 class ResourceForm(FlaskForm):
