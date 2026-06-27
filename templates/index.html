@@ -335,11 +335,13 @@
                     {% else %}
                         {% set _yt_id = '' %}
                     {% endif %}
-                    <iframe src="https://www.youtube.com/embed/{{ _yt_id }}?autoplay=1&mute=1&loop=1&playlist={{ _yt_id }}&controls=0&rel=0&modestbranding=1&showinfo=0&iv_load_policy=3&disablekb=1&playsinline=1"
+                    <iframe src="https://www.youtube-nocookie.com/embed/{{ _yt_id }}?autoplay=1&mute=1&controls=0&rel=0&modestbranding=1&showinfo=0&iv_load_policy=3&disablekb=1&playsinline=1&fs=0&cc_load_policy=0"
                             class="tc-yt-iframe" frameborder="0"
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                             allowfullscreen loading="lazy"></iframe>
                     <div class="tc-yt-overlay"></div>
+                    <div class="tc-yt-mask-top"></div>
+                    <div class="tc-yt-mask-bottom"></div>
                 </div>
                 {% else %}
                 <div class="tc-stars">{{ '★' * t.get('rating', 5) }}</div>
@@ -464,12 +466,31 @@
     border: none;
     pointer-events: none;
 }
-/* Transparent overlay blocks clicks on YouTube branding areas */
+/* Transparent overlay blocks clicks */
 .tc-yt-overlay {
     position: absolute;
     inset: 0;
     z-index: 2;
     pointer-events: none;
+}
+/* Mask strips: cover YouTube title bar (top) and logo (bottom) */
+.tc-yt-mask-top,
+.tc-yt-mask-bottom {
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 4;
+    background: #0f0f1e;
+    pointer-events: none;
+}
+.tc-yt-mask-top {
+    top: 0;
+    height: 22%;
+    border-radius: 18px 18px 0 0;
+}
+.tc-yt-mask-bottom {
+    bottom: 0;
+    height: 20%;
 }
 .tc-video-play-hint {
     position: absolute;
