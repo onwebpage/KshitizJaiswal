@@ -26,55 +26,28 @@
    BEYOND THE REEL — Premium vertical reel card carousel
    ═══════════════════════════════════════════════════════════════════ */
 
-/* Section — rich multi-layer dark premium background */
+/* Section — same dark navy as rest of the site's dark sections */
 .premium-reels-section {
-    background:
-        radial-gradient(ellipse 80% 55% at 50% -5%,  rgba(180,0,0,.22)   0%, transparent 60%),
-        radial-gradient(ellipse 45% 35% at 10% 60%,  rgba(140,0,0,.13)   0%, transparent 55%),
-        radial-gradient(ellipse 45% 35% at 90% 40%,  rgba(120,0,20,.12)  0%, transparent 55%),
-        radial-gradient(ellipse 60% 40% at 50% 100%, rgba(0,0,0,.55)     0%, transparent 70%),
-        linear-gradient(175deg, #0d0d1a 0%, #080810 40%, #0a0008 70%, #06060e 100%) !important;
+    background: #0d1321 !important;
     padding: 64px 0 80px;
     position: relative;
     overflow: hidden;
 }
 
-/* Animated top glow orb */
+/* Subtle red glow at top — same accent used across the site */
 .premium-reels-section::before {
     content: '';
     position: absolute;
-    top: -120px;
+    top: -80px;
     left: 50%;
     transform: translateX(-50%);
-    width: 700px;
-    height: 380px;
-    background: radial-gradient(ellipse, rgba(204,0,0,.28) 0%, rgba(160,0,0,.12) 35%, transparent 70%);
+    width: 600px;
+    height: 300px;
+    background: radial-gradient(ellipse, rgba(204,0,0,.18) 0%, rgba(160,0,0,.07) 45%, transparent 70%);
     border-radius: 50%;
-    filter: blur(40px);
+    filter: blur(32px);
     pointer-events: none;
     z-index: 0;
-    animation: preel-glow-pulse 6s ease-in-out infinite alternate;
-}
-
-/* Scanline texture overlay for premium depth */
-.premium-reels-section::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 3px,
-        rgba(255,255,255,.012) 3px,
-        rgba(255,255,255,.012) 4px
-    );
-    pointer-events: none;
-    z-index: 0;
-}
-
-@keyframes preel-glow-pulse {
-    0%   { opacity: .7; transform: translateX(-50%) scaleX(1);   }
-    100% { opacity: 1;  transform: translateX(-50%) scaleX(1.12); }
 }
 
 .premium-reels-section > * { position: relative; z-index: 1; }
