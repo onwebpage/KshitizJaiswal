@@ -61,10 +61,22 @@
                             </div>
                             
                             <div class="col-md-6">
-                                <label for="{{ form.price.id }}" class="form-label">
+                                <label class="form-label">
                                     <i class="fas fa-tag me-1"></i>{{ form.price.label.text }}
                                 </label>
-                                {{ form.price(class="form-control", placeholder="e.g., ₹999, Free") }}
+                                <div class="d-flex gap-2 mb-2" id="price-toggle-btns">
+                                    <button type="button" class="btn btn-sm price-toggle-btn" id="btn-free" onclick="setPriceMode('free')">
+                                        <i class="fas fa-gift me-1"></i>Free
+                                    </button>
+                                    <button type="button" class="btn btn-sm price-toggle-btn" id="btn-paid" onclick="setPriceMode('paid')">
+                                        <i class="fas fa-rupee-sign me-1"></i>Paid
+                                    </button>
+                                </div>
+                                <div id="paid-price-input" style="display:none;">
+                                    <input type="text" class="form-control" id="paid-price-value" placeholder="e.g., ₹999">
+                                    <small class="form-text text-muted">Enter the price amount</small>
+                                </div>
+                                {{ form.price(class="form-control", id="price-hidden-field", style="display:none;") }}
                                 {% if form.price.errors %}
                                     <div class="text-danger">
                                         {% for error in form.price.errors %}
@@ -72,7 +84,6 @@
                                         {% endfor %}
                                     </div>
                                 {% endif %}
-                                <small class="form-text text-muted">How much does this resource cost?</small>
                             </div>
                             
                             <div class="col-md-6">
@@ -125,8 +136,59 @@
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
 {{ image_upload_js() }}
+<style>
+.price-toggle-btn {
+    padding: 0.45rem 1.1rem;
+    border: 2px solid #dee2e6;
+    background: #f8f9fa;
+    color: #495057;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+.price-toggle-btn.active-free {
+    border-color: #198754;
+    background: #d1e7dd;
+    color: #0f5132;
+}
+.price-toggle-btn.active-paid {
+    border-color: #dc3545;
+    background: #f8d7da;
+    color: #842029;
+}
+.price-toggle-btn:hover {
+    border-color: #adb5bd;
+    background: #e9ecef;
+}
+</style>
 <script>
+    function setPriceMode(mode) {
+        const hiddenField = document.getElementById('price-hidden-field');
+        const paidInput = document.getElementById('paid-price-input');
+        const paidValue = document.getElementById('paid-price-value');
+        const btnFree = document.getElementById('btn-free');
+        const btnPaid = document.getElementById('btn-paid');
+
+        btnFree.classList.remove('active-free', 'active-paid');
+        btnPaid.classList.remove('active-free', 'active-paid');
+
+        if (mode === 'free') {
+            hiddenField.value = 'Free';
+            paidInput.style.display = 'none';
+            btnFree.classList.add('active-free');
+        } else {
+            paidInput.style.display = 'block';
+            btnPaid.classList.add('active-paid');
+            // sync typed value into hidden field
+            hiddenField.value = paidValue.value || '';
+            paidValue.addEventListener('input', function() {
+                hiddenField.value = this.value;
+            });
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
+        // Flash alerts auto-hide
         const flashAlerts = document.querySelectorAll('.alert.alert-dismissible');
         flashAlerts.forEach(function(alert) {
             setTimeout(function() {
@@ -135,6 +197,25 @@
                     alertInstance.close();
                 }
             }, 5000);
+        });
+
+        // Initialise toggle from existing value
+        const currentPrice = document.getElementById('price-hidden-field').value.trim();
+        if (currentPrice === '' || currentPrice.toLowerCase() === 'free') {
+            setPriceMode('free');
+        } else {
+            setPriceMode('paid');
+            document.getElementById('paid-price-value').value = currentPrice;
+        }
+
+        // Before form submit, ensure hidden field has the right value
+        document.querySelector('form').addEventListener('submit', function() {
+            const mode = document.getElementById('btn-free').classList.contains('active-free') ? 'free' : 'paid';
+            if (mode === 'free') {
+                document.getElementById('price-hidden-field').value = 'Free';
+            } else {
+                document.getElementById('price-hidden-field').value = document.getElementById('paid-price-value').value || '';
+            }
         });
     });
 </script>

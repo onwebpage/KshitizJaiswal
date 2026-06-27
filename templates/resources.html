@@ -33,7 +33,11 @@
                         <h5>{{ resource.title }}</h5>
                         <p class="text-muted mb-3">{{ resource.description }}</p>
                         <div class="d-flex justify-content-between align-items-center">
-                            <span class="resource-price">{{ resource.price }}</span>
+                            {% if resource.price and resource.price.lower() == 'free' %}
+                                <span class="resource-price free-price"><i class="fas fa-gift me-1"></i>Free</span>
+                            {% else %}
+                                <span class="resource-price">{{ resource.price }}</span>
+                            {% endif %}
                             <a href="{{ resource.link }}" class="btn btn-primary btn-sm" {% if resource.link.startswith('#') %}onclick="return false;" style="opacity: 0.6;"{% endif %}>
                                 {% if resource.get('coming_soon') or resource.link.startswith('#') %}
                                     Coming Soon

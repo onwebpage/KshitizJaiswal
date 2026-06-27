@@ -79,7 +79,11 @@
                                     <span class="text-muted">{{ resource.description[:100] }}{% if resource.description|length > 100 %}...{% endif %}</span>
                                 </td>
                                 <td>
-                                    <span class="badge bg-primary">{{ resource.price }}</span>
+                                    {% if resource.price and resource.price.lower() == 'free' %}
+                                        <span class="badge bg-success"><i class="fas fa-gift me-1"></i>Free</span>
+                                    {% else %}
+                                        <span class="badge bg-danger"><i class="fas fa-rupee-sign me-1"></i>{{ resource.price }}</span>
+                                    {% endif %}
                                 </td>
                                 <td>
                                     <div class="btn-group">
