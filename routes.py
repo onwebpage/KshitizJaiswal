@@ -68,12 +68,14 @@ def inject_section_visibility():
             'footer': SiteConfig.get('section_footer_visible', 'true').lower() != 'false',
         }
     except Exception:
+        db.session.rollback()
         section_vis = {k: True for k in ['hero', 'reels', 'support', 'statistics', 'testimonials', 'newsletter', 'courses', 'footer']}
 
     try:
         settings_record = SiteContent.query.filter_by(content_key='site_settings').first()
         site_settings = json.loads(settings_record.content_data) if settings_record else {}
     except Exception:
+        db.session.rollback()
         site_settings = {}
 
     # WhatsApp support phone and mobile-compatible chat links
@@ -99,6 +101,7 @@ def inject_section_visibility():
         else:
             announcement = None
     except Exception:
+        db.session.rollback()
         announcement = None
 
     # SEO config — keyed by Flask endpoint name
@@ -111,6 +114,7 @@ def inject_section_visibility():
         seo_config['og_image']        = SiteConfig.get('seo_og_image', '')
         seo_config['twitter_handle']  = SiteConfig.get('seo_twitter_handle', '')
     except Exception:
+        db.session.rollback()
         seo_config = {}
 
     return {
@@ -205,6 +209,15 @@ def index():
     except Exception:
         homepage_courses = []
 
+    # Ensure the DB session is clean before stats query — a failed
+    # commit earlier in this request (e.g. inside DataManager) can leave
+    # PostgreSQL in "transaction aborted" state, causing every subsequent
+    # query to silently fail or return None.
+    try:
+        db.session.rollback()
+    except Exception:
+        pass
+
     # Load statistics section data
     DEFAULT_STATS_DATA = {
         'title': 'By the Numbers',
@@ -252,7 +265,8 @@ def index():
             active_stats.append(stat)
         stats_data = dict(stats_data)
         stats_data['stats'] = active_stats
-    except Exception:
+    except Exception as _stats_exc:
+        logging.error(f"Stats load error: {_stats_exc}")
         stats_data = DEFAULT_STATS_DATA
         for stat in stats_data['stats']:
             stat['resolved_value'] = stat.get('value', '')
@@ -1565,6 +1579,7 @@ def admin_toggle_section(section):
     new_val = 'false' if current.lower() == 'true' else 'true'
     SiteConfig.set(f'section_{section}_visible', new_val)
     return jsonify({'visible': new_val == 'true', 'section': section})
+
 
 @app.route('/admin/statistics-section', methods=['GET', 'POST'])
 def admin_statistics_section():

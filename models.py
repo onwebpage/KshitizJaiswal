@@ -363,7 +363,12 @@ class DataManager:
                 "resources": resources
             }
         except Exception as e:
-            # If database is unavailable, return default content
+            # Roll back the broken transaction so subsequent queries in this
+            # request can still run against a clean session.
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
             import logging
             logging.error(f"Database error in get_content: {e}")
             return {

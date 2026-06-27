@@ -240,15 +240,15 @@ def inject_global_context():
             })
     except Exception as e:
         logging.debug(f"Database not available for footer archives: {e}")
-        pass  # If DB not ready, just skip
-    
+        db.session.rollback()
+
     # Get social links
     social_links = []
     try:
         social_links = [link.to_dict() for link in SocialLink.get_active_links()]
     except Exception as e:
         logging.debug(f"Database not available for social links: {e}")
-        pass  # If DB not ready, just skip
+        db.session.rollback()
 
     # Get footer stats (top 2 active stats for the footer bar)
     footer_stats = []
@@ -276,6 +276,7 @@ def inject_global_context():
                             _tp = sum((r.amount_paise or 0) * (r.paid_count or 0) for r in _rows)
                             _sup_cache = '₹{:,}'.format(_tp // 100)
                         except Exception:
+                            db.session.rollback()
                             _sup_cache = s.get('value', '₹0')
                     s['resolved_value'] = _sup_cache
                 else:
@@ -283,6 +284,7 @@ def inject_global_context():
             footer_stats = _active[:2]
     except Exception as e:
         logging.debug(f"Could not load footer stats: {e}")
+        db.session.rollback()
 
     return {
         'clerk_publishable_key': os.environ.get('CLERK_PUBLISHABLE_KEY', ''),
