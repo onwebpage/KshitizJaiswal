@@ -285,7 +285,7 @@
 </style>
 {% endif %}
 
-{% if section_vis.testimonials and testimonials_list %}
+{% if false %}{# testimonials moved to course detail page only #}
 {% set vis_t = [] %}
 {% for t in testimonials_list %}{% if t.get('is_visible', True) %}{% if vis_t.append(t) %}{% endif %}{% endif %}{% endfor %}
 {% if vis_t %}
