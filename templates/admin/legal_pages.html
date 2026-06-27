@@ -31,6 +31,27 @@
     </div>
 
     <!-- Tab Navigation -->
+    <style>
+        #legalTabs .nav-link {
+            color: #c0392b !important;
+            background: transparent !important;
+            transform: none !important;
+            border: 1px solid transparent;
+            border-bottom: none;
+            border-radius: 6px 6px 0 0;
+            font-weight: 600;
+        }
+        #legalTabs .nav-link:hover {
+            color: #a93226 !important;
+            background: rgba(192, 57, 43, 0.08) !important;
+        }
+        #legalTabs .nav-link.active {
+            color: #c0392b !important;
+            background: #fff !important;
+            border-color: #dee2e6 #dee2e6 #fff;
+        }
+        #legalTabs .nav-link::after { display: none !important; }
+    </style>
     <ul class="nav nav-tabs mb-0" id="legalTabs" role="tablist" style="border-bottom: none;">
         {% for page in pages %}
         <li class="nav-item" role="presentation">
