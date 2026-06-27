@@ -3,83 +3,364 @@
 {% block title %}Email Broadcast - Admin Panel{% endblock %}
 
 {% block admin_content %}
+<style>
+.template-card {
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 14px 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #fff;
+    text-align: center;
+    user-select: none;
+}
+.template-card:hover { border-color: #8B0000; background: #fff5f5; }
+.template-card.selected { border-color: #8B0000; background: #fff5f5; box-shadow: 0 0 0 3px rgba(139,0,0,0.12); }
+.template-card .t-icon { font-size: 24px; margin-bottom: 4px; display: block; }
+.template-card .t-label { font-size: 13px; font-weight: 700; color: #374151; display: block; }
+.template-card .t-desc { font-size: 11px; color: #6b7280; display: block; }
+
+.design-section {
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    padding: 18px 20px;
+    margin-bottom: 14px;
+}
+.design-section h6 {
+    font-weight: 700;
+    color: #374151;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.color-swatch {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: inline-block;
+    flex-shrink: 0;
+}
+.color-swatch:hover { transform: scale(1.2); }
+.color-swatch.selected { border-color: #111; box-shadow: 0 0 0 2px #fff, 0 0 0 4px #111; }
+
+.preview-wrapper {
+    position: sticky;
+    top: 80px;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+}
+.preview-phone-bar {
+    background: #1f2937;
+    border-radius: 12px 12px 0 0;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.preview-phone-bar .dot { width: 10px; height: 10px; border-radius: 50%; }
+#previewFrame {
+    width: 100%;
+    border: none;
+    background: #f3f4f6;
+    min-height: 580px;
+    display: block;
+}
+.send-bar {
+    background: linear-gradient(135deg, #8B0000, #c0392b);
+    border-radius: 12px;
+    padding: 18px 22px;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+</style>
+
 <div class="container-fluid p-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2><i class="fas fa-envelope-open-text me-2"></i>Email Broadcast</h2>
-        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
-            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
-        </a>
-    </div>
-
-    <div class="alert alert-info">
-        <i class="fas fa-info-circle me-2"></i>Send emails to all <strong>{{ subscriber_count }}</strong> subscribers
+        <div>
+            <h2 class="mb-1"><i class="fas fa-paper-plane me-2"></i>Email Broadcast</h2>
+            <p class="text-muted small mb-0">Design a beautiful email and send it to all your subscribers</p>
+        </div>
+        <span class="badge bg-primary fs-6 px-3 py-2">
+            <i class="fas fa-users me-1"></i>{{ subscriber_count }} Subscribers
+        </span>
     </div>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}{% for cat, msg in messages %}
-        <div class="alert alert-{{ 'danger' if cat == 'error' else cat }} alert-dismissible fade show">
-            {{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        {% for cat, msg in messages %}
+        <div class="alert alert-{{ 'success' if cat == 'success' else ('danger' if cat == 'error' else 'warning') }} alert-dismissible fade show" role="alert">
+            <i class="fas fa-{{ 'check-circle' if cat == 'success' else 'exclamation-circle' }} me-2"></i>{{ msg|safe }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
-        {% endfor %}{% endif %}
+        {% endfor %}
     {% endwith %}
 
-    {% if preview_mode %}
-    <div class="alert alert-warning">
-        <i class="fas fa-exclamation-triangle me-2"></i>
-        <strong>SMTP not configured:</strong> No emails were sent. Go to
-        <a href="{{ url_for('admin_whatsapp_settings') }}" class="alert-link">WhatsApp &amp; Email Settings</a>
-        to set up SMTP credentials, then try again.
-    </div>
-    <div class="card mb-4">
-        <div class="card-header bg-success text-white">
-            <h5 class="mb-0"><i class="fas fa-eye me-2"></i>Email Preview</h5>
-        </div>
-        <div class="card-body">
-            <h4>{{ subject }}</h4>
-            <hr>
-            <div style="white-space: pre-wrap;">{{ message }}</div>
-        </div>
-    </div>
-    {% endif %}
-
-    <form method="POST">
+    <form method="post" id="broadcastForm">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-edit me-2"></i>Compose Email</h5>
-            </div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <label for="subject" class="form-label fw-semibold">Subject <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" id="subject" name="subject" required
-                           value="{{ subject or '' }}" placeholder="Enter email subject">
-                </div>
-                <div class="mb-3">
-                    <label for="message" class="form-label fw-semibold">Message <span class="text-danger">*</span></label>
-                    <textarea class="form-control" id="message" name="message" rows="12" required
-                              placeholder="Enter your message to subscribers...">{{ message or '' }}</textarea>
-                    <small class="text-muted">Plain text. Each subscriber will receive this message individually.</small>
-                </div>
-            </div>
-        </div>
+        <input type="hidden" name="html_body" id="htmlBodyInput">
 
-        <div class="d-flex gap-2">
-            <button type="submit" class="btn btn-primary btn-lg">
-                <i class="fas fa-paper-plane me-2"></i>Send to All Subscribers
-            </button>
-            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary btn-lg">
-                <i class="fas fa-times me-1"></i>Cancel
-            </a>
+        <div class="row g-4">
+
+            <!-- ===== LEFT: Composer ===== -->
+            <div class="col-lg-6">
+
+                <!-- Template Picker -->
+                <div class="design-section">
+                    <h6><i class="fas fa-palette me-2 text-danger"></i>Choose Template</h6>
+                    <div class="row g-2">
+                        <div class="col-4">
+                            <div class="template-card selected" onclick="selectTemplate('newsletter', this)">
+                                <span class="t-icon">📰</span>
+                                <span class="t-label">Newsletter</span>
+                                <span class="t-desc">Clean layout</span>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="template-card" onclick="selectTemplate('announcement', this)">
+                                <span class="t-icon">📣</span>
+                                <span class="t-label">Announcement</span>
+                                <span class="t-desc">Bold & centered</span>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="template-card" onclick="selectTemplate('promo', this)">
+                                <span class="t-icon">🎯</span>
+                                <span class="t-label">Promotional</span>
+                                <span class="t-desc">Offer highlight</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Subject -->
+                <div class="design-section">
+                    <h6><i class="fas fa-tag me-2 text-danger"></i>Email Subject</h6>
+                    <input type="text" name="subject" id="subjectInput" class="form-control form-control-lg"
+                           placeholder="e.g. Kshitiz Ki Rai — Latest Update 🎙️" required
+                           value="{{ subject or '' }}" oninput="updatePreview()">
+                    <div class="form-text mt-1">Subscribers see this in their inbox before opening.</div>
+                </div>
+
+                <!-- Header -->
+                <div class="design-section">
+                    <h6><i class="fas fa-heading me-2 text-danger"></i>Header Design</h6>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Header Color</label>
+                        <div class="d-flex gap-2 flex-wrap mt-1 align-items-center">
+                            <span class="color-swatch selected" style="background:#8B0000;" data-color="#8B0000" onclick="selectColor('#8B0000',this)" title="Dark Red"></span>
+                            <span class="color-swatch" style="background:#1a1a2e;" data-color="#1a1a2e" onclick="selectColor('#1a1a2e',this)" title="Navy"></span>
+                            <span class="color-swatch" style="background:#0f4c75;" data-color="#0f4c75" onclick="selectColor('#0f4c75',this)" title="Blue"></span>
+                            <span class="color-swatch" style="background:#1b5e20;" data-color="#1b5e20" onclick="selectColor('#1b5e20',this)" title="Green"></span>
+                            <span class="color-swatch" style="background:#e65100;" data-color="#e65100" onclick="selectColor('#e65100',this)" title="Orange"></span>
+                            <span class="color-swatch" style="background:#4a148c;" data-color="#4a148c" onclick="selectColor('#4a148c',this)" title="Purple"></span>
+                            <span class="color-swatch" style="background:#263238;" data-color="#263238" onclick="selectColor('#263238',this)" title="Charcoal"></span>
+                            <span class="color-swatch" style="background:#880e4f;" data-color="#880e4f" onclick="selectColor('#880e4f',this)" title="Dark Pink"></span>
+                            <input type="color" value="#8B0000" id="customColor" title="Custom color"
+                                style="width:28px;height:28px;border-radius:6px;border:2px solid #e5e7eb;padding:1px;cursor:pointer;"
+                                oninput="selectColor(this.value,null)">
+                        </div>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">Header Title</label>
+                            <input type="text" id="headerTitle" class="form-control" value="Kshitiz Jaiswal" oninput="updatePreview()">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold">Subtitle <span class="text-muted">(optional)</span></label>
+                            <input type="text" id="headerSubtitle" class="form-control" value="Unfiltered Commentator" oninput="updatePreview()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Body -->
+                <div class="design-section">
+                    <h6><i class="fas fa-align-left me-2 text-danger"></i>Email Body</h6>
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Greeting <span class="text-muted">(optional)</span></label>
+                        <input type="text" id="greetingInput" class="form-control" placeholder="Namaste! 🙏" oninput="updatePreview()">
+                    </div>
+                    <div>
+                        <label class="form-label small fw-semibold">Main Message <span class="text-danger">*</span></label>
+                        <textarea name="message" id="messageInput" class="form-control" rows="7"
+                                  placeholder="Write your message here…" required
+                                  oninput="updatePreview()">{{ message or '' }}</textarea>
+                        <div class="form-text">Line breaks are preserved in the email.</div>
+                    </div>
+                </div>
+
+                <!-- CTA Button -->
+                <div class="design-section">
+                    <h6><i class="fas fa-mouse-pointer me-2 text-danger"></i>Button <span class="text-muted fw-normal text-lowercase">(optional)</span></h6>
+                    <div class="row g-2">
+                        <div class="col-5">
+                            <label class="form-label small fw-semibold">Button Text</label>
+                            <input type="text" id="ctaText" class="form-control" placeholder="Watch Now" oninput="updatePreview()">
+                        </div>
+                        <div class="col-7">
+                            <label class="form-label small fw-semibold">Button URL</label>
+                            <input type="url" id="ctaUrl" class="form-control" placeholder="https://kshitizjaiswal.in" oninput="updatePreview()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="design-section">
+                    <h6><i class="fas fa-minus me-2 text-danger"></i>Footer Note <span class="text-muted fw-normal text-lowercase">(optional)</span></h6>
+                    <input type="text" id="footerNote" class="form-control"
+                           value="You received this because you subscribed to Kshitiz Jaiswal's newsletter."
+                           oninput="updatePreview()">
+                </div>
+
+                <!-- Send Bar -->
+                <div class="send-bar mt-2">
+                    <div>
+                        <div class="fw-bold fs-6"><i class="fas fa-paper-plane me-2"></i>Ready to Send?</div>
+                        <div class="small opacity-75 mt-1">Will go to <strong>{{ subscriber_count }}</strong> subscribers</div>
+                    </div>
+                    <button type="submit" class="btn btn-light btn-lg fw-bold px-4 flex-shrink-0" onclick="prepareSend()">
+                        <i class="fas fa-paper-plane me-2 text-danger"></i>Send Now
+                    </button>
+                </div>
+            </div>
+
+            <!-- ===== RIGHT: Live Preview ===== -->
+            <div class="col-lg-6">
+                <div class="preview-wrapper">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="fw-bold text-muted small"><i class="fas fa-eye me-1"></i>LIVE PREVIEW</span>
+                        <span class="badge bg-success small">Auto-updates as you type</span>
+                    </div>
+                    <div class="preview-phone-bar">
+                        <span class="dot" style="background:#ef4444;"></span>
+                        <span class="dot" style="background:#f59e0b;"></span>
+                        <span class="dot" style="background:#10b981;"></span>
+                        <span class="text-white ms-2 opacity-75" style="font-size:11px;">Email Preview</span>
+                    </div>
+                    <iframe id="previewFrame" sandbox="allow-same-origin"></iframe>
+                </div>
+            </div>
         </div>
     </form>
-
-    <div class="alert alert-secondary mt-4">
-        <h6><i class="fas fa-info-circle me-2"></i>How Email Broadcast Works</h6>
-        <ul class="mb-0">
-            <li>Emails are sent via your configured SMTP server to every Inner Circle subscriber.</li>
-            <li>To set up SMTP, go to <a href="{{ url_for('admin_whatsapp_settings') }}">WhatsApp &amp; Email Settings</a> and fill in the Email Settings section.</li>
-            <li>Both plain-text and HTML versions are sent automatically.</li>
-        </ul>
-    </div>
 </div>
+
+<script>
+(function () {
+    var selTemplate = 'newsletter';
+    var selColor    = '#8B0000';
+
+    window.selectTemplate = function(name, el) {
+        selTemplate = name;
+        document.querySelectorAll('.template-card').forEach(function(c){ c.classList.remove('selected'); });
+        el.classList.add('selected');
+        updatePreview();
+    };
+
+    window.selectColor = function(color, el) {
+        selColor = color;
+        document.querySelectorAll('.color-swatch').forEach(function(s){ s.classList.remove('selected'); });
+        if (el) el.classList.add('selected');
+        document.getElementById('customColor').value = color;
+        updatePreview();
+    };
+
+    function esc(s) {
+        return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function lighten(hex) {
+        try {
+            var r = Math.min(255, parseInt(hex.slice(1,3),16)+50);
+            var g = Math.min(255, parseInt(hex.slice(3,5),16)+35);
+            var b = Math.min(255, parseInt(hex.slice(5,7),16)+55);
+            return '#'+[r,g,b].map(function(x){return x.toString(16).padStart(2,'0');}).join('');
+        } catch(e){ return hex; }
+    }
+
+    function buildHtml() {
+        var subject    = document.getElementById('subjectInput').value || 'Your Newsletter';
+        var greeting   = document.getElementById('greetingInput').value.trim();
+        var message    = document.getElementById('messageInput').value || '';
+        var headerTitle = document.getElementById('headerTitle').value || 'Kshitiz Jaiswal';
+        var headerSub  = document.getElementById('headerSubtitle').value.trim();
+        var ctaText    = document.getElementById('ctaText').value.trim();
+        var ctaUrl     = document.getElementById('ctaUrl').value.trim();
+        var footerNote = document.getElementById('footerNote').value.trim() ||
+                         "You received this because you subscribed to Kshitiz Jaiswal's newsletter.";
+        var color      = selColor;
+        var msgHtml    = message.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+                                .replace(/\n/g,'<br>');
+
+        var headerHtml = '';
+        if (selTemplate === 'newsletter') {
+            headerHtml = '<table width="100%" cellpadding="0" cellspacing="0" style="background:'+color+';">'
+                + '<tr><td style="padding:30px 40px;">'
+                + '<div style="font-size:26px;font-weight:800;color:#fff;letter-spacing:-0.5px;">'+esc(headerTitle)+'</div>'
+                + (headerSub ? '<div style="font-size:13px;color:rgba(255,255,255,0.75);margin-top:5px;">'+esc(headerSub)+'</div>' : '')
+                + '<div style="margin-top:14px;width:40px;height:3px;background:rgba(255,255,255,0.45);border-radius:2px;"></div>'
+                + '</td></tr></table>';
+        } else if (selTemplate === 'announcement') {
+            headerHtml = '<table width="100%" cellpadding="0" cellspacing="0" style="background:'+color+';">'
+                + '<tr><td style="padding:40px;text-align:center;">'
+                + '<div style="display:inline-block;background:rgba(255,255,255,0.18);padding:5px 16px;border-radius:20px;color:rgba(255,255,255,0.9);font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:14px;">📣 ANNOUNCEMENT</div>'
+                + '<div style="font-size:30px;font-weight:800;color:#fff;line-height:1.2;">'+esc(headerTitle)+'</div>'
+                + (headerSub ? '<div style="font-size:14px;color:rgba(255,255,255,0.8);margin-top:8px;">'+esc(headerSub)+'</div>' : '')
+                + '</td></tr></table>';
+        } else {
+            headerHtml = '<table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,'+color+','+lighten(color)+');">'
+                + '<tr><td style="padding:38px 40px;text-align:center;">'
+                + '<div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.8);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;">🎯 SPECIAL</div>'
+                + '<div style="font-size:30px;font-weight:800;color:#fff;">'+esc(headerTitle)+'</div>'
+                + (headerSub ? '<div style="font-size:14px;color:rgba(255,255,255,0.85);margin-top:6px;">'+esc(headerSub)+'</div>' : '')
+                + '</td></tr></table>';
+        }
+
+        var ctaHtml = '';
+        if (ctaText && ctaUrl) {
+            var align = selTemplate === 'newsletter' ? 'left' : 'center';
+            ctaHtml = '<table width="100%" cellpadding="0" cellspacing="0"><tr>'
+                + '<td style="padding:22px 40px 0;text-align:'+align+';">'
+                + '<a href="'+esc(ctaUrl)+'" style="display:inline-block;background:'+color+';color:#fff;padding:13px 32px;border-radius:8px;text-decoration:none;font-weight:700;font-size:15px;">'+esc(ctaText)+' &rarr;</a>'
+                + '</td></tr></table>';
+        }
+
+        return '<!DOCTYPE html><html><head><meta charset="UTF-8">'
+            + '<meta name="viewport" content="width=device-width,initial-scale=1"></head>'
+            + '<body style="margin:0;padding:0;background:#f4f4f5;font-family:\'Helvetica Neue\',Arial,sans-serif;">'
+            + '<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:24px 0;"><tr><td align="center">'
+            + '<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);">'
+            + '<tr><td>'+headerHtml+'</td></tr>'
+            + '<tr><td style="padding:34px 40px;">'
+            + (greeting ? '<p style="font-size:17px;font-weight:600;color:#111;margin:0 0 14px;">'+esc(greeting)+'</p>' : '')
+            + '<div style="font-size:15px;line-height:1.85;color:#374151;">'+msgHtml+'</div>'
+            + ctaHtml
+            + '</td></tr>'
+            + '<tr><td style="padding:0 40px;"><hr style="border:none;border-top:1px solid #e5e7eb;margin:0;"></td></tr>'
+            + '<tr><td style="padding:18px 40px 26px;text-align:center;">'
+            + '<p style="font-size:12px;color:#9ca3af;margin:0 0 4px;">'+esc(footerNote)+'</p>'
+            + '<p style="font-size:11px;color:#d1d5db;margin:0;">&copy; '+new Date().getFullYear()+' Kshitiz Jaiswal. All rights reserved.</p>'
+            + '</td></tr>'
+            + '</table></td></tr></table></body></html>';
+    }
+
+    window.updatePreview = function() {
+        document.getElementById('previewFrame').srcdoc = buildHtml();
+    };
+
+    window.prepareSend = function() {
+        document.getElementById('htmlBodyInput').value = buildHtml();
+    };
+
+    // Init on page load
+    updatePreview();
+})();
+</script>
 {% endblock %}

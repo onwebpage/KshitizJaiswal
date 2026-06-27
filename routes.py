@@ -3606,8 +3606,9 @@ def admin_email_broadcast():
         return redirect(url_for('admin_login'))
 
     if request.method == 'POST':
-        subject = request.form.get('subject', '').strip()
-        message = request.form.get('message', '').strip()
+        subject   = request.form.get('subject', '').strip()
+        message   = request.form.get('message', '').strip()
+        html_body = request.form.get('html_body', '').strip()
 
         if not subject or not message:
             flash('Subject and message are required.', 'error')
@@ -3620,7 +3621,6 @@ def admin_email_broadcast():
             flash('No subscribers found to send to.', 'warning')
             return redirect(url_for('admin_email_broadcast'))
 
-        # Send broadcast via Resend
         import resend as _resend
         from utils import _get_resend_from
         resend_api_key = os.environ.get('RESEND_API_KEY', '').strip()
@@ -3632,10 +3632,7 @@ def admin_email_broadcast():
                 f'Email would have been sent to {len(subscriber_emails)} subscribers.',
                 'warning'
             )
-            return render_template('admin/email_broadcast.html',
-                                   subject=subject, message=message,
-                                   subscriber_count=len(subscriber_emails),
-                                   preview_mode=True)
+            return redirect(url_for('admin_email_broadcast'))
 
         if not from_email:
             flash(
@@ -3643,22 +3640,21 @@ def admin_email_broadcast():
                 f'Email would have been sent to {len(subscriber_emails)} subscribers.',
                 'warning'
             )
-            return render_template('admin/email_broadcast.html',
-                                   subject=subject, message=message,
-                                   subscriber_count=len(subscriber_emails),
-                                   preview_mode=True)
+            return redirect(url_for('admin_email_broadcast'))
+
+        # Use designer HTML if available, else build a simple fallback
+        if not html_body:
+            html_body = (
+                f'<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">'
+                f'<h2 style="color:#8B0000;">{subject}</h2>'
+                f'<div style="white-space:pre-wrap;line-height:1.7;color:#333;">{message}</div>'
+                f'<hr style="margin-top:30px;border:none;border-top:1px solid #eee;">'
+                f'<p style="color:#999;font-size:12px;margin-top:12px;">'
+                f'You are receiving this because you subscribed to Kshitiz Jaiswal\'s newsletter.'
+                f'</p></div>'
+            )
 
         _resend.api_key = resend_api_key
-        html_body = (
-            f'<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">'
-            f'<h2 style="color:#8B0000;">{subject}</h2>'
-            f'<div style="white-space:pre-wrap;line-height:1.7;color:#333;">{message}</div>'
-            f'<hr style="margin-top:30px;border:none;border-top:1px solid #eee;">'
-            f'<p style="color:#999;font-size:12px;margin-top:12px;">'
-            f'You are receiving this because you subscribed to Kshitiz Jaiswal\'s newsletter.'
-            f'</p></div>'
-        )
-
         sent = 0
         failed = 0
         for addr in subscriber_emails:
@@ -3678,7 +3674,7 @@ def admin_email_broadcast():
         if failed:
             flash(f'Sent to {sent} subscribers. {failed} failed — check logs.', 'warning')
         else:
-            flash(f'Email sent successfully to {sent} subscribers via Resend!', 'success')
+            flash(f'Email sent successfully to {sent} subscribers via Resend! ✅', 'success')
 
         return redirect(url_for('admin_email_broadcast'))
 
