@@ -90,9 +90,9 @@
     text-decoration: none;
 }
 
-/* Full-bleed container — 90% wide, centred */
+/* Full-bleed container — 95% wide, centred */
 .preel-full-bleed {
-    width: 90%;
+    width: 95%;
     margin: 0 auto;
     box-sizing: border-box;
 }
@@ -412,9 +412,7 @@
             <button class="preel-nav-btn preel-nav-prev" id="reelPrev" aria-label="Previous reels">
                 <i class="fas fa-chevron-left"></i>
             </button>
-            {%- set _rc = content.reels | length -%}
-            {%- set _ow = _rc * 275 + (_rc - 1) * 24 -%}
-            <div class="preel-carousel-overflow" style="max-width:{{ _ow }}px">
+            <div class="preel-carousel-overflow">
                 <div class="preel-carousel" id="reelCarousel">
                     {% for reel in content.reels %}{{ premium_reel_card(reel) }}{% endfor %}
                 </div>
