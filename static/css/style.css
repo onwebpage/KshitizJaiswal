@@ -3034,7 +3034,7 @@ h1, h2, h3, h4, h5, h6 {
 /* Polls Archive Page Styles */
 .polls-archive-hero {
   background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
-  padding: 120px 0 80px;
+  padding: 90px 0 35px;
   text-align: center;
 }
 
@@ -3114,7 +3114,7 @@ h1, h2, h3, h4, h5, h6 {
 /* Poll Detail Page Styles */
 .poll-detail-hero {
   background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
-  padding: 120px 0 60px;
+  padding: 90px 0 35px;
 }
 
 .poll-detail-header .breadcrumb {
@@ -4085,7 +4085,7 @@ h1, h2, h3, h4, h5, h6 {
 /* Group Detail Page */
 .poll-group-hero {
   background: linear-gradient(135deg, var(--dark-color) 0%, var(--primary-dark) 100%);
-  padding: 6rem 0 4rem;
+  padding: 90px 0 35px;
   color: #ffffff;
 }
 
