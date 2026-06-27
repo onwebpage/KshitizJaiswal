@@ -282,7 +282,7 @@ def inject_global_context():
                     s['resolved_value'] = _sup_cache
                 else:
                     s['resolved_value'] = s.get('value', '')
-            footer_stats = _active[:2]
+            footer_stats = _active[:3]
     except Exception as e:
         logging.debug(f"Could not load footer stats: {e}")
         db.session.rollback()
