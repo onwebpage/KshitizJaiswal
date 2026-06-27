@@ -715,7 +715,8 @@ input[type="submit"], input[type="button"],
 /* ── 23. UPCOMING SHOWS GRID ─────────────────────────────────── */
 @media (max-width: 575.98px) {
   .show-image {
-    height: 160px;
+    /* let aspect-ratio control height on mobile too */
+    height: unset;
   }
 
   .show-content {
