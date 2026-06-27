@@ -335,7 +335,7 @@
                     {% else %}
                         {% set _yt_id = '' %}
                     {% endif %}
-                    <iframe src="https://www.youtube.com/embed/{{ _yt_id }}?rel=0&modestbranding=1"
+                    <iframe src="https://www.youtube.com/embed/{{ _yt_id }}?autoplay=1&mute=1&loop=1&playlist={{ _yt_id }}&controls=0&rel=0&modestbranding=1&showinfo=0&iv_load_policy=3&disablekb=1"
                             class="tc-yt-iframe" frameborder="0"
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                             allowfullscreen loading="lazy"></iframe>
