@@ -74,6 +74,17 @@
                     data-auto-thumb="{% if not _thumb %}{{ _auto }}{% endif %}"
                     onerror="var a=this.dataset.autoThumb;if(a&&this.src!==a){this.onerror=function(){this.src='{{ _placeholder }}'};this.src=a;}else{this.onerror=null;this.src='{{ _placeholder }}'}">
                 <div class="preel-gradient"></div>
+                {% if platform == 'youtube' %}
+                <div class="preel-platform-badge preel-yt"><i class="fab fa-youtube"></i> YouTube</div>
+                {% elif platform == 'instagram' %}
+                <div class="preel-platform-badge preel-ig"><i class="fab fa-instagram"></i> Instagram</div>
+                {% endif %}
+                {% if reel.category_tag %}
+                <div class="preel-cat-badge">{{ reel.category_tag }}</div>
+                {% endif %}
+                <div class="preel-title-block">
+                    <p class="preel-title">{{ reel.title }}</p>
+                </div>
                 <div class="preel-hover-overlay">
                     <div class="preel-play-btn"><i class="fas fa-play"></i></div>
                 </div>
@@ -674,14 +685,14 @@
 /* ══ Carousel track ═══════════════════════════════════════════════════ */
 .preel-carousel-wrap {
     position: relative;
-    padding: 0 52px;
+    padding: 0 60px;
 }
 .preel-carousel-overflow {
     overflow: hidden;
 }
 .preel-carousel {
     display: flex;
-    gap: 18px;
+    gap: 22px;
     width: max-content;
     will-change: transform;
     user-select: none;
@@ -695,26 +706,26 @@
     top: 50%;
     transform: translateY(-50%);
     z-index: 10;
-    width: 46px;
-    height: 46px;
+    width: 52px;
+    height: 52px;
     border-radius: 50%;
     border: 2px solid rgba(255,255,255,.3);
-    background: rgba(20,20,30,.85);
+    background: rgba(20,20,30,.88);
     color: #fff;
-    font-size: 1rem;
+    font-size: 1.1rem;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: background .2s, border-color .2s, transform .2s;
-    box-shadow: 0 4px 18px rgba(0,0,0,.4);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
+    box-shadow: 0 6px 24px rgba(0,0,0,.5);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
 }
 .preel-nav-btn:hover {
-    background: rgba(204,0,0,.9);
+    background: rgba(204,0,0,.92);
     border-color: rgba(204,0,0,.8);
-    transform: translateY(-50%) scale(1.08);
+    transform: translateY(-50%) scale(1.1);
 }
 .preel-nav-btn:disabled,
 .preel-nav-btn[style*="display:none"],
@@ -725,28 +736,33 @@
 .preel-nav-prev { left: 0; }
 .preel-nav-next { right: 0; }
 
-/* ══ Individual card ══════════════════════════════════════════════════ */
+/* ══ Individual card — large premium 9:16 ════════════════════════════ */
 .preel-card {
     flex-shrink: 0;
-    width: 280px;
-    border-radius: 18px;
+    width: 340px;
+    border-radius: 22px;
     overflow: hidden;
     display: block;
     text-decoration: none;
     position: relative;
-    box-shadow: 0 8px 32px rgba(0,0,0,.45);
-    transition: transform .3s cubic-bezier(.23,1,.32,1), box-shadow .3s ease;
+    box-shadow:
+        0 12px 40px rgba(0,0,0,.55),
+        0 2px 8px rgba(0,0,0,.3);
+    transition: transform .35s cubic-bezier(.23,1,.32,1), box-shadow .35s ease;
+    background: #0d0d1a;
 }
 .preel-card:hover {
-    transform: translateY(-10px) scale(1.02);
-    box-shadow: 0 20px 56px rgba(0,0,0,.65);
+    transform: translateY(-12px) scale(1.025);
+    box-shadow:
+        0 28px 72px rgba(0,0,0,.7),
+        0 4px 16px rgba(204,0,0,.2);
     text-decoration: none;
 }
 
-/* ══ Thumbnail ════════════════════════════════════════════════════════ */
+/* ══ Thumbnail — true 9:16 ════════════════════════════════════════════ */
 .preel-thumb {
     position: relative;
-    aspect-ratio: 9/14;
+    aspect-ratio: 9 / 16;
     background: #0d0d1a;
     overflow: hidden;
 }
@@ -755,10 +771,10 @@
     height: 100%;
     object-fit: cover;
     display: block;
-    transition: transform .45s cubic-bezier(.23,1,.32,1);
+    transition: transform .5s cubic-bezier(.23,1,.32,1);
     pointer-events: none;
 }
-.preel-card:hover .preel-img { transform: scale(1.08); }
+.preel-card:hover .preel-img { transform: scale(1.07); }
 
 /* ══ Bottom gradient + title ══════════════════════════════════════════ */
 .preel-gradient {
@@ -766,10 +782,10 @@
     inset: 0;
     background: linear-gradient(
         to bottom,
-        transparent 35%,
-        rgba(0,0,0,.25) 55%,
-        rgba(0,0,0,.85) 80%,
-        rgba(0,0,0,.97) 100%
+        transparent 30%,
+        rgba(0,0,0,.15) 50%,
+        rgba(0,0,0,.75) 72%,
+        rgba(0,0,0,.96) 100%
     );
     z-index: 1;
 }
@@ -778,27 +794,28 @@
     bottom: 0;
     left: 0;
     right: 0;
-    padding: 14px 16px 18px;
+    padding: 18px 20px 22px;
     z-index: 2;
 }
 .preel-title {
-    font-size: .95rem;
+    font-size: 1.05rem;
     font-weight: 700;
     color: #fff;
     margin: 0;
-    line-height: 1.4;
+    line-height: 1.45;
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    text-shadow: 0 1px 6px rgba(0,0,0,.6);
+    text-shadow: 0 2px 8px rgba(0,0,0,.7);
+    letter-spacing: .01em;
 }
 
 /* ══ Hover overlay — play button ══════════════════════════════════════ */
 .preel-hover-overlay {
     position: absolute;
     inset: 0;
-    background: rgba(0,0,0,.28);
+    background: rgba(0,0,0,.22);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -809,75 +826,88 @@
 }
 .preel-card:hover .preel-hover-overlay { opacity: 1; }
 .preel-play-btn {
-    width: 58px;
-    height: 58px;
-    background: rgba(255,255,255,.95);
+    width: 68px;
+    height: 68px;
+    background: rgba(255,255,255,.96);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.2rem;
+    font-size: 1.4rem;
     color: #cc0000;
-    box-shadow: 0 4px 20px rgba(0,0,0,.4);
-    transform: scale(.9);
-    transition: transform .25s ease;
+    box-shadow: 0 6px 28px rgba(0,0,0,.45);
+    transform: scale(.85);
+    transition: transform .3s cubic-bezier(.23,1,.32,1);
 }
 .preel-card:hover .preel-play-btn { transform: scale(1); }
 
 /* ══ Platform badge ═══════════════════════════════════════════════════ */
 .preel-platform-badge {
     position: absolute;
-    top: 12px;
-    left: 12px;
-    padding: 4px 10px;
+    top: 14px;
+    left: 14px;
+    padding: 5px 12px;
     border-radius: 20px;
-    font-size: .72rem;
+    font-size: .75rem;
     font-weight: 700;
     backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     z-index: 4;
     display: inline-flex;
     align-items: center;
     gap: 5px;
+    letter-spacing: .02em;
 }
 .preel-yt {
     background: rgba(255,0,0,.88);
     color: #fff;
 }
 .preel-ig {
-    background: linear-gradient(135deg, rgba(245,133,41,.9), rgba(221,42,123,.9), rgba(129,52,175,.9));
+    background: linear-gradient(135deg, rgba(245,133,41,.92), rgba(221,42,123,.92), rgba(129,52,175,.92));
     color: #fff;
 }
 
 /* ══ Category badge ═══════════════════════════════════════════════════ */
 .preel-cat-badge {
     position: absolute;
-    top: 12px;
-    right: 12px;
-    padding: 4px 10px;
+    top: 14px;
+    right: 14px;
+    padding: 5px 12px;
     border-radius: 20px;
-    font-size: .7rem;
+    font-size: .72rem;
     font-weight: 700;
     background: rgba(255,255,255,.18);
     color: #fff;
     backdrop-filter: blur(8px);
-    border: 1px solid rgba(255,255,255,.25);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,.28);
     z-index: 4;
 }
 
-/* ══ Mobile ═══════════════════════════════════════════════════════════ */
+/* ══ Tablet — 2 cards visible ════════════════════════════════════════ */
+@media (max-width: 1024px) {
+    .preel-card { width: 300px; border-radius: 20px; }
+    .preel-carousel { gap: 18px; }
+    .preel-carousel-wrap { padding: 0 54px; }
+}
+
+/* ══ Mobile — 1 large card ════════════════════════════════════════════ */
 @media (max-width: 767.98px) {
     .premium-reels-section { padding: 48px 0 56px; }
-    .preel-card { width: min(68vw, 260px); }
+    .preel-card { width: min(78vw, 300px); border-radius: 20px; }
     .premium-reels-header { margin-bottom: 28px; }
-    .preel-carousel-wrap { padding: 0 48px; }
-    .preel-nav-btn { width: 40px; height: 40px; font-size: .9rem; }
+    .preel-carousel-wrap { padding: 0 50px; }
+    .preel-nav-btn { width: 44px; height: 44px; font-size: 1rem; }
+    .preel-title { font-size: 1rem; }
+    .preel-title-block { padding: 14px 16px 18px; }
 }
 @media (max-width: 480px) {
-    .preel-card { width: min(72vw, 240px); border-radius: 14px; }
-    .preel-carousel { gap: 14px; }
-    .preel-title { font-size: .9rem; }
-    .preel-carousel-wrap { padding: 0 40px; }
-    .preel-nav-btn { width: 36px; height: 36px; font-size: .82rem; }
+    .preel-card { width: min(80vw, 260px); border-radius: 18px; }
+    .preel-carousel { gap: 16px; }
+    .preel-carousel-wrap { padding: 0 42px; }
+    .preel-nav-btn { width: 38px; height: 38px; font-size: .9rem; }
+    .preel-title { font-size: .95rem; }
+    .preel-play-btn { width: 56px; height: 56px; font-size: 1.2rem; }
 }
 </style>
 
