@@ -107,7 +107,7 @@
     font-family: monospace;
 }
 
-/* Toggle switch */
+/* ── Toggle switch (checkbox-based, inside main form) ─────── */
 .toggle-wrap {
     display: flex;
     align-items: center;
@@ -118,68 +118,54 @@
     font-size: 0.78rem;
     font-weight: 600;
     color: #6b7280;
-    min-width: 42px;
+    min-width: 30px;
     text-align: right;
 }
 .toggle-label.on  { color: #059669; }
 .toggle-label.off { color: #9ca3af; }
 
-/* Pure-CSS toggle button */
-.toggle-btn {
+.toggle-checkbox { display: none; }
+.toggle-visual {
     position: relative;
     width: 48px;
     height: 26px;
     background: #d1d5db;
-    border: none;
     border-radius: 13px;
     cursor: pointer;
     transition: background 0.25s;
-    padding: 0;
+    display: inline-block;
     flex-shrink: 0;
 }
-.toggle-btn.on { background: #22c55e; }
-.toggle-btn::after {
+.toggle-visual::after {
     content: '';
     position: absolute;
-    top: 3px;
-    left: 3px;
-    width: 20px;
-    height: 20px;
+    top: 3px; left: 3px;
+    width: 20px; height: 20px;
     background: #fff;
     border-radius: 50%;
     transition: left 0.25s;
     box-shadow: 0 1px 4px rgba(0,0,0,0.18);
 }
-.toggle-btn.on::after { left: 25px; }
+.toggle-checkbox:checked + .toggle-visual { background: #22c55e; }
+.toggle-checkbox:checked + .toggle-visual::after { left: 25px; }
 
 /* URL row */
 .url-row {
     margin-top: 4px;
 }
-.url-row .input-group {
-    border-radius: 10px;
-    overflow: hidden;
-}
 .url-row input[type="url"] {
-    border-color: #e5e7eb;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
     font-size: 0.84rem;
     padding: 7px 12px;
-    min-width: 0;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
 }
 .url-row input[type="url"]:focus {
     border-color: #6366f1;
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
 }
-.url-row .btn-save-url {
-    background: #6366f1;
-    color: #fff;
-    border: none;
-    font-size: 0.8rem;
-    font-weight: 600;
-    padding: 7px 14px;
-    white-space: nowrap;
-}
-.url-row .btn-save-url:hover { background: #4f46e5; }
 
 /* Card footer */
 .card-footer-actions {
@@ -232,6 +218,42 @@
 .add-platform-card i { font-size: 1.8rem; }
 .add-platform-card span { font-size: 0.9rem; font-weight: 600; }
 
+/* Sticky save bar */
+.save-bar {
+    position: sticky;
+    top: 70px;
+    z-index: 100;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 14px 20px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.08);
+}
+.save-bar p {
+    margin: 0;
+    font-size: 0.88rem;
+    color: #6b7280;
+}
+.btn-save-all {
+    background: #22c55e;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 0.92rem;
+    font-weight: 700;
+    padding: 10px 28px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+    white-space: nowrap;
+}
+.btn-save-all:hover { background: #16a34a; transform: translateY(-1px); }
+.btn-save-all:active { transform: translateY(0); }
+
 /* Tips box */
 .tips-card {
     background: #f0f9ff;
@@ -283,6 +305,14 @@
                         </a>
                     </div>
 
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}{% for cat, msg in messages %}
+                        <div class="alert alert-{{ 'danger' if cat == 'error' else cat }} alert-dismissible fade show mb-3">
+                            {{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endfor %}{% endif %}
+                    {% endwith %}
+
                     <!-- Stats bar -->
                     {% set enabled_count  = links | selectattr('is_active') | list | length %}
                     {% set disabled_count = links | rejectattr('is_active') | list | length %}
@@ -291,109 +321,138 @@
                             <i class="fas fa-layer-group"></i>{{ links|length }} Platforms
                         </div>
                         <div class="sm-stat-pill enabled">
-                            <i class="fas fa-eye"></i>{{ enabled_count }} Visible on site
+                            <i class="fas fa-eye"></i><span id="stat-enabled">{{ enabled_count }}</span> Visible on site
                         </div>
                         <div class="sm-stat-pill disabled">
-                            <i class="fas fa-eye-slash"></i>{{ disabled_count }} Hidden
+                            <i class="fas fa-eye-slash"></i><span id="stat-hidden">{{ disabled_count }}</span> Hidden
                         </div>
                     </div>
 
-                    <!-- Platform cards grid -->
-                    <div class="platform-grid">
+                    <!-- ── Single save form wraps all cards ────────────────── -->
+                    <form id="save-all-form"
+                          method="POST"
+                          action="{{ url_for('admin_save_all_social_links') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-                        {% for link in links %}
-                        {% set pl = link.platform.lower() %}
-                        {% set brand = platform_colors.get(pl, platform_colors.get(pl.split(' ')[0], '#6366f1')) %}
-                        <div class="platform-card {{ 'is-enabled' if link.is_active else 'is-disabled' }}"
-                             style="--brand-color: {{ brand }}">
+                        <!-- Sticky save bar -->
+                        <div class="save-bar">
+                            <p><i class="fas fa-info-circle me-1 text-primary"></i>
+                               Edit any URLs or toggle visibility, then click <strong>Save Changes</strong> to apply all at once.</p>
+                            <button type="submit" class="btn-save-all">
+                                <i class="fas fa-save me-2"></i>Save Changes
+                            </button>
+                        </div>
 
-                            <!-- Top row: icon + name + toggle -->
-                            <div class="card-top">
-                                <div class="platform-icon-wrap" style="background: {{ brand }}">
-                                    <i class="{{ link.icon_class }}"></i>
-                                </div>
-                                <div class="platform-meta">
-                                    <p class="platform-name">{{ link.platform }}</p>
-                                    <span class="platform-icon-label">{{ link.icon_class }}</span>
-                                </div>
-                                <!-- Toggle -->
-                                <div class="toggle-wrap">
-                                    <span class="toggle-label {{ 'on' if link.is_active else 'off' }}">
-                                        {{ 'ON' if link.is_active else 'OFF' }}
-                                    </span>
-                                    <form method="POST"
-                                          action="{{ url_for('admin_toggle_social_link', link_id=link.id) }}"
-                                          style="display:inline">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <button type="submit"
-                                                class="toggle-btn {{ 'on' if link.is_active else '' }}"
-                                                title="{{ 'Disable' if link.is_active else 'Enable' }} {{ link.platform }}">
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
+                        <!-- Platform cards grid -->
+                        <div class="platform-grid">
 
-                            <!-- URL row -->
-                            <div class="url-row">
-                                <form method="POST"
-                                      action="{{ url_for('admin_update_social_url', link_id=link.id) }}">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <div class="input-group">
-                                        <input type="url"
-                                               class="form-control"
-                                               name="url"
-                                               value="{{ link.url or '' }}"
-                                               placeholder="https://…">
-                                        <button type="submit" class="btn btn-save-url">
-                                            <i class="fas fa-save me-1"></i>Save URL
-                                        </button>
+                            {% for link in links %}
+                            {% set pl = link.platform.lower() %}
+                            {% set brand = platform_colors.get(pl, platform_colors.get(pl.split(' ')[0], '#6366f1')) %}
+                            <div class="platform-card {{ 'is-enabled' if link.is_active else 'is-disabled' }}"
+                                 id="card-{{ link.id }}"
+                                 style="--brand-color: {{ brand }}">
+
+                                <!-- Top row: icon + name + toggle -->
+                                <div class="card-top">
+                                    <div class="platform-icon-wrap" style="background: {{ brand }}">
+                                        <i class="{{ link.icon_class }}"></i>
                                     </div>
-                                </form>
-                            </div>
+                                    <div class="platform-meta">
+                                        <p class="platform-name">{{ link.platform }}</p>
+                                        <span class="platform-icon-label">{{ link.icon_class }}</span>
+                                    </div>
+                                    <!-- Toggle (checkbox inside the main form) -->
+                                    <div class="toggle-wrap">
+                                        <span class="toggle-label {{ 'on' if link.is_active else 'off' }}"
+                                              id="lbl-{{ link.id }}">
+                                            {{ 'ON' if link.is_active else 'OFF' }}
+                                        </span>
+                                        <input type="checkbox"
+                                               class="toggle-checkbox"
+                                               id="chk-{{ link.id }}"
+                                               name="active_{{ link.id }}"
+                                               value="1"
+                                               {{ 'checked' if link.is_active else '' }}
+                                               onchange="syncToggle({{ link.id }}, this.checked)">
+                                        <label for="chk-{{ link.id }}"
+                                               class="toggle-visual"
+                                               title="{{ 'Disable' if link.is_active else 'Enable' }} {{ link.platform }}">
+                                        </label>
+                                    </div>
+                                </div>
 
-                            <!-- Footer: badge + action buttons -->
-                            <div class="card-footer-actions">
-                                <span class="visibility-badge {{ 'visible' if link.is_active else 'hidden' }}">
-                                    <i class="fas fa-{{ 'eye' if link.is_active else 'eye-slash' }} me-1"></i>
-                                    {{ 'Visible to users' if link.is_active else 'Hidden from users' }}
-                                </span>
-                                <div class="card-action-btns">
-                                    <a href="{{ url_for('admin_edit_social_link', link_id=link.id) }}"
-                                       class="btn btn-outline-secondary btn-sm"
-                                       title="Advanced edit">
-                                        <i class="fas fa-sliders-h me-1"></i>Advanced
-                                    </a>
-                                    <form method="POST"
-                                          action="{{ url_for('admin_delete_social_link', link_id=link.id) }}"
-                                          style="display:inline"
-                                          onsubmit="return confirm('Delete {{ link.platform }}? This cannot be undone.')">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <button type="submit" class="btn btn-outline-danger btn-sm" title="Delete">
+                                <!-- URL input (no save button — covered by main form) -->
+                                <div class="url-row">
+                                    <input type="url"
+                                           name="url_{{ link.id }}"
+                                           value="{{ link.url or '' }}"
+                                           placeholder="https://…">
+                                </div>
+
+                                <!-- Footer: badge + action buttons -->
+                                <div class="card-footer-actions">
+                                    <span class="visibility-badge {{ 'visible' if link.is_active else 'hidden' }}"
+                                          id="badge-{{ link.id }}">
+                                        <i class="fas fa-{{ 'eye' if link.is_active else 'eye-slash' }} me-1"
+                                           id="badge-icon-{{ link.id }}"></i>
+                                        <span id="badge-text-{{ link.id }}">{{ 'Visible to users' if link.is_active else 'Hidden from users' }}</span>
+                                    </span>
+                                    <div class="card-action-btns">
+                                        <a href="{{ url_for('admin_edit_social_link', link_id=link.id) }}"
+                                           class="btn btn-outline-secondary btn-sm"
+                                           title="Advanced edit">
+                                            <i class="fas fa-sliders-h me-1"></i>Advanced
+                                        </a>
+                                        <!-- Delete button references its own out-of-form form -->
+                                        <button type="submit"
+                                                form="delete-form-{{ link.id }}"
+                                                class="btn btn-outline-danger btn-sm"
+                                                title="Delete"
+                                                onclick="return confirm('Delete {{ link.platform }}? This cannot be undone.')">
                                             <i class="fas fa-trash"></i>
                                         </button>
-                                    </form>
+                                    </div>
                                 </div>
+
                             </div>
+                            {% endfor %}
+
+                            <!-- Add custom platform card -->
+                            <a href="{{ url_for('admin_add_social_link') }}" class="add-platform-card">
+                                <i class="fas fa-plus-circle"></i>
+                                <span>Add Custom Platform</span>
+                                <small class="text-muted" style="font-size:0.78rem">Pinterest, Snapchat, etc.</small>
+                            </a>
 
                         </div>
-                        {% endfor %}
 
-                        <!-- Add custom platform card -->
-                        <a href="{{ url_for('admin_add_social_link') }}" class="add-platform-card">
-                            <i class="fas fa-plus-circle"></i>
-                            <span>Add Custom Platform</span>
-                            <small class="text-muted" style="font-size:0.78rem">Pinterest, Snapchat, etc.</small>
-                        </a>
+                        <!-- Bottom save button -->
+                        <div class="text-end mt-4">
+                            <button type="submit" class="btn-save-all">
+                                <i class="fas fa-save me-2"></i>Save Changes
+                            </button>
+                        </div>
 
-                    </div>
+                    </form>
+                    <!-- ── End of main save form ───────────────────────────── -->
+
+                    <!-- Delete mini-forms (outside main form, referenced by button[form=...]) -->
+                    {% for link in links %}
+                    <form id="delete-form-{{ link.id }}"
+                          method="POST"
+                          action="{{ url_for('admin_delete_social_link', link_id=link.id) }}"
+                          style="display:none">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    </form>
+                    {% endfor %}
 
                     <!-- Tips -->
                     <div class="tips-card">
                         <h6><i class="fas fa-lightbulb me-2"></i>How it works</h6>
                         <ul>
-                            <li><strong>Toggle ON/OFF</strong> to instantly show or hide any platform on the website — no code changes needed.</li>
-                            <li>Paste a full profile URL (e.g. <code>https://youtube.com/@kshitizjaiswal</code>) and click <strong>Save URL</strong>.</li>
-                            <li>Only <strong>enabled</strong> platforms with a valid URL are displayed in the website footer.</li>
+                            <li>Edit any URLs and toggle ON/OFF for any platforms, then click <strong>Save Changes</strong> once to apply everything.</li>
+                            <li>Only <strong>enabled (ON)</strong> platforms with a valid URL are displayed in the website footer.</li>
                             <li>Use <strong>Advanced</strong> to change the icon class or display order.</li>
                             <li>For new platforms, use any <a href="https://fontawesome.com/icons?d=gallery&p=2&s=brands" target="_blank">Font Awesome brand icon</a> (e.g. <code>fab fa-pinterest</code>).</li>
                         </ul>
@@ -404,4 +463,38 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function syncToggle(id, isOn) {
+    const card    = document.getElementById('card-' + id);
+    const lbl     = document.getElementById('lbl-' + id);
+    const badge   = document.getElementById('badge-' + id);
+    const badgeIc = document.getElementById('badge-icon-' + id);
+    const badgeTx = document.getElementById('badge-text-' + id);
+
+    if (isOn) {
+        card.classList.replace('is-disabled', 'is-enabled');
+        lbl.textContent = 'ON';
+        lbl.classList.replace('off', 'on');
+        badge.classList.replace('hidden', 'visible');
+        badgeIc.className = 'fas fa-eye me-1';
+        badgeTx.textContent = 'Visible to users';
+    } else {
+        card.classList.replace('is-enabled', 'is-disabled');
+        lbl.textContent = 'OFF';
+        lbl.classList.replace('on', 'off');
+        badge.classList.replace('visible', 'hidden');
+        badgeIc.className = 'fas fa-eye-slash me-1';
+        badgeTx.textContent = 'Hidden from users';
+    }
+
+    // Update stats bar counters live
+    const total   = document.querySelectorAll('.toggle-checkbox').length;
+    const onCount = document.querySelectorAll('.toggle-checkbox:checked').length;
+    document.getElementById('stat-enabled').textContent = onCount;
+    document.getElementById('stat-hidden').textContent  = total - onCount;
+}
+</script>
 {% endblock %}

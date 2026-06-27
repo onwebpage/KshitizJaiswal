@@ -2212,6 +2212,23 @@ def admin_update_social_url(link_id):
     flash(f'{link.platform} URL saved successfully!', 'success')
     return redirect(url_for('admin_social_links'))
 
+@app.route('/admin/social-links/save-all', methods=['POST'])
+def admin_save_all_social_links():
+    """Save all social link URLs and visibility states in one shot."""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+
+    links = SocialLink.query.all()
+    for link in links:
+        url_val    = request.form.get(f'url_{link.id}', '').strip()
+        is_active  = request.form.get(f'active_{link.id}') == '1'
+        link.url       = url_val
+        link.is_active = is_active
+
+    db.session.commit()
+    flash('All social media links saved successfully!', 'success')
+    return redirect(url_for('admin_social_links'))
+
 @app.route('/admin/resources')
 def admin_resources():
     """Manage Learning Resources"""
