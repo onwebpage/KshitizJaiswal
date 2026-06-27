@@ -3934,30 +3934,48 @@ def admin_user_activity_detail(user_id):
                          days=days)
 
 # Static pages routes
+def _load_legal_page(content_key):
+    """Load legal page data from DB. Returns dict or None."""
+    try:
+        import json as _json
+        rec = SiteContent.query.filter_by(content_key=content_key).first()
+        if rec:
+            data = _json.loads(rec.content_data)
+            if data.get('content'):
+                return data
+    except Exception:
+        pass
+    return None
+
 @app.route('/privacy-policy')
 def privacy_policy():
     """Privacy Policy page"""
-    return render_template('privacy_policy.html')
+    db_content = _load_legal_page('legal_privacy_policy')
+    return render_template('privacy_policy.html', db_content=db_content)
 
 @app.route('/terms-of-service')
 def terms_of_service():
     """Terms of Service page"""
-    return render_template('terms_of_service.html')
+    db_content = _load_legal_page('legal_terms_of_service')
+    return render_template('terms_of_service.html', db_content=db_content)
 
 @app.route('/disclaimer')
 def disclaimer():
     """Disclaimer page"""
-    return render_template('disclaimer.html')
+    db_content = _load_legal_page('legal_disclaimer')
+    return render_template('disclaimer.html', db_content=db_content)
 
 @app.route('/cookies-policy')
 def cookies_policy():
     """Cookies Policy page"""
-    return render_template('cookies_policy.html')
+    db_content = _load_legal_page('legal_cookies_policy')
+    return render_template('cookies_policy.html', db_content=db_content)
 
 @app.route('/refund-policy')
 def refund_policy():
     """Refund and Cancellation Policy page"""
-    return render_template('refund_policy.html')
+    db_content = _load_legal_page('legal_refund_policy')
+    return render_template('refund_policy.html', db_content=db_content)
 
 @app.route('/return-policy')
 def return_policy():
@@ -5780,3 +5798,110 @@ def admin_resend_course_email(purchase_id):
                             search=request.args.get('search',''),
                             course=request.args.get('course',''),
                             status=request.args.get('status','')))
+
+
+# ── Admin: Legal Pages Editor ─────────────────────────────────────────────────
+@app.route('/admin/legal-pages', methods=['GET', 'POST'])
+def admin_legal_pages():
+    """Admin editor for all legal pages."""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+
+    import json as _json
+
+    LEGAL_PAGES = [
+        {
+            'key': 'privacy_policy',
+            'label': 'Privacy Policy',
+            'icon': 'fas fa-shield-alt',
+            'route': 'privacy_policy',
+            'default_title': 'Privacy Policy',
+            'default_subtitle': 'Your privacy is important to us.',
+        },
+        {
+            'key': 'terms_of_service',
+            'label': 'Terms of Service',
+            'icon': 'fas fa-file-contract',
+            'route': 'terms_of_service',
+            'default_title': 'Terms & Conditions',
+            'default_subtitle': 'Please read these terms carefully.',
+        },
+        {
+            'key': 'disclaimer',
+            'label': 'Disclaimer',
+            'icon': 'fas fa-exclamation-triangle',
+            'route': 'disclaimer',
+            'default_title': 'Disclaimer',
+            'default_subtitle': 'Important information about this website.',
+        },
+        {
+            'key': 'cookies_policy',
+            'label': 'Cookies Policy',
+            'icon': 'fas fa-cookie-bite',
+            'route': 'cookies_policy',
+            'default_title': 'Cookies Policy',
+            'default_subtitle': 'How we use cookies on this platform.',
+        },
+        {
+            'key': 'refund_policy',
+            'label': 'Refund Policy',
+            'icon': 'fas fa-undo',
+            'route': 'refund_policy',
+            'default_title': 'Refund & Cancellation Policy',
+            'default_subtitle': 'Understanding our refund and cancellation process.',
+        },
+    ]
+
+    if request.method == 'POST':
+        page_key = request.form.get('page_key', '').strip()
+        valid_keys = [p['key'] for p in LEGAL_PAGES]
+        if page_key not in valid_keys:
+            flash('Invalid page key.', 'error')
+            return redirect(url_for('admin_legal_pages'))
+
+        data = {
+            'title':        request.form.get('title', '').strip(),
+            'subtitle':     request.form.get('subtitle', '').strip(),
+            'last_updated': request.form.get('last_updated', '').strip(),
+            'content':      request.form.get('content', '').strip(),
+        }
+        content_key = f'legal_{page_key}'
+        try:
+            rec = SiteContent.query.filter_by(content_key=content_key).first()
+            if rec:
+                rec.content_data = _json.dumps(data)
+                rec.updated_at = datetime.utcnow()
+            else:
+                rec = SiteContent(content_key=content_key, content_data=_json.dumps(data))
+                db.session.add(rec)
+            db.session.commit()
+            flash(f'Legal page saved successfully!', 'success')
+        except Exception as _e:
+            db.session.rollback()
+            logging.error(f'admin_legal_pages save error: {_e}')
+            flash(f'Save failed: {_e}', 'error')
+
+        return redirect(url_for('admin_legal_pages') + f'?tab={page_key}')
+
+    # GET — load all pages from DB
+    pages_data = {}
+    for page in LEGAL_PAGES:
+        rec = SiteContent.query.filter_by(content_key=f'legal_{page["key"]}').first()
+        if rec:
+            try:
+                pages_data[page['key']] = _json.loads(rec.content_data)
+            except Exception:
+                pages_data[page['key']] = {}
+        else:
+            pages_data[page['key']] = {}
+
+    active_tab = request.args.get('tab', 'privacy_policy')
+    if active_tab not in [p['key'] for p in LEGAL_PAGES]:
+        active_tab = 'privacy_policy'
+
+    return render_template(
+        'admin/legal_pages.html',
+        pages=LEGAL_PAGES,
+        pages_data=pages_data,
+        active_tab=active_tab,
+    )

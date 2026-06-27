@@ -3,6 +3,28 @@
 {% block title %}Privacy Policy - {{ super() }}{% endblock %}
 
 {% block content %}
+{% if db_content %}
+<div class="legal-db-hero">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10 text-center">
+                <div class="hero-icon mb-4"><i class="fas fa-shield-alt"></i></div>
+                <h1 class="legal-db-hero-title">{{ db_content.title or 'Privacy Policy' }}</h1>
+                {% if db_content.subtitle %}<p class="legal-db-hero-subtitle">{{ db_content.subtitle }}</p>{% endif %}
+                {% if db_content.last_updated %}<p class="text-white-50 mb-0"><i class="far fa-calendar-alt me-2"></i>Last updated: {{ db_content.last_updated }}</p>{% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+<div class="container" style="padding: 60px 15px;">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 legal-db-content">
+            {{ db_content.content | safe }}
+        </div>
+    </div>
+</div>
+{% include 'partials/_legal_db_styles.html' ignore missing %}
+{% else %}
 <div class="privacy-hero">
     <div class="container">
         <div class="row justify-content-center">
@@ -593,5 +615,5 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-
+{% endif %}
 {% endblock %}

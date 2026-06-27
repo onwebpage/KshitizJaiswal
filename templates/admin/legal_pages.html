@@ -1,0 +1,193 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Legal Pages Editor - Admin Panel{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-gavel me-2"></i>Legal Pages Editor</h2>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}{% for cat, msg in messages %}
+        <div class="alert alert-{{ 'danger' if cat == 'error' else cat }} alert-dismissible fade show">
+            {{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}{% endif %}
+    {% endwith %}
+
+    <div class="card mb-3">
+        <div class="card-body py-2">
+            <small class="text-muted">
+                <i class="fas fa-info-circle me-1 text-primary"></i>
+                Yahan aap har legal page ka title, subtitle, aur full content edit kar sakte hain.
+                Content ko <strong>HTML format</strong> mein likho — jaise <code>&lt;h3&gt;</code>, <code>&lt;p&gt;</code>, <code>&lt;ul&gt;</code>, <code>&lt;li&gt;</code> tags.
+                Save karne ke baad live page pe automatically update ho jayega.
+            </small>
+        </div>
+    </div>
+
+    <!-- Tab Navigation -->
+    <ul class="nav nav-tabs mb-0" id="legalTabs" role="tablist" style="border-bottom: none;">
+        {% for page in pages %}
+        <li class="nav-item" role="presentation">
+            <button class="nav-link {% if active_tab == page.key %}active{% endif %}"
+                    id="tab-{{ page.key }}"
+                    data-bs-toggle="tab"
+                    data-bs-target="#panel-{{ page.key }}"
+                    type="button" role="tab">
+                <i class="{{ page.icon }} me-1"></i>{{ page.label }}
+                {% if pages_data[page.key].content %}
+                    <span class="badge bg-success ms-1" style="font-size:10px;">Saved</span>
+                {% endif %}
+            </button>
+        </li>
+        {% endfor %}
+    </ul>
+
+    <div class="tab-content border border-top-0 rounded-bottom p-4 bg-white shadow-sm">
+        {% for page in pages %}
+        <div class="tab-pane fade {% if active_tab == page.key %}show active{% endif %}"
+             id="panel-{{ page.key }}"
+             role="tabpanel">
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0"><i class="{{ page.icon }} me-2 text-danger"></i>{{ page.label }}</h5>
+                <a href="{{ url_for(page.route) }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-external-link-alt me-1"></i>Live Page Dekho
+                </a>
+            </div>
+
+            <form method="POST" action="{{ url_for('admin_legal_pages') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="page_key" value="{{ page.key }}">
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-5">
+                        <label class="form-label fw-semibold">Page Title</label>
+                        <input type="text" class="form-control" name="title"
+                               value="{{ pages_data[page.key].title or '' }}"
+                               placeholder="{{ page.default_title }}">
+                        <div class="form-text">Hero section mein bada heading</div>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label fw-semibold">Subtitle</label>
+                        <input type="text" class="form-control" name="subtitle"
+                               value="{{ pages_data[page.key].subtitle or '' }}"
+                               placeholder="{{ page.default_subtitle }}">
+                        <div class="form-text">Hero ke neeche chhoti line</div>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold">Last Updated</label>
+                        <input type="text" class="form-control" name="last_updated"
+                               value="{{ pages_data[page.key].last_updated or '' }}"
+                               placeholder="e.g. June 27, 2026">
+                        <div class="form-text">Date dikhayega</div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Page Content <span class="text-danger">*</span></label>
+                    <div class="d-flex gap-2 mb-2 flex-wrap">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="insertTag('{{ page.key }}', 'h3', 'Section Heading')">H3</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="insertTag('{{ page.key }}', 'p', 'Paragraph text yahan likho')">P</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="insertUL('{{ page.key }}')">List</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="insertTag('{{ page.key }}', 'strong', 'Bold text')"><b>Bold</b></button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="insertTag('{{ page.key }}', 'em', 'Italic text')"><i>Italic</i></button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="insertHR('{{ page.key }}')">— Divider</button>
+                        <button type="button" class="btn btn-sm btn-outline-danger ms-auto" onclick="clearContent('{{ page.key }}')"
+                                title="Default template wapas dikhao (DB content hata do)">
+                            <i class="fas fa-undo me-1"></i>Reset to Default
+                        </button>
+                    </div>
+                    <textarea class="form-control font-monospace"
+                              id="content_{{ page.key }}"
+                              name="content"
+                              rows="22"
+                              placeholder="HTML content yahan likho... jaise &lt;h3&gt;Heading&lt;/h3&gt; &lt;p&gt;Text...&lt;/p&gt;">{{ pages_data[page.key].content or '' }}</textarea>
+                    <div class="form-text mt-1">
+                        <i class="fas fa-lightbulb text-warning"></i>
+                        Agar ye field <strong>khali</strong> chhod do to default (original) page design dikhega.
+                        Content likhne ke baad custom layout show hoga.
+                    </div>
+                </div>
+
+                {% if pages_data[page.key].content %}
+                <div class="card border-warning mb-3">
+                    <div class="card-body py-2 d-flex align-items-center gap-2">
+                        <i class="fas fa-check-circle text-success"></i>
+                        <small>Is page pe <strong>custom content active hai</strong>. Live page DB se content dikha raha hai.</small>
+                        <a href="{{ url_for(page.route) }}" target="_blank" class="btn btn-sm btn-outline-success ms-auto">Preview</a>
+                    </div>
+                </div>
+                {% else %}
+                <div class="card border-secondary mb-3">
+                    <div class="card-body py-2 d-flex align-items-center gap-2">
+                        <i class="fas fa-info-circle text-muted"></i>
+                        <small>Is page pe abhi <strong>default design</strong> dikh raha hai. Content likhke save karo to custom ho jayega.</small>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-save me-2"></i>Save {{ page.label }}
+                    </button>
+                    <a href="{{ url_for(page.route) }}" target="_blank" class="btn btn-outline-secondary btn-lg">
+                        <i class="fas fa-eye me-2"></i>Live Preview
+                    </a>
+                </div>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+function insertTag(pageKey, tag, placeholder) {
+    const ta = document.getElementById('content_' + pageKey);
+    const start = ta.selectionStart;
+    const end = ta.selectionEnd;
+    const selected = ta.value.substring(start, end) || placeholder;
+    const insertion = `<${tag}>${selected}</${tag}>\n`;
+    ta.value = ta.value.substring(0, start) + insertion + ta.value.substring(end);
+    ta.focus();
+    ta.selectionStart = start + insertion.length;
+    ta.selectionEnd = start + insertion.length;
+}
+
+function insertUL(pageKey) {
+    const ta = document.getElementById('content_' + pageKey);
+    const start = ta.selectionStart;
+    const insertion = `<ul>\n    <li>Point 1</li>\n    <li>Point 2</li>\n    <li>Point 3</li>\n</ul>\n`;
+    ta.value = ta.value.substring(0, start) + insertion + ta.value.substring(start);
+    ta.focus();
+}
+
+function insertHR(pageKey) {
+    const ta = document.getElementById('content_' + pageKey);
+    const start = ta.selectionStart;
+    const insertion = `\n<hr class="my-4">\n`;
+    ta.value = ta.value.substring(0, start) + insertion + ta.value.substring(start);
+    ta.focus();
+}
+
+function clearContent(pageKey) {
+    if (!confirm('Kya aap is page ka custom content hata kar default design wapas lana chahte hain?')) return;
+    document.getElementById('content_' + pageKey).value = '';
+}
+
+// Activate the right tab on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const activeTab = '{{ active_tab }}';
+    const tabBtn = document.getElementById('tab-' + activeTab);
+    if (tabBtn) {
+        const tab = new bootstrap.Tab(tabBtn);
+        tab.show();
+    }
+});
+</script>
+{% endblock %}

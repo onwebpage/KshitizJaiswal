@@ -1,0 +1,62 @@
+<style>
+.legal-db-hero {
+    background: var(--gradient-primary);
+    padding: 140px 0 80px;
+    position: relative;
+    overflow: hidden;
+}
+.legal-db-hero::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: url('data:image/svg+xml,<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><g fill="%23ffffff" fill-opacity="0.05"><path d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/></g></g></svg>') repeat;
+    opacity: 0.3;
+}
+.legal-db-hero .container { position: relative; z-index: 2; }
+.legal-db-hero .hero-icon {
+    width: 80px; height: 80px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2rem; color: #fff;
+    margin: 0 auto 1rem;
+    backdrop-filter: blur(10px);
+}
+.legal-db-hero-title {
+    font-size: 3rem; font-weight: 800;
+    color: #fff; margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+.legal-db-hero-subtitle {
+    font-size: 1.2rem;
+    color: rgba(255,255,255,0.9);
+    margin-bottom: 1rem;
+}
+@media (max-width: 767.98px) {
+    .legal-db-hero { padding: 120px 0 60px; }
+    .legal-db-hero-title { font-size: 2rem; }
+}
+
+/* Content area styling when rendered from DB */
+.legal-db-content h2,
+.legal-db-content h3 { color: var(--gray-800); font-weight: 700; margin-top: 2rem; margin-bottom: 1rem; }
+.legal-db-content h3 { font-size: 1.4rem; }
+.legal-db-content h2 { font-size: 1.75rem; }
+.legal-db-content p { color: var(--gray-600); line-height: 1.8; margin-bottom: 1rem; }
+.legal-db-content ul, .legal-db-content ol {
+    color: var(--gray-600); line-height: 1.8;
+    margin-bottom: 1rem; padding-left: 1.5rem;
+}
+.legal-db-content li { margin-bottom: 0.4rem; }
+.legal-db-content strong { color: var(--gray-800); }
+.legal-db-content hr { border-color: var(--gray-200); margin: 2rem 0; }
+.legal-db-content a { color: var(--primary-color); }
+.legal-db-content blockquote {
+    border-left: 4px solid var(--primary-color);
+    padding: 1rem 1.5rem;
+    background: var(--gray-100);
+    border-radius: 0 8px 8px 0;
+    margin: 1.5rem 0;
+    color: var(--gray-700);
+}
+</style>
