@@ -760,7 +760,7 @@ h1, h2, h3, h4, h5, h6 {
 /* Resources Page Styles */
 .resources-hero {
   background: linear-gradient(135deg, #1a0000 0%, #4a0000 40%, #8b0000 100%);
-  padding: 80px 0 60px;
+  padding: 36px 0 36px;
   text-align: center;
   color: var(--white);
   position: relative;
@@ -841,15 +841,30 @@ h1, h2, h3, h4, h5, h6 {
 
 @media (max-width: 767.98px) {
   .resources-hero {
-    padding: 48px 0 32px;
+    padding: 12px 0 28px;
   }
   
+  .resources-hero-badge {
+    font-size: .72rem;
+    padding: 4px 13px;
+    margin-bottom: 12px;
+  }
+
   .resources-hero-title {
-    font-size: 2rem;
+    font-size: 1.85rem;
+    letter-spacing: -.3px;
+    margin-bottom: .4rem;
+  }
+
+  .resources-hero-accent {
+    width: 38px;
+    height: 3px;
+    margin: 10px auto 14px;
   }
   
   .resources-hero-subtitle {
-    font-size: 1rem;
+    font-size: .93rem;
+    padding: 0 12px;
   }
 }
 
