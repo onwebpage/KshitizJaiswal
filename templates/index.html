@@ -74,22 +74,8 @@
                     data-auto-thumb="{% if not _thumb %}{{ _auto }}{% endif %}"
                     onerror="var a=this.dataset.autoThumb;if(a&&this.src!==a){this.onerror=function(){this.src='{{ _placeholder }}'};this.src=a;}else{this.onerror=null;this.src='{{ _placeholder }}'}">
                 <div class="preel-gradient"></div>
-                {% if platform == 'youtube' %}
-                <span class="preel-platform-badge preel-yt"><i class="fab fa-youtube"></i> YouTube</span>
-                {% elif platform == 'instagram' %}
-                <span class="preel-platform-badge preel-ig"><i class="fab fa-instagram"></i> Instagram</span>
-                {% endif %}
-                {% if reel.category_tag %}
-                <span class="preel-cat-badge preel-cat-{{ reel.category_tag }}">
-                    {% if reel.category_tag == 'trending' %}🔥{% elif reel.category_tag == 'new' %}✨{% elif reel.category_tag == 'must_watch' %}👀{% elif reel.category_tag == 'fan_favourite' %}❤{% elif reel.category_tag == 'exclusive' %}⭐{% elif reel.category_tag == 'behind_scenes' %}🎬{% endif %}
-                    {{ reel.category_tag | replace('_', ' ') | title }}
-                </span>
-                {% endif %}
                 <div class="preel-hover-overlay">
                     <div class="preel-play-btn"><i class="fas fa-play"></i></div>
-                </div>
-                <div class="preel-title-block">
-                    <p class="preel-title">{{ reel.title }}</p>
                 </div>
             </div>
         </a>
