@@ -65,8 +65,11 @@ def _is_external_db(url):
     return "helium" not in url and "PGHOST" not in url
 
 replit_pg_url = _build_replit_pg_url()
-external_db_url = os.environ.get("DATABASE_URL")
-database_url = replit_pg_url or external_db_url
+external_db_url = os.environ.get("DATABASE_URL", "")
+# Render (and some other providers) give postgres:// — SQLAlchemy needs postgresql://
+if external_db_url.startswith("postgres://"):
+    external_db_url = external_db_url.replace("postgres://", "postgresql://", 1)
+database_url = replit_pg_url or external_db_url or None
 
 use_sqlite = False
 
