@@ -312,21 +312,41 @@
         </div>
         <div class="tc-grid">
             {% for t in vis_t %}
-            <div class="tc-card {% if t.get('video_path') %}tc-card-video{% endif %}">
+            {% set _vid_url = t.get('video_url', '') %}
+            {% set _has_yt  = 'youtube.com' in _vid_url or 'youtu.be' in _vid_url %}
+            {% set _has_video = t.get('video_path') or _has_yt %}
+            <div class="tc-card {% if _has_video %}tc-card-video{% endif %}">
                 {% if t.get('video_path') %}
                 <div class="tc-video-wrap">
                     <video src="{{ url_for('static', filename=t.video_path) }}"
                            class="tc-video" controls muted playsinline
-                           poster=""
                            onmouseover="this.play()" onmouseout="this.pause()">
                     </video>
                     <div class="tc-video-play-hint"><i class="fas fa-play-circle"></i></div>
+                </div>
+                {% elif _has_yt %}
+                <div class="tc-video-wrap tc-yt-wrap">
+                    {% if 'youtu.be/' in _vid_url %}
+                        {% set _yt_id = _vid_url.split('youtu.be/')[1].split('?')[0].split('&')[0] %}
+                    {% else %}
+                        {% set _yt_id = _vid_url.split('v=')[1].split('&')[0] %}
+                    {% endif %}
+                    <iframe src="https://www.youtube.com/embed/{{ _yt_id }}?rel=0&modestbranding=1"
+                            class="tc-yt-iframe" frameborder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowfullscreen loading="lazy"></iframe>
                 </div>
                 {% else %}
                 <div class="tc-stars">{{ '★' * t.get('rating', 5) }}</div>
                 <p class="tc-text">"{{ t.get('text', '') }}"</p>
                 {% endif %}
-                <div class="tc-author">
+                {% if _has_video %}
+                <div class="tc-video-meta">
+                    <div class="tc-stars tc-stars-sm">{{ '★' * t.get('rating', 5) }}</div>
+                    {% if t.get('text') %}<p class="tc-text tc-text-sm">"{{ t.get('text') }}"</p>{% endif %}
+                </div>
+                {% endif %}
+                <div class="tc-author {% if _has_video %}tc-author-video{% endif %}">
                     <div class="tc-avatar">{{ t.name[0]|upper }}</div>
                     <div class="tc-info">
                         <div class="tc-name">{{ t.name }} <i class="fas fa-check-circle tc-verified-icon"></i></div>
@@ -405,7 +425,7 @@
     padding: 0 0 20px;
     overflow: hidden;
 }
-.tc-card-video .tc-author { padding: 0 22px; margin-top: 4px; }
+.tc-author-video { padding: 0 22px; margin-top: 4px; }
 .tc-video-wrap {
     position: relative;
     width: 100%;
@@ -417,6 +437,17 @@
     object-fit: cover;
     display: block;
     border-radius: 18px 18px 0 0;
+    background: #000;
+}
+.tc-yt-wrap {
+    aspect-ratio: 16/9;
+    cursor: default;
+}
+.tc-yt-iframe {
+    width: 100%;
+    height: 100%;
+    border-radius: 18px 18px 0 0;
+    display: block;
     background: #000;
 }
 .tc-video-play-hint {
@@ -433,6 +464,11 @@
     background: rgba(0,0,0,.25);
 }
 .tc-card-video:hover .tc-video-play-hint { opacity: 0; }
+.tc-video-meta {
+    padding: 10px 22px 0;
+}
+.tc-stars-sm { font-size: .9rem; letter-spacing: 1px; margin-bottom: 4px; }
+.tc-text-sm  { font-size: .83rem; line-height: 1.5; margin: 0; }
 .tc-stars { color: #fbbf24; font-size: 1.1rem; letter-spacing: 2px; }
 .tc-text {
     color: rgba(255,255,255,.82);
