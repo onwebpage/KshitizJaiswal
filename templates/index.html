@@ -328,8 +328,12 @@
                 <div class="tc-video-wrap tc-yt-wrap">
                     {% if 'youtu.be/' in _vid_url %}
                         {% set _yt_id = _vid_url.split('youtu.be/')[1].split('?')[0].split('&')[0] %}
-                    {% else %}
+                    {% elif '/shorts/' in _vid_url %}
+                        {% set _yt_id = _vid_url.split('/shorts/')[1].split('?')[0].split('&')[0] %}
+                    {% elif 'v=' in _vid_url %}
                         {% set _yt_id = _vid_url.split('v=')[1].split('&')[0] %}
+                    {% else %}
+                        {% set _yt_id = '' %}
                     {% endif %}
                     <iframe src="https://www.youtube.com/embed/{{ _yt_id }}?rel=0&modestbranding=1"
                             class="tc-yt-iframe" frameborder="0"
