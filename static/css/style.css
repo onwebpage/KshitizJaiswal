@@ -760,7 +760,7 @@ h1, h2, h3, h4, h5, h6 {
 /* Resources Page Styles */
 .resources-hero {
   background: linear-gradient(135deg, #1a0000 0%, #4a0000 40%, #8b0000 100%);
-  padding: 28px 0 28px;
+  padding: 100px 0 28px;
   text-align: center;
   color: var(--white);
   position: relative;
