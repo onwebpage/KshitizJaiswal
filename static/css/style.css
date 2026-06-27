@@ -759,8 +759,8 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Resources Page Styles */
 .resources-hero {
-  background: var(--gradient-primary);
-  padding: 120px 0 80px;
+  background: linear-gradient(135deg, #1a0000 0%, #4a0000 40%, #8b0000 100%);
+  padding: 80px 0 60px;
   text-align: center;
   color: var(--white);
   position: relative;
@@ -770,11 +770,19 @@ h1, h2, h3, h4, h5, h6 {
 .resources-hero::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, rgba(26, 0, 0, 0.8) 0%, rgba(204, 0, 0, 0.7) 100%);
+  top: 0; left: 0; right: 0; bottom: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(204,0,0,.35) 0%, transparent 70%),
+    url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60"><defs><pattern id="g" width="60" height="60" patternUnits="userSpaceOnUse"><path d="M 60 0 L 0 0 0 60" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1"/></pattern></defs><rect width="60" height="60" fill="url(%23g)"/></svg>') repeat;
+  z-index: 1;
+}
+
+.resources-hero::after {
+  content: '';
+  position: absolute;
+  bottom: -2px; left: 0; right: 0;
+  height: 60px;
+  background: linear-gradient(to bottom, transparent, rgba(0,0,0,.15));
   z-index: 1;
 }
 
@@ -783,34 +791,65 @@ h1, h2, h3, h4, h5, h6 {
   z-index: 2;
 }
 
+.resources-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.25);
+  border-radius: 50px;
+  padding: 5px 16px;
+  font-size: .78rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.85);
+  margin-bottom: 18px;
+  backdrop-filter: blur(6px);
+}
+
 .resources-hero-title {
   font-size: 3.5rem;
-  font-weight: 800;
+  font-weight: 900;
   color: var(--white);
-  margin-bottom: 1rem;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  margin-bottom: .6rem;
+  letter-spacing: -.5px;
+  line-height: 1.1;
+  text-shadow: 0 4px 24px rgba(0,0,0,.4);
+}
+
+.resources-hero-accent {
+  display: block;
+  width: 52px;
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #cc0000, #ff4444);
+  margin: 14px auto 20px;
+  box-shadow: 0 2px 12px rgba(204,0,0,.6);
 }
 
 .resources-hero-subtitle {
-  font-size: 1.3rem;
-  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.15rem;
+  color: rgba(255, 255, 255, 0.78);
   margin-bottom: 0;
-  max-width: 600px;
+  max-width: 500px;
   margin-left: auto;
   margin-right: auto;
+  font-style: italic;
+  line-height: 1.6;
 }
 
 @media (max-width: 767.98px) {
   .resources-hero {
-    padding: 100px 0 60px;
+    padding: 48px 0 32px;
   }
   
   .resources-hero-title {
-    font-size: 2.5rem;
+    font-size: 2rem;
   }
   
   .resources-hero-subtitle {
-    font-size: 1.1rem;
+    font-size: 1rem;
   }
 }
 
