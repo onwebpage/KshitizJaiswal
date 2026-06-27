@@ -3,13 +3,13 @@
 {% block title %}Login - Kshitiz Jaiswal{% endblock %}
 
 {% block content %}
-<section style="min-height: 100vh; padding-top: 80px; background: linear-gradient(135deg, #1e293b 0%, #7c3aed 100%);">
+<section style="min-height: 100vh; padding-top: 80px; background: linear-gradient(135deg, #1a0000 0%, #8b0000 60%, #cc0000 100%);">
     <div class="container py-5">
         <div class="row justify-content-center">
             <div class="col-md-5 col-lg-4">
 
                 <div class="text-center mb-4">
-                    <div style="width:70px;height:70px;background:rgba(255,255,255,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;backdrop-filter:blur(10px);">
+                    <div style="width:70px;height:70px;background:rgba(255,255,255,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;backdrop-filter:blur(10px);border:2px solid rgba(255,255,255,0.2);">
                         <i class="fas fa-graduation-cap text-white fa-2x"></i>
                     </div>
                     <h2 class="text-white fw-bold mb-1">Welcome Back</h2>
@@ -28,7 +28,7 @@
                         <form method="POST" action="{{ url_for('user_login') }}{% if next_url %}?next={{ next_url }}{% endif %}">
                             <div class="mb-4">
                                 <label class="form-label fw-semibold text-dark">
-                                    <i class="fas fa-envelope me-1 text-primary"></i>Enter your email
+                                    <i class="fas fa-envelope me-1" style="color:#8b0000;"></i>Enter your email
                                 </label>
                                 <input type="email" name="identifier" class="form-control form-control-lg"
                                     placeholder="your@email.com"
@@ -37,7 +37,7 @@
                             </div>
                             <div class="mb-4">
                                 <label class="form-label fw-semibold text-dark">
-                                    <i class="fas fa-lock me-1 text-primary"></i>Password
+                                    <i class="fas fa-lock me-1" style="color:#8b0000;"></i>Password
                                 </label>
                                 <div class="position-relative">
                                     <input type="password" name="password" id="passwordInput" class="form-control form-control-lg"
@@ -51,32 +51,14 @@
                             </div>
 
                             <button type="submit" class="btn w-100 btn-lg fw-bold text-white"
-                                style="background:linear-gradient(135deg,#7c3aed 0%,#4f46e5 100%);border:none;border-radius:12px;padding:14px;">
+                                style="background:linear-gradient(135deg,#8b0000 0%,#cc0000 100%);border:none;border-radius:12px;padding:14px;letter-spacing:0.3px;">
                                 <i class="fas fa-sign-in-alt me-2"></i>Sign In
                             </button>
                         </form>
 
-                        <div class="d-flex align-items-center my-4">
-                            <hr class="flex-grow-1" style="border-color:#e2e8f0;">
-                            <span class="mx-3 text-muted small fw-semibold">OR</span>
-                            <hr class="flex-grow-1" style="border-color:#e2e8f0;">
-                        </div>
-
-                        <button id="googleLoginBtn" type="button" class="btn w-100 btn-lg d-flex align-items-center justify-content-center gap-2"
-                            style="border:2px solid #e2e8f0;border-radius:12px;padding:12px;background:#fff;color:#374151;font-weight:600;font-size:0.95rem;">
-                            <svg width="20" height="20" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M44.5 20H24v8.5h11.7C34.1 33.9 29.6 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 6 1.1 8.2 3l6-6C34.6 5.1 29.6 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21c10.5 0 20-7.7 20-21 0-1.4-.1-2.7-.5-4z" fill="#FFC107"/>
-                                <path d="M6.3 14.7l7 5.1C15 16.1 19.2 13 24 13c3.1 0 6 1.1 8.2 3l6-6C34.6 5.1 29.6 3 24 3 16.3 3 9.7 7.9 6.3 14.7z" fill="#FF3D00"/>
-                                <path d="M24 45c5.5 0 10.4-1.9 14.2-5.1l-6.6-5.6C29.5 35.8 26.9 37 24 37c-5.6 0-10.1-3.1-11.7-7.5l-7 5.4C8.6 41.1 15.8 45 24 45z" fill="#4CAF50"/>
-                                <path d="M44.5 20H24v8.5h11.7c-.8 2.3-2.3 4.2-4.3 5.5l6.6 5.6C42.2 36 45 30.5 45 24c0-1.4-.1-2.7-.5-4z" fill="#1976D2"/>
-                            </svg>
-                            Continue with Google
-                        </button>
-
                         <div class="text-center mt-4">
                             <p class="text-muted small mb-0">
-                                Your login credentials were sent to your WhatsApp after purchase.<br>
-                                <a href="{{ url_for('courses') }}" class="text-primary fw-semibold">Browse Courses</a>
+                                <a href="{{ url_for('courses') }}" class="fw-semibold" style="color:#8b0000;">Browse Courses</a>
                                 if you haven't purchased yet.
                             </p>
                         </div>
@@ -106,10 +88,5 @@ function togglePassword() {
         icon.classList.replace('fa-eye-slash', 'fa-eye');
     }
 }
-
-document.getElementById('googleLoginBtn').addEventListener('click', function() {
-    const callbackPath = '{{ url_for("user_google_callback") }}';
-    window.location.href = '/login?next=' + encodeURIComponent(callbackPath);
-});
 </script>
 {% endblock %}
