@@ -1045,9 +1045,9 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .coming-soon-badge {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
   background: var(--accent-color);
   color: var(--white);
   padding: 0.25rem 0.75rem;

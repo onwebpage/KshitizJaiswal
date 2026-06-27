@@ -25,10 +25,6 @@
                 <div class="show-card">
                     <div class="show-image show-image--{{ btype }}">
                         <img src="{{ url_for('static', filename=show.image) if show.image and not show.image.startswith('http') else (show.image if show.image else url_for('static', filename='img/reel-placeholder.svg')) }}" alt="{{ show.title }}" class="img-fluid" onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/reel-placeholder.svg') }}'">
-                        <div class="coming-soon-overlay">
-                            <i class="fas fa-clock"></i>
-                            <span>Coming Soon</span>
-                        </div>
                         <span class="show-banner-badge show-banner-badge--{{ btype }}">
                             {% if btype == 'instagram' %}
                                 <i class="fab fa-instagram me-1"></i>9:16
@@ -39,6 +35,9 @@
                     </div>
                     <div class="show-content">
                         <h5>{{ show.title }}</h5>
+                        <div class="coming-soon-badge mb-1">
+                            <i class="fas fa-clock me-1"></i>Coming Soon
+                        </div>
                         <p class="text-muted">{{ show.description }}</p>
                         {% if show.get('date') %}
                         <p class="text-primary"><i class="fas fa-calendar-alt me-1"></i>{{ show.date }}</p>
