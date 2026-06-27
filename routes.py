@@ -5198,6 +5198,31 @@ def admin_seo():
 
 # ── TESTIMONIALS MANAGER ───────────────────────────────────────────────────────
 
+def _save_testimonial_video(video_file):
+    """Save an uploaded video file; return relative path or None."""
+    if not video_file or not video_file.filename:
+        return None
+    ext = video_file.filename.rsplit('.', 1)[-1].lower() if '.' in video_file.filename else ''
+    if ext not in {'mp4', 'webm', 'mov', 'avi'}:
+        return None
+    import time as _time
+    fname = secure_filename(f"t_{int(_time.time())}_{video_file.filename}")
+    upload_dir = os.path.join('static', 'uploads', 'testimonials')
+    os.makedirs(upload_dir, exist_ok=True)
+    video_file.save(os.path.join(upload_dir, fname))
+    return f"uploads/testimonials/{fname}"
+
+def _delete_testimonial_video(video_path):
+    """Delete a testimonial video file from disk if it exists."""
+    if not video_path:
+        return
+    full_path = os.path.join('static', video_path)
+    try:
+        if os.path.isfile(full_path):
+            os.remove(full_path)
+    except Exception:
+        pass
+
 def _get_testimonials_list():
     import json
     rec = SiteContent.query.filter_by(content_key='testimonials_list').first()
@@ -5231,12 +5256,14 @@ def admin_add_testimonial():
     from forms import TestimonialForm
     form = TestimonialForm()
     if form.validate_on_submit():
+        video_path = _save_testimonial_video(request.files.get('video_file')) or ''
         testimonials = _get_testimonials_list()
         testimonials.append({
             'name':       form.name.data.strip(),
             'role':       form.role.data.strip(),
             'text':       (form.text.data or '').strip(),
             'video_url':  (form.video_url.data or '').strip(),
+            'video_path': video_path,
             'rating':     int(form.rating.data),
             'is_visible': form.is_visible.data == '1',
             'sort_order': form.sort_order.data or 0,
@@ -5245,7 +5272,7 @@ def admin_add_testimonial():
         _save_testimonials_list(testimonials)
         flash(f'Testimonial by "{form.name.data}" added!', 'success')
         return redirect(url_for('admin_testimonials'))
-    return render_template('admin/testimonial_form.html', form=form, title='Add Testimonial')
+    return render_template('admin/testimonial_form.html', form=form, title='Add Testimonial', current_video=None)
 
 @app.route('/admin/testimonial/<int:idx>/edit', methods=['GET', 'POST'])
 def admin_edit_testimonial(idx):
@@ -5259,11 +5286,20 @@ def admin_edit_testimonial(idx):
     t = testimonials[idx]
     form = TestimonialForm()
     if form.validate_on_submit():
+        current_video_path = t.get('video_path', '')
+        if request.form.get('remove_video') == '1' and current_video_path:
+            _delete_testimonial_video(current_video_path)
+            current_video_path = ''
+        new_video = _save_testimonial_video(request.files.get('video_file'))
+        if new_video:
+            _delete_testimonial_video(current_video_path)
+            current_video_path = new_video
         testimonials[idx] = {
             'name':       form.name.data.strip(),
             'role':       form.role.data.strip(),
             'text':       (form.text.data or '').strip(),
             'video_url':  (form.video_url.data or '').strip(),
+            'video_path': current_video_path,
             'rating':     int(form.rating.data),
             'is_visible': form.is_visible.data == '1',
             'sort_order': form.sort_order.data or 0,
@@ -5271,7 +5307,6 @@ def admin_edit_testimonial(idx):
         _save_testimonials_list(testimonials)
         flash('Testimonial updated!', 'success')
         return redirect(url_for('admin_testimonials'))
-    # Pre-populate
     if not form.is_submitted():
         form.name.data       = t.get('name', '')
         form.role.data       = t.get('role', '')
@@ -5280,7 +5315,8 @@ def admin_edit_testimonial(idx):
         form.rating.data     = str(t.get('rating', 5))
         form.is_visible.data = '1' if t.get('is_visible', True) else '0'
         form.sort_order.data = t.get('sort_order', 0)
-    return render_template('admin/testimonial_form.html', form=form, title='Edit Testimonial', idx=idx)
+    return render_template('admin/testimonial_form.html', form=form, title='Edit Testimonial',
+                           idx=idx, current_video=t.get('video_path', ''))
 
 @app.route('/admin/testimonial/<int:idx>/delete', methods=['POST'])
 def admin_delete_testimonial(idx):
@@ -5289,6 +5325,7 @@ def admin_delete_testimonial(idx):
     testimonials = _get_testimonials_list()
     if idx < len(testimonials):
         name = testimonials[idx].get('name', 'Testimonial')
+        _delete_testimonial_video(testimonials[idx].get('video_path', ''))
         del testimonials[idx]
         _save_testimonials_list(testimonials)
         flash(f'Testimonial by "{name}" deleted.', 'success')
