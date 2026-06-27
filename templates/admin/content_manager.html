@@ -317,7 +317,6 @@
                                         <input type="text" class="form-control form-control-sm" name="tb_label_{{ i }}" value="{{ item.label or '' }}" placeholder="e.g. Supporters">
                                     </div>
                                     <div class="col-2 col-md-1 text-center">
-                                        <input type="hidden" name="tb_active_{{ i }}" value="0">
                                         <input type="checkbox" class="form-check-input" name="tb_active_{{ i }}" value="1" {{ 'checked' if item.is_active }}>
                                     </div>
                                     <div class="col-12 col-md-1 text-end">
@@ -784,7 +783,6 @@ function addTrustBarRow() {
                 <input type="text" class="form-control form-control-sm" name="tb_label_${idx}" value="" placeholder="e.g. Supporters">
             </div>
             <div class="col-2 col-md-1 text-center">
-                <input type="hidden" name="tb_active_${idx}" value="0">
                 <input type="checkbox" class="form-check-input" name="tb_active_${idx}" value="1" checked>
             </div>
             <div class="col-12 col-md-1 text-end">
