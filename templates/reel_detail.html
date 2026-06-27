@@ -21,11 +21,24 @@
     <div class="rd-video-col">
 
         <!-- Video / Embed -->
-        {% set is_portrait = reel.is_instagram or reel.detected_type == 'youtube_short' or (reel.thumbnail and not reel.video_url) %}
+        {% set is_portrait = reel.is_instagram or reel.detected_type == 'youtube_short' or (reel.thumbnail and not reel.video_url and not reel.video_file_path) %}
         {% set thumb_url = (url_for('static', filename=reel.thumbnail) if reel.thumbnail and not reel.thumbnail.startswith('http') else reel.thumbnail) if reel.thumbnail else '' %}
         <div class="rd-video-wrap {% if is_portrait %}rd-video-wrap--portrait{% endif %}"
              {% if thumb_url %}style="--reel-thumb: url('{{ thumb_url }}')"{% endif %}>
-            {% if reel.video_url %}
+            {% if reel.video_type == 'direct' and reel.video_file_path %}
+            <!-- Direct-uploaded video: HTML5 player -->
+            <div class="rd-direct-video-wrap">
+                <video
+                    controls
+                    playsinline
+                    preload="metadata"
+                    class="rd-direct-video"
+                    poster="{{ thumb_url if thumb_url else '' }}">
+                    <source src="{{ url_for('static', filename=reel.video_file_path) }}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+            {% elif reel.video_url %}
                 {% if reel.is_instagram %}
                 <!-- Instagram: thumbnail + watch button, no embed -->
                 <div class="ig-thumb-card">
@@ -70,7 +83,8 @@
                     </iframe>
                 </div>
                 {% endif %}
-            {% elif reel.thumbnail %}
+            {% endif %}
+            {% if not reel.video_url and not reel.video_file_path and not (reel.video_type == 'direct' and reel.video_file_path) and reel.thumbnail %}
             <!-- Thumbnail-only: portrait card with blurred bg -->
             <div class="rd-thumb-wrap" style="--reel-thumb: url('{{ thumb_url }}')">
                 <div class="rd-thumb-blur-bg"></div>
@@ -210,6 +224,24 @@
 /* ══════════════════════════════════════════
    REEL DETAIL — PREMIUM RESPONSIVE LAYOUT
 ══════════════════════════════════════════ */
+
+/* Direct-uploaded video player */
+.rd-direct-video-wrap {
+    width: 100%;
+    background: #000;
+    border-radius: 12px;
+    overflow: hidden;
+    aspect-ratio: 16 / 9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.rd-direct-video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+}
 
 /* Hero strip */
 .rd-hero {

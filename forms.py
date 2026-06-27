@@ -22,10 +22,12 @@ class ReelForm(FlaskForm):
     thumbnail = FileField('Thumbnail Image', validators=[FileAllowed(['jpg', 'jpeg', 'png', 'gif', 'webp'])])
     thumbnail_url = StringField('Thumbnail URL', validators=[Optional(), Length(max=500)])
     video_url = StringField('Instagram Reel URL', validators=[Optional(), Length(max=500)])
+    video_file = FileField('Upload Video File', validators=[FileAllowed(['mp4', 'webm', 'mov', 'avi', 'mkv'])])
     video_type = SelectField('Content Type', choices=[
         ('auto', 'Auto-detect'),
         ('youtube', 'YouTube Video'),
         ('instagram', 'Instagram Reel'),
+        ('direct', 'Direct Upload (MP4/Video)'),
     ], default='instagram')
     card_layout = SelectField('Card Layout', choices=[
         ('portrait', 'Portrait (9:16)'),

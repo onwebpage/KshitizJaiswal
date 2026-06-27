@@ -1332,10 +1332,18 @@ def admin_add_reel():
         if not thumbnail_url and form.thumbnail_url.data:
             thumbnail_url = form.thumbnail_url.data
 
+        # Handle direct video file upload
+        video_file_path = ''
+        if form.video_type.data == 'direct' and form.video_file.data and form.video_file.data.filename:
+            vpath, _, verr = save_video_file(form.video_file.data, 'reels')
+            if vpath:
+                video_file_path = vpath
+
         new_reel = Reel(
             title=form.title.data,
             thumbnail=thumbnail_url or '',
             video_url=form.video_url.data or '',
+            video_file_path=video_file_path,
             video_type=form.video_type.data or 'instagram',
             card_layout=form.card_layout.data or 'portrait',
             sort_order=form.sort_order.data or 0,
@@ -1415,6 +1423,14 @@ def admin_edit_reel(reel_id):
         # Handle thumbnail URL — always allow URL field to override existing thumbnail
         if not form.thumbnail.data and form.thumbnail_url.data:
             reel.thumbnail = form.thumbnail_url.data
+
+        # Handle direct video file upload
+        if form.video_type.data == 'direct' and form.video_file.data and form.video_file.data.filename:
+            vpath, _, verr = save_video_file(form.video_file.data, 'reels')
+            if vpath:
+                reel.video_file_path = vpath
+        elif form.video_type.data != 'direct':
+            reel.video_file_path = ''
 
         reel.title = form.title.data
         reel.video_url = form.video_url.data or ''

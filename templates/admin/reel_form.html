@@ -62,6 +62,19 @@
 }
 .url-preview-box i { font-size: 1.1rem; }
 .url-preview-box a { color: inherit; text-decoration: underline dotted; }
+.direct-video-dropzone {
+    border: 2px dashed #dc3545;
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+    background: #fff5f5;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+}
+.direct-video-dropzone:hover, .direct-video-dropzone.drag-over {
+    background: #ffe4e6;
+    border-color: #b91c1c;
+}
 </style>
 {% endblock %}
 
@@ -81,10 +94,10 @@
                     {{ form.hidden_tag() }}
                     {{ form.thumbnail_url(id="thumbnailUrlHidden", type="hidden") }}
 
-                    <!-- ── Section 1: Platform + URL ── -->
+                    <!-- ── Section 1: Platform + URL / Upload ── -->
                     <div class="reel-form-section">
                         <div class="reel-form-section-title">
-                            <i class="fas fa-video"></i> Platform &amp; Video URL
+                            <i class="fas fa-video"></i> Platform &amp; Video Source
                         </div>
 
                         <div class="mb-4">
@@ -92,28 +105,67 @@
                                 Platform <span class="text-danger">*</span>
                             </label>
                             {{ form.video_type(class="form-select form-select-lg", id="videoType") }}
-                            <small class="form-text text-muted">Select whether this is a YouTube video or an Instagram reel.</small>
+                            <small class="form-text text-muted">Select YouTube, Instagram, or upload your own video file.</small>
                         </div>
 
-                        <div class="mb-1">
-                            <label class="form-label fw-semibold" id="urlLabel">
-                                Video / Reel URL <span class="text-danger">*</span>
+                        <!-- URL input (YouTube / Instagram / auto) -->
+                        <div id="urlSection">
+                            <div class="mb-1">
+                                <label class="form-label fw-semibold" id="urlLabel">
+                                    Video / Reel URL <span class="text-danger">*</span>
+                                </label>
+                                {{ form.video_url(
+                                    class="form-control form-control-lg",
+                                    id="videoUrl",
+                                    placeholder="https://www.youtube.com/watch?v=... or https://www.instagram.com/reel/...",
+                                    autocomplete="off"
+                                ) }}
+                                <small class="form-text text-muted" id="urlHint">
+                                    Paste the full URL. Users will be sent here when they click to watch.
+                                </small>
+                            </div>
+                            <div class="url-preview-box mt-2" id="urlPreviewBox" style="display:none">
+                                <i id="urlPreviewIcon" class="fab fa-youtube"></i>
+                                <span id="urlPreviewText">URL detected:</span>&nbsp;
+                                <a id="urlPreviewLink" href="#" target="_blank" rel="noopener noreferrer">view link</a>
+                            </div>
+                        </div>
+
+                        <!-- Direct upload section -->
+                        <div id="directUploadSection" style="display:none;">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-upload me-1 text-danger"></i>Upload Video File
+                                <span class="text-danger">*</span>
                             </label>
-                            {{ form.video_url(
-                                class="form-control form-control-lg",
-                                id="videoUrl",
-                                placeholder="https://www.youtube.com/watch?v=... or https://www.instagram.com/reel/...",
-                                autocomplete="off"
-                            ) }}
-                            <small class="form-text text-muted" id="urlHint">
-                                Paste the full URL. Users will be sent here when they click to watch.
-                            </small>
-                        </div>
-
-                        <div class="url-preview-box mt-2" id="urlPreviewBox" style="display:none">
-                            <i id="urlPreviewIcon" class="fab fa-youtube"></i>
-                            <span id="urlPreviewText">URL detected:</span>&nbsp;
-                            <a id="urlPreviewLink" href="#" target="_blank" rel="noopener noreferrer">view link</a>
+                            <div class="direct-video-dropzone" id="videoDropzone">
+                                <i class="fas fa-film fa-2x mb-2 text-muted"></i>
+                                <div class="fw-semibold mb-1">Drag &amp; drop your video here</div>
+                                <div class="text-muted small mb-3">or</div>
+                                {{ form.video_file(class="d-none", id="videoFileInput") }}
+                                <button type="button" class="btn btn-outline-danger btn-sm px-4" onclick="document.getElementById('videoFileInput').click()">
+                                    <i class="fas fa-folder-open me-1"></i>Browse File
+                                </button>
+                                <div class="text-muted small mt-2">MP4 / WebM / MOV · Max 100 MB</div>
+                            </div>
+                            <div id="videoFilePreview" class="mt-3" style="display:none;">
+                                <div class="d-flex align-items-center gap-3 p-3 rounded-3" style="background:#f0fdf4;border:1.5px solid #86efac;">
+                                    <i class="fas fa-check-circle text-success fa-lg"></i>
+                                    <div>
+                                        <div class="fw-semibold text-success" id="videoFileName">video.mp4</div>
+                                        <div class="text-muted small" id="videoFileSize"></div>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-danger ms-auto" onclick="clearVideoFile()">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            {% if reel and reel.video_file_path %}
+                            <div class="mt-3 p-3 rounded-3" style="background:#eff6ff;border:1.5px solid #93c5fd;">
+                                <i class="fas fa-info-circle text-primary me-1"></i>
+                                <strong>Current video:</strong> {{ reel.video_file_path.split('/')[-1] }}
+                                <span class="text-muted small ms-2">(upload a new file to replace it)</span>
+                            </div>
+                            {% endif %}
                         </div>
                     </div>
 
@@ -259,13 +311,82 @@
 {{ image_upload_js() }}
 <script>
 (function () {
-    var urlInput    = document.getElementById('videoUrl');
-    var typeSelect  = document.getElementById('videoType');
-    var previewBox  = document.getElementById('urlPreviewBox');
-    var previewIcon = document.getElementById('urlPreviewIcon');
-    var previewText = document.getElementById('urlPreviewText');
-    var previewLnk  = document.getElementById('urlPreviewLink');
-    var urlHint     = document.getElementById('urlHint');
+    var urlInput          = document.getElementById('videoUrl');
+    var typeSelect        = document.getElementById('videoType');
+    var previewBox        = document.getElementById('urlPreviewBox');
+    var previewIcon       = document.getElementById('urlPreviewIcon');
+    var previewText       = document.getElementById('urlPreviewText');
+    var previewLnk        = document.getElementById('urlPreviewLink');
+    var urlHint           = document.getElementById('urlHint');
+    var urlSection        = document.getElementById('urlSection');
+    var directSection     = document.getElementById('directUploadSection');
+    var videoFileInput    = document.getElementById('videoFileInput');
+    var videoFilePreview  = document.getElementById('videoFilePreview');
+    var videoFileName     = document.getElementById('videoFileName');
+    var videoFileSize     = document.getElementById('videoFileSize');
+    var videoDropzone     = document.getElementById('videoDropzone');
+
+    function toggleSections() {
+        if (!typeSelect) return;
+        var isDirect = typeSelect.value === 'direct';
+        if (urlSection)    urlSection.style.display    = isDirect ? 'none' : 'block';
+        if (directSection) directSection.style.display = isDirect ? 'block' : 'none';
+    }
+
+    function formatBytes(b) {
+        if (b < 1024*1024) return (b/1024).toFixed(1) + ' KB';
+        return (b/(1024*1024)).toFixed(1) + ' MB';
+    }
+
+    function showFilePreview(file) {
+        if (!file) return;
+        if (videoFileName) videoFileName.textContent = file.name;
+        if (videoFileSize) videoFileSize.textContent = formatBytes(file.size);
+        if (videoFilePreview) videoFilePreview.style.display = 'block';
+        if (videoDropzone) videoDropzone.style.display = 'none';
+    }
+
+    window.clearVideoFile = function() {
+        if (videoFileInput) videoFileInput.value = '';
+        if (videoFilePreview) videoFilePreview.style.display = 'none';
+        if (videoDropzone) videoDropzone.style.display = 'block';
+    };
+
+    if (videoFileInput) {
+        videoFileInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) showFilePreview(this.files[0]);
+        });
+    }
+
+    if (videoDropzone) {
+        videoDropzone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.classList.add('drag-over');
+        });
+        videoDropzone.addEventListener('dragleave', function() {
+            this.classList.remove('drag-over');
+        });
+        videoDropzone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('drag-over');
+            var file = e.dataTransfer.files[0];
+            if (file && videoFileInput) {
+                var dt = new DataTransfer();
+                dt.items.add(file);
+                videoFileInput.files = dt.files;
+                showFilePreview(file);
+            }
+        });
+        videoDropzone.addEventListener('click', function(e) {
+            if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT') {
+                if (videoFileInput) videoFileInput.click();
+            }
+        });
+    }
+
+    if (typeSelect) {
+        typeSelect.addEventListener('change', function() { toggleSections(); updateUI(); });
+    }
 
     function isYouTube(url) {
         return /youtube\.com\/(watch|shorts)|youtu\.be\//.test(url);
@@ -324,8 +445,9 @@
         typeSelect.addEventListener('change', updateUI);
     }
 
-    // Run on load (populates hints on edit page)
+    // Run on load
     document.addEventListener('DOMContentLoaded', function () {
+        toggleSections();
         updateUI();
         document.querySelectorAll('.alert.alert-dismissible').forEach(function(el) {
             setTimeout(function() { try { new bootstrap.Alert(el).close(); } catch(e){} }, 5000);

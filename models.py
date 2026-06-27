@@ -23,6 +23,7 @@ class Reel(db.Model):
     view_count = db.Column(db.Integer, default=0)  # For popularity tracking
     is_featured = db.Column(db.Boolean, default=False)  # For homepage featured reels
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    video_file_path = db.Column(db.String(500))  # Path for directly uploaded video files
 
     def _auto_thumbnail(self):
         """Return a YouTube thumbnail URL computed from video_url (always, as a fallback source)."""
@@ -50,6 +51,7 @@ class Reel(db.Model):
             'thumbnail': self.thumbnail or '',
             'auto_thumbnail': self._auto_thumbnail(),
             'video_url': self.video_url or '',
+            'video_file_path': self.video_file_path or '',
             'video_type': self.video_type or 'auto',
             'card_layout': self.card_layout or 'standard',
             'sort_order': self.sort_order or 0,
