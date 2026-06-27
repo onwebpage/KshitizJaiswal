@@ -3845,10 +3845,11 @@ def admin_user_data_usage():
     cutoff_date = datetime.utcnow() - timedelta(days=days)
     
     total_activities = UserActivity.query.filter(UserActivity.created_at >= cutoff_date).count()
-    total_unique_users = db.session.query(func.count(func.distinct(UserActivity.user_id))).filter(
-        UserActivity.created_at >= cutoff_date,
-        UserActivity.user_id.isnot(None)
-    ).scalar() or 0
+    total_unique_users = db.session.query(
+        func.count(func.distinct(
+            func.coalesce(UserActivity.user_id, UserActivity.ip_address)
+        ))
+    ).filter(UserActivity.created_at >= cutoff_date).scalar() or 0
     total_data_usage = db.session.query(func.sum(UserActivity.data_size)).filter(
         UserActivity.created_at >= cutoff_date
     ).scalar() or 0
