@@ -2,6 +2,7 @@
 
 {% block extra_head %}
 <style>
+/* ── Support tier grid ─────────────────────────────────────── */
 .support-tiers-row {
   display: flex !important;
   flex-wrap: wrap !important;
@@ -19,6 +20,331 @@
 }
 @media (max-width: 575px) {
   .support-tier-col { flex: 1 1 100% !important; max-width: 100% !important; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   BEYOND THE REEL — Premium card carousel
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Dynamic card width — set by server based on reel count */
+{% if content and content.reels %}
+{% set _rc = content.reels | length %}
+{% if _rc == 1 %}
+:root { --preel-card-w: calc(88vw - 116px); }
+{% elif _rc == 2 %}
+:root { --preel-card-w: calc(47vw - 62px); }
+{% elif _rc == 3 %}
+:root { --preel-card-w: calc(31vw - 44px); }
+{% else %}
+:root { --preel-card-w: calc(23.5vw - 34px); }
+{% endif %}
+{% else %}
+:root { --preel-card-w: calc(23.5vw - 34px); }
+{% endif %}
+
+/* Section */
+.premium-reels-section {
+    background: #090911 !important;
+    padding: 56px 0 72px;
+    position: relative;
+}
+.premium-reels-section::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(204,0,0,.12) 0%, transparent 65%);
+    pointer-events: none;
+    z-index: 0;
+}
+.premium-reels-section > * { position: relative; z-index: 1; }
+
+/* Header */
+.premium-reels-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 32px;
+}
+.premium-reels-title,
+.premium-reels-section h2.premium-reels-title {
+    font-size: clamp(1.7rem, 3vw, 2.4rem);
+    font-weight: 800;
+    color: #cc0000 !important;
+    -webkit-text-fill-color: #cc0000 !important;
+    background: none !important;
+    -webkit-background-clip: unset !important;
+    background-clip: unset !important;
+    margin: 0 0 6px;
+    letter-spacing: -.3px;
+}
+.premium-reels-subtitle {
+    font-size: 1rem;
+    color: #ff5555 !important;
+    font-weight: 600;
+    margin: 0;
+}
+.premium-reels-viewall {
+    background: transparent;
+    color: #fff;
+    border: 1.5px solid rgba(255,255,255,.3);
+    border-radius: 50px;
+    padding: 9px 24px;
+    font-size: .88rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background .2s, border-color .2s;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.premium-reels-viewall:hover {
+    background: rgba(255,255,255,.12);
+    border-color: rgba(255,255,255,.6);
+    color: #fff;
+    text-decoration: none;
+}
+
+/* Full-bleed: breaks out of Bootstrap container */
+.preel-full-bleed {
+    width: 100%;
+    padding: 0 12px;
+    box-sizing: border-box;
+}
+
+/* Carousel wrap — flex row: [arrow] [overflow] [arrow] */
+.preel-carousel-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Overflow clip */
+.preel-carousel-overflow {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+}
+
+/* Scrolling track */
+.preel-carousel {
+    display: flex;
+    gap: 16px;
+    width: max-content;
+    will-change: transform;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: transform 0.42s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* Arrow buttons — flex children, naturally adjacent to the track */
+.preel-nav-btn {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,.28);
+    background: rgba(12,12,24,.92);
+    color: #fff;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .2s, border-color .2s, transform .2s;
+    box-shadow: 0 4px 20px rgba(0,0,0,.55);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    position: static;
+    transform: none;
+}
+.preel-nav-btn:hover {
+    background: rgba(204,0,0,.95);
+    border-color: #cc0000;
+    transform: scale(1.1);
+}
+.preel-nav-btn:disabled,
+.preel-nav-btn[style*="display:none"],
+.preel-nav-btn[style*="display: none"] {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Card */
+.preel-card {
+    flex-shrink: 0;
+    width: var(--preel-card-w, calc(23.5vw - 34px));
+    border-radius: 20px;
+    overflow: hidden;
+    display: block;
+    text-decoration: none;
+    position: relative;
+    box-shadow: 0 10px 36px rgba(0,0,0,.6), 0 2px 8px rgba(0,0,0,.35);
+    transition: transform .32s cubic-bezier(.23,1,.32,1), box-shadow .32s ease;
+    background: #10101e;
+}
+.preel-card:hover {
+    transform: translateY(-10px) scale(1.03);
+    box-shadow: 0 24px 64px rgba(0,0,0,.75), 0 4px 16px rgba(200,0,0,.18);
+    text-decoration: none;
+    z-index: 5;
+}
+
+/* Thumbnail — fixed clamp height, image fills via object-fit */
+.preel-thumb {
+    position: relative;
+    height: clamp(300px, 42vh, 500px);
+    background: linear-gradient(160deg, #0e0e20 0%, #171730 60%, #0b0b1c 100%);
+    overflow: hidden;
+}
+.preel-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform .48s cubic-bezier(.23,1,.32,1);
+    pointer-events: none;
+}
+.preel-card:hover .preel-img { transform: scale(1.06); }
+
+/* Premium placeholder — hide the default SVG text, show dark gradient */
+.preel-img[src$="reel-placeholder.svg"] {
+    object-fit: contain;
+    padding: 28% 30%;
+    background: linear-gradient(160deg, #0e0e22 0%, #18183a 60%, #0c0c1e 100%);
+    opacity: .85;
+}
+
+/* Bottom gradient overlay */
+.preel-gradient {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, transparent 28%, rgba(0,0,0,.12) 48%, rgba(0,0,0,.75) 70%, rgba(0,0,0,.97) 100%);
+    z-index: 1;
+}
+
+/* Title block */
+.preel-title-block {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 16px 16px 20px;
+    z-index: 2;
+}
+.preel-title {
+    font-size: clamp(.88rem, 1.2vw, 1.05rem);
+    font-weight: 700;
+    color: #fff;
+    margin: 0 0 4px;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-shadow: 0 1px 8px rgba(0,0,0,.8);
+}
+.preel-meta {
+    font-size: .72rem;
+    color: rgba(255,255,255,.65);
+    font-weight: 500;
+    margin: 0;
+}
+
+/* Hover play overlay */
+.preel-hover-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity .22s ease;
+    z-index: 3;
+    pointer-events: none;
+}
+.preel-card:hover .preel-hover-overlay { opacity: 1; }
+.preel-play-btn {
+    width: 60px;
+    height: 60px;
+    background: rgba(255,255,255,.97);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    color: #cc0000;
+    box-shadow: 0 4px 24px rgba(0,0,0,.5);
+    transform: scale(.8);
+    transition: transform .28s cubic-bezier(.23,1,.32,1);
+}
+.preel-card:hover .preel-play-btn { transform: scale(1); }
+
+/* Platform badge */
+.preel-platform-badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: .7rem;
+    font-weight: 700;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 4;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.preel-yt  { background: rgba(255,0,0,.88); color: #fff; }
+.preel-ig  {
+    background: linear-gradient(135deg, rgba(245,133,41,.9), rgba(221,42,123,.9), rgba(129,52,175,.9));
+    color: #fff;
+}
+
+/* Category badge */
+.preel-cat-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: .68rem;
+    font-weight: 700;
+    background: rgba(255,255,255,.16);
+    color: #fff;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,.25);
+    z-index: 4;
+}
+
+/* Tablet — 2 cards */
+@media (max-width: 1100px) {
+    :root { --preel-card-w: calc(46vw - 52px); }
+    .preel-carousel { gap: 14px; }
+    .preel-full-bleed { padding: 0 8px; }
+    .preel-carousel-wrap { gap: 8px; }
+    .preel-nav-btn { width: 42px; height: 42px; font-size: .92rem; }
+}
+
+/* Mobile — 1 card + partial 2nd */
+@media (max-width: 700px) {
+    .premium-reels-section { padding: 40px 0 56px; }
+    .premium-reels-header { margin-bottom: 24px; }
+    :root { --preel-card-w: calc(83vw - 46px); }
+    .preel-carousel { gap: 12px; }
+    .preel-full-bleed { padding: 0 4px; }
+    .preel-carousel-wrap { gap: 6px; }
+    .preel-nav-btn { width: 38px; height: 38px; font-size: .85rem; }
+    .preel-title { font-size: .9rem; }
+    .preel-title-block { padding: 12px 14px 16px; }
+    .preel-play-btn { width: 50px; height: 50px; font-size: 1.1rem; }
+}
+@media (max-width: 420px) {
+    :root { --preel-card-w: calc(88vw - 42px); }
+    .preel-nav-btn { width: 34px; height: 34px; font-size: .8rem; }
 }
 </style>
 {% endblock %}
@@ -38,60 +364,67 @@
 
 <!-- Beyond The Reel Section -->
 {% if section_vis.reels %}
-<section id="beyond-reel" class="premium-reels-section">
+<section id="beyond-reel" class="premium-reels-section" style="background:#090911!important">
+    <!-- Header stays inside container for alignment -->
     <div class="container">
         <div class="premium-reels-header">
             <div>
                 <h2 class="premium-reels-title">{{ page_content.reels_section_title or 'Beyond The Reel' }}</h2>
-                <p class="premium-reels-subtitle" style="color:#ff4444!important;font-weight:700;font-size:1.05rem;">{{ page_content.reels_section_subtitle or 'Unfiltered commentary from the field' }}</p>
+                <p class="premium-reels-subtitle">{{ page_content.reels_section_subtitle or 'Unfiltered commentary from the field' }}</p>
             </div>
             <a href="{{ url_for('reels_library') }}" class="btn premium-reels-viewall">
                 View All <i class="fas fa-arrow-right ms-2"></i>
             </a>
         </div>
+    </div>
 
-        {% if content.reels %}
-        {% macro premium_reel_card(reel) %}
-        {%- set vtype = reel.video_type or 'auto' -%}
-        {%- if vtype == 'youtube' or 'youtube.com' in (reel.video_url or '') or 'youtu.be' in (reel.video_url or '') -%}
-            {%- set platform = 'youtube' -%}
-        {%- elif vtype == 'instagram' or 'instagram.com' in (reel.video_url or '') -%}
-            {%- set platform = 'instagram' -%}
-        {%- else -%}
-            {%- set platform = '' -%}
-        {%- endif -%}
-        <a href="{{ url_for('reel_detail', reel_id=reel.id) }}" class="preel-card" data-reel-id="{{ reel.id }}">
-            <div class="preel-thumb">
-                {% set _thumb = reel.thumbnail %}
-                {% set _auto = reel.auto_thumbnail %}
-                {% set _placeholder = url_for('static', filename='img/reel-placeholder.svg') %}
-                <img
-                    src="{% if _thumb %}{{ url_for('static', filename=_thumb) if not _thumb.startswith('http') else _thumb }}{% elif _auto %}{{ _auto }}{% else %}{{ _placeholder }}{% endif %}"
-                    alt="{{ reel.title }}"
-                    class="preel-img"
-                    loading="lazy"
-                    draggable="false"
-                    data-auto-thumb="{% if not _thumb %}{{ _auto }}{% endif %}"
-                    onerror="var a=this.dataset.autoThumb;if(a&&this.src!==a){this.onerror=function(){this.src='{{ _placeholder }}'};this.src=a;}else{this.onerror=null;this.src='{{ _placeholder }}'}">
-                <div class="preel-gradient"></div>
-                {% if platform == 'youtube' %}
-                <div class="preel-platform-badge preel-yt"><i class="fab fa-youtube"></i> YouTube</div>
-                {% elif platform == 'instagram' %}
-                <div class="preel-platform-badge preel-ig"><i class="fab fa-instagram"></i> Instagram</div>
+    {% if content.reels %}
+    {% macro premium_reel_card(reel) %}
+    {%- set vtype = reel.video_type or 'auto' -%}
+    {%- if vtype == 'youtube' or 'youtube.com' in (reel.video_url or '') or 'youtu.be' in (reel.video_url or '') -%}
+        {%- set platform = 'youtube' -%}
+    {%- elif vtype == 'instagram' or 'instagram.com' in (reel.video_url or '') -%}
+        {%- set platform = 'instagram' -%}
+    {%- else -%}
+        {%- set platform = '' -%}
+    {%- endif -%}
+    <a href="{{ url_for('reel_detail', reel_id=reel.id) }}" class="preel-card" data-reel-id="{{ reel.id }}">
+        <div class="preel-thumb">
+            {% set _thumb = reel.thumbnail %}
+            {% set _auto = reel.auto_thumbnail %}
+            {% set _placeholder = url_for('static', filename='img/reel-placeholder.svg') %}
+            <img
+                src="{% if _thumb %}{{ url_for('static', filename=_thumb) if not _thumb.startswith('http') else _thumb }}{% elif _auto %}{{ _auto }}{% else %}{{ _placeholder }}{% endif %}"
+                alt="{{ reel.title }}"
+                class="preel-img"
+                loading="lazy"
+                draggable="false"
+                data-auto-thumb="{% if not _thumb %}{{ _auto }}{% endif %}"
+                onerror="var a=this.dataset.autoThumb;if(a&&this.src!==a){this.onerror=function(){this.src='{{ _placeholder }}'};this.src=a;}else{this.onerror=null;this.src='{{ _placeholder }}'}">
+            <div class="preel-gradient"></div>
+            {% if platform == 'youtube' %}
+            <div class="preel-platform-badge preel-yt"><i class="fab fa-youtube"></i> YouTube</div>
+            {% elif platform == 'instagram' %}
+            <div class="preel-platform-badge preel-ig"><i class="fab fa-instagram"></i> Instagram</div>
+            {% endif %}
+            {% if reel.category_tag %}
+            <div class="preel-cat-badge">{{ reel.category_tag }}</div>
+            {% endif %}
+            <div class="preel-title-block">
+                <p class="preel-title">{{ reel.title }}</p>
+                {% if reel.view_count %}
+                <div class="preel-meta"><i class="fas fa-eye me-1"></i>{{ reel.view_count }} views</div>
                 {% endif %}
-                {% if reel.category_tag %}
-                <div class="preel-cat-badge">{{ reel.category_tag }}</div>
-                {% endif %}
-                <div class="preel-title-block">
-                    <p class="preel-title">{{ reel.title }}</p>
-                </div>
-                <div class="preel-hover-overlay">
-                    <div class="preel-play-btn"><i class="fas fa-play"></i></div>
-                </div>
             </div>
-        </a>
-        {% endmacro %}
+            <div class="preel-hover-overlay">
+                <div class="preel-play-btn"><i class="fas fa-play"></i></div>
+            </div>
+        </div>
+    </a>
+    {% endmacro %}
 
+    <!-- Full-bleed carousel — NOT inside .container so it can use full viewport width -->
+    <div class="preel-full-bleed">
         <div class="preel-carousel-wrap" aria-label="Video Carousel">
             <button class="preel-nav-btn preel-nav-prev" id="reelPrev" aria-label="Previous reels">
                 <i class="fas fa-chevron-left"></i>
@@ -105,13 +438,15 @@
                 <i class="fas fa-chevron-right"></i>
             </button>
         </div>
-        {% else %}
+    </div>
+    {% else %}
+    <div class="container">
         <div class="text-center py-5">
             <i class="fas fa-video fa-3x mb-3" style="color:rgba(255,255,255,.25)"></i>
             <p style="color:rgba(255,255,255,.5)">No reels yet — check back soon!</p>
         </div>
-        {% endif %}
     </div>
+    {% endif %}
 </section>
 {% endif %}
 
@@ -613,303 +948,6 @@
 {% endif %}
 {% endif %}
 
-<!-- Premium Reel Carousel CSS -->
-<style>
-/* ══ Section wrapper ══════════════════════════════════════════════════ */
-.premium-reels-section {
-    background: linear-gradient(180deg, #0a0a12 0%, #0f0f1e 60%, #0a0a12 100%);
-    padding: 64px 0 72px;
-    overflow: hidden;
-    position: relative;
-}
-.premium-reels-section::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(204,0,0,.12) 0%, transparent 70%);
-    pointer-events: none;
-}
-
-/* ══ Header ═══════════════════════════════════════════════════════════ */
-.premium-reels-header {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 16px;
-    margin-bottom: 40px;
-    position: relative;
-    z-index: 1;
-}
-.premium-reels-title,
-.premium-reels-section h2.premium-reels-title {
-    font-size: clamp(1.6rem, 3.5vw, 2.2rem);
-    font-weight: 800;
-    color: #cc0000 !important;
-    -webkit-text-fill-color: #cc0000 !important;
-    background: none !important;
-    -webkit-background-clip: unset !important;
-    background-clip: unset !important;
-    margin: 0 0 6px;
-    letter-spacing: -.3px;
-    text-shadow: 0 2px 12px rgba(0,0,0,.4);
-}
-.premium-reels-subtitle {
-    font-size: 1.05rem;
-    color: #ff4444 !important;
-    font-weight: 700;
-    margin: 0;
-    text-shadow: 0 1px 4px rgba(0,0,0,0.5);
-    letter-spacing: .2px;
-}
-.premium-reels-viewall {
-    background: transparent;
-    color: #fff;
-    border: 1.5px solid rgba(255,255,255,.25);
-    border-radius: 50px;
-    padding: 9px 22px;
-    font-size: .85rem;
-    font-weight: 600;
-    text-decoration: none;
-    transition: background .2s, border-color .2s, color .2s;
-    white-space: nowrap;
-    flex-shrink: 0;
-}
-.premium-reels-viewall:hover {
-    background: rgba(255,255,255,.12);
-    border-color: rgba(255,255,255,.55);
-    color: #fff;
-    text-decoration: none;
-}
-
-/* ══ Carousel track ═══════════════════════════════════════════════════ */
-.preel-carousel-wrap {
-    position: relative;
-    padding: 0 60px;
-}
-.preel-carousel-overflow {
-    overflow: hidden;
-}
-.preel-carousel {
-    display: flex;
-    gap: 22px;
-    width: max-content;
-    will-change: transform;
-    user-select: none;
-    -webkit-user-select: none;
-    transition: transform 0.45s cubic-bezier(0.23, 1, 0.32, 1);
-}
-
-/* ══ Nav buttons ══════════════════════════════════════════════════════ */
-.preel-nav-btn {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 10;
-    width: 52px;
-    height: 52px;
-    border-radius: 50%;
-    border: 2px solid rgba(255,255,255,.3);
-    background: rgba(20,20,30,.88);
-    color: #fff;
-    font-size: 1.1rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background .2s, border-color .2s, transform .2s;
-    box-shadow: 0 6px 24px rgba(0,0,0,.5);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-}
-.preel-nav-btn:hover {
-    background: rgba(204,0,0,.92);
-    border-color: rgba(204,0,0,.8);
-    transform: translateY(-50%) scale(1.1);
-}
-.preel-nav-btn:disabled,
-.preel-nav-btn[style*="display:none"],
-.preel-nav-btn[style*="display: none"] {
-    opacity: 0;
-    pointer-events: none;
-}
-.preel-nav-prev { left: 0; }
-.preel-nav-next { right: 0; }
-
-/* ══ Individual card — large premium 9:16 ════════════════════════════ */
-.preel-card {
-    flex-shrink: 0;
-    width: 340px;
-    border-radius: 22px;
-    overflow: hidden;
-    display: block;
-    text-decoration: none;
-    position: relative;
-    box-shadow:
-        0 12px 40px rgba(0,0,0,.55),
-        0 2px 8px rgba(0,0,0,.3);
-    transition: transform .35s cubic-bezier(.23,1,.32,1), box-shadow .35s ease;
-    background: #0d0d1a;
-}
-.preel-card:hover {
-    transform: translateY(-12px) scale(1.025);
-    box-shadow:
-        0 28px 72px rgba(0,0,0,.7),
-        0 4px 16px rgba(204,0,0,.2);
-    text-decoration: none;
-}
-
-/* ══ Thumbnail — true 9:16 ════════════════════════════════════════════ */
-.preel-thumb {
-    position: relative;
-    aspect-ratio: 9 / 16;
-    background: #0d0d1a;
-    overflow: hidden;
-}
-.preel-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-    transition: transform .5s cubic-bezier(.23,1,.32,1);
-    pointer-events: none;
-}
-.preel-card:hover .preel-img { transform: scale(1.07); }
-
-/* ══ Bottom gradient + title ══════════════════════════════════════════ */
-.preel-gradient {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-        to bottom,
-        transparent 30%,
-        rgba(0,0,0,.15) 50%,
-        rgba(0,0,0,.75) 72%,
-        rgba(0,0,0,.96) 100%
-    );
-    z-index: 1;
-}
-.preel-title-block {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 18px 20px 22px;
-    z-index: 2;
-}
-.preel-title {
-    font-size: 1.05rem;
-    font-weight: 700;
-    color: #fff;
-    margin: 0;
-    line-height: 1.45;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    text-shadow: 0 2px 8px rgba(0,0,0,.7);
-    letter-spacing: .01em;
-}
-
-/* ══ Hover overlay — play button ══════════════════════════════════════ */
-.preel-hover-overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(0,0,0,.22);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: opacity .25s ease;
-    z-index: 3;
-    pointer-events: none;
-}
-.preel-card:hover .preel-hover-overlay { opacity: 1; }
-.preel-play-btn {
-    width: 68px;
-    height: 68px;
-    background: rgba(255,255,255,.96);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.4rem;
-    color: #cc0000;
-    box-shadow: 0 6px 28px rgba(0,0,0,.45);
-    transform: scale(.85);
-    transition: transform .3s cubic-bezier(.23,1,.32,1);
-}
-.preel-card:hover .preel-play-btn { transform: scale(1); }
-
-/* ══ Platform badge ═══════════════════════════════════════════════════ */
-.preel-platform-badge {
-    position: absolute;
-    top: 14px;
-    left: 14px;
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-size: .75rem;
-    font-weight: 700;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    z-index: 4;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    letter-spacing: .02em;
-}
-.preel-yt {
-    background: rgba(255,0,0,.88);
-    color: #fff;
-}
-.preel-ig {
-    background: linear-gradient(135deg, rgba(245,133,41,.92), rgba(221,42,123,.92), rgba(129,52,175,.92));
-    color: #fff;
-}
-
-/* ══ Category badge ═══════════════════════════════════════════════════ */
-.preel-cat-badge {
-    position: absolute;
-    top: 14px;
-    right: 14px;
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-size: .72rem;
-    font-weight: 700;
-    background: rgba(255,255,255,.18);
-    color: #fff;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    border: 1px solid rgba(255,255,255,.28);
-    z-index: 4;
-}
-
-/* ══ Tablet — 2 cards visible ════════════════════════════════════════ */
-@media (max-width: 1024px) {
-    .preel-card { width: 300px; border-radius: 20px; }
-    .preel-carousel { gap: 18px; }
-    .preel-carousel-wrap { padding: 0 54px; }
-}
-
-/* ══ Mobile — 1 large card ════════════════════════════════════════════ */
-@media (max-width: 767.98px) {
-    .premium-reels-section { padding: 48px 0 56px; }
-    .preel-card { width: min(78vw, 300px); border-radius: 20px; }
-    .premium-reels-header { margin-bottom: 28px; }
-    .preel-carousel-wrap { padding: 0 50px; }
-    .preel-nav-btn { width: 44px; height: 44px; font-size: 1rem; }
-    .preel-title { font-size: 1rem; }
-    .preel-title-block { padding: 14px 16px 18px; }
-}
-@media (max-width: 480px) {
-    .preel-card { width: min(80vw, 260px); border-radius: 18px; }
-    .preel-carousel { gap: 16px; }
-    .preel-carousel-wrap { padding: 0 42px; }
-    .preel-nav-btn { width: 38px; height: 38px; font-size: .9rem; }
-    .preel-title { font-size: .95rem; }
-    .preel-play-btn { width: 56px; height: 56px; font-size: 1.2rem; }
-}
-</style>
 
 <!-- One-Time Support Payment Modal -->
 <div class="modal fade" id="supportModal" tabindex="-1" aria-labelledby="supportModalLabel" aria-hidden="true">
