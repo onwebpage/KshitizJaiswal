@@ -301,50 +301,15 @@ def index():
 
 @app.route('/reels')
 def reels_library():
-    """Full library view with search and filters"""
-    # Get filter parameters
-    search = request.args.get('search', '')
-    sort_by = request.args.get('sort', 'latest')  # latest, oldest, popular
-    category = request.args.get('category', '')
-    topic = request.args.get('topic', '')
-    page = request.args.get('page', 1, type=int)
-    per_page = 24  # Show 24 reels per page (grid layout)
-    
-    # Base query
-    query = Reel.query
-    
-    # Apply search filter
-    if search:
-        query = query.filter(Reel.title.ilike(f'%{search}%'))
-    
-    # Apply category filter
-    if category:
-        query = query.filter_by(category_tag=category)
-    
-    # Apply topic filter
-    if topic:
-        query = query.filter_by(topic_tag=topic)
-    
-    # Apply sorting
-    if sort_by == 'oldest':
-        query = query.order_by(Reel.created_at.asc())
-    elif sort_by == 'popular':
-        query = query.order_by(Reel.view_count.desc())
-    else:  # latest
-        query = query.order_by(Reel.created_at.desc())
-    
-    # Paginate results
-    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
-
-    # Tag each reel with a resolved platform (youtube / instagram / unknown)
+    """Showcase page — latest 6 Instagram reels + latest 6 YouTube videos"""
     from utils import get_video_info
+
     def _resolve_platform(r):
         vtype = r.get('video_type', 'auto') or 'auto'
         if vtype in ('youtube', 'youtube_short'):
             return 'youtube'
         if vtype == 'instagram':
             return 'instagram'
-        # auto-detect from URL
         url = r.get('video_url', '') or ''
         if url:
             info = get_video_info(url, 'auto')
@@ -355,34 +320,123 @@ def reels_library():
                 return 'instagram'
         return 'unknown'
 
-    reels_raw = [reel.to_dict() for reel in pagination.items]
-    for r in reels_raw:
-        r['platform'] = _resolve_platform(r)
+    all_reels = Reel.query.order_by(Reel.created_at.desc()).all()
+    instagram_featured = []
+    youtube_featured = []
 
-    youtube_reels   = [r for r in reels_raw if r['platform'] == 'youtube']
-    instagram_reels = [r for r in reels_raw if r['platform'] == 'instagram']
-    other_reels     = [r for r in reels_raw if r['platform'] == 'unknown']
+    for reel in all_reels:
+        r = reel.to_dict()
+        platform = _resolve_platform(r)
+        r['platform'] = platform
+        if platform == 'instagram' and len(instagram_featured) < 6:
+            instagram_featured.append(r)
+        elif platform == 'youtube' and len(youtube_featured) < 6:
+            youtube_featured.append(r)
+        if len(instagram_featured) >= 6 and len(youtube_featured) >= 6:
+            break
 
-    # Get all topics for filter dropdown
-    topics = db.session.query(Reel.topic_tag).filter(Reel.topic_tag != None, Reel.topic_tag != '').distinct().all()
-    topic_list = [t[0] for t in topics]
-    
-    # Get all categories for filter
-    categories = db.session.query(Reel.category_tag).filter(Reel.category_tag != None, Reel.category_tag != '').distinct().all()
-    category_list = [c[0] for c in categories]
-    
+    instagram_total = Reel.query.filter(Reel.video_type == 'instagram').count()
+    youtube_total = Reel.query.filter(Reel.video_type.in_(['youtube', 'youtube_short'])).count()
+
     return render_template('reels_library.html',
-                         reels=reels_raw,
-                         youtube_reels=youtube_reels,
-                         instagram_reels=instagram_reels,
-                         other_reels=other_reels,
-                         pagination=pagination,
-                         topics=topic_list,
-                         categories=category_list,
-                         current_search=search,
-                         current_sort=sort_by,
-                         current_category=category,
-                         current_topic=topic)
+                           instagram_featured=instagram_featured,
+                           youtube_featured=youtube_featured,
+                           instagram_total=instagram_total,
+                           youtube_total=youtube_total)
+
+
+@app.route('/reels/instagram')
+def instagram_reels():
+    """All Instagram reels — dedicated page"""
+    search = request.args.get('search', '')
+    sort_by = request.args.get('sort', 'latest')
+    category = request.args.get('category', '')
+    topic = request.args.get('topic', '')
+    page = request.args.get('page', 1, type=int)
+    per_page = 18
+
+    query = Reel.query.filter(Reel.video_type == 'instagram')
+    if search:
+        query = query.filter(Reel.title.ilike(f'%{search}%'))
+    if category:
+        query = query.filter(Reel.category_tag == category)
+    if topic:
+        query = query.filter(Reel.topic_tag == topic)
+    if sort_by == 'oldest':
+        query = query.order_by(Reel.created_at.asc())
+    elif sort_by == 'popular':
+        query = query.order_by(Reel.view_count.desc())
+    else:
+        query = query.order_by(Reel.created_at.desc())
+
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    reels = [r.to_dict() for r in pagination.items]
+
+    topics = db.session.query(Reel.topic_tag).filter(
+        Reel.video_type == 'instagram',
+        Reel.topic_tag != None, Reel.topic_tag != ''
+    ).distinct().all()
+    categories = db.session.query(Reel.category_tag).filter(
+        Reel.video_type == 'instagram',
+        Reel.category_tag != None, Reel.category_tag != ''
+    ).distinct().all()
+
+    return render_template('instagram_reels.html',
+                           reels=reels,
+                           pagination=pagination,
+                           topics=[t[0] for t in topics],
+                           categories=[c[0] for c in categories],
+                           current_search=search,
+                           current_sort=sort_by,
+                           current_category=category,
+                           current_topic=topic)
+
+
+@app.route('/reels/youtube')
+def youtube_reels():
+    """All YouTube videos — dedicated page"""
+    search = request.args.get('search', '')
+    sort_by = request.args.get('sort', 'latest')
+    category = request.args.get('category', '')
+    topic = request.args.get('topic', '')
+    page = request.args.get('page', 1, type=int)
+    per_page = 18
+
+    query = Reel.query.filter(Reel.video_type.in_(['youtube', 'youtube_short']))
+    if search:
+        query = query.filter(Reel.title.ilike(f'%{search}%'))
+    if category:
+        query = query.filter(Reel.category_tag == category)
+    if topic:
+        query = query.filter(Reel.topic_tag == topic)
+    if sort_by == 'oldest':
+        query = query.order_by(Reel.created_at.asc())
+    elif sort_by == 'popular':
+        query = query.order_by(Reel.view_count.desc())
+    else:
+        query = query.order_by(Reel.created_at.desc())
+
+    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+    reels = [r.to_dict() for r in pagination.items]
+
+    topics = db.session.query(Reel.topic_tag).filter(
+        Reel.video_type.in_(['youtube', 'youtube_short']),
+        Reel.topic_tag != None, Reel.topic_tag != ''
+    ).distinct().all()
+    categories = db.session.query(Reel.category_tag).filter(
+        Reel.video_type.in_(['youtube', 'youtube_short']),
+        Reel.category_tag != None, Reel.category_tag != ''
+    ).distinct().all()
+
+    return render_template('youtube_reels.html',
+                           reels=reels,
+                           pagination=pagination,
+                           topics=[t[0] for t in topics],
+                           categories=[c[0] for c in categories],
+                           current_search=search,
+                           current_sort=sort_by,
+                           current_category=category,
+                           current_topic=topic)
 
 @app.route('/reel/<int:reel_id>')
 def reel_detail(reel_id):

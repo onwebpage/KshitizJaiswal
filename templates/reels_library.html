@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Beyond The Reel - Full Library - Kshitiz Jaiswal{% endblock %}
+{% block title %}Beyond The Reel - Kshitiz Jaiswal{% endblock %}
 
 {% block content %}
 <section class="resources-hero">
@@ -14,243 +14,101 @@
     </div>
 </section>
 
-<section class="reels-library-section section-padding">
-    <div class="container-fluid" style="max-width: 1400px;">
-
-        <!-- Search and Filter Bar -->
-        <div class="search-filter-bar mb-5">
-            <form method="GET" action="{{ url_for('reels_library') }}" class="row g-3">
-                <!-- Search Input -->
-                <div class="col-md-4">
-                    <div class="input-group">
-                        <span class="input-group-text"><i class="fas fa-search"></i></span>
-                        <input type="text" class="form-control" name="search" placeholder="Search reels..." value="{{ current_search }}">
-                    </div>
-                </div>
-
-                <!-- Sort Dropdown -->
-                <div class="col-md-2">
-                    <select name="sort" class="form-select">
-                        <option value="latest" {% if current_sort == 'latest' %}selected{% endif %}>Latest</option>
-                        <option value="oldest" {% if current_sort == 'oldest' %}selected{% endif %}>Oldest</option>
-                        <option value="popular" {% if current_sort == 'popular' %}selected{% endif %}>Most Popular</option>
-                    </select>
-                </div>
-
-                <!-- Category Filter -->
-                <div class="col-md-2">
-                    <select name="category" class="form-select">
-                        <option value="">All Tags</option>
-                        {% for cat in categories %}
-                        <option value="{{ cat }}" {% if current_category == cat %}selected{% endif %}>
-                            {% if cat == 'trending' %}🔥 Trending
-                            {% elif cat == 'new' %}🆕 New
-                            {% elif cat == 'fan_favourite' %}❤ Fan Favourite
-                            {% elif cat == 'exclusive' %}⭐ Exclusive
-                            {% elif cat == 'must_watch' %}👀 Must Watch
-                            {% elif cat == 'behind_scenes' %}🎬 Behind the Scenes
-                            {% else %}{{ cat }}{% endif %}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <!-- Topic Filter -->
-                <div class="col-md-2">
-                    <select name="topic" class="form-select">
-                        <option value="">All Topics</option>
-                        {% for topic in topics %}
-                        <option value="{{ topic }}" {% if current_topic == topic %}selected{% endif %}>{{ topic }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <!-- Search Button -->
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-primary w-100">
-                        <i class="fas fa-filter me-1"></i>Filter
-                    </button>
-                </div>
-            </form>
-
-            <!-- Active Filters Display -->
-            {% if current_search or current_category or current_topic %}
-            <div class="active-filters mt-3">
-                <span class="me-2"><strong>Active filters:</strong></span>
-                {% if current_search %}
-                <span class="badge bg-primary me-2">Search: {{ current_search }}</span>
-                {% endif %}
-                {% if current_category %}
-                <span class="badge bg-success me-2">Tag: {{ current_category }}</span>
-                {% endif %}
-                {% if current_topic %}
-                <span class="badge bg-info me-2">Topic: {{ current_topic }}</span>
-                {% endif %}
-                <a href="{{ url_for('reels_library') }}" class="btn btn-sm btn-outline-secondary">Clear All</a>
-            </div>
+{% macro reel_card(reel) %}
+{% set _thumb = reel.thumbnail %}
+{% set _auto  = reel.auto_thumbnail %}
+{% set _ph    = url_for('static', filename='img/reel-placeholder.svg') %}
+<a href="{{ url_for('reel_detail', reel_id=reel.id) }}" class="showcase-card">
+    <div class="showcase-card-thumb">
+        {% if reel.category_tag %}
+        <div class="showcase-tag {{ reel.category_tag }}">
+            {% if reel.category_tag == 'trending' %}🔥 Trending
+            {% elif reel.category_tag == 'new' %}🆕 New
+            {% elif reel.category_tag == 'fan_favourite' %}❤ Fan Favourite
+            {% elif reel.category_tag == 'exclusive' %}⭐ Exclusive
+            {% elif reel.category_tag == 'must_watch' %}👀 Must Watch
+            {% elif reel.category_tag == 'behind_scenes' %}🎬 BTS
             {% endif %}
         </div>
+        {% endif %}
+        <img src="{% if _thumb %}{{ url_for('static', filename=_thumb) if not _thumb.startswith('http') else _thumb }}{% elif _auto %}{{ _auto }}{% else %}{{ _ph }}{% endif %}"
+             alt="{{ reel.title }}"
+             data-auto-thumb="{% if not _thumb %}{{ _auto }}{% endif %}"
+             onerror="var a=this.dataset.autoThumb;if(a&&this.src!==a){this.onerror=function(){this.src='{{ _ph }}'};this.src=a;}else{this.onerror=null;this.src='{{ _ph }}'}">
+        <div class="showcase-card-play"><i class="fas fa-play-circle"></i></div>
+    </div>
+    <div class="showcase-card-body">
+        <h6 class="showcase-card-title">{{ reel.title }}</h6>
+        {% if reel.topic_tag %}
+        <span class="showcase-card-topic">{{ reel.topic_tag }}</span>
+        {% endif %}
+    </div>
+</a>
+{% endmacro %}
 
-        <!-- Results Count -->
-        <div class="results-info mb-4">
-            <p class="text-muted">
-                Showing {{ reels|length }} of {{ pagination.total }} reels
-                {% if pagination.page > 1 %} (Page {{ pagination.page }} of {{ pagination.pages }}){% endif %}
-            </p>
-        </div>
+<section class="reels-showcase-section section-padding">
+    <div class="container showcase-container">
 
-        {% macro reel_card(reel) %}
-        <div class="reel-grid-item layout-{{ reel.card_layout or 'standard' }}">
-            <a href="{{ url_for('reel_detail', reel_id=reel.id) }}" class="reel-link">
-                <div class="reel-thumbnail-wrapper layout-{{ reel.card_layout or 'standard' }}">
-                    {% if reel.category_tag %}
-                    <div class="reel-category-tag {{ reel.category_tag }}">
-                        {% if reel.category_tag == 'trending' %}🔥 Trending
-                        {% elif reel.category_tag == 'new' %}🆕 New
-                        {% elif reel.category_tag == 'fan_favourite' %}❤ Fan Favourite
-                        {% elif reel.category_tag == 'exclusive' %}⭐ Exclusive
-                        {% elif reel.category_tag == 'must_watch' %}👀 Must Watch
-                        {% elif reel.category_tag == 'behind_scenes' %}🎬 BTS
-                        {% endif %}
-                    </div>
-                    {% endif %}
-                    {% set _thumb = reel.thumbnail %}
-                    {% set _auto = reel.auto_thumbnail %}
-                    {% set _placeholder = url_for('static', filename='img/reel-placeholder.svg') %}
-                    <img src="{% if _thumb %}{{ url_for('static', filename=_thumb) if not _thumb.startswith('http') else _thumb }}{% elif _auto %}{{ _auto }}{% else %}{{ _placeholder }}{% endif %}"
-                         alt="{{ reel.title }}" class="reel-thumbnail"
-                         data-auto-thumb="{% if not _thumb %}{{ _auto }}{% endif %}"
-                         onerror="var a=this.dataset.autoThumb;if(a&&this.src!==a){this.onerror=function(){this.src='{{ _placeholder }}'};this.src=a;}else{this.onerror=null;this.src='{{ _placeholder }}'}">
-                    <div class="reel-overlay">
-                        <i class="fas fa-play-circle fa-3x"></i>
-                    </div>
-                </div>
-                <div class="reel-info">
-                    <h6 class="reel-grid-title">{{ reel.title }}</h6>
-                    <div class="reel-meta-info">
-                        {% if reel.topic_tag %}
-                        <span class="badge bg-secondary me-2">{{ reel.topic_tag }}</span>
-                        {% endif %}
-                    </div>
-                </div>
-            </a>
-        </div>
-        {% endmacro %}
-
-        {% if reels %}
-
-        {% if true %}
-        <!-- Two-column platform layout -->
-        <div class="platform-columns-wrapper">
-
-            <!-- YouTube Column -->
-            <div class="platform-column platform-col-youtube">
-                <div class="platform-col-header platform-col-header--yt">
-                    <i class="fab fa-youtube"></i>
-                    <span>YouTube</span>
-                    <span class="platform-count">{{ youtube_reels|length }}</span>
-                </div>
-                {% if youtube_reels %}
-                <div class="reels-grid reels-grid--col">
-                    {% for reel in youtube_reels %}{{ reel_card(reel) }}{% endfor %}
-                </div>
-                {% else %}
-                <div class="platform-empty">
-                    <i class="fab fa-youtube fa-2x mb-2 opacity-25"></i>
-                    <p class="text-muted small mb-0">No YouTube reels yet</p>
-                </div>
-                {% endif %}
-            </div>
-
-            <!-- Divider -->
-            <div class="platform-divider"></div>
-
-            <!-- Instagram Column -->
-            <div class="platform-column platform-col-instagram">
-                <div class="platform-col-header platform-col-header--ig">
+        {# ── Instagram Section (first) ───────────────── #}
+        {% if instagram_featured %}
+        <div class="platform-section">
+            <div class="platform-section-header">
+                <div class="platform-section-title ig-title">
                     <i class="fab fa-instagram"></i>
-                    <span>Instagram</span>
-                    <span class="platform-count">{{ instagram_reels|length }}</span>
-                </div>
-                {% if instagram_reels %}
-                <div class="reels-grid reels-grid--col">
-                    {% for reel in instagram_reels %}{{ reel_card(reel) }}{% endfor %}
-                </div>
-                {% else %}
-                <div class="platform-empty">
-                    <i class="fab fa-instagram fa-2x mb-2 opacity-25"></i>
-                    <p class="text-muted small mb-0">No Instagram reels yet</p>
-                </div>
-                {% endif %}
-            </div>
-
-        </div>
-
-        {% if other_reels %}
-        <div class="mt-5">
-            <div class="platform-col-header platform-col-header--other mb-3" style="display:inline-flex;">
-                <i class="fas fa-film"></i><span>Other</span>
-                <span class="platform-count">{{ other_reels|length }}</span>
-            </div>
-            <div class="reels-grid">
-                {% for reel in other_reels %}{{ reel_card(reel) }}{% endfor %}
-            </div>
-        </div>
-        {% endif %}
-
-        {% else %}
-        <!-- Fallback: no platform info, show flat grid -->
-        <div class="reels-grid">
-            {% for reel in reels %}{{ reel_card(reel) }}{% endfor %}
-        </div>
-        {% endif %}
-
-        <!-- Pagination -->
-        {% if pagination.pages > 1 %}
-        <nav aria-label="Reels pagination" class="mt-5">
-            <ul class="pagination justify-content-center">
-                {% if pagination.has_prev %}
-                <li class="page-item">
-                    <a class="page-link" href="{{ url_for('reels_library', page=pagination.prev_num, search=current_search, sort=current_sort, category=current_category, topic=current_topic) }}">
-                        <i class="fas fa-chevron-left"></i> Previous
-                    </a>
-                </li>
-                {% endif %}
-                {% for page_num in pagination.iter_pages(left_edge=2, right_edge=2, left_current=2, right_current=2) %}
-                    {% if page_num %}
-                        <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
-                            <a class="page-link" href="{{ url_for('reels_library', page=page_num, search=current_search, sort=current_sort, category=current_category, topic=current_topic) }}">{{ page_num }}</a>
-                        </li>
-                    {% else %}
-                        <li class="page-item disabled"><span class="page-link">...</span></li>
+                    <span>Instagram Reels</span>
+                    {% if instagram_total > 0 %}
+                    <span class="platform-total-badge">{{ instagram_total }}</span>
                     {% endif %}
-                {% endfor %}
-                {% if pagination.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="{{ url_for('reels_library', page=pagination.next_num, search=current_search, sort=current_sort, category=current_category, topic=current_topic) }}">
-                        Next <i class="fas fa-chevron-right"></i>
-                    </a>
-                </li>
+                </div>
+                {% if instagram_total > 6 %}
+                <a href="{{ url_for('instagram_reels') }}" class="platform-view-all ig-view-all">
+                    View All Instagram Reels <i class="fas fa-arrow-right ms-1"></i>
+                </a>
                 {% endif %}
-            </ul>
-        </nav>
-        {% endif %}
-
-        {% else %}
-        <div class="no-results text-center py-5">
-            <i class="fas fa-search fa-3x text-muted mb-3"></i>
-            <h4>No Reels Found</h4>
-            <p class="text-muted">Try adjusting your search or filters</p>
-            <a href="{{ url_for('reels_library') }}" class="btn btn-primary mt-3">Clear Filters</a>
+            </div>
+            <div class="showcase-grid">
+                {% for reel in instagram_featured %}{{ reel_card(reel) }}{% endfor %}
+            </div>
         </div>
         {% endif %}
 
+        {# ── YouTube Section (below Instagram) ─────── #}
+        {% if youtube_featured %}
+        <div class="platform-section">
+            <div class="platform-section-header">
+                <div class="platform-section-title yt-title">
+                    <i class="fab fa-youtube"></i>
+                    <span>YouTube Videos</span>
+                    {% if youtube_total > 0 %}
+                    <span class="platform-total-badge">{{ youtube_total }}</span>
+                    {% endif %}
+                </div>
+                {% if youtube_total > 6 %}
+                <a href="{{ url_for('youtube_reels') }}" class="platform-view-all yt-view-all">
+                    View All YouTube Videos <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+                {% endif %}
+            </div>
+            <div class="showcase-grid">
+                {% for reel in youtube_featured %}{{ reel_card(reel) }}{% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {# ── Empty state ─────────────────────────────── #}
+        {% if not instagram_featured and not youtube_featured %}
+        <div class="no-results text-center py-5">
+            <i class="fas fa-film fa-3x text-muted mb-3 d-block"></i>
+            <h4>No Content Yet</h4>
+            <p class="text-muted">Reels and videos will appear here once they are added.</p>
+        </div>
+        {% endif %}
+
+        {# ── WhatsApp CTA ────────────────────────────── #}
         {% if whatsapp_link %}
         <div class="reels-wa-banner mt-5">
             <div class="reels-wa-inner">
-                <div class="reels-wa-icon">
-                    <i class="fab fa-whatsapp"></i>
-                </div>
+                <div class="reels-wa-icon"><i class="fab fa-whatsapp"></i></div>
                 <div class="reels-wa-text">
                     <h5 class="mb-1">Want to discuss a reel?</h5>
                     <p class="mb-0">Chat with us on WhatsApp — we'd love to hear your thoughts!</p>
@@ -264,274 +122,205 @@
             </div>
         </div>
         {% endif %}
+
     </div>
 </section>
 
 <style>
-/* ── Platform two-column layout ─────────────────────── */
-.platform-columns-wrapper {
-    display: grid;
-    grid-template-columns: 1fr 2px 1fr;
-    gap: 0 2rem;
-    margin-bottom: 3rem;
-    align-items: start;
-}
-.platform-column { min-width: 0; }
-.platform-divider {
-    background: linear-gradient(to bottom, transparent, #dee2e6 15%, #dee2e6 85%, transparent);
-    border-radius: 2px;
-    align-self: stretch;
-    margin-top: 3.5rem;
-}
-.platform-col-header {
+/* ── Container ──────────────────────────────────── */
+.showcase-container { max-width: 1280px; }
+
+/* ── Platform section ───────────────────────────── */
+.platform-section { margin-bottom: 4rem; }
+
+.platform-section-header {
     display: flex;
     align-items: center;
-    gap: .6rem;
-    font-size: 1.15rem;
-    font-weight: 700;
-    padding: .5rem .75rem .5rem 0;
-    margin-bottom: 1.25rem;
-    border-bottom: 3px solid transparent;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.875rem;
+    border-bottom: 2px solid #f0f0f0;
 }
-.platform-col-header--yt  { color: #cc0000; border-color: #cc0000; }
-.platform-col-header--ig  {
-    color: #c13584;
-    border-color: #c13584;
+
+.platform-section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-size: 1.3rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
 }
-.platform-col-header--other { color: #6c757d; border-color: #adb5bd; }
-.platform-count {
-    margin-left: auto;
+
+.platform-section-title i { font-size: 1.4rem; }
+
+.ig-title { color: #c13584; }
+.yt-title { color: #cc0000; }
+
+.platform-total-badge {
+    font-size: 0.72rem;
+    font-weight: 600;
     background: #f0f0f0;
     color: #555;
-    font-size: .75rem;
-    font-weight: 600;
-    border-radius: 20px;
     padding: 2px 10px;
+    border-radius: 20px;
+    margin-left: 0.25rem;
 }
-.platform-empty {
-    display: flex;
-    flex-direction: column;
+
+/* ── View All buttons ───────────────────────────── */
+.platform-view-all {
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
-    padding: 3rem 1rem;
-    color: #adb5bd;
+    gap: 0.3rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: 0.45rem 1.1rem;
+    border-radius: 50px;
+    border: 2px solid transparent;
+    text-decoration: none;
+    transition: all 0.22s ease;
+    white-space: nowrap;
 }
-.reels-grid--col {
-    justify-content: flex-start;
+.ig-view-all {
+    color: #c13584;
+    border-color: #c13584;
+    background: transparent;
 }
-@media (max-width: 768px) {
-    .platform-columns-wrapper {
-        grid-template-columns: 1fr;
-    }
-    .platform-divider {
-        height: 2px;
-        background: linear-gradient(to right, transparent, #dee2e6 15%, #dee2e6 85%, transparent);
-        align-self: auto;
-        margin: 1rem 0;
-        margin-top: 0;
-    }
+.ig-view-all:hover {
+    background: #c13584;
+    color: #fff;
+    text-decoration: none;
+}
+.yt-view-all {
+    color: #cc0000;
+    border-color: #cc0000;
+    background: transparent;
+}
+.yt-view-all:hover {
+    background: #cc0000;
+    color: #fff;
+    text-decoration: none;
 }
 
-/* ── Reels grid ─────────────────────────────────────── */
-.reels-grid {
-    display: flex;
-    flex-wrap: wrap;
+/* ── Showcase grid (CSS Grid, responsive) ───────── */
+.showcase-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
     gap: 1.5rem;
-    margin-bottom: 3rem;
-    justify-content: flex-start;
+}
+@media (max-width: 991px) {
+    .showcase-grid { grid-template-columns: repeat(2, 1fr); gap: 1.25rem; }
+}
+@media (max-width: 575px) {
+    .showcase-grid { grid-template-columns: repeat(2, 1fr); gap: 0.875rem; }
 }
 
-.reel-grid-item {
-    position: relative;
-    border-radius: 12px;
+/* ── Showcase card ──────────────────────────────── */
+.showcase-card {
+    display: block;
+    text-decoration: none;
+    border-radius: 14px;
     overflow: hidden;
     background: #fff;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    width: 280px;
-    flex-shrink: 0;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    color: inherit;
+}
+.showcase-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.14);
+    color: inherit;
+    text-decoration: none;
 }
 
-.reel-grid-item.layout-portrait {
-    width: 190px;
-}
-
-.reel-grid-item.layout-landscape {
-    width: 360px;
-}
-
-.reel-grid-item:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-}
-
-.reel-thumbnail-wrapper {
+.showcase-card-thumb {
     position: relative;
     aspect-ratio: 16/9;
     overflow: hidden;
+    background: #111;
 }
-
-.reel-thumbnail-wrapper.layout-portrait {
-    aspect-ratio: 9/16;
-}
-
-.reel-thumbnail-wrapper.layout-landscape {
-    aspect-ratio: 16/9;
-}
-
-.reel-thumbnail-wrapper.layout-standard {
-    aspect-ratio: 16/9;
-}
-
-.reel-thumbnail {
+.showcase-card-thumb img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     transition: transform 0.3s ease;
+    display: block;
 }
+.showcase-card:hover .showcase-card-thumb img { transform: scale(1.07); }
 
-.reel-grid-item:hover .reel-thumbnail {
-    transform: scale(1.1);
-}
-
-.reel-overlay {
+.showcase-card-play {
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0,0,0,0.5);
+    inset: 0;
+    background: rgba(0,0,0,0.42);
     display: flex;
     align-items: center;
     justify-content: center;
     opacity: 0;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.25s ease;
 }
+.showcase-card:hover .showcase-card-play { opacity: 1; }
+.showcase-card-play i { font-size: 2.8rem; color: #fff; }
 
-.reel-grid-item:hover .reel-overlay {
-    opacity: 1;
-}
-
-.reel-overlay i {
-    color: #fff;
-}
-
-.reel-info {
-    padding: 1rem;
-}
-
-.reel-grid-title {
-    font-weight: 600;
-    color: #1a1a1a;
-    margin-bottom: 0.5rem;
-    font-size: 0.95rem;
-    line-height: 1.4;
-}
-
-.reel-meta-info {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.85rem;
-}
-
-.reel-category-tag {
+.showcase-tag {
     position: absolute;
-    top: 12px;
-    right: 12px;
-    padding: 4px 12px;
+    top: 10px;
+    right: 10px;
+    padding: 3px 10px;
     border-radius: 20px;
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     font-weight: 600;
-    z-index: 10;
-    background: rgba(255, 255, 255, 0.95);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    z-index: 2;
+    background: rgba(255,255,255,0.95);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+}
+.showcase-tag.trending   { background: linear-gradient(135deg,#ff6b6b,#ff5252); color:#fff; }
+.showcase-tag.new        { background: linear-gradient(135deg,#4CAF50,#45a049); color:#fff; }
+.showcase-tag.fan_favourite { background: linear-gradient(135deg,#e91e63,#c2185b); color:#fff; }
+.showcase-tag.exclusive  { background: linear-gradient(135deg,#ffd700,#ffb300); color:#000; }
+.showcase-tag.must_watch { background: linear-gradient(135deg,#9c27b0,#7b1fa2); color:#fff; }
+.showcase-tag.behind_scenes { background: linear-gradient(135deg,#607d8b,#455a64); color:#fff; }
+
+.showcase-card-body { padding: 0.875rem 1rem; }
+.showcase-card-title {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0 0 0.3rem;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+.showcase-card-topic {
+    font-size: 0.75rem;
+    color: #888;
+    background: #f5f5f5;
+    padding: 2px 8px;
+    border-radius: 10px;
+    display: inline-block;
 }
 
-.reel-category-tag.trending {
-    background: linear-gradient(135deg, #ff6b6b, #ff5252);
-    color: #fff;
-}
-
-.reel-category-tag.new {
-    background: linear-gradient(135deg, #4CAF50, #45a049);
-    color: #fff;
-}
-
-.reel-category-tag.fan_favourite {
-    background: linear-gradient(135deg, #e91e63, #c2185b);
-    color: #fff;
-}
-
-.reel-category-tag.exclusive {
-    background: linear-gradient(135deg, #ffd700, #ffb300);
-    color: #000;
-}
-
-.reel-category-tag.must_watch {
-    background: linear-gradient(135deg, #9c27b0, #7b1fa2);
-    color: #fff;
-}
-
-.reel-category-tag.behind_scenes {
-    background: linear-gradient(135deg, #607d8b, #455a64);
-    color: #fff;
-}
-
-@media (max-width: 768px) {
-    .reels-grid {
-        justify-content: center;
-        gap: 1rem;
-    }
-    .reel-grid-item { width: calc(50% - 0.5rem); min-width: 140px; }
-    .reel-grid-item.layout-portrait { width: calc(45% - 0.5rem); min-width: 130px; }
-    .reel-grid-item.layout-landscape { width: calc(100% - 0.5rem); max-width: 400px; }
-}
-
-@media (max-width: 480px) {
-    .reel-grid-item { width: calc(50% - 0.5rem); min-width: 130px; }
-    .reel-grid-item.layout-portrait { width: calc(45% - 0.5rem); min-width: 120px; }
-    .reel-grid-item.layout-landscape { width: 100%; }
-}
-
-.search-filter-bar {
-    background: #f8f9fa;
-    padding: 2rem;
-    border-radius: 12px;
-}
-
-.active-filters {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-}
-
-.no-results {
-    background: #f8f9fa;
-    border-radius: 12px;
-    padding: 4rem 2rem;
-}
-
-/* ── WhatsApp CTA ─────────────────────────────────── */
+/* ── WhatsApp CTA ───────────────────────────────── */
 .reels-wa-banner {
-    background: linear-gradient(135deg, #1a0000 0%, #3d0000 50%, #1a0000 100%);
+    background: linear-gradient(135deg,#1a0000 0%,#3d0000 50%,#1a0000 100%);
     border-radius: 18px;
     padding: 2px;
-    box-shadow: 0 8px 28px rgba(204, 0, 0, 0.18);
+    box-shadow: 0 8px 28px rgba(204,0,0,0.18);
 }
 .reels-wa-inner {
-    background: linear-gradient(135deg, #140000 0%, #2d0505 60%, #1a0000 100%);
+    background: linear-gradient(135deg,#140000 0%,#2d0505 60%,#1a0000 100%);
     border-radius: 16px;
     padding: 24px 28px;
     display: flex;
     align-items: center;
     gap: 20px;
     flex-wrap: wrap;
-    border: 1px solid rgba(204, 0, 0, 0.25);
+    border: 1px solid rgba(204,0,0,0.25);
 }
 .reels-wa-icon {
-    width: 56px;
-    height: 56px;
+    width: 56px; height: 56px;
     background: #25D366;
     border-radius: 50%;
     display: flex;
@@ -543,7 +332,7 @@
 }
 .reels-wa-text { flex: 1; color: #fff; min-width: 180px; }
 .reels-wa-text h5 { font-size: 1.05rem; font-weight: 700; margin-bottom: 4px; }
-.reels-wa-text p { font-size: 0.88rem; opacity: 0.78; margin: 0; }
+.reels-wa-text p  { font-size: 0.88rem; opacity: 0.78; margin: 0; }
 .reels-wa-btn {
     display: inline-flex;
     align-items: center;
@@ -555,20 +344,20 @@
     border-radius: 50px;
     text-decoration: none;
     white-space: nowrap;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s;
-    box-shadow: 0 4px 16px rgba(37, 211, 102, 0.3);
+    transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+    box-shadow: 0 4px 16px rgba(37,211,102,0.3);
     flex-shrink: 0;
 }
 .reels-wa-btn:hover {
     background: #128C7E;
     color: #fff;
     transform: translateY(-2px);
-    box-shadow: 0 8px 22px rgba(37, 211, 102, 0.4);
+    box-shadow: 0 8px 22px rgba(37,211,102,0.4);
     text-decoration: none;
 }
 @media (max-width: 768px) {
     .reels-wa-inner { padding: 20px; flex-direction: column; text-align: center; }
-    .reels-wa-btn { width: 100%; justify-content: center; }
+    .reels-wa-btn   { width: 100%; justify-content: center; }
 }
 </style>
 {% endblock %}
