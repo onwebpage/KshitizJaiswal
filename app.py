@@ -174,6 +174,9 @@ with app.app_context():
         _add_column("opinion",            "topic_tag",            "VARCHAR(100)")
         _add_column("subscriber",         "place",                "VARCHAR(100)")
         _add_column("subscriber",         "age",                  "VARCHAR(20)")
+        _add_column("course",             "preview_title",        "VARCHAR(300)")
+        _add_column("course",             "preview_subtitle",     "TEXT")
+        _add_column("course",             "course_features",      "TEXT")
 
         # PostgreSQL-only migrations (silently ignored on SQLite)
         pg_only = [
