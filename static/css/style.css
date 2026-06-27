@@ -2399,6 +2399,19 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 8px 25px rgba(204, 0, 0, 0.3);
 }
 
+.admin-nav-upload-video {
+  background: linear-gradient(135deg, #cc0000 0%, #8b0000 100%);
+  color: var(--white) !important;
+  font-weight: 700 !important;
+  border: 2px solid rgba(255,255,255,0.15);
+  box-shadow: 0 4px 15px rgba(204, 0, 0, 0.35);
+}
+.admin-nav-upload-video:hover {
+  background: linear-gradient(135deg, #e60000 0%, #a00000 100%);
+  transform: translateX(5px);
+  box-shadow: 0 8px 25px rgba(204, 0, 0, 0.55);
+}
+
 .admin-nav-item i {
   width: 20px;
   text-align: center;

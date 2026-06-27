@@ -71,6 +71,9 @@
             <div class="admin-nav-section-title">
                 <small class="text-muted">MEDIA & POSTS</small>
             </div>
+            <a href="{{ url_for('admin_add_reel') }}?upload=1" class="admin-nav-item admin-nav-upload-video {{ 'active' if request.endpoint in ['admin_add_reel', 'admin_edit_reel'] else '' }}">
+                <i class="fas fa-upload me-2"></i>Upload Video
+            </a>
             <a href="{{ url_for('admin_add_reel') }}" class="admin-nav-item {{ 'active' if request.endpoint in ['admin_add_reel', 'admin_edit_reel'] else '' }}">
                 <i class="fas fa-video me-2"></i>Add / Edit Reel
             </a>
