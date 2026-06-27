@@ -28,7 +28,7 @@
 
         <!-- Search & Filter -->
         <div class="plib-filter-bar mb-4">
-            <form method="GET" action="{{ url_for('youtube_reels') }}" class="row g-2 align-items-end">
+            <form id="yt-filter-form" method="GET" action="{{ url_for('youtube_reels') }}" class="row g-2 align-items-end">
                 <div class="col-md-5 col-sm-6">
                     <div class="input-group">
                         <span class="input-group-text"><i class="fas fa-search"></i></span>
@@ -298,5 +298,44 @@
     border-radius: 12px;
     padding: 4rem 2rem;
 }
+.plib-filter-bar .form-select:focus,
+.plib-filter-bar .form-control:focus {
+    border-color: #cc0000;
+    box-shadow: 0 0 0 0.2rem rgba(204,0,0,0.15);
+}
+.search-spinner {
+    display: none;
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #cc0000;
+    font-size: 0.85rem;
+}
+.input-group { position: relative; }
+.input-group.searching .search-spinner { display: block; }
 </style>
+<script>
+(function(){
+    var form = document.getElementById('yt-filter-form');
+    if (!form) return;
+    var searchInput = form.querySelector('input[name="search"]');
+    var selects     = form.querySelectorAll('select');
+    var debounceTimer;
+
+    selects.forEach(function(sel){
+        sel.addEventListener('change', function(){ form.submit(); });
+    });
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function(){
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(function(){ form.submit(); }, 500);
+        });
+        searchInput.addEventListener('keydown', function(e){
+            if (e.key === 'Enter') { clearTimeout(debounceTimer); form.submit(); }
+        });
+    }
+})();
+</script>
 {% endblock %}

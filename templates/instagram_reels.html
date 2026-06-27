@@ -28,7 +28,7 @@
 
         <!-- Search & Filter -->
         <div class="plib-filter-bar mb-4">
-            <form method="GET" action="{{ url_for('instagram_reels') }}" class="row g-2 align-items-end">
+            <form id="ig-filter-form" method="GET" action="{{ url_for('instagram_reels') }}" class="row g-2 align-items-end">
                 <div class="col-md-5 col-sm-6">
                     <div class="input-group">
                         <span class="input-group-text"><i class="fas fa-search"></i></span>
@@ -299,5 +299,33 @@
     border-radius: 12px;
     padding: 4rem 2rem;
 }
+.plib-filter-bar .form-select:focus,
+.plib-filter-bar .form-control:focus {
+    border-color: #c13584;
+    box-shadow: 0 0 0 0.2rem rgba(193,53,132,0.15);
+}
 </style>
+<script>
+(function(){
+    var form = document.getElementById('ig-filter-form');
+    if (!form) return;
+    var searchInput = form.querySelector('input[name="search"]');
+    var selects     = form.querySelectorAll('select');
+    var debounceTimer;
+
+    selects.forEach(function(sel){
+        sel.addEventListener('change', function(){ form.submit(); });
+    });
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function(){
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(function(){ form.submit(); }, 500);
+        });
+        searchInput.addEventListener('keydown', function(e){
+            if (e.key === 'Enter') { clearTimeout(debounceTimer); form.submit(); }
+        });
+    }
+})();
+</script>
 {% endblock %}
