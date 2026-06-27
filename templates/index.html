@@ -335,10 +335,11 @@
                     {% else %}
                         {% set _yt_id = '' %}
                     {% endif %}
-                    <iframe src="https://www.youtube.com/embed/{{ _yt_id }}?autoplay=1&mute=1&loop=1&playlist={{ _yt_id }}&controls=0&rel=0&modestbranding=1&showinfo=0&iv_load_policy=3&disablekb=1"
+                    <iframe src="https://www.youtube.com/embed/{{ _yt_id }}?autoplay=1&mute=1&loop=1&playlist={{ _yt_id }}&controls=0&rel=0&modestbranding=1&showinfo=0&iv_load_policy=3&disablekb=1&playsinline=1"
                             class="tc-yt-iframe" frameborder="0"
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                             allowfullscreen loading="lazy"></iframe>
+                    <div class="tc-yt-overlay"></div>
                 </div>
                 {% else %}
                 <div class="tc-stars">{{ '★' * t.get('rating', 5) }}</div>
@@ -446,13 +447,28 @@
 .tc-yt-wrap {
     aspect-ratio: 16/9;
     cursor: default;
+    position: relative;
+    overflow: hidden;
+    border-radius: 18px 18px 0 0;
+    background: #000;
 }
 .tc-yt-iframe {
+    position: absolute;
+    top: -13%;
+    left: 0;
     width: 100%;
-    height: 100%;
-    border-radius: 18px 18px 0 0;
+    height: 126%;
     display: block;
     background: #000;
+    border: none;
+    pointer-events: none;
+}
+/* Transparent overlay blocks clicks on YouTube branding areas */
+.tc-yt-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
 }
 .tc-video-play-hint {
     position: absolute;
