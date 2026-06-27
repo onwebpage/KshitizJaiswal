@@ -1086,6 +1086,25 @@ def create_payment():
         logging.error(f"[RAZORPAY] create_payment FAILED: {type(e).__name__}: {e}", exc_info=True)
         return jsonify({'status': 'error', 'message': str(e)})
 
+@app.route('/admin/subscribers')
+def admin_subscribers():
+    """Admin subscribers management"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    subscribers = [s.to_dict() for s in Subscriber.query.order_by(Subscriber.subscribed_at.desc()).all()]
+    return render_template('admin/subscribers.html', subscribers=subscribers)
+
+@app.route('/admin/subscribers/<int:subscriber_id>/delete', methods=['POST'])
+def admin_delete_subscriber(subscriber_id):
+    """Delete a subscriber"""
+    if 'admin_logged_in' not in session:
+        return redirect(url_for('admin_login'))
+    sub = Subscriber.query.get_or_404(subscriber_id)
+    db.session.delete(sub)
+    db.session.commit()
+    flash('Subscriber deleted.', 'success')
+    return redirect(url_for('admin_subscribers'))
+
 @app.route('/admin')
 def admin_dashboard():
     """Admin dashboard"""
