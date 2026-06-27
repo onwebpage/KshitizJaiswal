@@ -558,28 +558,23 @@ h1, h2, h3, h4, h5, h6 {
   }
 
   .custom-navbar {
-    background: linear-gradient(135deg,
-      rgba(14, 0, 0, 0.97) 0%,
-      rgba(100, 0, 0, 0.97) 50%,
-      rgba(155, 0, 0, 0.97) 100%) !important;
-    margin: 0 14px;
-    border-radius: 50px;
+    margin: 0;
+    border-radius: 0;
     padding: 0;
-    min-height: 58px;
-    border: 1.5px solid rgba(255, 255, 255, 0.12);
+    min-height: 64px;
+    border: none;
     position: fixed;
-    top: 8px;
+    top: 0;
     left: 0;
     right: 0;
-    width: auto;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
-                0 2px 8px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.35);
     z-index: 1030;
   }
 
   .custom-navbar .container {
-    min-height: 58px;
-    padding: 0 1.25rem;
+    min-height: 64px;
+    padding: 0 1rem;
   }
 
   .navbar-brand {
@@ -593,11 +588,11 @@ h1, h2, h3, h4, h5, h6 {
   }
 
   main {
-    padding-top: 82px;
+    padding-top: 64px;
   }
 
   .alert {
-    margin-top: 82px !important;
+    margin-top: 64px !important;
     margin-bottom: 0 !important;
   }
 
