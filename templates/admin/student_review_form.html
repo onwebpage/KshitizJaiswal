@@ -165,7 +165,7 @@
                         <div class="alert alert-info py-2 mb-3" style="font-size:.82rem;">
                             <i class="fas fa-info-circle me-1"></i>
                             Max <strong>15 seconds</strong>. Accepted formats: <strong>MP4, MOV, WebM</strong>.
-                            A thumbnail is auto-generated.
+                            Upload a custom thumbnail below, or one will be auto-generated from the video.
                         </div>
 
                         <div class="dropzone" id="zone_video"
@@ -196,6 +196,39 @@
                             </div>
                         </div>
                         {% endif %}
+
+                        <!-- ── Custom Thumbnail ── -->
+                        <div class="mt-4">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-image me-1 text-danger"></i>Custom Video Thumbnail
+                                <span class="text-muted fw-normal">(optional)</span>
+                            </label>
+                            <p class="text-muted mb-2" style="font-size:.82rem;">Upload a custom cover image for this video. If left blank, a thumbnail will be auto-generated from the video.</p>
+                            <div class="dropzone" id="zone_thumb"
+                                 ondragover="dzOver(event,'thumb')" ondragleave="dzLeave(event,'thumb')" ondrop="dzDropImg(event,'thumb')">
+                                <div class="dropzone-inner" id="inner_thumb">
+                                    <div class="dropzone-icon"><i class="fas fa-image"></i></div>
+                                    <p class="mb-1 fw-semibold text-muted small">Drag & drop thumbnail</p>
+                                    <label for="video_thumbnail_file" class="btn btn-sm btn-outline-danger">Browse</label>
+                                    <p class="text-muted mt-1 mb-0" style="font-size:.75rem;">JPG, PNG, WebP · recommended 16:9 (e.g. 1280×720)</p>
+                                </div>
+                                <div class="dropzone-preview-wrap" id="prevwrap_thumb" style="display:none;">
+                                    <img id="preview_thumb" class="dropzone-preview-img" alt="Thumbnail Preview">
+                                    <button type="button" class="btn btn-sm btn-danger" onclick="dzClearThumb()">Remove</button>
+                                </div>
+                            </div>
+                            <input type="file" name="video_thumbnail_file" id="video_thumbnail_file" class="d-none"
+                                   accept="image/*" onchange="dzOnChangeImg(this,'thumb')">
+                            {% if review and review.video_thumbnail %}
+                            <div class="mt-2 d-flex align-items-center gap-2" id="current_thumb">
+                                <small class="text-muted">Current thumbnail:</small>
+                                <img src="{{ url_for('static', filename=review.video_thumbnail) }}" alt="Current Thumb"
+                                     style="height:40px;border-radius:6px;border:1px solid #e5e7eb;"
+                                     onerror="this.style.display='none'">
+                                <small class="text-muted">Upload a new image to replace it.</small>
+                            </div>
+                            {% endif %}
+                        </div>
                     </div>
 
                     <!-- ── Settings ── -->
@@ -251,13 +284,14 @@ function dzLeave(e, id) {
 }
 
 // ── Image drop zone ─────────────────────────────────
+var imgInputMap = { profile: 'profile_image', thumb: 'video_thumbnail_file' };
 function dzDropImg(e, id) {
     e.preventDefault();
     document.getElementById('zone_' + id).classList.remove('dz-hover');
     const file = e.dataTransfer.files[0];
     if (!file || !file.type.startsWith('image/')) return;
     const dt = new DataTransfer(); dt.items.add(file);
-    document.getElementById('profile_image').files = dt.files;
+    document.getElementById(imgInputMap[id] || 'profile_image').files = dt.files;
     showImgPreview(file, id);
 }
 function dzOnChangeImg(input, id) {
@@ -275,12 +309,13 @@ function showImgPreview(file, id) {
     reader.readAsDataURL(file);
 }
 function dzClearImg(id) {
-    document.getElementById('profile_image').value = '';
+    document.getElementById(imgInputMap[id] || 'profile_image').value = '';
     document.getElementById('inner_' + id).style.display = '';
     document.getElementById('prevwrap_' + id).style.display = 'none';
     const cur = document.getElementById('current_' + id);
     if (cur) cur.style.display = '';
 }
+function dzClearThumb() { dzClearImg('thumb'); }
 
 // ── Video drop zone ─────────────────────────────────
 function dzDropVid(e, id) {
