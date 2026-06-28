@@ -83,17 +83,14 @@
 }
 
 .course-status-badge {
-    position: absolute;
-    top: 16px;
-    right: 16px;
     background: rgba(0, 0, 0, 0.7);
     backdrop-filter: blur(10px);
     color: white;
-    padding: 8px 16px;
+    padding: 6px 14px;
     border-radius: 20px;
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     font-weight: 600;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 6px;
 }
@@ -141,23 +138,23 @@
                         </div>
                         {% endif %}
                         
-                        {% if course.has_access %}
-                        <div class="course-status-badge owned">
-                            <i class="fas fa-check-circle"></i> Enrolled
-                        </div>
-                        {% elif course.price == 0 %}
-                        <div class="course-status-badge" style="background:rgba(22,163,74,0.85);">
-                            <i class="fas fa-unlock"></i> Free
-                        </div>
-                        {% else %}
-                        <div class="course-status-badge">
-                            <i class="fas fa-lock"></i> Premium
-                        </div>
-                        {% endif %}
                     </div>
                     
                     <div class="course-card-body">
                         <h5 class="course-title">{{ course.title }}</h5>
+                        {% if course.has_access %}
+                        <span class="course-status-badge owned d-inline-flex mb-2">
+                            <i class="fas fa-check-circle"></i> Enrolled
+                        </span>
+                        {% elif course.price == 0 %}
+                        <span class="course-status-badge d-inline-flex mb-2" style="background:rgba(22,163,74,0.85);">
+                            <i class="fas fa-unlock"></i> Free
+                        </span>
+                        {% else %}
+                        <span class="course-status-badge d-inline-flex mb-2">
+                            <i class="fas fa-lock"></i> Premium
+                        </span>
+                        {% endif %}
                         <p class="course-description">{{ course.description|truncate(120) }}</p>
                         
                         <div class="course-stats mb-3">
@@ -299,17 +296,14 @@
 }
 
 .course-status-badge {
-    position: absolute;
-    top: 16px;
-    right: 16px;
     background: rgba(0, 0, 0, 0.7);
     backdrop-filter: blur(10px);
     color: white;
-    padding: 8px 16px;
+    padding: 6px 14px;
     border-radius: 20px;
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     font-weight: 600;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: 6px;
 }
