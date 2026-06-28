@@ -53,8 +53,8 @@
         {% if instagram_featured %}
         <div class="platform-section">
             <div class="platform-section-header">
-                <div class="platform-section-title ig-title">
-                    <i class="fab fa-instagram"></i>
+                <div class="platform-section-title ig-title" style="color:#cc0000!important">
+                    <i class="fab fa-instagram" style="color:#cc0000!important"></i>
                     <span>Instagram Reels</span>
                     {% if instagram_total > 0 %}
                     <span class="platform-total-badge">{{ instagram_total }}</span>
@@ -189,7 +189,7 @@
     letter-spacing: -0.01em;
 }
 .platform-section-title i { font-size: 1.4rem; }
-.ig-title { color: #e1599d; }
+.ig-title { color: #ff4444; }
 .yt-title { color: #ff4444; }
 
 .platform-total-badge {
@@ -222,16 +222,16 @@
     -webkit-backdrop-filter: blur(8px);
 }
 .ig-view-all {
-    color: #e1599d;
-    border-color: rgba(225,89,157,.55);
-    background: rgba(225,89,157,.08);
+    color: #ff4444;
+    border-color: rgba(255,68,68,.55);
+    background: rgba(255,68,68,.08);
 }
 .ig-view-all:hover {
-    background: #c13584;
-    border-color: #c13584;
+    background: #cc0000;
+    border-color: #cc0000;
     color: #fff;
     text-decoration: none;
-    box-shadow: 0 4px 18px rgba(193,53,132,.35);
+    box-shadow: 0 4px 18px rgba(204,0,0,.35);
 }
 .yt-view-all {
     color: #ff4444;
