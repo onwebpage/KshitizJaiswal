@@ -51,6 +51,10 @@ class ReelForm(FlaskForm):
                            render_kw={"placeholder": "e.g., Vote Chori Issue, Education Reform"})
     is_featured = SelectField('Show on Homepage?', choices=[('0', 'No'), ('1', 'Yes')], default='0')
     is_visible = SelectField('Visible on Site?', choices=[('1', 'Yes — Show'), ('0', 'No — Hide')], default='1')
+    youtube_url = StringField('YouTube Video URL', validators=[Optional(), Length(max=500)],
+                              render_kw={"placeholder": "https://www.youtube.com/watch?v=..."})
+    instagram_reel_url = StringField('Instagram Reel URL', validators=[Optional(), Length(max=500)],
+                                     render_kw={"placeholder": "https://www.instagram.com/reel/..."})
 
 class OpinionForm(FlaskForm):
     title = StringField('Title', validators=[DataRequired(), Length(max=100)])

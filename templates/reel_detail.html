@@ -156,6 +156,48 @@
     <!-- Sidebar (right on desktop, below on mobile) -->
     <div class="rd-sidebar">
 
+        <!-- Media Links Card -->
+        <div class="rd-side-card">
+            <div class="rd-side-card-header">
+                <i class="fas fa-play-circle"></i>
+                <span>Media Links</span>
+            </div>
+            <div class="rd-side-card-body">
+                {% if reel.youtube_url or reel.instagram_reel_url %}
+                <div class="rd-media-links-body">
+                    {% if reel.youtube_url %}
+                    <a href="{{ reel.youtube_url }}" target="_blank" rel="noopener noreferrer" class="rd-media-btn rd-media-btn--yt">
+                        <i class="fab fa-youtube rd-media-btn-icon"></i>
+                        <div class="rd-media-btn-text">
+                            <span class="rd-media-btn-label">Watch on</span>
+                            <span class="rd-media-btn-platform">YouTube</span>
+                        </div>
+                        <i class="fas fa-arrow-right rd-media-btn-arrow"></i>
+                    </a>
+                    {% endif %}
+                    {% if reel.instagram_reel_url %}
+                    <a href="{{ reel.instagram_reel_url }}" target="_blank" rel="noopener noreferrer" class="rd-media-btn rd-media-btn--ig">
+                        <i class="fab fa-instagram rd-media-btn-icon"></i>
+                        <div class="rd-media-btn-text">
+                            <span class="rd-media-btn-label">Watch on</span>
+                            <span class="rd-media-btn-platform">Instagram</span>
+                        </div>
+                        <i class="fas fa-arrow-right rd-media-btn-arrow"></i>
+                    </a>
+                    {% endif %}
+                </div>
+                {% else %}
+                <div class="rd-empty-note" style="display:flex;align-items:center;gap:10px;color:#aaa;padding:8px 0;">
+                    <i class="fas fa-video fa-lg"></i>
+                    <div>
+                        <div style="font-weight:600;color:#888;font-size:.9rem;">Media coming soon</div>
+                        <div style="font-size:.82rem;">Video will be added shortly</div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
         <!-- Sources Card -->
         <div class="rd-side-card">
             <div class="rd-side-card-header">
@@ -403,6 +445,93 @@
 .rd-no-media i { font-size: 3rem; }
 .rd-no-media h5 { margin: 0; color: #888; }
 .rd-no-media p { margin: 0; font-size: .9rem; }
+
+/* ── Media Links card ── */
+.rd-media-links-wrap {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 12px;
+    background: #f8f9fa;
+    border-radius: 14px;
+    min-height: 200px;
+}
+.rd-media-links-card {
+    width: 100%;
+    max-width: 400px;
+}
+.rd-media-links-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 18px;
+    text-align: center;
+    justify-content: center;
+}
+.rd-media-links-header i { color: #cc0000; font-size: 1.2rem; }
+.rd-media-links-body {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+.rd-media-btn {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 22px;
+    border-radius: 14px;
+    text-decoration: none;
+    font-weight: 700;
+    transition: transform .18s, box-shadow .18s, filter .18s;
+    box-shadow: 0 4px 18px rgba(0,0,0,.10);
+    position: relative;
+    overflow: hidden;
+}
+.rd-media-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(0,0,0,.18);
+    text-decoration: none;
+    filter: brightness(1.06);
+}
+.rd-media-btn--yt {
+    background: linear-gradient(135deg, #cc0000 0%, #8b0000 100%);
+    color: #fff;
+}
+.rd-media-btn--ig {
+    background: linear-gradient(135deg, #833ab4 0%, #fd1d1d 50%, #fcb045 100%);
+    color: #fff;
+}
+.rd-media-btn-icon {
+    font-size: 2rem;
+    flex-shrink: 0;
+    opacity: .95;
+}
+.rd-media-btn-text {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+.rd-media-btn-label {
+    font-size: .78rem;
+    font-weight: 500;
+    opacity: .85;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+}
+.rd-media-btn-platform {
+    font-size: 1.2rem;
+    font-weight: 800;
+    line-height: 1.1;
+}
+.rd-media-btn-arrow {
+    font-size: .95rem;
+    opacity: .7;
+    flex-shrink: 0;
+}
 
 /* ── Instagram thumbnail card ── */
 .ig-thumb-card {

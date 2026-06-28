@@ -1427,7 +1427,9 @@ def admin_add_reel():
             topic_tag=form.topic_tag.data or '',
             is_featured=bool(int(form.is_featured.data)),
             is_visible=bool(int(form.is_visible.data)),
-            view_count=0
+            view_count=0,
+            youtube_url=form.youtube_url.data or '',
+            instagram_reel_url=form.instagram_reel_url.data or '',
         )
         
         db.session.add(new_reel)
@@ -1522,6 +1524,8 @@ def admin_edit_reel(reel_id):
         reel.topic_tag = form.topic_tag.data or ''
         reel.is_featured = bool(int(form.is_featured.data))
         reel.is_visible = bool(int(form.is_visible.data))
+        reel.youtube_url = form.youtube_url.data or ''
+        reel.instagram_reel_url = form.instagram_reel_url.data or ''
         
         db.session.commit()
         
@@ -1547,6 +1551,8 @@ def admin_edit_reel(reel_id):
         form.topic_tag.data = reel.topic_tag or ''
         form.is_featured.data = '1' if reel.is_featured else '0'
         form.is_visible.data = '0' if reel.is_visible is False else '1'
+        form.youtube_url.data = reel.youtube_url or ''
+        form.instagram_reel_url.data = reel.instagram_reel_url or ''
     
     return render_template('admin/reel_form.html', form=form, title='Edit Reel', reel=reel)
 

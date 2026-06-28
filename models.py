@@ -24,6 +24,8 @@ class Reel(db.Model):
     is_featured = db.Column(db.Boolean, default=False)  # For homepage featured reels
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     video_file_path = db.Column(db.String(500))  # Path for directly uploaded video files
+    youtube_url = db.Column(db.String(500))       # "Watch on YouTube" link
+    instagram_reel_url = db.Column(db.String(500)) # "Watch on Instagram" link
 
     def _auto_thumbnail(self):
         """Return a YouTube thumbnail URL computed from video_url (always, as a fallback source)."""
@@ -63,7 +65,9 @@ class Reel(db.Model):
             'topic_tag': self.topic_tag or '',
             'view_count': self.view_count or 0,
             'is_featured': self.is_featured or False,
-            'created_at': self.created_at.isoformat() if self.created_at else ''
+            'created_at': self.created_at.isoformat() if self.created_at else '',
+            'youtube_url': self.youtube_url or '',
+            'instagram_reel_url': self.instagram_reel_url or '',
         }
 
 class Opinion(db.Model):

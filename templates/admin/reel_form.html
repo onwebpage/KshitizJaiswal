@@ -269,7 +269,31 @@
                         </div>
                     </div>
 
-                    <!-- ── Section 5: Extra (Sources / Context) ── -->
+                    <!-- ── Section 5: Media Links ── -->
+                    <div class="reel-form-section">
+                        <div class="reel-form-section-title">
+                            <i class="fas fa-link"></i> Media Links <span class="text-muted fw-normal ms-1" style="text-transform:none;letter-spacing:0;font-size:.78rem;">(optional — shown as Watch buttons on the reel page)</span>
+                        </div>
+                        <p class="text-muted small mb-3">
+                            Add links so visitors can watch this reel directly on YouTube or Instagram. These appear as "Watch on YouTube" / "Watch on Instagram" buttons on the reel details page.
+                        </p>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">
+                                <i class="fab fa-youtube me-1" style="color:#cc0000;"></i>{{ form.youtube_url.label.text }}
+                            </label>
+                            {{ form.youtube_url(class="form-control") }}
+                            <small class="form-text text-muted">e.g. https://www.youtube.com/watch?v=abc123</small>
+                        </div>
+                        <div class="mb-1">
+                            <label class="form-label fw-semibold">
+                                <i class="fab fa-instagram me-1" style="color:#cc0000;"></i>{{ form.instagram_reel_url.label.text }}
+                            </label>
+                            {{ form.instagram_reel_url(class="form-control") }}
+                            <small class="form-text text-muted">e.g. https://www.instagram.com/reel/abc123</small>
+                        </div>
+                    </div>
+
+                    <!-- ── Section 6: Extra (Sources / Context) ── -->
                     <div class="reel-form-section">
                         <div class="reel-form-section-title">
                             <i class="fas fa-book-open"></i> Sources & Extra Context <span class="text-muted fw-normal ms-1" style="text-transform:none;letter-spacing:0;font-size:.78rem;">(optional)</span>

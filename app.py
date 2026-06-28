@@ -170,6 +170,8 @@ with app.app_context():
         _add_column("reel",               "topic_tag",            "VARCHAR(100)")
         _add_column("reel",               "view_count",           "INTEGER DEFAULT 0")
         _add_column("reel",               "is_featured",          "BOOLEAN DEFAULT FALSE")
+        _add_column("reel",               "youtube_url",          "VARCHAR(500)")
+        _add_column("reel",               "instagram_reel_url",   "VARCHAR(500)")
         _add_column("reel",               "video_file_path",      "VARCHAR(500)")
         _add_column("opinion",            "topic_tag",            "VARCHAR(100)")
         _add_column("subscriber",         "place",                "VARCHAR(100)")
