@@ -7,7 +7,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2><i class="fas fa-users me-2"></i>Course Users</h2>
         <div class="d-flex gap-2 align-items-center">
-            <span class="badge bg-primary fs-6">{{ users|length }} users</span>
+            <span class="badge bg-primary fs-6" id="userCountBadge">{{ users|length }} users</span>
             <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createUserModal">
                 <i class="fas fa-user-plus me-1"></i>Create User
             </button>
@@ -22,34 +22,35 @@
                     <h5 class="modal-title"><i class="fas fa-user-plus me-2"></i>Create Course User</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <form method="post" action="{{ url_for('admin_create_course_user') }}">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <!-- Step 1: form -->
+                <div id="createFormBody">
                     <div class="modal-body">
+                        <div id="createErrorBox" class="alert alert-danger d-none mb-3"></div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Full Name <span class="text-danger">*</span></label>
-                            <input type="text" name="name" class="form-control" placeholder="e.g. Kshitiz Jaiswal" required>
+                            <input type="text" id="createName" class="form-control" placeholder="e.g. Kshitiz Jaiswal" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Email</label>
-                            <input type="email" name="email" class="form-control" placeholder="user@example.com">
+                            <input type="email" id="createEmail" class="form-control" placeholder="user@example.com">
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Phone (optional)</label>
-                            <input type="text" name="phone" class="form-control" placeholder="+91 98765 43210">
+                            <input type="text" id="createPhone" class="form-control" placeholder="+91 98765 43210">
                         </div>
                         {% if courses %}
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Grant Access To</label>
                             {% for c in courses %}
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="course_ids" value="{{ c.id }}" id="course_{{ c.id }}" checked>
+                                <input class="form-check-input createCourseCheck" type="checkbox" value="{{ c.id }}" id="course_{{ c.id }}" checked>
                                 <label class="form-check-label" for="course_{{ c.id }}">{{ c.title }} (₹{{ c.price }})</label>
                             </div>
                             {% endfor %}
                         </div>
                         {% endif %}
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="send_email" value="1" id="createSendEmail" checked>
+                            <input class="form-check-input" type="checkbox" id="createSendEmail" checked>
                             <label class="form-check-label" for="createSendEmail">Send login credentials via email</label>
                         </div>
                         <div class="alert alert-info mt-3 mb-0 small">
@@ -58,14 +59,40 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-success"><i class="fas fa-user-plus me-1"></i>Create User</button>
+                        <button type="button" class="btn btn-success" id="createSubmitBtn" onclick="doCreateUser()">
+                            <i class="fas fa-user-plus me-1"></i>Create User
+                        </button>
                     </div>
-                </form>
+                </div>
+                <!-- Step 2: success result -->
+                <div id="createSuccessBody" class="d-none">
+                    <div class="modal-body">
+                        <div class="alert alert-success mb-3">
+                            <i class="fas fa-check-circle me-1"></i><strong>User created successfully!</strong>
+                        </div>
+                        <table class="table table-sm">
+                            <tr><th>Name</th><td id="createdName"></td></tr>
+                            <tr><th>Login ID</th><td id="createdLoginId"></td></tr>
+                            <tr>
+                                <th>Password</th>
+                                <td><code class="user-select-all fs-6" id="createdPassword"></code>
+                                    <button class="btn btn-sm btn-outline-secondary ms-2" onclick="copyPassword()"><i class="fas fa-copy"></i></button>
+                                </td>
+                            </tr>
+                        </table>
+                        <div class="text-muted small mt-2" id="createdEmailStatus"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" onclick="closeCreateAndRefresh()">
+                            <i class="fas fa-sync me-1"></i>Close &amp; Refresh
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Reset Password Modals (outside the table to avoid stacking context issues) -->
+    <!-- Reset Password Modals -->
     {% for u in users %}
     <div class="modal fade" id="resetModal{{ u.id }}" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
@@ -88,7 +115,7 @@
                     <div class="d-flex gap-2">
                         <button type="button" class="btn btn-warning" id="resetBtn{{ u.id }}"
                                 onclick="doResetPassword({{ u.id }}, '{{ url_for('admin_reset_course_user_password', user_id=u.id) }}', '{{ csrf_token() }}')">
-                            <i class="fas fa-key me-1"></i>Reset & Show Password
+                            <i class="fas fa-key me-1"></i>Reset &amp; Show Password
                         </button>
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     </div>
@@ -98,14 +125,17 @@
     </div>
     {% endfor %}
 
+    <!-- Flash messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% for cat, msg in messages %}
-        <div class="alert alert-{{ 'success' if cat == 'success' else 'warning' }} alert-dismissible fade show" role="alert">
+        <div class="alert alert-{{ 'success' if cat == 'success' else ('danger' if cat == 'danger' else 'warning') }} alert-dismissible fade show" role="alert">
             {{ msg|safe }}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
         {% endfor %}
     {% endwith %}
+
+    <div id="alertArea"></div>
 
     <div class="card border-0 shadow-sm mb-4">
         <div class="card-body">
@@ -172,24 +202,29 @@
 
 {% block scripts %}
 <script>
+var _createUrl  = "{{ url_for('admin_create_course_user') }}";
+var _csrfToken  = "{{ csrf_token() }}";
+
+/* ── Shared helpers ─────────────────────────────────────────────── */
 function _forceCloseModal(modalId) {
     try {
-        var modalEl = document.getElementById(modalId);
-        if (!modalEl) return;
-        var bsModal = bootstrap.Modal.getInstance(modalEl);
-        if (bsModal) { bsModal.hide(); }
+        var el = document.getElementById(modalId);
+        if (el) {
+            var inst = bootstrap.Modal.getInstance(el);
+            if (inst) inst.hide();
+        }
     } catch (e) {}
     setTimeout(function () {
         try {
-            var modalEl = document.getElementById(modalId);
-            if (modalEl) {
-                modalEl.classList.remove('show');
-                modalEl.setAttribute('aria-hidden', 'true');
-                modalEl.removeAttribute('aria-modal');
-                modalEl.style.display = 'none';
+            var el = document.getElementById(modalId);
+            if (el) {
+                el.classList.remove('show');
+                el.setAttribute('aria-hidden', 'true');
+                el.removeAttribute('aria-modal');
+                el.style.display = 'none';
             }
         } catch (e) {}
-        document.querySelectorAll('.modal-backdrop').forEach(function (el) { el.remove(); });
+        document.querySelectorAll('.modal-backdrop').forEach(function (b) { b.remove(); });
         document.body.classList.remove('modal-open');
         document.body.style.removeProperty('overflow');
         document.body.style.removeProperty('padding-right');
@@ -197,18 +232,100 @@ function _forceCloseModal(modalId) {
 }
 
 function _showAlert(type, html) {
-    var container = document.querySelector('.container-fluid');
-    var box = document.createElement('div');
-    box.className = 'alert alert-' + type + ' alert-dismissible fade show mt-3';
+    var area = document.getElementById('alertArea');
+    var box  = document.createElement('div');
+    box.className = 'alert alert-' + type + ' alert-dismissible fade show mt-2';
     box.setAttribute('role', 'alert');
     box.innerHTML = html + '<button type="button" class="btn-close" data-bs-dismiss="alert"></button>';
-    var ref = container.children[2] || null;
-    container.insertBefore(box, ref);
+    area.prepend(box);
     setTimeout(function () {
         try { new bootstrap.Alert(box).close(); } catch (e) { box.remove(); }
-    }, 12000);
+    }, 15000);
 }
 
+/* ── Create User (AJAX) ─────────────────────────────────────────── */
+function doCreateUser() {
+    var name  = document.getElementById('createName').value.trim();
+    var email = document.getElementById('createEmail').value.trim();
+    var phone = document.getElementById('createPhone').value.trim();
+
+    if (!name || (!email && !phone)) {
+        var errBox = document.getElementById('createErrorBox');
+        errBox.textContent = 'Name and at least one of Email / Phone is required.';
+        errBox.classList.remove('d-none');
+        return;
+    }
+    document.getElementById('createErrorBox').classList.add('d-none');
+
+    var btn = document.getElementById('createSubmitBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Creating\u2026';
+
+    var fd = new FormData();
+    fd.append('csrf_token', _csrfToken);
+    fd.append('name',  name);
+    fd.append('email', email);
+    fd.append('phone', phone);
+    document.querySelectorAll('.createCourseCheck:checked').forEach(function (cb) {
+        fd.append('course_ids', cb.value);
+    });
+    fd.append('send_email', document.getElementById('createSendEmail').checked ? '1' : '0');
+
+    fetch(_createUrl, {
+        method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        body: fd,
+        credentials: 'same-origin'
+    })
+    .then(function (resp) {
+        return resp.json().then(function (data) {
+            if (!resp.ok) throw new Error(data.error || 'Server error ' + resp.status);
+            return data;
+        });
+    })
+    .then(function (data) {
+        if (!data.success) throw new Error(data.error || 'Creation failed.');
+        // Show success step
+        document.getElementById('createdName').textContent    = data.name;
+        document.getElementById('createdLoginId').textContent = data.login_id;
+        document.getElementById('createdPassword').textContent = data.password;
+        document.getElementById('createdEmailStatus').textContent = data.email_status;
+        document.getElementById('createFormBody').classList.add('d-none');
+        document.getElementById('createSuccessBody').classList.remove('d-none');
+    })
+    .catch(function (err) {
+        var errBox = document.getElementById('createErrorBox');
+        errBox.textContent = err.message;
+        errBox.classList.remove('d-none');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-user-plus me-1"></i>Create User';
+    });
+}
+
+function copyPassword() {
+    var pwd = document.getElementById('createdPassword').textContent;
+    navigator.clipboard.writeText(pwd).catch(function () {});
+}
+
+function closeCreateAndRefresh() {
+    _forceCloseModal('createUserModal');
+    setTimeout(function () { window.location.reload(); }, 400);
+}
+
+// Reset form state when modal is closed
+document.getElementById('createUserModal').addEventListener('hidden.bs.modal', function () {
+    document.getElementById('createName').value  = '';
+    document.getElementById('createEmail').value = '';
+    document.getElementById('createPhone').value = '';
+    document.getElementById('createErrorBox').classList.add('d-none');
+    document.getElementById('createFormBody').classList.remove('d-none');
+    document.getElementById('createSuccessBody').classList.add('d-none');
+    var btn = document.getElementById('createSubmitBtn');
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-user-plus me-1"></i>Create User';
+});
+
+/* ── Reset Password (AJAX) ──────────────────────────────────────── */
 function doResetPassword(userId, actionUrl, csrfToken) {
     var btn = document.getElementById('resetBtn' + userId);
     var sendEmailEl = document.getElementById('sendEmail' + userId);
@@ -217,40 +334,35 @@ function doResetPassword(userId, actionUrl, csrfToken) {
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Resetting\u2026';
 
-    var formData = new FormData();
-    formData.append('csrf_token', csrfToken);
-    formData.append('send_email', sendEmail);
+    var fd = new FormData();
+    fd.append('csrf_token', csrfToken);
+    fd.append('send_email', sendEmail);
 
     fetch(actionUrl, {
         method: 'POST',
         headers: { 'X-Requested-With': 'XMLHttpRequest' },
-        body: formData,
+        body: fd,
         credentials: 'same-origin'
     })
     .then(function (resp) {
-        if (!resp.ok) {
-            return resp.json().catch(function () { return null; }).then(function (data) {
-                throw new Error((data && data.error) || 'Server error ' + resp.status);
-            });
-        }
-        return resp.json();
+        return resp.json().then(function (data) {
+            if (!resp.ok) throw new Error(data.error || 'Server error ' + resp.status);
+            return data;
+        });
     })
     .then(function (data) {
+        if (!data.success) throw new Error(data.error || 'Password reset failed.');
         _forceCloseModal('resetModal' + userId);
-        if (data.success) {
-            _showAlert('success',
-                '<strong>Password reset for ' + data.name + '.</strong><br>' +
-                'New password: <code class="user-select-all fs-6">' + data.password + '</code><br>' +
-                'Login ID: ' + data.login_id + '<br>' +
-                '<small class="text-muted">' + data.email_status + '</small>'
-            );
-        } else {
-            _showAlert('danger', data.error || 'Password reset failed. Please try again.');
-        }
+        _showAlert('success',
+            '<strong>Password reset for ' + data.name + '</strong><br>' +
+            'Login ID: ' + data.login_id + '<br>' +
+            'New password: <code class="user-select-all fs-6">' + data.password + '</code><br>' +
+            '<small class="text-muted">' + data.email_status + '</small>'
+        );
     })
     .catch(function (err) {
         _forceCloseModal('resetModal' + userId);
-        _showAlert('danger', 'Error: ' + err.message + ' — please refresh and try again.');
+        _showAlert('danger', '<strong>Error:</strong> ' + err.message);
     })
     .finally(function () {
         btn.disabled = false;
