@@ -3180,7 +3180,11 @@ def admin_create_course_user():
 @app.route('/admin/course-user/<int:user_id>/reset-password', methods=['POST'])
 def admin_reset_course_user_password(user_id):
     """Reset a CourseUser's password, show it to admin, optionally email them."""
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
     if 'admin_logged_in' not in session:
+        if is_ajax:
+            return jsonify({'success': False, 'error': 'Not authenticated'}), 401
         return redirect(url_for('admin_login'))
 
     user = CourseUser.query.get_or_404(user_id)
@@ -3190,6 +3194,7 @@ def admin_reset_course_user_password(user_id):
     db.session.commit()
 
     send_email = request.form.get('send_email') == '1'
+    email_status = ''
 
     if send_email and user.email:
         import threading
@@ -3208,13 +3213,24 @@ def admin_reset_course_user_password(user_id):
             except Exception as _e:
                 logging.error(f'admin_reset_course_user_password bg email error: {_e}')
         threading.Thread(target=_send_bg, daemon=True).start()
+        email_status = 'Email is being sent in background ✅.'
+    else:
+        email_status = 'Email not sent — copy password above and share manually.'
+
+    if is_ajax:
+        return jsonify({
+            'success': True,
+            'name': user.name,
+            'login_id': user.email or user.phone,
+            'password': new_password,
+            'email_status': email_status,
+        })
 
     flash(
         f'Password reset for {user.name}. '
         f'New password: <strong>{new_password}</strong>. '
         f'Login ID: {user.email or user.phone}. '
-        + ('Email is being sent in background ✅.' if send_email and user.email
-           else 'Email not sent — copy password above and share manually.'),
+        + email_status,
         'success'
     )
     return redirect(url_for('admin_course_users', search=request.args.get('search', '')))
