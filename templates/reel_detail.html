@@ -84,7 +84,8 @@
                 </div>
                 {% endif %}
             {% endif %}
-            {% if not reel.video_url and not reel.video_file_path and not (reel.video_type == 'direct' and reel.video_file_path) and reel.thumbnail %}
+            {% if not reel.video_url and not reel.video_file_path %}
+            {% if reel.thumbnail %}
             <!-- Thumbnail-only: portrait card with blurred bg -->
             <div class="rd-thumb-wrap" style="--reel-thumb: url('{{ thumb_url }}')">
                 <div class="rd-thumb-blur-bg"></div>
@@ -102,6 +103,7 @@
                 <h5>Media coming soon</h5>
                 <p>Video will be added shortly</p>
             </div>
+            {% endif %}
             {% endif %}
         </div>
 
