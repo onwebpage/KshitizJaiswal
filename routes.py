@@ -4613,9 +4613,9 @@ def course_start(course_id):
         flash('Please purchase this course to access lessons.', 'warning')
         return redirect(url_for('course_detail', course_id=course_id))
 
-    first_module = Module.query.filter_by(course_id=course_id).order_by(Module.order).first()
+    first_module = Module.query.filter_by(course_id=course_id).order_by(Module.sort_order).first()
     if first_module:
-        first_lesson = Lesson.query.filter_by(module_id=first_module.id).order_by(Lesson.order).first()
+        first_lesson = Lesson.query.filter_by(module_id=first_module.id).order_by(Lesson.sort_order).first()
         if first_lesson:
             return redirect(url_for('lesson_view', course_id=course_id, lesson_id=first_lesson.id))
     flash('No lessons available yet.', 'info')
