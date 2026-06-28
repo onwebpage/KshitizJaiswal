@@ -4825,6 +4825,7 @@ def verify_course_payment():
 
         # Auto-create CourseUser ONLY for truly new / unregistered buyers
         already_logged_in = bool(clerk_user_id or course_user)
+        new_credentials = None  # default — overwritten below if account is auto-created
         if not already_logged_in:
             try:
                 if guest_email or guest_phone:
