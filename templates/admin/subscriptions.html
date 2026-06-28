@@ -23,25 +23,37 @@
 
     <!-- Summary Cards -->
     <div class="row g-3 mb-4">
-        <div class="col-6 col-md-3">
+        <div class="col-6 col-md-2">
             <div class="admin-card text-center py-3">
-                <div class="fs-3 fw-bold text-success">{{ counts.active }}</div>
-                <div class="small text-muted">Active</div>
+                <div class="fs-3 fw-bold text-secondary">{{ counts.total }}</div>
+                <div class="small text-muted">Total</div>
             </div>
         </div>
-        <div class="col-6 col-md-3">
+        <div class="col-6 col-md-2">
+            <div class="admin-card text-center py-3">
+                <div class="fs-3 fw-bold text-info">{{ counts.created }}</div>
+                <div class="small text-muted">Created</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-2">
             <div class="admin-card text-center py-3">
                 <div class="fs-3 fw-bold text-primary">{{ counts.authenticated }}</div>
                 <div class="small text-muted">Authenticated</div>
             </div>
         </div>
-        <div class="col-6 col-md-3">
+        <div class="col-6 col-md-2">
+            <div class="admin-card text-center py-3">
+                <div class="fs-3 fw-bold text-success">{{ counts.active }}</div>
+                <div class="small text-muted">Active</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-2">
             <div class="admin-card text-center py-3">
                 <div class="fs-3 fw-bold text-warning">{{ counts.halted + counts.pending }}</div>
                 <div class="small text-muted">Halted / Pending</div>
             </div>
         </div>
-        <div class="col-6 col-md-3">
+        <div class="col-6 col-md-2">
             <div class="admin-card text-center py-3">
                 <div class="fs-3 fw-bold text-danger">₹{{ counts.active_revenue }}</div>
                 <div class="small text-muted">Est. per cycle</div>
