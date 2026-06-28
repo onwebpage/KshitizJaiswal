@@ -206,10 +206,31 @@ var _createUrl  = "{{ url_for('admin_create_course_user') }}";
 var _csrfToken  = "{{ csrf_token() }}";
 
 /* ── Shared helpers ─────────────────────────────────────────────── */
-function _domCleanModal(el) {
-    /* Hard DOM reset — removes backdrop, body locks, and any modal remnants.
-       Called AFTER Bootstrap has fully finished (hidden.bs.modal) OR as a
-       600 ms fallback.  Using a `cleaned` guard prevents double-runs. */
+function _forceCloseModal(modalId) {
+    /*
+     * ROOT-CAUSE FIX: Bootstrap's Modal.dispose() is the ONLY reliable way
+     * to synchronously release ALL three locks Bootstrap sets when a modal opens:
+     *   1. FocusTrap  — Bootstrap's focusin document listener that re-focuses
+     *                   the modal on every click, making the page appear frozen.
+     *   2. Backdrop   — the .modal-backdrop div blocking pointer-events.
+     *   3. ScrollBar  — body.modal-open / overflow:hidden / padding-right.
+     *
+     * dispose() handles (1) and (2) internally and synchronously.
+     * We handle (3) and the modal's own visibility below.
+     *
+     * Calling hide() instead is WRONG here because hide() is async (CSS
+     * transition) and may never complete, leaving (1) permanently active.
+     */
+    var el = document.getElementById(modalId);
+
+    /* 1. Dispose the Bootstrap instance — synchronously deactivates focus
+          trap and removes the backdrop element from the DOM. */
+    try {
+        var inst = bootstrap.Modal.getInstance(el);
+        if (inst) inst.dispose();
+    } catch (e) {}
+
+    /* 2. Hide the modal element itself (dispose() does NOT do this). */
     try {
         if (el) {
             el.classList.remove('show');
@@ -217,46 +238,18 @@ function _domCleanModal(el) {
             el.setAttribute('aria-hidden', 'true');
             el.removeAttribute('aria-modal');
             el.removeAttribute('role');
+            /* Bootstrap 5.3 may set inert on the modal's siblings; clear all. */
+            document.querySelectorAll('[inert]').forEach(function (n) {
+                n.removeAttribute('inert');
+            });
         }
     } catch (e) {}
+
+    /* 3. Clean body — dispose() does NOT restore these. */
     document.querySelectorAll('.modal-backdrop').forEach(function (b) { b.remove(); });
     document.body.classList.remove('modal-open');
     document.body.style.removeProperty('overflow');
     document.body.style.removeProperty('padding-right');
-}
-
-function _forceCloseModal(modalId) {
-    /* Strategy: call Bootstrap's hide() so it can run its OWN cleanup
-       (most importantly FocusTrap.deactivate()).  Wait for hidden.bs.modal
-       to confirm it finished, then sweep up any leftovers.
-       Hard-timeout at 600 ms ensures the page never stays frozen even if
-       Bootstrap's transitionend never fires. */
-    var el = document.getElementById(modalId);
-    var inst = null;
-    try { if (el) inst = bootstrap.Modal.getInstance(el); } catch (e) {}
-
-    if (!inst) {
-        /* No Bootstrap instance — just clean the DOM directly. */
-        _domCleanModal(el);
-        return;
-    }
-
-    var done = false;
-    function finish() {
-        if (done) return;
-        done = true;
-        _domCleanModal(el);
-    }
-
-    /* hidden.bs.modal fires AFTER Bootstrap has deactivated the focus trap
-       and removed its own backdrop — safe to do a final sweep here. */
-    el.addEventListener('hidden.bs.modal', finish, { once: true });
-
-    /* Fallback: if hidden.bs.modal never fires (e.g. transition interrupted),
-       force-clean after 600 ms so the page never stays locked. */
-    setTimeout(finish, 600);
-
-    try { inst.hide(); } catch (e) { finish(); }
 }
 
 function _showAlert(type, html) {
