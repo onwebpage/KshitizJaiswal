@@ -92,33 +92,51 @@
         </div>
     </div>
 
-    <!-- Reset Password Modals -->
+    <!-- Reset Password Dialogs (custom overlay — NOT Bootstrap modal)
+         Bootstrap modals leave the backdrop and focus-trap active when closed
+         programmatically after an async operation, freezing the page.
+         A custom overlay is closed with a single display:none — no lifecycle,
+         no backdrop class, no focus trap, nothing to clean up. -->
     {% for u in users %}
-    <div class="modal fade" id="resetModal{{ u.id }}" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header bg-warning text-dark">
-                    <h5 class="modal-title"><i class="fas fa-key me-2"></i>Reset Password</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <div id="resetDialog{{ u.id }}"
+         role="dialog" aria-modal="true" aria-labelledby="resetDialogTitle{{ u.id }}"
+         onclick="if(event.target===this)closeResetDialog({{ u.id }})"
+         style="display:none; position:fixed; inset:0; z-index:1055;
+                background:rgba(0,0,0,0.5);
+                align-items:center; justify-content:center; padding:16px;">
+        <div style="background:#fff; border-radius:8px; max-width:480px; width:100%;
+                    box-shadow:0 10px 40px rgba(0,0,0,0.3); overflow:hidden;">
+            <div style="background:#ffc107; padding:16px 20px;
+                        display:flex; align-items:center; justify-content:space-between;">
+                <h5 id="resetDialogTitle{{ u.id }}" style="margin:0; color:#000; font-size:1rem; font-weight:700;">
+                    <i class="fas fa-key me-2"></i>Reset Password
+                </h5>
+                <button onclick="closeResetDialog({{ u.id }})" aria-label="Close"
+                        style="background:none; border:none; font-size:1.1rem; cursor:pointer;
+                               color:#000; opacity:0.6; line-height:1; padding:4px 6px; border-radius:4px;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div style="padding:20px;">
+                <p>User: <strong>{{ u.name }}</strong></p>
+                <p>Login ID: <strong>{{ u.email or u.phone }}</strong></p>
+                <p class="text-danger small">
+                    <i class="fas fa-exclamation-triangle me-1"></i>A new random password will be generated. Old password will stop working.
+                </p>
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="sendEmail{{ u.id }}"
+                           {% if u.email %}checked{% else %}disabled{% endif %}>
+                    <label class="form-check-label" for="sendEmail{{ u.id }}">
+                        Also email new password to user
+                        {% if not u.email %}<span class="text-muted">(no email on file)</span>{% endif %}
+                    </label>
                 </div>
-                <div class="modal-body">
-                    <p>User: <strong>{{ u.name }}</strong></p>
-                    <p>Login ID: <strong>{{ u.email or u.phone }}</strong></p>
-                    <p class="text-danger"><i class="fas fa-exclamation-triangle me-1"></i>A new random password will be generated. Old password will stop working.</p>
-                    <div class="form-check mb-3">
-                        <input class="form-check-input" type="checkbox" id="sendEmail{{ u.id }}" {% if u.email %}checked{% else %}disabled{% endif %}>
-                        <label class="form-check-label" for="sendEmail{{ u.id }}">
-                            Also email new password to user
-                            {% if not u.email %}<span class="text-muted">(no email on file)</span>{% endif %}
-                        </label>
-                    </div>
-                    <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-warning" id="resetBtn{{ u.id }}"
-                                onclick="doResetPassword({{ u.id }}, '{{ url_for('admin_reset_course_user_password', user_id=u.id) }}', '{{ csrf_token() }}')">
-                            <i class="fas fa-key me-1"></i>Reset &amp; Show Password
-                        </button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-warning" id="resetBtn{{ u.id }}"
+                            onclick="doResetPassword({{ u.id }}, '{{ url_for('admin_reset_course_user_password', user_id=u.id) }}', '{{ csrf_token() }}')">
+                        <i class="fas fa-key me-1"></i>Reset &amp; Show Password
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="closeResetDialog({{ u.id }})">Cancel</button>
                 </div>
             </div>
         </div>
@@ -179,8 +197,7 @@
                             <td class="small text-muted">{{ u.created_at.strftime('%d %b %Y %H:%M') if u.created_at else '—' }}</td>
                             <td>
                                 <button class="btn btn-sm btn-outline-warning"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#resetModal{{ u.id }}">
+                                        onclick="openResetDialog({{ u.id }})">
                                     <i class="fas fa-key me-1"></i>Reset Password
                                 </button>
                             </td>
@@ -205,47 +222,40 @@
 var _createUrl  = "{{ url_for('admin_create_course_user') }}";
 var _csrfToken  = "{{ csrf_token() }}";
 
+/* ── Reset-dialog helpers (custom overlay — no Bootstrap modal) ─── */
+function openResetDialog(userId) {
+    var el = document.getElementById('resetDialog' + userId);
+    if (el) el.style.display = 'flex';
+}
+
+function closeResetDialog(userId) {
+    /* Single atomic operation — cannot leave any lock, trap, or backdrop. */
+    var el = document.getElementById('resetDialog' + userId);
+    if (el) el.style.display = 'none';
+}
+
 /* ── Shared helpers ─────────────────────────────────────────────── */
 function _forceCloseModal(modalId) {
-    /*
-     * ROOT-CAUSE FIX: Bootstrap's Modal.dispose() is the ONLY reliable way
-     * to synchronously release ALL three locks Bootstrap sets when a modal opens:
-     *   1. FocusTrap  — Bootstrap's focusin document listener that re-focuses
-     *                   the modal on every click, making the page appear frozen.
-     *   2. Backdrop   — the .modal-backdrop div blocking pointer-events.
-     *   3. ScrollBar  — body.modal-open / overflow:hidden / padding-right.
-     *
-     * dispose() handles (1) and (2) internally and synchronously.
-     * We handle (3) and the modal's own visibility below.
-     *
-     * Calling hide() instead is WRONG here because hide() is async (CSS
-     * transition) and may never complete, leaving (1) permanently active.
-     */
-    var el = document.getElementById(modalId);
+    /* Reset-password dialogs use a custom overlay, not a Bootstrap modal.
+       Map resetModal{id} → closeResetDialog(id). */
+    if (modalId.indexOf('resetModal') === 0) {
+        closeResetDialog(modalId.replace('resetModal', ''));
+        return;
+    }
 
-    /* 1. Dispose the Bootstrap instance — synchronously deactivates focus
-          trap and removes the backdrop element from the DOM. */
+    /* Fallback for Bootstrap modals (e.g. createUserModal). */
+    var el = document.getElementById(modalId);
     try {
         var inst = bootstrap.Modal.getInstance(el);
         if (inst) inst.dispose();
     } catch (e) {}
-
-    /* 2. Hide the modal element itself (dispose() does NOT do this). */
-    try {
-        if (el) {
-            el.classList.remove('show');
-            el.style.display = 'none';
-            el.setAttribute('aria-hidden', 'true');
-            el.removeAttribute('aria-modal');
-            el.removeAttribute('role');
-            /* Bootstrap 5.3 may set inert on the modal's siblings; clear all. */
-            document.querySelectorAll('[inert]').forEach(function (n) {
-                n.removeAttribute('inert');
-            });
-        }
-    } catch (e) {}
-
-    /* 3. Clean body — dispose() does NOT restore these. */
+    if (el) {
+        el.classList.remove('show');
+        el.style.display = 'none';
+        el.setAttribute('aria-hidden', 'true');
+        el.removeAttribute('aria-modal');
+        el.removeAttribute('role');
+    }
     document.querySelectorAll('.modal-backdrop').forEach(function (b) { b.remove(); });
     document.body.classList.remove('modal-open');
     document.body.style.removeProperty('overflow');
