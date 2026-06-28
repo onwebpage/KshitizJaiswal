@@ -366,15 +366,17 @@
     {% macro premium_reel_card(reel) %}
     {%- set _placeholder = url_for('static', filename='img/reel-placeholder.svg') -%}
     {%- set _thumb = reel.thumbnail -%}
+    {%- set _auto = reel.auto_thumbnail -%}
     <a href="{{ url_for('reel_detail', reel_id=reel.id) }}" class="preel-card" data-reel-id="{{ reel.id }}">
         <div class="preel-thumb">
             <img
-                src="{% if _thumb %}{{ url_for('static', filename=_thumb) if not _thumb.startswith('http') else _thumb }}{% else %}{{ _placeholder }}{% endif %}"
+                src="{% if _thumb %}{{ url_for('static', filename=_thumb) if not _thumb.startswith('http') else _thumb }}{% elif _auto %}{{ _auto }}{% else %}{{ _placeholder }}{% endif %}"
                 alt="{{ reel.title }}"
                 class="preel-img"
                 loading="lazy"
                 draggable="false"
-                onerror="this.onerror=null;this.src='{{ _placeholder }}'">
+                data-fallback="{{ _placeholder }}"
+                onerror="this.onerror=null;this.src=this.dataset.fallback">
             <div class="preel-gradient"></div>
             <div class="preel-hover-overlay">
                 <div class="preel-play-btn"><i class="fas fa-play"></i></div>
