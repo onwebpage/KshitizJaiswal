@@ -206,29 +206,57 @@ var _createUrl  = "{{ url_for('admin_create_course_user') }}";
 var _csrfToken  = "{{ csrf_token() }}";
 
 /* ── Shared helpers ─────────────────────────────────────────────── */
-function _forceCloseModal(modalId) {
+function _domCleanModal(el) {
+    /* Hard DOM reset — removes backdrop, body locks, and any modal remnants.
+       Called AFTER Bootstrap has fully finished (hidden.bs.modal) OR as a
+       600 ms fallback.  Using a `cleaned` guard prevents double-runs. */
     try {
-        var el = document.getElementById(modalId);
         if (el) {
-            var inst = bootstrap.Modal.getInstance(el);
-            if (inst) inst.hide();
+            el.classList.remove('show');
+            el.style.display = 'none';
+            el.setAttribute('aria-hidden', 'true');
+            el.removeAttribute('aria-modal');
+            el.removeAttribute('role');
         }
     } catch (e) {}
-    setTimeout(function () {
-        try {
-            var el = document.getElementById(modalId);
-            if (el) {
-                el.classList.remove('show');
-                el.setAttribute('aria-hidden', 'true');
-                el.removeAttribute('aria-modal');
-                el.style.display = 'none';
-            }
-        } catch (e) {}
-        document.querySelectorAll('.modal-backdrop').forEach(function (b) { b.remove(); });
-        document.body.classList.remove('modal-open');
-        document.body.style.removeProperty('overflow');
-        document.body.style.removeProperty('padding-right');
-    }, 350);
+    document.querySelectorAll('.modal-backdrop').forEach(function (b) { b.remove(); });
+    document.body.classList.remove('modal-open');
+    document.body.style.removeProperty('overflow');
+    document.body.style.removeProperty('padding-right');
+}
+
+function _forceCloseModal(modalId) {
+    /* Strategy: call Bootstrap's hide() so it can run its OWN cleanup
+       (most importantly FocusTrap.deactivate()).  Wait for hidden.bs.modal
+       to confirm it finished, then sweep up any leftovers.
+       Hard-timeout at 600 ms ensures the page never stays frozen even if
+       Bootstrap's transitionend never fires. */
+    var el = document.getElementById(modalId);
+    var inst = null;
+    try { if (el) inst = bootstrap.Modal.getInstance(el); } catch (e) {}
+
+    if (!inst) {
+        /* No Bootstrap instance — just clean the DOM directly. */
+        _domCleanModal(el);
+        return;
+    }
+
+    var done = false;
+    function finish() {
+        if (done) return;
+        done = true;
+        _domCleanModal(el);
+    }
+
+    /* hidden.bs.modal fires AFTER Bootstrap has deactivated the focus trap
+       and removed its own backdrop — safe to do a final sweep here. */
+    el.addEventListener('hidden.bs.modal', finish, { once: true });
+
+    /* Fallback: if hidden.bs.modal never fires (e.g. transition interrupted),
+       force-clean after 600 ms so the page never stays locked. */
+    setTimeout(finish, 600);
+
+    try { inst.hide(); } catch (e) { finish(); }
 }
 
 function _showAlert(type, html) {
