@@ -3277,6 +3277,101 @@ def admin_reset_course_user_password(user_id):
     return redirect(url_for('admin_course_users', search=request.args.get('search', '')))
 
 
+@app.route('/admin/course-user/<int:user_id>/delete', methods=['POST'])
+def admin_delete_course_user(user_id):
+    """Admin: permanently delete a CourseUser login account."""
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    if 'admin_logged_in' not in session:
+        if is_ajax:
+            return jsonify({'success': False, 'error': 'Not authenticated'}), 401
+        return redirect(url_for('admin_login'))
+    try:
+        user = CourseUser.query.get_or_404(user_id)
+        _name = user.name
+        db.session.delete(user)
+        db.session.commit()
+    except Exception as ex:
+        db.session.rollback()
+        logging.error(f'admin_delete_course_user DB error: {ex}')
+        msg = f'Database error deleting user: {ex}'
+        if is_ajax:
+            return jsonify({'success': False, 'error': msg}), 500
+        flash(msg, 'danger')
+        return redirect(url_for('admin_course_users'))
+    if is_ajax:
+        return jsonify({'success': True, 'name': _name})
+    flash(f'User "{_name}" deleted successfully.', 'success')
+    return redirect(url_for('admin_course_users'))
+
+
+@app.route('/admin/course-user/<int:user_id>/set-validity', methods=['POST'])
+def admin_set_course_user_validity(user_id):
+    """Admin: set course access expiry (N days from today) for all access records of a CourseUser."""
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    if 'admin_logged_in' not in session:
+        if is_ajax:
+            return jsonify({'success': False, 'error': 'Not authenticated'}), 401
+        return redirect(url_for('admin_login'))
+
+    days_str = request.form.get('days', '').strip()
+    try:
+        days = int(days_str)
+        if days < 1:
+            raise ValueError('Must be at least 1 day.')
+    except (ValueError, TypeError):
+        msg = 'Please enter a valid number of days (minimum 1).'
+        if is_ajax:
+            return jsonify({'success': False, 'error': msg}), 400
+        flash(msg, 'warning')
+        return redirect(url_for('admin_course_users'))
+
+    try:
+        from datetime import timedelta
+        user = CourseUser.query.get_or_404(user_id)
+        new_expiry = datetime.utcnow() + timedelta(days=days)
+
+        accesses = []
+        seen_ids = set()
+        if user.email:
+            for a in UserCourseAccess.query.filter_by(guest_email=user.email).all():
+                if a.id not in seen_ids:
+                    accesses.append(a)
+                    seen_ids.add(a.id)
+        if user.phone:
+            for a in UserCourseAccess.query.filter_by(guest_phone=user.phone).all():
+                if a.id not in seen_ids:
+                    accesses.append(a)
+                    seen_ids.add(a.id)
+
+        if not accesses:
+            msg = 'No course access records found for this user. Grant them course access first.'
+            if is_ajax:
+                return jsonify({'success': False, 'error': msg}), 404
+            flash(msg, 'warning')
+            return redirect(url_for('admin_course_users'))
+
+        for a in accesses:
+            a.expires_at = new_expiry
+        db.session.commit()
+
+        expiry_str = new_expiry.strftime('%d %b %Y')
+        _name = user.name
+        _count = len(accesses)
+    except Exception as ex:
+        db.session.rollback()
+        logging.error(f'admin_set_course_user_validity DB error: {ex}')
+        msg = f'Database error: {ex}'
+        if is_ajax:
+            return jsonify({'success': False, 'error': msg}), 500
+        flash(msg, 'danger')
+        return redirect(url_for('admin_course_users'))
+
+    if is_ajax:
+        return jsonify({'success': True, 'name': _name, 'days': days, 'expires_at': expiry_str, 'count': _count})
+    flash(f'Access validity set to {expiry_str} for {_name} ({_count} record(s) updated).', 'success')
+    return redirect(url_for('admin_course_users'))
+
+
 @app.route('/admin/inner-circle')
 def admin_inner_circle():
     """Inner Circle Members — view, search, filter"""
