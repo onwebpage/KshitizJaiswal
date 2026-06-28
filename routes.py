@@ -3138,46 +3138,54 @@ def admin_create_course_user():
         flash(msg, 'warning')
         return redirect(url_for('admin_course_users'))
 
+    # Step 1: Create the CourseUser in its own clean transaction
     try:
         password = CourseUser.generate_password()
         user = CourseUser(name=name, email=email, phone=phone, must_change_password=False)
         user.set_password(password)
         db.session.add(user)
-        db.session.flush()  # get user.id before adding accesses
-
-        for cid in course_ids:
-            try:
-                access = UserCourseAccess(
-                    course_id=int(cid),
-                    clerk_user_id=None,
-                    guest_email=email,
-                    guest_name=name,
-                    payment_status='manual',
-                    account_created=True,
-                    access_revoked=False,
-                )
-                db.session.add(access)
-            except Exception as _cex:
-                logging.warning(f'admin_create_course_user: could not grant course {cid}: {_cex}')
-
         db.session.commit()
     except Exception as ex:
         db.session.rollback()
-        logging.error(f'admin_create_course_user DB error: {ex}')
+        logging.error(f'admin_create_course_user DB error (user): {ex}')
         msg = f'Database error creating user: {ex}'
         if is_ajax:
             return jsonify({'success': False, 'error': msg}), 500
         flash(msg, 'danger')
         return redirect(url_for('admin_course_users'))
 
+    new_user_id = user.id
+    created_at_str = user.created_at.strftime('%d %b %Y %H:%M') if user.created_at else '—'
+
+    # Step 2: Grant course accesses in a separate transaction (failures don't undo the user)
+    for cid in course_ids:
+        try:
+            access = UserCourseAccess(
+                course_id=int(cid),
+                clerk_user_id=None,
+                guest_email=email,
+                guest_phone=phone,
+                guest_name=name,
+                payment_status='manual',
+                account_created=True,
+                access_revoked=False,
+            )
+            db.session.add(access)
+            db.session.commit()
+        except Exception as _cex:
+            db.session.rollback()
+            logging.warning(f'admin_create_course_user: could not grant course {cid}: {_cex}')
+
     # Send credentials email (background — non-blocking)
     email_status = 'Email not sent — share password manually.'
     if send_email_flag and email:
         import threading
         from utils import send_email_credentials
-        _login_url = url_for('user_login', _external=True)
+        try:
+            _login_url = url_for('user_login', _external=True)
+        except Exception:
+            _login_url = '/'
         _login_id  = email or phone
-        # Capture all values as locals so thread doesn't need live DB session
         def _send_creds_bg(_e=email, _n=name, _lid=_login_id, _pw=password, _lu=_login_url):
             try:
                 send_email_credentials(email=_e, name=_n, login_id=_lid, password=_pw, login_url=_lu)
@@ -3189,10 +3197,12 @@ def admin_create_course_user():
     if is_ajax:
         return jsonify({
             'success': True,
+            'user_id': new_user_id,
             'name': name,
             'login_id': email or phone,
             'password': password,
             'email_status': email_status,
+            'created_at': created_at_str,
         })
 
     flash(
@@ -3215,17 +3225,37 @@ def admin_reset_course_user_password(user_id):
             return jsonify({'success': False, 'error': 'Not authenticated'}), 401
         return redirect(url_for('admin_login'))
 
+    new_password     = request.form.get('new_password', '').strip()
+    confirm_password = request.form.get('confirm_password', '').strip()
+
+    if not new_password:
+        msg = 'New password is required.'
+        if is_ajax:
+            return jsonify({'success': False, 'error': msg}), 400
+        flash(msg, 'warning')
+        return redirect(url_for('admin_course_users'))
+
+    if new_password != confirm_password:
+        msg = 'Passwords do not match.'
+        if is_ajax:
+            return jsonify({'success': False, 'error': msg}), 400
+        flash(msg, 'warning')
+        return redirect(url_for('admin_course_users'))
+
+    if len(new_password) < 6:
+        msg = 'Password must be at least 6 characters.'
+        if is_ajax:
+            return jsonify({'success': False, 'error': msg}), 400
+        flash(msg, 'warning')
+        return redirect(url_for('admin_course_users'))
+
     try:
         user = CourseUser.query.get_or_404(user_id)
-        # Capture string values NOW before session closes (needed for bg thread)
         _uname    = user.name
-        _uemail   = user.email
-        _uphone   = user.phone
         _login_id = user.email or user.phone
 
-        new_password = CourseUser.generate_password()
         user.set_password(new_password)
-        user.must_change_password = True
+        user.must_change_password = False
         db.session.commit()
     except Exception as ex:
         db.session.rollback()
@@ -3236,38 +3266,14 @@ def admin_reset_course_user_password(user_id):
         flash(msg, 'danger')
         return redirect(url_for('admin_course_users'))
 
-    send_email = request.form.get('send_email') == '1'
-    email_status = 'Email not sent — copy password above and share manually.'
-
-    if send_email and _uemail:
-        import threading
-        from utils import send_email_credentials
-        _login_url = url_for('user_login', _external=True)
-        # All values captured as locals — no live DB session needed in thread
-        def _send_bg(_e=_uemail, _n=_uname, _lid=_login_id, _pw=new_password, _lu=_login_url):
-            try:
-                send_email_credentials(email=_e, name=_n, login_id=_lid, password=_pw, login_url=_lu)
-            except Exception as _ex:
-                logging.error(f'admin_reset_course_user_password bg email error: {_ex}')
-        threading.Thread(target=_send_bg, daemon=True).start()
-        email_status = 'Email is being sent in background ✅.'
-
     if is_ajax:
         return jsonify({
             'success': True,
             'name': _uname,
             'login_id': _login_id,
-            'password': new_password,
-            'email_status': email_status,
         })
 
-    flash(
-        f'Password reset for {_uname}. '
-        f'New password: <strong>{new_password}</strong>. '
-        f'Login ID: {_login_id}. '
-        + email_status,
-        'success'
-    )
+    flash(f'Password reset successfully for {_uname} (Login ID: {_login_id}).', 'success')
     return redirect(url_for('admin_course_users', search=request.args.get('search', '')))
 
 

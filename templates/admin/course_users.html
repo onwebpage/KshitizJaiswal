@@ -22,81 +22,50 @@
                     <h5 class="modal-title"><i class="fas fa-user-plus me-2"></i>Create Course User</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <!-- Step 1: form -->
-                <div id="createFormBody">
-                    <div class="modal-body">
-                        <div id="createErrorBox" class="alert alert-danger d-none mb-3"></div>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Full Name <span class="text-danger">*</span></label>
-                            <input type="text" id="createName" class="form-control" placeholder="e.g. Kshitiz Jaiswal" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Email</label>
-                            <input type="email" id="createEmail" class="form-control" placeholder="user@example.com">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Phone (optional)</label>
-                            <input type="text" id="createPhone" class="form-control" placeholder="+91 98765 43210">
-                        </div>
-                        {% if courses %}
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Grant Access To</label>
-                            {% for c in courses %}
-                            <div class="form-check">
-                                <input class="form-check-input createCourseCheck" type="checkbox" value="{{ c.id }}" id="course_{{ c.id }}" checked>
-                                <label class="form-check-label" for="course_{{ c.id }}">{{ c.title }} (₹{{ c.price }})</label>
-                            </div>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="createSendEmail" checked>
-                            <label class="form-check-label" for="createSendEmail">Send login credentials via email</label>
-                        </div>
-                        <div class="alert alert-info mt-3 mb-0 small">
-                            <i class="fas fa-info-circle me-1"></i>A random password will be generated and shown after creation.
-                        </div>
+                <div class="modal-body">
+                    <div id="createErrorBox" class="alert alert-danger d-none mb-3"></div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Full Name <span class="text-danger">*</span></label>
+                        <input type="text" id="createName" class="form-control" placeholder="e.g. Kshitiz Jaiswal" required>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="button" class="btn btn-success" id="createSubmitBtn" onclick="doCreateUser()">
-                            <i class="fas fa-user-plus me-1"></i>Create User
-                        </button>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Email</label>
+                        <input type="email" id="createEmail" class="form-control" placeholder="user@example.com">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Phone (optional)</label>
+                        <input type="text" id="createPhone" class="form-control" placeholder="+91 98765 43210">
+                    </div>
+                    {% if courses %}
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Grant Access To</label>
+                        {% for c in courses %}
+                        <div class="form-check">
+                            <input class="form-check-input createCourseCheck" type="checkbox" value="{{ c.id }}" id="course_{{ c.id }}" checked>
+                            <label class="form-check-label" for="course_{{ c.id }}">{{ c.title }} (₹{{ c.price }})</label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="createSendEmail" checked>
+                        <label class="form-check-label" for="createSendEmail">Send login credentials via email</label>
+                    </div>
+                    <div class="alert alert-info mt-3 mb-0 small">
+                        <i class="fas fa-info-circle me-1"></i>A random password will be generated and shown after creation.
                     </div>
                 </div>
-                <!-- Step 2: success result -->
-                <div id="createSuccessBody" class="d-none">
-                    <div class="modal-body">
-                        <div class="alert alert-success mb-3">
-                            <i class="fas fa-check-circle me-1"></i><strong>User created successfully!</strong>
-                        </div>
-                        <table class="table table-sm">
-                            <tr><th>Name</th><td id="createdName"></td></tr>
-                            <tr><th>Login ID</th><td id="createdLoginId"></td></tr>
-                            <tr>
-                                <th>Password</th>
-                                <td><code class="user-select-all fs-6" id="createdPassword"></code>
-                                    <button class="btn btn-sm btn-outline-secondary ms-2" onclick="copyPassword()"><i class="fas fa-copy"></i></button>
-                                </td>
-                            </tr>
-                        </table>
-                        <div class="text-muted small mt-2" id="createdEmailStatus"></div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-primary" onclick="closeCreateAndRefresh()">
-                            <i class="fas fa-sync me-1"></i>Close &amp; Refresh
-                        </button>
-                    </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" id="createSubmitBtn" onclick="doCreateUser()">
+                        <i class="fas fa-user-plus me-1"></i>Create User
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Reset Password Dialogs (custom overlay — NOT Bootstrap modal)
-         Bootstrap modals leave the backdrop and focus-trap active when closed
-         programmatically after an async operation, freezing the page.
-         A custom overlay is closed with a single display:none — no lifecycle,
-         no backdrop class, no focus trap, nothing to clean up. -->
+    <!-- Reset Password Dialogs (custom overlay — NOT Bootstrap modal) -->
     {% for u in users %}
     <div id="resetDialog{{ u.id }}"
          role="dialog" aria-modal="true" aria-labelledby="resetDialogTitle{{ u.id }}"
@@ -109,7 +78,7 @@
             <div style="background:#ffc107; padding:16px 20px;
                         display:flex; align-items:center; justify-content:space-between;">
                 <h5 id="resetDialogTitle{{ u.id }}" style="margin:0; color:#000; font-size:1rem; font-weight:700;">
-                    <i class="fas fa-key me-2"></i>Reset Password
+                    <i class="fas fa-key me-2"></i>Reset Password — {{ u.name }}
                 </h5>
                 <button onclick="closeResetDialog({{ u.id }})" aria-label="Close"
                         style="background:none; border:none; font-size:1.1rem; cursor:pointer;
@@ -118,23 +87,22 @@
                 </button>
             </div>
             <div style="padding:20px;">
-                <p>User: <strong>{{ u.name }}</strong></p>
-                <p>Login ID: <strong>{{ u.email or u.phone }}</strong></p>
-                <p class="text-danger small">
-                    <i class="fas fa-exclamation-triangle me-1"></i>A new random password will be generated. Old password will stop working.
-                </p>
-                <div class="form-check mb-3">
-                    <input class="form-check-input" type="checkbox" id="sendEmail{{ u.id }}"
-                           {% if u.email %}checked{% else %}disabled{% endif %}>
-                    <label class="form-check-label" for="sendEmail{{ u.id }}">
-                        Also email new password to user
-                        {% if not u.email %}<span class="text-muted">(no email on file)</span>{% endif %}
-                    </label>
+                <p class="mb-3 text-muted small">Login ID: <strong>{{ u.email or u.phone }}</strong></p>
+                <div id="resetErrorBox{{ u.id }}" class="alert alert-danger d-none mb-3"></div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">New Password <span class="text-danger">*</span></label>
+                    <input type="password" id="resetNewPwd{{ u.id }}" class="form-control"
+                           placeholder="Enter new password (min 6 chars)" autocomplete="new-password">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Confirm Password <span class="text-danger">*</span></label>
+                    <input type="password" id="resetConfirmPwd{{ u.id }}" class="form-control"
+                           placeholder="Re-enter password" autocomplete="new-password">
                 </div>
                 <div class="d-flex gap-2">
                     <button type="button" class="btn btn-warning" id="resetBtn{{ u.id }}"
                             onclick="doResetPassword({{ u.id }}, '{{ url_for('admin_reset_course_user_password', user_id=u.id) }}', '{{ csrf_token() }}')">
-                        <i class="fas fa-key me-1"></i>Reset &amp; Show Password
+                        <i class="fas fa-save me-1"></i>Save Password
                     </button>
                     <button type="button" class="btn btn-secondary" onclick="closeResetDialog({{ u.id }})">Cancel</button>
                 </div>
@@ -171,7 +139,7 @@
     <div class="card border-0 shadow-sm">
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+                <table class="table table-hover align-middle mb-0" id="usersTable">
                     <thead class="table-dark">
                         <tr>
                             <th>#</th>
@@ -181,9 +149,9 @@
                             <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="usersTableBody">
                         {% for u in users %}
-                        <tr>
+                        <tr id="userRow{{ u.id }}">
                             <td class="text-muted small">{{ u.id }}</td>
                             <td class="fw-semibold">{{ u.name }}</td>
                             <td>
@@ -209,7 +177,7 @@
         </div>
     </div>
     {% else %}
-    <div class="text-center text-muted py-5">
+    <div class="text-center text-muted py-5" id="emptyState">
         <i class="fas fa-users fa-3x mb-3 opacity-25"></i>
         <p>{% if search %}No users found for "{{ search }}"{% else %}No course users yet{% endif %}</p>
     </div>
@@ -219,36 +187,34 @@
 
 {% block scripts %}
 <script>
-var _createUrl  = "{{ url_for('admin_create_course_user') }}";
-var _csrfToken  = "{{ csrf_token() }}";
+var _createUrl = "{{ url_for('admin_create_course_user') }}";
+var _csrfToken = "{{ csrf_token() }}";
 
 /* ── Reset-dialog helpers (custom overlay — no Bootstrap modal) ─── */
 function openResetDialog(userId) {
     var el = document.getElementById('resetDialog' + userId);
-    if (el) el.style.display = 'flex';
+    if (!el) return;
+    /* Clear fields and error on each open */
+    var np = document.getElementById('resetNewPwd' + userId);
+    var cp = document.getElementById('resetConfirmPwd' + userId);
+    var eb = document.getElementById('resetErrorBox' + userId);
+    var btn = document.getElementById('resetBtn' + userId);
+    if (np) np.value = '';
+    if (cp) cp.value = '';
+    if (eb) eb.classList.add('d-none');
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save me-1"></i>Save Password'; }
+    el.style.display = 'flex';
 }
 
 function closeResetDialog(userId) {
-    /* Single atomic operation — cannot leave any lock, trap, or backdrop. */
     var el = document.getElementById('resetDialog' + userId);
     if (el) el.style.display = 'none';
 }
 
 /* ── Shared helpers ─────────────────────────────────────────────── */
 function _forceCloseModal(modalId) {
-    /* Reset-password dialogs use a custom overlay, not a Bootstrap modal.
-       Map resetModal{id} → closeResetDialog(id). */
-    if (modalId.indexOf('resetModal') === 0) {
-        closeResetDialog(modalId.replace('resetModal', ''));
-        return;
-    }
-
-    /* Fallback for Bootstrap modals (e.g. createUserModal). */
     var el = document.getElementById(modalId);
-    try {
-        var inst = bootstrap.Modal.getInstance(el);
-        if (inst) inst.dispose();
-    } catch (e) {}
+    try { var inst = bootstrap.Modal.getInstance(el); if (inst) inst.dispose(); } catch (e) {}
     if (el) {
         el.classList.remove('show');
         el.style.display = 'none';
@@ -271,7 +237,7 @@ function _showAlert(type, html) {
     area.prepend(box);
     setTimeout(function () {
         try { new bootstrap.Alert(box).close(); } catch (e) { box.remove(); }
-    }, 15000);
+    }, 8000);
 }
 
 /* ── Create User (AJAX) ─────────────────────────────────────────── */
@@ -279,14 +245,14 @@ function doCreateUser() {
     var name  = document.getElementById('createName').value.trim();
     var email = document.getElementById('createEmail').value.trim();
     var phone = document.getElementById('createPhone').value.trim();
+    var errBox = document.getElementById('createErrorBox');
 
     if (!name || (!email && !phone)) {
-        var errBox = document.getElementById('createErrorBox');
         errBox.textContent = 'Name and at least one of Email / Phone is required.';
         errBox.classList.remove('d-none');
         return;
     }
-    document.getElementById('createErrorBox').classList.add('d-none');
+    errBox.classList.add('d-none');
 
     var btn = document.getElementById('createSubmitBtn');
     btn.disabled = true;
@@ -309,6 +275,15 @@ function doCreateUser() {
         credentials: 'same-origin'
     })
     .then(function (resp) {
+        if (resp.status === 302 || (resp.redirected)) {
+            throw new Error('Session expired. Please refresh and log in again.');
+        }
+        var ct = resp.headers.get('content-type') || '';
+        if (!ct.includes('application/json')) {
+            return resp.text().then(function (t) {
+                throw new Error('Unexpected server response. Check server logs.');
+            });
+        }
         return resp.json().then(function (data) {
             if (!resp.ok) throw new Error(data.error || 'Server error ' + resp.status);
             return data;
@@ -316,41 +291,96 @@ function doCreateUser() {
     })
     .then(function (data) {
         if (!data.success) throw new Error(data.error || 'Creation failed.');
-        // Show success step
-        document.getElementById('createdName').textContent    = data.name;
-        document.getElementById('createdLoginId').textContent = data.login_id;
-        document.getElementById('createdPassword').textContent = data.password;
-        document.getElementById('createdEmailStatus').textContent = data.email_status;
-        document.getElementById('createFormBody').classList.add('d-none');
-        document.getElementById('createSuccessBody').classList.remove('d-none');
+
+        /* 1. Close the modal */
+        _forceCloseModal('createUserModal');
+
+        /* 2. Add new row to table (prepend — newest first) */
+        var tbody = document.getElementById('usersTableBody');
+        var empty = document.getElementById('emptyState');
+        var table = document.getElementById('usersTable');
+
+        if (tbody) {
+            var loginHtml = '';
+            if (email) loginHtml += '<div><i class="fas fa-envelope text-muted me-1"></i>' + _esc(email) + '</div>';
+            if (phone) loginHtml += '<div><i class="fas fa-phone text-muted me-1"></i>' + _esc(phone) + '</div>';
+
+            var tr = document.createElement('tr');
+            tr.id  = 'userRow' + data.user_id;
+            tr.innerHTML =
+                '<td class="text-muted small">' + data.user_id + '</td>' +
+                '<td class="fw-semibold">' + _esc(data.name) + '</td>' +
+                '<td>' + loginHtml + '</td>' +
+                '<td class="small text-muted">' + _esc(data.created_at) + '</td>' +
+                '<td><button class="btn btn-sm btn-outline-warning" onclick="openResetDialog(' + data.user_id + ')"><i class="fas fa-key me-1"></i>Reset Password</button></td>';
+            tbody.prepend(tr);
+
+            /* Also inject a hidden reset dialog for the new user (so Reset Password works immediately) */
+            var dlv = document.createElement('div');
+            dlv.id = 'resetDialog' + data.user_id;
+            dlv.setAttribute('role', 'dialog');
+            dlv.setAttribute('aria-modal', 'true');
+            dlv.setAttribute('onclick', 'if(event.target===this)closeResetDialog(' + data.user_id + ')');
+            dlv.style.cssText = 'display:none;position:fixed;inset:0;z-index:1055;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;padding:16px;';
+            dlv.innerHTML =
+                '<div style="background:#fff;border-radius:8px;max-width:480px;width:100%;box-shadow:0 10px 40px rgba(0,0,0,0.3);overflow:hidden;">' +
+                '<div style="background:#ffc107;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;">' +
+                '<h5 style="margin:0;color:#000;font-size:1rem;font-weight:700;"><i class="fas fa-key me-2"></i>Reset Password \u2014 ' + _esc(data.name) + '</h5>' +
+                '<button onclick="closeResetDialog(' + data.user_id + ')" style="background:none;border:none;font-size:1.1rem;cursor:pointer;color:#000;opacity:0.6;line-height:1;padding:4px 6px;border-radius:4px;"><i class="fas fa-times"></i></button>' +
+                '</div>' +
+                '<div style="padding:20px;">' +
+                '<p class="mb-3 text-muted small">Login ID: <strong>' + _esc(data.login_id) + '</strong></p>' +
+                '<div id="resetErrorBox' + data.user_id + '" class="alert alert-danger d-none mb-3"></div>' +
+                '<div class="mb-3"><label class="form-label fw-semibold">New Password <span class="text-danger">*</span></label>' +
+                '<input type="password" id="resetNewPwd' + data.user_id + '" class="form-control" placeholder="Enter new password (min 6 chars)" autocomplete="new-password"></div>' +
+                '<div class="mb-3"><label class="form-label fw-semibold">Confirm Password <span class="text-danger">*</span></label>' +
+                '<input type="password" id="resetConfirmPwd' + data.user_id + '" class="form-control" placeholder="Re-enter password" autocomplete="new-password"></div>' +
+                '<div class="d-flex gap-2">' +
+                '<button type="button" class="btn btn-warning" id="resetBtn' + data.user_id + '" onclick="doResetPassword(' + data.user_id + ', \'/admin/course-user/' + data.user_id + '/reset-password\', \'' + _csrfToken + '\')">' +
+                '<i class="fas fa-save me-1"></i>Save Password</button>' +
+                '<button type="button" class="btn btn-secondary" onclick="closeResetDialog(' + data.user_id + ')">Cancel</button>' +
+                '</div></div></div>';
+            document.body.appendChild(dlv);
+        }
+
+        if (empty) empty.style.display = 'none';
+        if (table) table.style.display = '';
+
+        /* 3. Update count badge */
+        var badge = document.getElementById('userCountBadge');
+        if (badge) {
+            var cur = parseInt(badge.textContent) || 0;
+            badge.textContent = (cur + 1) + ' users';
+        }
+
+        /* 4. Show success alert with the password */
+        _showAlert('success',
+            '<strong><i class="fas fa-check-circle me-1"></i>User created: ' + _esc(data.name) + '</strong><br>' +
+            'Login ID: ' + _esc(data.login_id) + '<br>' +
+            'Password: <code class="user-select-all fs-6">' + _esc(data.password) + '</code>' +
+            ' <button class="btn btn-sm btn-outline-secondary py-0 px-1 ms-1" onclick="navigator.clipboard.writeText(\'' + data.password.replace(/'/g, "\\'") + '\')" title="Copy"><i class="fas fa-copy"></i></button>'
+        );
     })
     .catch(function (err) {
-        var errBox = document.getElementById('createErrorBox');
         errBox.textContent = err.message;
         errBox.classList.remove('d-none');
+    })
+    .finally(function () {
         btn.disabled = false;
         btn.innerHTML = '<i class="fas fa-user-plus me-1"></i>Create User';
     });
 }
 
-function copyPassword() {
-    var pwd = document.getElementById('createdPassword').textContent;
-    navigator.clipboard.writeText(pwd).catch(function () {});
+function _esc(str) {
+    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-function closeCreateAndRefresh() {
-    _forceCloseModal('createUserModal');
-    setTimeout(function () { window.location.reload(); }, 400);
-}
-
-// Reset form state when modal is closed
+/* Reset form state when modal is closed */
 document.getElementById('createUserModal').addEventListener('hidden.bs.modal', function () {
     document.getElementById('createName').value  = '';
     document.getElementById('createEmail').value = '';
     document.getElementById('createPhone').value = '';
     document.getElementById('createErrorBox').classList.add('d-none');
-    document.getElementById('createFormBody').classList.remove('d-none');
-    document.getElementById('createSuccessBody').classList.add('d-none');
     var btn = document.getElementById('createSubmitBtn');
     btn.disabled = false;
     btn.innerHTML = '<i class="fas fa-user-plus me-1"></i>Create User';
@@ -358,16 +388,36 @@ document.getElementById('createUserModal').addEventListener('hidden.bs.modal', f
 
 /* ── Reset Password (AJAX) ──────────────────────────────────────── */
 function doResetPassword(userId, actionUrl, csrfToken) {
-    var btn = document.getElementById('resetBtn' + userId);
-    var sendEmailEl = document.getElementById('sendEmail' + userId);
-    var sendEmail = (sendEmailEl && !sendEmailEl.disabled && sendEmailEl.checked) ? '1' : '0';
+    var newPwd     = (document.getElementById('resetNewPwd' + userId) || {}).value || '';
+    var confirmPwd = (document.getElementById('resetConfirmPwd' + userId) || {}).value || '';
+    var errBox = document.getElementById('resetErrorBox' + userId);
+    var btn    = document.getElementById('resetBtn' + userId);
+
+    /* Client-side validation */
+    if (!newPwd) {
+        errBox.textContent = 'Please enter a new password.';
+        errBox.classList.remove('d-none');
+        return;
+    }
+    if (newPwd.length < 6) {
+        errBox.textContent = 'Password must be at least 6 characters.';
+        errBox.classList.remove('d-none');
+        return;
+    }
+    if (newPwd !== confirmPwd) {
+        errBox.textContent = 'Passwords do not match.';
+        errBox.classList.remove('d-none');
+        return;
+    }
+    errBox.classList.add('d-none');
 
     btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Resetting\u2026';
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving\u2026';
 
     var fd = new FormData();
     fd.append('csrf_token', csrfToken);
-    fd.append('send_email', sendEmail);
+    fd.append('new_password', newPwd);
+    fd.append('confirm_password', confirmPwd);
 
     fetch(actionUrl, {
         method: 'POST',
@@ -376,6 +426,12 @@ function doResetPassword(userId, actionUrl, csrfToken) {
         credentials: 'same-origin'
     })
     .then(function (resp) {
+        var ct = resp.headers.get('content-type') || '';
+        if (!ct.includes('application/json')) {
+            return resp.text().then(function () {
+                throw new Error('Unexpected server response. Check server logs.');
+            });
+        }
         return resp.json().then(function (data) {
             if (!resp.ok) throw new Error(data.error || 'Server error ' + resp.status);
             return data;
@@ -383,21 +439,19 @@ function doResetPassword(userId, actionUrl, csrfToken) {
     })
     .then(function (data) {
         if (!data.success) throw new Error(data.error || 'Password reset failed.');
-        _forceCloseModal('resetModal' + userId);
+        closeResetDialog(userId);
         _showAlert('success',
-            '<strong>Password reset for ' + data.name + '</strong><br>' +
-            'Login ID: ' + data.login_id + '<br>' +
-            'New password: <code class="user-select-all fs-6">' + data.password + '</code><br>' +
-            '<small class="text-muted">' + data.email_status + '</small>'
+            '<strong><i class="fas fa-check-circle me-1"></i>Password updated for ' + _esc(data.name) + '</strong><br>' +
+            'Login ID: ' + _esc(data.login_id)
         );
     })
     .catch(function (err) {
-        _forceCloseModal('resetModal' + userId);
-        _showAlert('danger', '<strong>Error:</strong> ' + err.message);
+        errBox.textContent = err.message;
+        errBox.classList.remove('d-none');
     })
     .finally(function () {
         btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-key me-1"></i>Reset &amp; Show Password';
+        btn.innerHTML = '<i class="fas fa-save me-1"></i>Save Password';
     });
 }
 </script>
