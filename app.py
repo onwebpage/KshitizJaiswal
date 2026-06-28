@@ -45,7 +45,7 @@ os.makedirs('data', exist_ok=True)
 os.makedirs('instance', exist_ok=True)
 
 # Configure the database
-# Priority: Replit native PG (PGHOST) → external DATABASE_URL → SQLite fallback
+# Priority: external DATABASE_URL → Replit native PG (PGHOST) → SQLite fallback
 def _build_replit_pg_url():
     host = os.environ.get("PGHOST")
     port = os.environ.get("PGPORT", "5432")
@@ -64,12 +64,13 @@ def _is_external_db(url):
         return False
     return "helium" not in url and "PGHOST" not in url
 
-replit_pg_url = _build_replit_pg_url()
 external_db_url = os.environ.get("DATABASE_URL", "")
 # Render (and some other providers) give postgres:// — SQLAlchemy needs postgresql://
 if external_db_url.startswith("postgres://"):
     external_db_url = external_db_url.replace("postgres://", "postgresql://", 1)
-database_url = replit_pg_url or external_db_url or None
+replit_pg_url = _build_replit_pg_url()
+# Prefer DATABASE_URL (production data) over Replit's internal PG
+database_url = external_db_url or replit_pg_url or None
 
 use_sqlite = False
 
@@ -78,7 +79,7 @@ if database_url:
         import psycopg2
         # Build connection kwargs — external providers (Railway, Aiven, Neon, Supabase)
         # require sslmode=require; Replit's internal helium does not.
-        is_external = _is_external_db(database_url) and not replit_pg_url
+        is_external = _is_external_db(database_url)
         connect_kwargs = {}
         if is_external and "sslmode" not in database_url:
             connect_kwargs["sslmode"] = "require"
