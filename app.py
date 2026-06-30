@@ -310,5 +310,15 @@ def inject_global_context():
         'footer_stats': footer_stats,
     }
 
+@app.template_global()
+def static_ver(filename):
+    """Return a cache-busting query string based on the file's modification time."""
+    import time
+    try:
+        path = os.path.join(app.static_folder, filename)
+        return int(os.path.getmtime(path))
+    except Exception:
+        return int(time.time())
+
 # Import routes after app and db creation
 from routes import *
