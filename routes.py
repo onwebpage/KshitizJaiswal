@@ -310,6 +310,10 @@ def reels_library():
             return 'youtube'
         if vtype == 'instagram':
             return 'instagram'
+        # Direct uploads: use card_layout to decide — portrait → instagram, else → youtube
+        if vtype == 'direct':
+            layout = r.get('card_layout', 'portrait') or 'portrait'
+            return 'instagram' if layout == 'portrait' else 'youtube'
         url = r.get('video_url', '') or ''
         if url:
             info = get_video_info(url, 'auto')
@@ -320,7 +324,7 @@ def reels_library():
                 return 'instagram'
         return 'unknown'
 
-    all_reels = Reel.query.order_by(Reel.created_at.desc()).all()
+    all_reels = Reel.query.filter_by(is_visible=True).order_by(Reel.created_at.desc()).all()
     instagram_featured = []
     youtube_featured = []
 
@@ -335,8 +339,20 @@ def reels_library():
         if len(instagram_featured) >= 6 and len(youtube_featured) >= 6:
             break
 
-    instagram_total = Reel.query.filter(Reel.video_type == 'instagram').count()
-    youtube_total = Reel.query.filter(Reel.video_type.in_(['youtube', 'youtube_short'])).count()
+    instagram_total = Reel.query.filter(
+        Reel.is_visible == True,
+        db.or_(
+            Reel.video_type == 'instagram',
+            db.and_(Reel.video_type == 'direct', db.or_(Reel.card_layout == 'portrait', Reel.card_layout == None))
+        )
+    ).count()
+    youtube_total = Reel.query.filter(
+        Reel.is_visible == True,
+        db.or_(
+            Reel.video_type.in_(['youtube', 'youtube_short']),
+            db.and_(Reel.video_type == 'direct', Reel.card_layout.in_(['standard', 'landscape']))
+        )
+    ).count()
 
     return render_template('reels_library.html',
                            instagram_featured=instagram_featured,
