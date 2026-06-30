@@ -134,6 +134,7 @@
         </div>
 
         <!-- Why This Topic -->
+        {% if reel.behind_thought %}
         <div class="rd-card rd-card-thought">
             <div class="rd-card-header">
                 <span class="rd-card-icon"><i class="fas fa-lightbulb"></i></span>
@@ -141,6 +142,7 @@
             </div>
             <p class="rd-card-body">{{ reel.behind_thought }}</p>
         </div>
+        {% endif %}
 
         <!-- More Thoughts -->
         {% if reel.extra_context %}
@@ -158,14 +160,14 @@
     <!-- Sidebar (right on desktop, below on mobile) -->
     <div class="rd-sidebar">
 
-        <!-- Media Links Card -->
+        <!-- Media Links Card — only shown when at least one link exists -->
+        {% if reel.youtube_url or reel.instagram_reel_url %}
         <div class="rd-side-card">
             <div class="rd-side-card-header">
                 <i class="fas fa-play-circle"></i>
                 <span>Media Links</span>
             </div>
             <div class="rd-side-card-body">
-                {% if reel.youtube_url or reel.instagram_reel_url %}
                 <div class="rd-media-links-body">
                     {% if reel.youtube_url %}
                     <a href="{{ reel.youtube_url }}" target="_blank" rel="noopener noreferrer" class="rd-media-btn rd-media-btn--yt">
@@ -188,26 +190,18 @@
                     </a>
                     {% endif %}
                 </div>
-                {% else %}
-                <div class="rd-empty-note" style="display:flex;align-items:center;gap:10px;color:#aaa;padding:8px 0;">
-                    <i class="fas fa-video fa-lg"></i>
-                    <div>
-                        <div style="font-weight:600;color:#888;font-size:.9rem;">Media coming soon</div>
-                        <div style="font-size:.82rem;">Video will be added shortly</div>
-                    </div>
-                </div>
-                {% endif %}
             </div>
         </div>
+        {% endif %}
 
         <!-- Sources Card -->
+        {% if reel.sources and reel.sources|length > 0 %}
         <div class="rd-side-card">
             <div class="rd-side-card-header">
                 <i class="fas fa-book-open"></i>
                 <span>Sources</span>
             </div>
             <div class="rd-side-card-body">
-                {% if reel.sources and reel.sources|length > 0 %}
                 <ul class="rd-sources">
                     {% for source in reel.sources %}
                     <li class="rd-source-item">
@@ -225,11 +219,9 @@
                     </li>
                     {% endfor %}
                 </ul>
-                {% else %}
-                <p class="rd-empty-note">Sources will be updated soon</p>
-                {% endif %}
             </div>
         </div>
+        {% endif %}
 
         <!-- Related Reels -->
         {% if related_reels and related_reels|length > 0 %}
