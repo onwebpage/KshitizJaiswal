@@ -779,10 +779,11 @@ h1, h2, h3, h4, h5, h6 {
     margin-bottom: 0;
   }
 
-  /* main { padding-top: 64px } already clears the fixed navbar on mobile;
-     --compact marks the three poll/resources/shows pages that share this hero. */
+  /* On mobile the fixed navbar is 64px tall (set on main above).
+     The compact hero needs a modest top pad so the title never clips
+     behind the navbar on any device (including those with safe-area insets). */
   .resources-hero.resources-hero--compact {
-    padding: 0 16px 10px !important;
+    padding: 14px 16px 10px !important;
   }
 
   .resources-hero.resources-hero--compact .resources-hero-title {
