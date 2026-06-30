@@ -728,18 +728,23 @@ document.addEventListener('keydown', function(e) {
                         overlay.classList.add('playing');
                         setIcon(true);
                         startAutoSave();
+                        if (document.fullscreenElement) scheduleHide();
                     } else if (e.data === YT.PlayerState.PAUSED) {
                         playing = false;
                         overlay.classList.remove('playing');
                         setIcon(false);
                         stopAutoSave();
-                        saveProgress(true);   // save immediately on pause
+                        saveProgress(true);
+                        if (hideTimer) clearTimeout(hideTimer);
+                        showControls();
                     } else if (e.data === YT.PlayerState.ENDED) {
                         playing = false;
                         overlay.classList.remove('playing');
                         setIcon(false);
                         stopAutoSave();
-                        saveProgress(true);   // save on end
+                        saveProgress(true);
+                        if (hideTimer) clearTimeout(hideTimer);
+                        showControls();
                     } else {
                         playing = false;
                         overlay.classList.remove('playing');
@@ -766,6 +771,45 @@ document.addEventListener('keydown', function(e) {
     });
 
     // ── Fullscreen ─────────────────────────────────────────────────────
+    var hideTimer = null;
+
+    function showControls() {
+        overlay.style.opacity = '1';
+        overlay.style.pointerEvents = 'auto';
+    }
+    function scheduleHide() {
+        if (hideTimer) clearTimeout(hideTimer);
+        showControls();
+        if (document.fullscreenElement && playing) {
+            hideTimer = setTimeout(function() {
+                overlay.style.opacity = '0';
+                overlay.style.pointerEvents = 'none';
+            }, 3000);
+        }
+    }
+
+    // When mouse moves inside the wrapper, show controls temporarily
+    if (wrapper) {
+        wrapper.addEventListener('mousemove', function() {
+            if (document.fullscreenElement) scheduleHide();
+        });
+        wrapper.addEventListener('touchstart', function() {
+            if (document.fullscreenElement) scheduleHide();
+        }, { passive: true });
+    }
+
+    document.addEventListener('fullscreenchange', function() {
+        if (fsIcon) fsIcon.className = document.fullscreenElement ? 'fas fa-compress' : 'fas fa-expand';
+        if (!document.fullscreenElement) {
+            // Exiting fullscreen — always restore controls
+            if (hideTimer) clearTimeout(hideTimer);
+            showControls();
+        } else if (playing) {
+            // Entered fullscreen while playing — start hide timer
+            scheduleHide();
+        }
+    });
+
     if (fsBtn && wrapper) {
         fsBtn.addEventListener('click', function(e) {
             e.stopPropagation();
@@ -774,15 +818,10 @@ document.addEventListener('keydown', function(e) {
                 if (el.requestFullscreen)            el.requestFullscreen();
                 else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
                 else if (el.mozRequestFullScreen)    el.mozRequestFullScreen();
-                if (fsIcon) fsIcon.className = 'fas fa-compress';
             } else {
                 if (document.exitFullscreen)             document.exitFullscreen();
                 else if (document.webkitExitFullscreen)  document.webkitExitFullscreen();
-                if (fsIcon) fsIcon.className = 'fas fa-expand';
             }
-        });
-        document.addEventListener('fullscreenchange', function() {
-            if (fsIcon) fsIcon.className = document.fullscreenElement ? 'fas fa-compress' : 'fas fa-expand';
         });
     }
 })();
