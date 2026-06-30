@@ -207,12 +207,12 @@
 }
 
 .video-section {
-    background: #0f172a;
+    background: #000;
 }
 
 .video-player-wrapper {
     position: relative;
-    background: black;
+    background: #000;
 }
 
 .bunny-video-container {
@@ -221,18 +221,23 @@
     padding-bottom: 56.25%;
     height: 0;
     background: #000;
-    overflow: hidden; /* clips extended iframe edges */
+    overflow: hidden;
 }
 
 .bunny-video-iframe {
     border: 0;
     position: absolute;
-    /* Extend iframe beyond the container on all sides to clip YouTube's
-       top bar (channel name) and bottom bar (Watch on YouTube) */
-    top: -40px;
+    top: -60px;
     left: -2px;
     width: calc(100% + 4px);
-    height: calc(100% + 80px);
+    height: calc(100% + 120px);
+}
+
+@media (max-width: 576px) {
+    .bunny-video-iframe {
+        top: -30px;
+        height: calc(100% + 60px);
+    }
 }
 
 /* Custom YouTube overlay — fully covers iframe, hides all YouTube UI */
@@ -349,7 +354,7 @@
 
 .lesson-notes {
     background: #f8fafc;
-    padding: 28px;
+    padding: 20px;
     border-radius: 12px;
     border: 1px solid #e2e8f0;
 }
@@ -398,6 +403,13 @@
     background: none;
     padding: 0;
     color: inherit;
+}
+
+.notes-url-link {
+    color: #be123c;
+    text-decoration: underline;
+    word-break: break-all;
+    cursor: pointer;
 }
 
 .lesson-navigation {
@@ -801,6 +813,42 @@ document.addEventListener('keydown', function(e) {
             }
         });
     }
+})();
+
+// Auto-link plain URLs inside lesson notes
+(function() {
+    var notesEl = document.querySelector('.notes-content');
+    if (!notesEl) return;
+    var urlRegex = /(\bhttps?:\/\/[^\s<>"']+)/g;
+    function linkifyNode(node) {
+        if (node.nodeType === 3) { // text node
+            var text = node.nodeValue;
+            if (!urlRegex.test(text)) return;
+            urlRegex.lastIndex = 0;
+            var frag = document.createDocumentFragment();
+            var lastIndex = 0, match;
+            while ((match = urlRegex.exec(text)) !== null) {
+                if (match.index > lastIndex) {
+                    frag.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
+                }
+                var a = document.createElement('a');
+                a.href = match[1];
+                a.textContent = match[1];
+                a.target = '_blank';
+                a.rel = 'noopener noreferrer';
+                a.className = 'notes-url-link';
+                frag.appendChild(a);
+                lastIndex = urlRegex.lastIndex;
+            }
+            if (lastIndex < text.length) {
+                frag.appendChild(document.createTextNode(text.slice(lastIndex)));
+            }
+            node.parentNode.replaceChild(frag, node);
+        } else if (node.nodeType === 1 && node.nodeName !== 'A' && node.nodeName !== 'SCRIPT') {
+            Array.from(node.childNodes).forEach(linkifyNode);
+        }
+    }
+    linkifyNode(notesEl);
 })();
 </script>
 {% endblock %}
