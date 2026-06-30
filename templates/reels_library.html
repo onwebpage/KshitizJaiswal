@@ -235,10 +235,13 @@
     padding: 1.25rem 0 1rem;
     border-bottom: 1px solid rgba(204,0,0,.25);
     position: sticky;
-    top: 0;
-    z-index: 50;
+    top: 72px;
+    z-index: 1020;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
+}
+@media (max-width: 991px) {
+    .reels-filter-bar-section { top: 62px; }
 }
 .reels-filter-form {
     display: flex;
@@ -724,4 +727,33 @@
     .reels-wa-btn   { width: 100%; justify-content: center; }
 }
 </style>
+
+<script>
+(function(){
+    var form = document.getElementById('reelsFilterForm');
+    if (!form) return;
+
+    // Strip empty params before submitting so URL stays clean
+    form.addEventListener('submit', function(e){
+        e.preventDefault();
+        var params = new URLSearchParams();
+        var fd = new FormData(form);
+        fd.forEach(function(val, key){
+            if (val && val.toString().trim() !== '') params.set(key, val);
+        });
+        // Preserve hidden platform field even if not in FormData
+        var hidden = form.querySelector('input[name="platform"]');
+        if (hidden && hidden.value) params.set('platform', hidden.value);
+        window.location.href = form.action + (params.toString() ? '?' + params.toString() : '');
+    });
+
+    // Also trigger submit on Enter in search input
+    var searchInput = form.querySelector('.reels-filter-input');
+    if (searchInput){
+        searchInput.addEventListener('keydown', function(e){
+            if (e.key === 'Enter'){ e.preventDefault(); form.dispatchEvent(new Event('submit')); }
+        });
+    }
+})();
+</script>
 {% endblock %}
