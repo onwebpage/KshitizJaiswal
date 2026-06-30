@@ -341,15 +341,17 @@
 
 {% block content %}
 {%- set _fallback_img = url_for('static', filename='uploads/hero/banner.jpg') -%}
-{%- set _desk_raw = content.hero.desktop_url or content.hero.banner_url or '' -%}
-{%- set _mob_raw  = content.hero.mobile_url  or content.hero.banner_url or '' -%}
-{%- set _desk_src = (_desk_raw if _desk_raw.startswith('http') else url_for('static', filename=_desk_raw)) if _desk_raw else _fallback_img -%}
-{%- set _mob_src  = (_mob_raw  if _mob_raw.startswith('http')  else url_for('static', filename=_mob_raw))  if _mob_raw  else _fallback_img -%}
+{%- set _desk_raw   = content.hero.desktop_url or content.hero.banner_url or '' -%}
+{%- set _mob_raw    = content.hero.mobile_url or '' -%}
+{%- set _desk_src   = (_desk_raw if _desk_raw.startswith('http') else url_for('static', filename=_desk_raw)) if _desk_raw else _fallback_img -%}
+{%- set _mob_src    = (_mob_raw  if _mob_raw.startswith('http')  else url_for('static', filename=_mob_raw))  if _mob_raw  else '' -%}
 <!-- Hero Section -->
 {% if section_vis.hero %}
 <section class="hero-section responsive-hero">
     <picture>
-        {%- if _mob_src and _mob_src != _desk_src %}
+        {# Only inject the mobile source when a dedicated mobile image has been uploaded.
+           If no mobile image exists the <img> src (desktop) serves on all screens — no cropping fallback. #}
+        {%- if _mob_src %}
         <source media="(max-width: 767px)" srcset="{{ _mob_src }}">
         {%- endif %}
         <img class="hero-banner-img"
