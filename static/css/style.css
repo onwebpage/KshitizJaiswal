@@ -782,7 +782,7 @@ h1, h2, h3, h4, h5, h6 {
   /* main { padding-top: 64px } already clears the fixed navbar on mobile;
      --compact marks the three poll/resources/shows pages that share this hero. */
   .resources-hero.resources-hero--compact {
-    padding: 0 16px 0 !important;
+    padding: 0 16px 10px !important;
   }
 
   .resources-hero.resources-hero--compact .resources-hero-title {
