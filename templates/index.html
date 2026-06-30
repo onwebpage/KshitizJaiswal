@@ -348,12 +348,8 @@
 <!-- Hero Section -->
 {% if section_vis.hero %}
 <section class="hero-section responsive-hero">
-    <img class="hero-banner-img d-none d-md-block"
+    <img class="hero-banner-img"
          src="{{ _desk_src }}"
-         alt="Hero Banner"
-         onerror="this.onerror=null;this.src='{{ _fallback_img }}';">
-    <img class="hero-banner-img d-md-none"
-         src="{{ _mob_src }}"
          alt="Hero Banner"
          onerror="this.onerror=null;this.src='{{ _fallback_img }}';">
 </section>
