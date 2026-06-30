@@ -513,7 +513,7 @@ if (pvBtn) {
                             <div class="sr-video-wrap"
                                  onclick="srOpenLightbox('{{ url_for('static', filename=r.video_path) }}')"
                                  {% if r.video_thumbnail %}
-                                 style="background-image:url('{{ url_for('static', filename=r.video_thumbnail) }}');"
+                                 style="background-image:url('{{ r.video_thumbnail if r.video_thumbnail.startswith('http') else url_for('static', filename=r.video_thumbnail) }}');"
                                  {% endif %}>
                                 {% if r.video_thumbnail %}
                                 <div class="sr-video-poster-overlay"></div>
@@ -528,7 +528,7 @@ if (pvBtn) {
                                 </div>
                                 <div style="display:flex;align-items:center;gap:10px;margin-top:auto;">
                                     {% if r.profile_image %}
-                                    <img src="{{ url_for('static', filename=r.profile_image) }}" class="sr-avatar"
+                                    <img src="{{ r.profile_image if r.profile_image.startswith('http') else url_for('static', filename=r.profile_image) }}" class="sr-avatar"
                                          onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
                                     <div class="sr-avatar-letter" style="display:none;">{{ r.name[0]|upper }}</div>
                                     {% else %}
@@ -553,7 +553,7 @@ if (pvBtn) {
                             {% endif %}
                             <div style="display:flex;align-items:center;gap:12px;border-top:1px solid rgba(204,0,0,.12);padding-top:16px;margin-top:auto;">
                                 {% if r.profile_image %}
-                                <img src="{{ url_for('static', filename=r.profile_image) }}" class="sr-avatar"
+                                <img src="{{ r.profile_image if r.profile_image.startswith('http') else url_for('static', filename=r.profile_image) }}" class="sr-avatar"
                                      onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
                                 <div class="sr-avatar-letter" style="display:none;">{{ r.name[0]|upper }}</div>
                                 {% else %}

@@ -76,10 +76,10 @@
                     <div class="drag-handle"><i class="fas fa-grip-vertical"></i></div>
 
                     {% if r.review_type == 'video' and r.video_thumbnail %}
-                    <img src="{{ url_for('static', filename=r.video_thumbnail) }}" class="video-thumb-sm"
+                    <img src="{{ r.video_thumbnail if r.video_thumbnail.startswith('http') else url_for('static', filename=r.video_thumbnail) }}" class="video-thumb-sm"
                          onerror="this.src='{{ url_for('static', filename='img/reel-placeholder.svg') }}'">
                     {% elif r.profile_image %}
-                    <img src="{{ url_for('static', filename=r.profile_image) }}" class="review-avatar"
+                    <img src="{{ r.profile_image if r.profile_image.startswith('http') else url_for('static', filename=r.profile_image) }}" class="review-avatar"
                          onerror="this.src='{{ url_for('static', filename='img/reel-placeholder.svg') }}'">
                     {% else %}
                     <div class="review-avatar-letter">{{ r.name[0]|upper }}</div>

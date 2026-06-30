@@ -1653,7 +1653,7 @@ def admin_edit_reel(reel_id):
     if form.validate_on_submit():
         # Handle thumbnail upload
         if form.thumbnail.data:
-            reel.thumbnail = save_uploaded_file(form.thumbnail.data, 'reels')
+            reel.thumbnail = save_uploaded_file(form.thumbnail.data, 'reels') or reel.thumbnail
         
         # Process sources
         sources = [s.strip() for s in (form.sources.data or '').split('\n') if s.strip()]
@@ -2854,7 +2854,7 @@ def admin_edit_course(course_id):
     
     if form.validate_on_submit():
         if form.thumbnail.data:
-            course.thumbnail = save_uploaded_file(form.thumbnail.data, 'courses')
+            course.thumbnail = save_uploaded_file(form.thumbnail.data, 'courses') or course.thumbnail
         elif form.thumbnail_url.data:
             course.thumbnail = form.thumbnail_url.data
         
@@ -5871,7 +5871,7 @@ def admin_add_student_review():
 
         # Profile image
         if 'profile_image' in request.files and request.files['profile_image'].filename:
-            review.profile_image = save_uploaded_file(request.files['profile_image'], 'reviews')
+            review.profile_image = save_uploaded_file(request.files['profile_image'], 'reviews') or review.profile_image
 
         # Video upload
         if review_type == 'video' and 'video_file' in request.files and request.files['video_file'].filename:
@@ -5912,7 +5912,7 @@ def admin_edit_student_review(review_id):
 
         # Profile image
         if 'profile_image' in request.files and request.files['profile_image'].filename:
-            review.profile_image = save_uploaded_file(request.files['profile_image'], 'reviews')
+            review.profile_image = save_uploaded_file(request.files['profile_image'], 'reviews') or review.profile_image
 
         # Video upload (only replace if new file provided)
         if review_type == 'video' and 'video_file' in request.files and request.files['video_file'].filename:

@@ -8,3 +8,4 @@
 - [Admin new features pattern](admin-new-features.md) — SEO, Testimonials, Announcement, Account Settings — each backed by SiteConfig/SiteContent; context processor injects announcement+seo_config globally; no Jinja2 md5 filter (use Python hash instead).
 - [Admin panel CSRF pattern](admin-csrf.md) — All admin POST forms use {{ csrf_token() }} (not form.hidden_tag()). Templates that display data tables with action forms (revoke, cancel, delete) must include <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"> in each form.
 - [Admin base template rule](admin-base-rule.md) — All admin pages must extend admin/admin_base.html and use {% block admin_content %}. Pages extending base.html with inline sidebars are broken (no full nav, inconsistent layout).
+- [Cloudinary image integration](cloudinary-integration.md) — All user-uploaded images go to Cloudinary; videos stay local. Template pattern and edit-handler guard required.

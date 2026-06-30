@@ -142,7 +142,7 @@
                             {% if review and review.profile_image %}
                             <div class="mt-2" id="current_profile">
                                 <small class="text-muted">Current:</small>
-                                <img src="{{ url_for('static', filename=review.profile_image) }}" alt="Current"
+                                <img src="{{ review.profile_image if review.profile_image.startswith('http') else url_for('static', filename=review.profile_image) }}" alt="Current"
                                      style="width:50px;height:50px;border-radius:50%;object-fit:cover;border:2px solid #e5e7eb;margin-left:8px;"
                                      onerror="this.style.display='none'">
                             </div>
@@ -187,7 +187,7 @@
                         {% if review and review.video_path %}
                         <div class="mt-3 d-flex align-items-center gap-3" id="current_video">
                             {% if review.video_thumbnail %}
-                            <img src="{{ url_for('static', filename=review.video_thumbnail) }}" alt="Thumb"
+                            <img src="{{ review.video_thumbnail if review.video_thumbnail.startswith('http') else url_for('static', filename=review.video_thumbnail) }}" alt="Thumb"
                                  style="width:80px;height:50px;object-fit:cover;border-radius:8px;border:1px solid #e5e7eb;">
                             {% endif %}
                             <div>
@@ -222,7 +222,7 @@
                             {% if review and review.video_thumbnail %}
                             <div class="mt-2 d-flex align-items-center gap-2" id="current_thumb">
                                 <small class="text-muted">Current thumbnail:</small>
-                                <img src="{{ url_for('static', filename=review.video_thumbnail) }}" alt="Current Thumb"
+                                <img src="{{ review.video_thumbnail if review.video_thumbnail.startswith('http') else url_for('static', filename=review.video_thumbnail) }}" alt="Current Thumb"
                                      style="height:40px;border-radius:6px;border:1px solid #e5e7eb;"
                                      onerror="this.style.display='none'">
                                 <small class="text-muted">Upload a new image to replace it.</small>

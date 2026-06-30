@@ -7,28 +7,44 @@ from flask import current_app
 from werkzeug.utils import secure_filename
 
 def save_uploaded_file(form_file, folder_name):
-    """Save uploaded file and return relative path, or None on failure."""
+    """
+    Upload an image file and return a URL/path, or None on failure.
+
+    - When Cloudinary is configured, uploads the image there and returns
+      the full https:// Cloudinary URL.
+    - Falls back to local disk storage (static/uploads/<folder_name>/)
+      and returns a relative path when Cloudinary is not configured.
+    """
     import logging
     if not form_file or not form_file.filename:
         return None
 
-    random_hex = secrets.token_hex(8)
     _, file_ext = os.path.splitext(form_file.filename)
     file_ext = file_ext.lower()
+    is_image = file_ext in ('.jpg', '.jpeg', '.png', '.gif', '.webp')
 
+    # ── Cloudinary path (images only) ────────────────────────────────────────
+    if is_image:
+        try:
+            from cloudinary_utils import upload_image_to_cloudinary, _is_configured
+            if _is_configured():
+                url = upload_image_to_cloudinary(form_file, folder_name)
+                if url:
+                    return url
+                logging.warning("Cloudinary upload returned None — falling back to local storage.")
+        except Exception as exc:
+            logging.error(f"Cloudinary upload exception ({folder_name}): {exc} — falling back to local storage.")
+
+    # ── Local disk fallback ───────────────────────────────────────────────────
+    random_hex = secrets.token_hex(8)
     folder_path = os.path.join(current_app.config['UPLOAD_FOLDER'], folder_name)
     os.makedirs(folder_path, exist_ok=True)
 
-    # Always save as .jpg for image types so PIL never tries to write RGBA JPEG
-    if file_ext in ('.jpg', '.jpeg', '.png', '.gif', '.webp'):
-        save_ext = '.jpg'
-    else:
-        save_ext = file_ext
-
+    save_ext = '.jpg' if is_image else file_ext
     filename = random_hex + save_ext
     file_path = os.path.join(folder_path, filename)
 
-    if file_ext in ('.jpg', '.jpeg', '.png', '.gif', '.webp'):
+    if is_image:
         try:
             form_file.seek(0)
             img = Image.open(form_file)
