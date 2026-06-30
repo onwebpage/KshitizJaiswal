@@ -168,6 +168,8 @@ input[type="submit"], input[type="button"],
   .hero-bg-desktop,
   .hero-bg-mobile {
     background-attachment: scroll !important;
+    background-size: contain !important;
+    background-position: center center !important;
   }
 
   .hero-cta {

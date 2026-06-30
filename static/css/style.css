@@ -682,15 +682,15 @@ h1, h2, h3, h4, h5, h6 {
 /* Mobile optimizations for hero images */
 @media (max-width: 767.98px) {
   .hero-bg-mobile {
-    background-size: cover;
-    background-position: center top;
-    min-height: 55vh;
+    background-size: contain;
+    background-position: center center;
+    min-height: unset;
   }
   
   .hero-section {
-    height: 55vh;
-    min-height: 280px;
-    max-height: 420px;
+    height: auto;
+    min-height: unset;
+    max-height: unset;
     background-attachment: scroll !important;
   }
   
