@@ -9,6 +9,7 @@
 
 {% block extra_head %}
 <style>
+/* ── Hero ───────────────────────────────────────────────────── */
 .courses-hero {
     background: linear-gradient(135deg, #cc0000 0%, #8b0000 100%) !important;
     position: relative;
@@ -16,15 +17,10 @@
     padding-top: calc(72px + 3rem);
     padding-bottom: 3rem;
 }
-
 @media (max-width: 768px) {
-    .courses-hero {
-        padding-top: calc(82px + 2rem);
-        padding-bottom: 2rem;
-    }
+    .courses-hero { padding-top: calc(82px + 2rem); padding-bottom: 2rem; }
     .courses-hero h1 { font-size: 2rem; }
 }
-
 .courses-hero::before {
     content: '';
     position: absolute;
@@ -33,45 +29,42 @@
     background-size: cover;
     pointer-events: none;
 }
+.courses-hero .badge { font-size: 0.85rem; font-weight: 500; }
 
-.courses-hero .badge {
-    font-size: 0.85rem;
-    font-weight: 500;
-}
-
+/* ── Card shell ─────────────────────────────────────────────── */
 .course-card {
-    background: linear-gradient(160deg, #1a0000 0%, #2d0000 60%, #1a0000 100%);
+    background: #171717;
     border-radius: 16px;
     overflow: hidden;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.35), 0 1px 4px rgba(0,0,0,0.2);
+    box-shadow: 0 4px 28px rgba(0,0,0,0.55);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border: 1px solid rgba(204,0,0,0.25);
+    border: 1px solid rgba(255,255,255,0.07);
     position: relative;
+    display: flex;
+    flex-direction: column;
 }
-
 .course-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 24px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(204,0,0,0.4);
+    transform: translateY(-6px);
+    box-shadow: 0 20px 48px rgba(0,0,0,0.7);
+    border-color: rgba(255,255,255,0.13);
 }
 
+/* ── Poster image area ──────────────────────────────────────── */
 .course-card-image {
     position: relative;
-    height: 280px;
+    height: 210px;
     overflow: hidden;
-    background: linear-gradient(135deg, #0d0000 0%, #3d0000 100%);
+    background: #111;
+    flex-shrink: 0;
 }
-
 .course-card-image img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     transition: transform 0.4s ease;
+    display: block;
 }
-
-.course-card:hover .course-card-image img {
-    transform: scale(1.1);
-}
-
+.course-card:hover .course-card-image img { transform: scale(1.04); }
 .placeholder-image {
     width: 100%;
     height: 100%;
@@ -79,24 +72,233 @@
     align-items: center;
     justify-content: center;
     font-size: 4rem;
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(255,255,255,0.2);
 }
 
+/* ── Body ───────────────────────────────────────────────────── */
+.course-card-body {
+    padding: 20px 20px 22px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+/* Course name */
+.course-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #FFFFFF;
+    line-height: 1.35;
+    margin-bottom: 10px;
+}
+
+/* Premium / Free / Enrolled badge */
 .course-status-badge {
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(10px);
-    color: white;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 0.82rem;
-    font-weight: 600;
+    background: #E53935;
+    color: #FFFFFF;
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 700;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
+    letter-spacing: 0.3px;
+    margin-bottom: 10px;
+    width: fit-content;
+}
+.course-status-badge.owned {
+    background: #10b981;
+}
+.course-status-badge.free-badge {
+    background: #16a34a;
 }
 
-.course-status-badge.owned {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+/* Description */
+.course-description {
+    color: #BDBDBD;
+    font-size: 0.88rem;
+    line-height: 1.6;
+    margin-bottom: 14px;
+    flex-grow: 1;
+}
+
+/* Module / Lesson stat boxes */
+.course-stats {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+.stat-item {
+    background: #2A2A2A;
+    border-radius: 8px;
+    padding: 7px 13px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #FFFFFF;
+}
+.stat-item i {
+    color: #FF4D4D;
+    font-size: 0.82rem;
+}
+
+/* Price */
+.course-price { margin-bottom: 16px; }
+.price-value {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #FFD166;
+    line-height: 1;
+    letter-spacing: -0.5px;
+}
+.price-value.free-price { color: #4ade80; font-size: 1.4rem; }
+
+/* Buttons */
+.course-footer {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: auto;
+}
+
+/* Know More — outline white */
+.btn-know-more {
+    flex: 1;
+    text-align: center;
+    background: transparent;
+    color: #FFFFFF;
+    padding: 11px 14px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.87rem;
+    border: 1.5px solid #FFFFFF;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.25s ease;
+    white-space: nowrap;
+}
+.btn-know-more:hover {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+}
+
+/* Buy Now — gradient */
+.btn-buy-now {
+    flex: 1;
+    text-align: center;
+    background: linear-gradient(135deg, #FF4D6D 0%, #FF0080 100%);
+    color: #FFFFFF;
+    padding: 11px 14px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.87rem;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.25s ease;
+    white-space: nowrap;
+    animation: pulse-buy 2.5s infinite;
+}
+.btn-buy-now:hover {
+    box-shadow: 0 6px 20px rgba(255,0,128,0.45);
+    color: #fff;
+    animation: none;
+    transform: translateY(-1px);
+}
+@keyframes pulse-buy {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255,0,128,0.35); }
+    50%       { box-shadow: 0 0 0 7px rgba(255,0,128,0); }
+}
+
+/* Enroll / Continue — single full-width button */
+.btn-course-action {
+    width: 100%;
+    text-align: center;
+    background: linear-gradient(135deg, #FF4D6D 0%, #FF0080 100%);
+    color: #FFFFFF;
+    padding: 12px 18px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.9rem;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.25s ease;
+}
+.btn-course-action:hover {
+    box-shadow: 0 6px 20px rgba(255,0,128,0.4);
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+/* ── Empty state ────────────────────────────────────────────── */
+.empty-state-icon { font-size: 5rem; color: #444; margin-bottom: 24px; }
+.empty-state h3 { color: #fff; font-weight: 700; }
+
+/* ── WhatsApp CTA ───────────────────────────────────────────── */
+.courses-wa-banner {
+    background: linear-gradient(135deg, #075E54 0%, #128C7E 50%, #25D366 100%);
+    border-radius: 20px;
+    padding: 2px;
+    box-shadow: 0 8px 32px rgba(37,211,102,0.25);
+}
+.courses-wa-inner {
+    background: linear-gradient(135deg, #064e45 0%, #0d7568 60%, #1db954 100%);
+    border-radius: 18px;
+    padding: 28px 32px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+.courses-wa-icon {
+    width: 60px; height: 60px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+.courses-wa-text { flex: 1; color: #fff; min-width: 180px; }
+.courses-wa-text h5 { font-size: 1.1rem; font-weight: 700; margin-bottom: 4px; }
+.courses-wa-text p  { font-size: 0.9rem; opacity: 0.82; }
+.courses-wa-btn {
+    display: inline-flex; align-items: center;
+    background: #fff; color: #075E54;
+    font-weight: 700; font-size: 0.95rem;
+    padding: 14px 28px; border-radius: 50px;
+    text-decoration: none; white-space: nowrap;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    flex-shrink: 0;
+}
+.courses-wa-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.2); color: #075E54; }
+.courses-wa-btn i { font-size: 1.15rem; color: #25D366; }
+
+/* ── Mobile ─────────────────────────────────────────────────── */
+@media (max-width: 767.98px) {
+    .course-card { border-radius: 14px; }
+    .course-card-image { height: 200px; }
+    .course-card-body { padding: 16px 16px 18px; }
+    .course-title { font-size: 1rem; }
+    .course-stats { gap: 8px; }
+    .stat-item { font-size: 0.78rem; padding: 6px 10px; }
+    .price-value { font-size: 1.6rem; }
+    .course-footer { flex-direction: column; gap: 8px; }
+    .btn-know-more, .btn-buy-now { width: 100%; flex: unset; }
+    .courses-wa-inner { padding: 22px 20px; flex-direction: column; text-align: center; }
+    .courses-wa-btn { width: 100%; justify-content: center; }
 }
 </style>
 {% endblock %}
@@ -108,15 +310,9 @@
             <h1 class="display-4 fw-bold mb-3">Courses</h1>
             <p class="lead mb-4">Master new skills with premium courses designed for real-world impact</p>
             <div class="d-flex justify-content-center gap-3 flex-wrap">
-                <span class="badge bg-white text-danger px-3 py-2">
-                    <i class="fas fa-certificate me-2"></i>Expert-Led Content
-                </span>
-                <span class="badge bg-white text-danger px-3 py-2">
-                    <i class="fas fa-infinity me-2"></i>Lifetime Access
-                </span>
-                <span class="badge bg-white text-danger px-3 py-2">
-                    <i class="fas fa-mobile-alt me-2"></i>Learn Anywhere
-                </span>
+                <span class="badge bg-white text-danger px-3 py-2"><i class="fas fa-certificate me-2"></i>Expert-Led Content</span>
+                <span class="badge bg-white text-danger px-3 py-2"><i class="fas fa-infinity me-2"></i>Lifetime Access</span>
+                <span class="badge bg-white text-danger px-3 py-2"><i class="fas fa-mobile-alt me-2"></i>Learn Anywhere</span>
             </div>
         </div>
     </div>
@@ -129,35 +325,36 @@
             {% for course in courses %}
             <div class="col-lg-4 col-md-6">
                 <div class="course-card h-100">
+                    <!-- Poster / Thumbnail -->
                     <div class="course-card-image">
                         {% if course.thumbnail %}
-                        <img src="{{ url_for('static', filename=course.thumbnail) if not course.thumbnail.startswith('http') else course.thumbnail }}" alt="{{ course.title }}">
+                        <img src="{{ url_for('static', filename=course.thumbnail) if not course.thumbnail.startswith('http') else course.thumbnail }}"
+                             alt="{{ course.title }}"
+                             onerror="this.style.display='none';this.parentElement.querySelector('.placeholder-image').style.display='flex'">
+                        <div class="placeholder-image" style="display:none"><i class="fas fa-graduation-cap"></i></div>
                         {% else %}
-                        <div class="placeholder-image">
-                            <i class="fas fa-graduation-cap"></i>
-                        </div>
+                        <div class="placeholder-image"><i class="fas fa-graduation-cap"></i></div>
                         {% endif %}
-                        
                     </div>
-                    
+
+                    <!-- Body -->
                     <div class="course-card-body">
                         <h5 class="course-title">{{ course.title }}</h5>
+
+                        <!-- Badge -->
                         {% if course.has_access %}
-                        <span class="course-status-badge owned d-inline-flex mb-2">
-                            <i class="fas fa-check-circle"></i> Enrolled
-                        </span>
+                        <span class="course-status-badge owned"><i class="fas fa-check-circle"></i> Enrolled</span>
                         {% elif course.price == 0 %}
-                        <span class="course-status-badge d-inline-flex mb-2" style="background:rgba(22,163,74,0.85);">
-                            <i class="fas fa-unlock"></i> Free
-                        </span>
+                        <span class="course-status-badge free-badge"><i class="fas fa-unlock"></i> Free</span>
                         {% else %}
-                        <span class="course-status-badge d-inline-flex mb-2">
-                            <i class="fas fa-lock"></i> Premium
-                        </span>
+                        <span class="course-status-badge"><i class="fas fa-lock"></i> Premium</span>
                         {% endif %}
+
+                        <!-- Description -->
                         <p class="course-description">{{ course.description|truncate(120) }}</p>
-                        
-                        <div class="course-stats mb-3">
+
+                        <!-- Stats -->
+                        <div class="course-stats">
                             <div class="stat-item">
                                 <i class="fas fa-book-open"></i>
                                 <span>{{ course.module_count }} Modules</span>
@@ -167,29 +364,32 @@
                                 <span>{{ course.lesson_count }} Lessons</span>
                             </div>
                         </div>
-                        
-                        <div class="course-price mb-3">
+
+                        <!-- Price -->
+                        <div class="course-price">
                             {% if course.price == 0 %}
-                            <span class="price-value text-success">FREE</span>
+                            <span class="price-value free-price">FREE</span>
                             {% else %}
                             <span class="price-value">₹{{ course.price }}</span>
                             {% endif %}
                         </div>
+
+                        <!-- CTA Buttons -->
                         <div class="course-footer">
                             {% if course.has_access %}
-                            <a href="{{ url_for('course_detail', course_id=course.id) }}" class="btn-course-action flex-fill justify-content-center">
-                                <i class="fas fa-play-circle me-1"></i>Continue Learning
+                            <a href="{{ url_for('course_detail', course_id=course.id) }}" class="btn-course-action">
+                                <i class="fas fa-play-circle"></i>Continue Learning
                             </a>
                             {% elif course.price == 0 %}
-                            <a href="{{ url_for('course_detail', course_id=course.id) }}" class="btn-course-action flex-fill justify-content-center">
-                                <i class="fas fa-arrow-right me-1"></i>Enroll Free
+                            <a href="{{ url_for('course_detail', course_id=course.id) }}" class="btn-course-action">
+                                <i class="fas fa-arrow-right"></i>Enroll Free
                             </a>
                             {% else %}
                             <a href="{{ url_for('course_detail', course_id=course.id) }}" class="btn-know-more">
-                                <i class="fas fa-info-circle me-1"></i>Know More
+                                <i class="fas fa-info-circle"></i>Know More
                             </a>
-                            <a href="{{ url_for('course_detail', course_id=course.id) }}?buy=1" class="btn-course-action btn-buy-now">
-                                <i class="fas fa-bolt me-1"></i>Buy Now
+                            <a href="{{ url_for('course_detail', course_id=course.id) }}?buy=1" class="btn-buy-now">
+                                <i class="fas fa-bolt"></i>Buy Now
                             </a>
                             {% endif %}
                         </div>
@@ -200,9 +400,7 @@
         </div>
         {% else %}
         <div class="empty-state text-center py-5">
-            <div class="empty-state-icon">
-                <i class="fas fa-graduation-cap"></i>
-            </div>
+            <div class="empty-state-icon"><i class="fas fa-graduation-cap"></i></div>
             <h3 class="mb-3">No Courses Available Yet</h3>
             <p class="text-muted">Check back soon for amazing learning content!</p>
         </div>
@@ -233,457 +431,4 @@
         {% endif %}
     </div>
 </section>
-
-<style>
-.courses-hero {
-    background: linear-gradient(135deg, #cc0000 0%, #8b0000 100%);
-    position: relative;
-    overflow: hidden;
-}
-
-.courses-hero::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="rgba(255,255,255,0.1)" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,138.7C960,139,1056,117,1152,96C1248,75,1344,53,1392,42.7L1440,32L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>') bottom center no-repeat;
-    background-size: cover;
-}
-
-.course-card {
-    background: linear-gradient(160deg, #1a0000 0%, #2d0000 60%, #1a0000 100%);
-    border-radius: 16px;
-    overflow: hidden;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.35), 0 1px 4px rgba(0,0,0,0.2);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border: 1px solid rgba(204,0,0,0.25);
-    position: relative;
-}
-
-.course-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 24px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(204,0,0,0.4);
-}
-
-.course-card-image {
-    position: relative;
-    height: 280px;
-    overflow: hidden;
-    background: linear-gradient(135deg, #0d0000 0%, #3d0000 100%);
-}
-
-.course-card-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.4s ease;
-}
-
-.course-card:hover .course-card-image img {
-    transform: scale(1.1);
-}
-
-.placeholder-image {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 4rem;
-    color: rgba(255, 255, 255, 0.7);
-}
-
-.course-status-badge {
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(10px);
-    color: white;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 0.82rem;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.course-status-badge.owned {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-}
-
-.course-card-body {
-    padding: 24px;
-    display: flex;
-    flex-direction: column;
-}
-
-.course-title {
-    font-size: 1.25rem;
-    font-weight: 700;
-    margin-bottom: 12px;
-    color: #ffffff;
-    line-height: 1.4;
-}
-
-.course-description {
-    color: rgba(255,255,255,0.65);
-    font-size: 0.95rem;
-    line-height: 1.6;
-    margin-bottom: 16px;
-    flex-grow: 1;
-}
-
-.course-stats {
-    display: flex;
-    gap: 20px;
-    padding: 16px 0;
-    border-top: 1px solid rgba(255,255,255,0.1);
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-}
-
-.stat-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: #ff6666;
-    font-size: 0.9rem;
-}
-
-.stat-item i {
-    color: #ff6666;
-    font-size: 1rem;
-}
-
-.course-footer {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    margin-top: 8px;
-}
-
-.course-price {
-    font-weight: 700;
-}
-
-.price-value {
-    font-size: 1.75rem;
-    color: #ff8888;
-    text-shadow: 0 0 20px rgba(204,0,0,0.4);
-}
-
-.btn-know-more {
-    flex: 1;
-    text-align: center;
-    background: rgba(255,255,255,0.07);
-    color: rgba(255,255,255,0.85);
-    padding: 11px 16px;
-    border-radius: 10px;
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 0.88rem;
-    border: 1.5px solid rgba(255,255,255,0.2);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-    white-space: nowrap;
-    backdrop-filter: blur(4px);
-}
-
-.btn-know-more:hover {
-    background: rgba(255,255,255,0.15);
-    color: white;
-    border-color: rgba(255,255,255,0.4);
-    transform: translateY(-2px);
-}
-
-.btn-buy-now.btn-course-action {
-    flex: 1;
-    text-align: center;
-    justify-content: center;
-    white-space: nowrap;
-}
-
-.btn-course-action {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 12px 24px;
-    border-radius: 10px;
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 0.9rem;
-    transition: all 0.3s ease;
-    display: inline-flex;
-    align-items: center;
-    border: none;
-}
-
-.btn-course-action:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 16px rgba(102, 126, 234, 0.4);
-    color: white;
-}
-
-.btn-buy-now {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    animation: pulse-buy 2.5s infinite;
-}
-
-.btn-buy-now:hover {
-    box-shadow: 0 8px 20px rgba(245, 87, 108, 0.45);
-    animation: none;
-}
-
-@keyframes pulse-buy {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(245, 87, 108, 0.4); }
-    50% { box-shadow: 0 0 0 8px rgba(245, 87, 108, 0); }
-}
-
-.empty-state-icon {
-    font-size: 5rem;
-    color: #e2e8f0;
-    margin-bottom: 24px;
-}
-
-.empty-state h3 {
-    color: #1e293b;
-    font-weight: 700;
-}
-
-/* ── WhatsApp CTA Banner ───────────────────────────── */
-.courses-wa-banner {
-    background: linear-gradient(135deg, #075E54 0%, #128C7E 50%, #25D366 100%);
-    border-radius: 20px;
-    padding: 2px;
-    box-shadow: 0 8px 32px rgba(37, 211, 102, 0.25);
-}
-
-.courses-wa-inner {
-    background: linear-gradient(135deg, #064e45 0%, #0d7568 60%, #1db954 100%);
-    border-radius: 18px;
-    padding: 28px 32px;
-    display: flex;
-    align-items: center;
-    gap: 24px;
-    flex-wrap: wrap;
-}
-
-.courses-wa-icon {
-    width: 60px;
-    height: 60px;
-    background: rgba(255,255,255,0.15);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.courses-wa-text {
-    flex: 1;
-    color: #fff;
-    min-width: 180px;
-}
-
-.courses-wa-text h5 {
-    font-size: 1.1rem;
-    font-weight: 700;
-    margin-bottom: 4px;
-}
-
-.courses-wa-text p {
-    font-size: 0.9rem;
-    opacity: 0.82;
-}
-
-.courses-wa-btn {
-    display: inline-flex;
-    align-items: center;
-    background: #fff;
-    color: #075E54;
-    font-weight: 700;
-    font-size: 0.95rem;
-    padding: 14px 28px;
-    border-radius: 50px;
-    text-decoration: none;
-    white-space: nowrap;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-    flex-shrink: 0;
-}
-
-.courses-wa-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-    color: #075E54;
-    text-decoration: none;
-}
-
-.courses-wa-btn i {
-    font-size: 1.15rem;
-    color: #25D366;
-}
-
-@media (max-width: 768px) {
-    .course-card-image {
-        height: 240px;
-    }
-
-    .course-footer {
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    .btn-course-action {
-        width: 100%;
-        justify-content: center;
-    }
-
-    .courses-wa-inner {
-        padding: 22px 20px;
-        flex-direction: column;
-        text-align: center;
-    }
-
-    .courses-wa-btn {
-        width: 100%;
-        justify-content: center;
-    }
-}
-
-/* ── Premium Mobile Course Cards ─────────────────────────────── */
-@media (max-width: 767.98px) {
-    .course-card {
-        border-radius: 20px;
-        box-shadow: 0 2px 16px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06);
-        border: 1px solid rgba(204,0,0,0.08);
-        position: relative;
-        overflow: hidden;
-    }
-
-    /* Red accent line at top of each card */
-    .course-card::before {
-        content: '';
-        position: absolute;
-        top: 0; left: 0; right: 0;
-        height: 3px;
-        background: linear-gradient(90deg, #cc0000 0%, #ff4444 100%);
-        z-index: 2;
-    }
-
-    .course-card-image {
-        height: 240px;
-    }
-
-    .course-status-badge {
-        font-size: 0.78rem;
-        padding: 6px 12px;
-        border-radius: 50px;
-        gap: 5px;
-    }
-
-    .course-card-body {
-        padding: 16px 16px 18px;
-    }
-
-    .course-title {
-        font-size: 1.05rem;
-        font-weight: 700;
-        margin-bottom: 6px;
-        color: #ffffff;
-        line-height: 1.35;
-    }
-
-    .course-description {
-        font-size: 0.85rem;
-        color: rgba(255,255,255,0.6);
-        margin-bottom: 12px;
-        line-height: 1.5;
-    }
-
-    .course-stats {
-        display: flex;
-        gap: 8px;
-        padding: 10px 0;
-        border-top: 1px solid rgba(255,255,255,0.1);
-        border-bottom: 1px solid rgba(255,255,255,0.1);
-        margin-bottom: 12px;
-    }
-
-    .stat-item {
-        background: rgba(255,255,255,0.07);
-        border: 1px solid rgba(255,255,255,0.12);
-        border-radius: 50px;
-        padding: 5px 10px;
-        font-size: 0.78rem;
-        gap: 5px;
-        color: #ff6666;
-    }
-
-    .stat-item i {
-        font-size: 0.78rem;
-        color: #ff6666;
-    }
-
-    .course-price {
-        margin-bottom: 12px;
-    }
-
-    .price-value {
-        font-size: 1.6rem;
-        font-weight: 800;
-        color: #ff8888;
-        letter-spacing: -0.5px;
-    }
-
-    /* Buttons */
-    .btn-know-more {
-        width: 100%;
-        padding: 11px 16px;
-        border-radius: 12px;
-        font-size: 0.88rem;
-        border: 1.5px solid rgba(255,255,255,0.2);
-        color: rgba(255,255,255,0.85);
-        background: rgba(255,255,255,0.07);
-        font-weight: 600;
-        justify-content: center;
-        display: inline-flex;
-        align-items: center;
-        text-decoration: none;
-        transition: all 0.2s ease;
-    }
-
-    .btn-course-action {
-        width: 100%;
-        padding: 13px 16px;
-        border-radius: 12px;
-        font-size: 0.92rem;
-        font-weight: 700;
-        justify-content: center;
-        letter-spacing: 0.2px;
-        box-shadow: 0 4px 12px rgba(102,126,234,0.3);
-    }
-
-    .btn-buy-now.btn-course-action {
-        padding: 14px 16px;
-        font-size: 0.95rem;
-        border-radius: 14px;
-        box-shadow: 0 4px 16px rgba(245,87,108,0.35);
-    }
-
-    .course-footer {
-        gap: 8px;
-    }
-
-    /* Section padding tighter on mobile */
-    .courses-hero .display-4 {
-        font-size: 1.8rem;
-    }
-
-    .courses-hero .lead {
-        font-size: 0.95rem;
-    }
-}
-</style>
 {% endblock %}
