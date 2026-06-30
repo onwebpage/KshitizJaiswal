@@ -164,12 +164,10 @@ input[type="submit"], input[type="button"],
     background-attachment: scroll !important;
   }
 
-  .hero-bg,
-  .hero-bg-desktop,
-  .hero-bg-mobile {
-    background-attachment: scroll !important;
-    background-size: contain !important;
-    background-position: center center !important;
+  .hero-banner-img {
+    width: 100% !important;
+    height: auto !important;
+    display: block !important;
   }
 
   .hero-cta {

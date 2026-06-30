@@ -339,10 +339,19 @@
 {% if section_vis.hero %}
 <section class="hero-section responsive-hero">
     {% if hero_img %}
-    <div class="hero-bg hero-bg-desktop d-none d-md-block" style="background-image: url('{% if content.hero.desktop_url %}{% if content.hero.desktop_url.startswith('http') %}{{ content.hero.desktop_url }}{% else %}{{ url_for('static', filename=content.hero.desktop_url) }}{% endif %}{% elif content.hero.banner_url %}{% if content.hero.banner_url.startswith('http') %}{{ content.hero.banner_url }}{% else %}{{ url_for('static', filename=content.hero.banner_url) }}{% endif %}{% endif %}');"></div>
-    <div class="hero-bg hero-bg-mobile d-md-none" style="background-image: url('{% if content.hero.mobile_url %}{% if content.hero.mobile_url.startswith('http') %}{{ content.hero.mobile_url }}{% else %}{{ url_for('static', filename=content.hero.mobile_url) }}{% endif %}{% elif content.hero.banner_url %}{% if content.hero.banner_url.startswith('http') %}{{ content.hero.banner_url }}{% else %}{{ url_for('static', filename=content.hero.banner_url) }}{% endif %}{% endif %}');"></div>
+    {%- set _desk = content.hero.desktop_url or content.hero.banner_url -%}
+    {%- set _mob  = content.hero.mobile_url  or content.hero.banner_url -%}
+    {% if _desk %}
+    <img class="hero-banner-img d-none d-md-block"
+         src="{% if _desk.startswith('http') %}{{ _desk }}{% else %}{{ url_for('static', filename=_desk) }}{% endif %}"
+         alt="Hero Banner">
     {% endif %}
-
+    {% if _mob %}
+    <img class="hero-banner-img d-md-none"
+         src="{% if _mob.startswith('http') %}{{ _mob }}{% else %}{{ url_for('static', filename=_mob) }}{% endif %}"
+         alt="Hero Banner">
+    {% endif %}
+    {% endif %}
 </section>
 {% endif %}
 

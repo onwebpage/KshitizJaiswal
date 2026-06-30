@@ -24,7 +24,17 @@
                             <i class="fas fa-desktop me-1 text-primary"></i>Banner Preview
                         </label>
                         <div class="hero-live-preview" id="heroBannerPreview"
-                             style="{% if current_hero.desktop_url or current_hero.banner_url %}background-image: url('{% set img = current_hero.desktop_url or current_hero.banner_url %}{% if img.startswith('http') %}{{ img }}{% else %}{{ url_for('static', filename=img) }}{% endif %}');{% endif %}">
+                             ondragover="event.preventDefault();this.classList.add('drag-over')"
+                             ondragleave="this.classList.remove('drag-over')"
+                             ondrop="previewDrop(event)">
+                            {% set _prev_img = current_hero.desktop_url or current_hero.banner_url %}
+                            {% if _prev_img %}
+                            <img id="heroBannerImg"
+                                 src="{% if _prev_img.startswith('http') %}{{ _prev_img }}{% else %}{{ url_for('static', filename=_prev_img) }}{% endif %}"
+                                 alt="Hero Preview">
+                            {% else %}
+                            <img id="heroBannerImg" src="" alt="Hero Preview" style="display:none;">
+                            {% endif %}
                             <div class="hero-preview-overlay">
                                 <div class="hero-preview-text">
                                     <div class="hero-preview-name">{{ current_hero.name or 'Your Name' }}</div>
@@ -35,9 +45,16 @@
                                 <i class="fas fa-cloud-upload-alt fa-2x mb-2"></i>
                                 <p class="mb-0 fw-semibold">Drop image here to preview</p>
                             </div>
+                            {% if not _prev_img %}
+                            <div class="hero-preview-empty">
+                                <i class="fas fa-image fa-3x mb-3 opacity-25"></i>
+                                <p class="mb-0">No image uploaded yet</p>
+                            </div>
+                            {% endif %}
                         </div>
                         <p class="text-muted mt-1" style="font-size:.8rem;">
                             <i class="fas fa-info-circle me-1"></i>
+                            Image will show at its full uploaded size — no cropping.
                             You can drag an image directly onto the preview above, or use the upload buttons below.
                         </p>
                     </div>
@@ -136,24 +153,27 @@
 /* ── Live Preview ── */
 .hero-live-preview {
     width: 100%;
-    height: 220px;
     border-radius: 14px;
     background: linear-gradient(135deg, #1a0000 0%, #8b0000 50%, #cc0000 100%);
-    background-size: cover;
-    background-position: center;
     position: relative;
     overflow: hidden;
     border: 2px dashed #dee2e6;
-    cursor: default;
     transition: border-color .2s;
+    min-height: 80px;
 }
 .hero-live-preview.drag-over {
     border-color: #cc0000;
     box-shadow: 0 0 0 3px rgba(204,0,0,.2);
 }
+.hero-live-preview #heroBannerImg {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 12px;
+}
 .hero-preview-overlay {
     position: absolute; inset: 0;
-    background: linear-gradient(135deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,.3) 100%);
+    background: linear-gradient(135deg, rgba(0,0,0,.45) 0%, rgba(0,0,0,.2) 100%);
     display: flex; align-items: center; justify-content: center;
     pointer-events: none;
 }
@@ -168,8 +188,14 @@
     background: rgba(0,0,0,.6);
     color: #fff;
     pointer-events: none;
+    border-radius: 12px;
 }
 .hero-live-preview.drag-over .hero-preview-drop-hint { display: flex; }
+.hero-preview-empty {
+    padding: 48px 24px;
+    text-align: center;
+    color: rgba(255,255,255,.5);
+}
 
 /* ── Upload Zones ── */
 .hero-upload-zone {
@@ -198,7 +224,7 @@
 .hero-uz-cta   { font-size: .78rem; color: #cc0000; font-weight: 600; }
 .hero-uz-thumb {
     width: 100%; max-height: 70px;
-    object-fit: cover; border-radius: 6px;
+    object-fit: contain; border-radius: 6px;
     margin-top: 6px; border: 1px solid #e9ecef;
 }
 
@@ -223,36 +249,31 @@
 </style>
 
 <script>
-/* ── Live preview update ── */
 const preview = document.getElementById('heroBannerPreview');
+const bannerImg = document.getElementById('heroBannerImg');
 
-/* Drag onto the big preview */
-preview.addEventListener('dragover', function(e) {
-    e.preventDefault();
-    preview.classList.add('drag-over');
-});
-preview.addEventListener('dragleave', function() {
-    preview.classList.remove('drag-over');
-});
-preview.addEventListener('drop', function(e) {
+/* Drop onto the big preview */
+function previewDrop(e) {
     e.preventDefault();
     preview.classList.remove('drag-over');
     const file = e.dataTransfer.files[0];
     if (file && file.type.startsWith('image/')) {
-        setPreviewBg(file);
-        /* Also feed the file into the desktop input */
+        setPreviewImg(file);
         const input = document.getElementById('desktop_image_input');
         const dt = new DataTransfer();
         dt.items.add(file);
         input.files = dt.files;
         heroShowPreview(file, 'desktop');
     }
-});
+}
 
-function setPreviewBg(file) {
+function setPreviewImg(file) {
     const reader = new FileReader();
     reader.onload = function(e) {
-        preview.style.backgroundImage = "url('" + e.target.result + "')";
+        bannerImg.src = e.target.result;
+        bannerImg.style.display = 'block';
+        const emptyMsg = preview.querySelector('.hero-preview-empty');
+        if (emptyMsg) emptyMsg.style.display = 'none';
     };
     reader.readAsDataURL(file);
 }
@@ -284,12 +305,12 @@ function heroDrop(e, id) {
     dt.items.add(file);
     input.files = dt.files;
     heroShowPreview(file, id);
-    if (id === 'desktop') setPreviewBg(file);
+    if (id === 'desktop') setPreviewImg(file);
 }
 function heroFileChange(input, id) {
     if (input.files && input.files[0]) {
         heroShowPreview(input.files[0], id);
-        if (id === 'desktop') setPreviewBg(input.files[0]);
+        if (id === 'desktop') setPreviewImg(input.files[0]);
     }
 }
 function heroShowPreview(file, id) {
