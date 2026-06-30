@@ -99,7 +99,7 @@
                                 <i class="fas fa-file-alt me-2"></i>Lesson Notes & Resources
                             </h5>
                             <div class="notes-content">
-                                {{ lesson.notes|safe }}
+                                {{ lesson.notes|linkify }}
                             </div>
                         </div>
                         {% endif %}
@@ -815,40 +815,5 @@ document.addEventListener('keydown', function(e) {
     }
 })();
 
-// Auto-link plain URLs inside lesson notes
-(function() {
-    var notesEl = document.querySelector('.notes-content');
-    if (!notesEl) return;
-    var urlRegex = /(\bhttps?:\/\/[^\s<>"']+)/g;
-    function linkifyNode(node) {
-        if (node.nodeType === 3) { // text node
-            var text = node.nodeValue;
-            if (!urlRegex.test(text)) return;
-            urlRegex.lastIndex = 0;
-            var frag = document.createDocumentFragment();
-            var lastIndex = 0, match;
-            while ((match = urlRegex.exec(text)) !== null) {
-                if (match.index > lastIndex) {
-                    frag.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
-                }
-                var a = document.createElement('a');
-                a.href = match[1];
-                a.textContent = match[1];
-                a.target = '_blank';
-                a.rel = 'noopener noreferrer';
-                a.className = 'notes-url-link';
-                frag.appendChild(a);
-                lastIndex = urlRegex.lastIndex;
-            }
-            if (lastIndex < text.length) {
-                frag.appendChild(document.createTextNode(text.slice(lastIndex)));
-            }
-            node.parentNode.replaceChild(frag, node);
-        } else if (node.nodeType === 1 && node.nodeName !== 'A' && node.nodeName !== 'SCRIPT') {
-            Array.from(node.childNodes).forEach(linkifyNode);
-        }
-    }
-    linkifyNode(notesEl);
-})();
 </script>
 {% endblock %}

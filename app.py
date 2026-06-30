@@ -311,6 +311,20 @@ def inject_global_context():
         'footer_stats': footer_stats,
     }
 
+import re as _re
+from markupsafe import Markup, escape as _escape
+
+@app.template_filter('linkify')
+def linkify_filter(text):
+    """Convert plain-text URLs inside HTML content into clickable <a> tags."""
+    if not text:
+        return text
+    _url_re = _re.compile(r'(?<!["\'=>])(https?://[^\s<>"\']+)')
+    def _replace(m):
+        url = m.group(1)
+        return f'<a href="{url}" target="_blank" rel="noopener noreferrer" class="notes-url-link">{url}</a>'
+    return Markup(_url_re.sub(_replace, str(text)))
+
 @app.template_global()
 def static_ver(filename):
     """Return a cache-busting query string based on the file's modification time."""
