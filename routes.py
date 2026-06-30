@@ -2845,10 +2845,13 @@ def admin_add_module():
     """Add new module"""
     if 'admin_logged_in' not in session:
         return redirect(url_for('admin_login'))
-    
+
+    # Course pre-selection from builder link (?course_id=N)
+    preselect_course_id = request.args.get('course_id', type=int)
+
     form = ModuleForm()
     form.course_id.choices = [(c.id, c.title) for c in Course.query.order_by(Course.title).all()]
-    
+
     if form.validate_on_submit():
         module = Module(
             title=form.title.data,
@@ -2858,11 +2861,16 @@ def admin_add_module():
         )
         db.session.add(module)
         db.session.commit()
-        
         flash(f'Module "{module.title}" added successfully!', 'success')
-        return redirect(url_for('admin_modules'))
-    
-    return render_template('admin/module_form.html', form=form, title='Add New Module')
+        # Go back to the builder if we came from one
+        return redirect(url_for('admin_course_builder', course_id=module.course_id))
+
+    # Pre-select course on GET
+    if preselect_course_id and not form.is_submitted():
+        form.course_id.data = preselect_course_id
+
+    back_url = url_for('admin_course_builder', course_id=preselect_course_id) if preselect_course_id else url_for('admin_modules')
+    return render_template('admin/module_form.html', form=form, title='Add New Module', back_url=back_url)
 
 @app.route('/admin/module/<int:module_id>/edit', methods=['GET', 'POST'])
 def admin_edit_module(module_id):
@@ -2922,10 +2930,19 @@ def admin_add_lesson():
     """Add new lesson"""
     if 'admin_logged_in' not in session:
         return redirect(url_for('admin_login'))
-    
+
+    # Pre-selection from builder link (?module_id=N&course_id=N)
+    preselect_module_id = request.args.get('module_id', type=int)
+    preselect_course_id = request.args.get('course_id', type=int)
+
     form = LessonForm()
-    form.module_id.choices = [(m.id, f"{m.course.title} - {m.title}") for m in Module.query.join(Course).order_by(Course.title, Module.sort_order).all()]
-    
+    # If a course is pre-selected, show only that course's modules; otherwise show all
+    if preselect_course_id:
+        modules_q = Module.query.filter_by(course_id=preselect_course_id).order_by(Module.sort_order).all()
+        form.module_id.choices = [(m.id, m.title) for m in modules_q]
+    else:
+        form.module_id.choices = [(m.id, f"{m.course.title} - {m.title}") for m in Module.query.join(Course).order_by(Course.title, Module.sort_order).all()]
+
     if form.validate_on_submit():
         lesson = Lesson(
             title=form.title.data,
@@ -2938,11 +2955,20 @@ def admin_add_lesson():
         )
         db.session.add(lesson)
         db.session.commit()
-        
         flash(f'Lesson "{lesson.title}" added successfully!', 'success')
+        # Go back to builder for the right course
+        _back_course_id = preselect_course_id or (Module.query.get(lesson.module_id).course_id if lesson.module_id else None)
+        if _back_course_id:
+            return redirect(url_for('admin_course_builder', course_id=_back_course_id))
         return redirect(url_for('admin_lessons'))
-    
-    return render_template('admin/lesson_form.html', form=form, title='Add New Lesson')
+
+    # Pre-select module on GET
+    if not form.is_submitted():
+        if preselect_module_id:
+            form.module_id.data = preselect_module_id
+
+    back_url = url_for('admin_course_builder', course_id=preselect_course_id) if preselect_course_id else url_for('admin_lessons')
+    return render_template('admin/lesson_form.html', form=form, title='Add New Lesson', back_url=back_url)
 
 @app.route('/admin/lesson/<int:lesson_id>/edit', methods=['GET', 'POST'])
 def admin_edit_lesson(lesson_id):

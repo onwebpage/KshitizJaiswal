@@ -8,7 +8,7 @@
         </a>
         <h2 class="d-inline-block mb-0 align-middle">Course Builder: <span class="text-primary">{{ course.title }}</span></h2>
     </div>
-    <a href="{{ url_for('admin_add_module') }}" class="btn btn-primary">
+    <a href="{{ url_for('admin_add_module', course_id=course.id) }}" class="btn btn-primary">
         <i class="fas fa-plus me-1"></i>Add Module
     </a>
 </div>
@@ -120,12 +120,12 @@
                 {% else %}
                 <div class="text-muted py-3 text-center cb-no-lessons">
                     <i class="fas fa-inbox me-1"></i>No lessons yet.
-                    <a href="{{ url_for('admin_add_lesson') }}">Add a lesson</a>
+                    <a href="{{ url_for('admin_add_lesson', module_id=module.id, course_id=course.id) }}">Add a lesson</a>
                 </div>
                 {% endif %}
             </div>
             <div class="px-3 pb-2 pt-1">
-                <a href="{{ url_for('admin_add_lesson') }}" class="btn btn-sm btn-outline-primary">
+                <a href="{{ url_for('admin_add_lesson', module_id=module.id, course_id=course.id) }}" class="btn btn-sm btn-outline-primary">
                     <i class="fas fa-plus me-1"></i>Add Lesson to this Module
                 </a>
             </div>
@@ -136,7 +136,7 @@
 <div class="alert alert-secondary text-center py-5">
     <i class="fas fa-layer-group fa-3x mb-3 d-block text-muted"></i>
     No modules yet for this course.
-    <a href="{{ url_for('admin_add_module') }}" class="btn btn-primary mt-2 d-block w-25 mx-auto">Add First Module</a>
+    <a href="{{ url_for('admin_add_module', course_id=course.id) }}" class="btn btn-primary mt-2 d-block w-25 mx-auto">Add First Module</a>
 </div>
 {% endif %}
 </div>
