@@ -5882,6 +5882,12 @@ def admin_add_student_review():
             review.video_path = vpath
             review.video_thumbnail = tpath
 
+        # Custom video thumbnail (overrides auto-generated one if provided)
+        if 'video_thumbnail_file' in request.files and request.files['video_thumbnail_file'].filename:
+            custom_thumb = save_uploaded_file(request.files['video_thumbnail_file'], 'reviews')
+            if custom_thumb:
+                review.video_thumbnail = custom_thumb
+
         db.session.add(review)
         db.session.commit()
         flash(f'Review by "{name}" added!', 'success')
@@ -5925,6 +5931,12 @@ def admin_edit_student_review(review_id):
         elif review_type == 'text':
             review.video_path = None
             review.video_thumbnail = None
+
+        # Custom video thumbnail (overrides auto-generated one if provided)
+        if review_type == 'video' and 'video_thumbnail_file' in request.files and request.files['video_thumbnail_file'].filename:
+            custom_thumb = save_uploaded_file(request.files['video_thumbnail_file'], 'reviews')
+            if custom_thumb:
+                review.video_thumbnail = custom_thumb
 
         db.session.commit()
         flash(f'Review by "{name}" updated!', 'success')
