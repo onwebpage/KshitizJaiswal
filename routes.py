@@ -2730,6 +2730,7 @@ def admin_add_course():
         import json as _json
         features_raw = form.course_features.data or ''
         features_list = [l.strip() for l in features_raw.splitlines() if l.strip()]
+        _vd = form.validity_days.data
         course = Course(
             title=form.title.data,
             description=form.description.data,
@@ -2739,6 +2740,7 @@ def admin_add_course():
             preview_subtitle=form.preview_subtitle.data or '',
             course_features=_json.dumps(features_list),
             price=form.price.data,
+            validity_days=_vd if _vd and _vd > 0 else None,
             is_active=bool(int(form.is_active.data)),
             sort_order=form.sort_order.data
         )
@@ -2773,6 +2775,7 @@ def admin_edit_course(course_id):
         import json as _json
         features_raw = form.course_features.data or ''
         features_list = [l.strip() for l in features_raw.splitlines() if l.strip()]
+        _vd = form.validity_days.data
         course.title = form.title.data
         course.description = form.description.data
         course.preview_video_url = form.preview_video_url.data or ''
@@ -2780,6 +2783,7 @@ def admin_edit_course(course_id):
         course.preview_subtitle = form.preview_subtitle.data or ''
         course.course_features = _json.dumps(features_list)
         course.price = form.price.data
+        course.validity_days = _vd if _vd and _vd > 0 else None
         course.is_active = bool(int(form.is_active.data))
         course.sort_order = form.sort_order.data
         
@@ -2804,6 +2808,7 @@ def admin_edit_course(course_id):
         _feats = []
     form.course_features.data = '\n'.join(_feats)
     form.price.data = course.price
+    form.validity_days.data = course.validity_days
     form.is_active.data = '1' if course.is_active else '0'
     form.sort_order.data = course.sort_order
     
@@ -3232,6 +3237,11 @@ def admin_create_course_user():
     # Step 2: Grant course accesses in a separate transaction (failures don't undo the user)
     for cid in course_ids:
         try:
+            from datetime import timedelta as _td
+            _c = Course.query.get(int(cid))
+            _expires = None
+            if _c and _c.validity_days and _c.validity_days > 0:
+                _expires = datetime.utcnow() + _td(days=_c.validity_days)
             access = UserCourseAccess(
                 course_id=int(cid),
                 clerk_user_id=None,
@@ -3241,6 +3251,7 @@ def admin_create_course_user():
                 payment_status='manual',
                 account_created=True,
                 access_revoked=False,
+                expires_at=_expires,
             )
             db.session.add(access)
             db.session.commit()
@@ -4954,6 +4965,10 @@ def verify_course_payment():
         if not course:
             return jsonify({'success': False, 'message': 'Course not found'}), 404
 
+        from datetime import timedelta as _td
+        _expires = None
+        if course.validity_days and course.validity_days > 0:
+            _expires = datetime.utcnow() + _td(days=course.validity_days)
         access = UserCourseAccess(
             clerk_user_id=clerk_user_id,
             course_id=course_id,
@@ -4966,6 +4981,7 @@ def verify_course_payment():
             guest_phone=guest_phone,
             account_created=False,
             access_revoked=False,
+            expires_at=_expires,
         )
         db.session.add(access)
         db.session.commit()

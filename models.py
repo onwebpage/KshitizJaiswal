@@ -551,6 +551,7 @@ class Course(db.Model):
     price = db.Column(db.Integer, nullable=False)  # Price in rupees
     is_active = db.Column(db.Boolean, default=True)
     sort_order = db.Column(db.Integer, default=0)
+    validity_days = db.Column(db.Integer, nullable=True)  # None = lifetime; >0 = days of access after purchase
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     modules = db.relationship('Module', backref='course', lazy=True, cascade='all, delete-orphan', order_by='Module.sort_order')

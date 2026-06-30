@@ -124,6 +124,7 @@ class CourseForm(FlaskForm):
     preview_subtitle = TextAreaField('Preview Section Subtitle', validators=[Optional()])
     course_features = TextAreaField('Course Features (one per line)', validators=[Optional()])
     price = IntegerField('Price (₹)', validators=[DataRequired(), NumberRange(min=0)])
+    validity_days = IntegerField('Course Validity (Days)', validators=[Optional(), NumberRange(min=1, max=36500)], default=None)
     is_active = SelectField('Active', choices=[('1', 'Yes'), ('0', 'No')], default='1')
     sort_order = IntegerField('Sort Order', validators=[NumberRange(min=0)], default=0)
     submit = SubmitField('Save Course')

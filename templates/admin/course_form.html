@@ -125,7 +125,7 @@
                         </div>
 
                         <div class="row g-3">
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label fw-semibold">
                                     {{ form.price.label.text }} <span class="text-danger">*</span>
                                 </label>
@@ -135,12 +135,26 @@
                                 </div>
                                 {% for err in form.price.errors %}<div class="invalid-feedback d-block">{{ err }}</div>{% endfor %}
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold">
+                                    <i class="fas fa-calendar-alt me-1 text-warning"></i>
+                                    Access Validity (Days)
+                                </label>
+                                <div class="input-group">
+                                    {{ form.validity_days(class="form-control", type="number", min="1", placeholder="Blank = Lifetime") }}
+                                    <span class="input-group-text">days</span>
+                                </div>
+                                <small class="form-text text-muted">
+                                    Khali chhodo = Lifetime access &nbsp;|&nbsp; e.g. 365 = 1 saal
+                                </small>
+                                {% for err in form.validity_days.errors %}<div class="invalid-feedback d-block">{{ err }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-3">
                                 <label class="form-label fw-semibold">{{ form.is_active.label.text }}</label>
                                 {{ form.is_active(class="form-select") }}
                                 <small class="form-text text-muted">Inactive courses won't appear on the site.</small>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label class="form-label fw-semibold">{{ form.sort_order.label.text }}</label>
                                 {{ form.sort_order(class="form-control", type="number", min="0") }}
                                 <small class="form-text text-muted">Lower numbers appear first.</small>
