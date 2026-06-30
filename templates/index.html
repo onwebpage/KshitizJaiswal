@@ -313,22 +313,28 @@
     .preel-nav-btn { width: 42px; height: 42px; font-size: .92rem; }
 }
 
-/* Mobile — 1.2 cards visible */
+/* Mobile — 1 card + peek of next */
 @media (max-width: 700px) {
     .premium-reels-section { padding: 40px 0 56px; }
     .premium-reels-header { margin-bottom: 24px; }
-    .preel-full-bleed { width: 94%; }
-    .preel-card { width: 78vw; border-radius: 18px; }
-    .preel-carousel { gap: 16px; }
+    /* full-bleed spans full width with small side padding */
+    .preel-full-bleed { width: 100%; box-sizing: border-box; padding: 0 10px; }
+    /* nav buttons smaller so they don't eat card space */
+    .preel-nav-btn { width: 34px; height: 34px; font-size: .8rem; flex-shrink: 0; }
     .preel-carousel-wrap { gap: 8px; }
-    .preel-nav-btn { width: 36px; height: 36px; font-size: .82rem; }
+    /* card fills available space: 100vw - 20px(padding) - 68px(buttons) - 16px(gaps) - 22px(peek) */
+    .preel-card { width: calc(100vw - 126px); border-radius: 18px; max-width: 280px; }
+    .preel-carousel { gap: 14px; }
     .preel-title { font-size: .9rem; }
     .preel-title-block { padding: 12px 14px 16px; }
     .preel-play-btn { width: 50px; height: 50px; font-size: 1.1rem; }
 }
 @media (max-width: 420px) {
-    .preel-card { width: 82vw; }
-    .preel-nav-btn { width: 32px; height: 32px; font-size: .78rem; }
+    /* tighter screens — keep card within viewport */
+    .preel-card { width: calc(100vw - 120px); max-width: 260px; }
+    .preel-nav-btn { width: 30px; height: 30px; font-size: .74rem; }
+    .preel-carousel-wrap { gap: 6px; }
+    .preel-full-bleed { padding: 0 8px; }
 }
 </style>
 {% endblock %}
