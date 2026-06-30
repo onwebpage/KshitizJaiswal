@@ -29,20 +29,29 @@
                           {% set _lvid = '' %}
                         {% endif %}
                         {% if _lvid %}
-                          {% set _lsrc = 'https://www.youtube-nocookie.com/embed/' ~ _lvid ~ '?rel=0&modestbranding=1&showinfo=0&controls=1&vq=hd1080&iv_load_policy=3&fs=1&color=white' %}
+                          {% set _lsrc = 'https://www.youtube-nocookie.com/embed/' ~ _lvid ~ '?rel=0&modestbranding=1&showinfo=0&controls=0&vq=hd1080&iv_load_policy=3&fs=0&color=white&enablejsapi=1&disablekb=1&playsinline=1' %}
                         {% else %}
                           {% set _lsrc = _lv %}
                         {% endif %}
                         <div class="bunny-video-container" id="videoWrapper" oncontextmenu="return false;">
                             <iframe
+                                id="ytLessonPlayer"
                                 src="{{ _lsrc }}"
                                 title="{{ lesson.title }}"
                                 loading="lazy"
                                 class="bunny-video-iframe"
-                                allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen"
+                                allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture"
                                 allowfullscreen="true"
-                                sandbox="allow-scripts allow-same-origin allow-presentation allow-popups">
+                                sandbox="allow-scripts allow-same-origin allow-presentation">
                             </iframe>
+                            {% if _lvid %}
+                            <!-- Overlay: blocks YouTube links, provides custom controls -->
+                            <div class="yt-overlay" id="ytOverlay">
+                                <button class="yt-play-btn" id="ytPlayBtn" aria-label="Play / Pause">
+                                    <i class="fas fa-play" id="ytPlayIcon"></i>
+                                </button>
+                            </div>
+                            {% endif %}
                         </div>
                         {% else %}
                         <div class="video-placeholder">
@@ -242,6 +251,40 @@
     height: 100%;
     width: 100%;
 }
+
+/* Custom YouTube overlay — blocks branding links, provides play/pause */
+.yt-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    /* Transparent — only the button area is visible */
+    background: transparent;
+}
+.yt-play-btn {
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.65);
+    border: 2px solid rgba(255,255,255,0.8);
+    color: #fff;
+    font-size: 1.4rem;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: background .2s, transform .15s;
+    backdrop-filter: blur(4px);
+    padding: 0;
+    /* Only the button intercepts clicks; the rest of overlay passes through */
+    pointer-events: auto;
+}
+.yt-play-btn:hover { background: rgba(204,0,0,0.8); transform: scale(1.1); }
+/* Hide play button once video is playing; show it again on pause */
+.yt-overlay.playing .yt-play-btn { opacity: 0; }
+.yt-overlay.playing:hover .yt-play-btn { opacity: 1; }
+.yt-overlay { pointer-events: none; } /* pass clicks through by default */
+.yt-overlay .yt-play-btn { pointer-events: auto; } /* but button still clickable */
 
 .video-placeholder {
     position: relative;
@@ -584,5 +627,59 @@ document.addEventListener('keydown', function(e) {
         e.preventDefault();
     }
 });
+
+/* ── YouTube IFrame API — custom play/pause control ── */
+(function() {
+    var overlay = document.getElementById('ytOverlay');
+    var playBtn = document.getElementById('ytPlayBtn');
+    var playIcon = document.getElementById('ytPlayIcon');
+    if (!overlay || !playBtn) return;
+
+    var player = null;
+    var playing = false;
+
+    // Load YT IFrame API
+    var tag = document.createElement('script');
+    tag.src = 'https://www.youtube.com/iframe_api';
+    document.head.appendChild(tag);
+
+    window.onYouTubeIframeAPIReady = function() {
+        player = new YT.Player('ytLessonPlayer', {
+            events: {
+                onReady: function() {
+                    // Show pause icon initially (video starts paused)
+                    setIcon(false);
+                },
+                onStateChange: function(e) {
+                    if (e.data === YT.PlayerState.PLAYING) {
+                        playing = true;
+                        overlay.classList.add('playing');
+                        setIcon(true);
+                    } else {
+                        playing = false;
+                        overlay.classList.remove('playing');
+                        setIcon(false);
+                    }
+                }
+            }
+        });
+    };
+
+    function setIcon(isPlaying) {
+        if (playIcon) {
+            playIcon.className = isPlaying ? 'fas fa-pause' : 'fas fa-play';
+        }
+    }
+
+    playBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (!player) return;
+        if (playing) {
+            player.pauseVideo();
+        } else {
+            player.playVideo();
+        }
+    });
+})();
 </script>
 {% endblock %}
