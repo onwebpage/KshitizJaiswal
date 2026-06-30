@@ -49,23 +49,29 @@
     border-color: rgba(255,255,255,0.13);
 }
 
-/* ── Poster image area ──────────────────────────────────────── */
+/* ── Poster image area — 16:9 ratio ─────────────────────────── */
 .course-card-image {
     position: relative;
-    height: 210px;
+    width: 100%;
+    padding-top: 56.25%; /* 9/16 = 56.25% — enforces 1920×1080 ratio */
     overflow: hidden;
     background: #111;
     flex-shrink: 0;
 }
 .course-card-image img {
+    position: absolute;
+    top: 0; left: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: center center;
     transition: transform 0.4s ease;
     display: block;
 }
 .course-card:hover .course-card-image img { transform: scale(1.04); }
 .placeholder-image {
+    position: absolute;
+    top: 0; left: 0;
     width: 100%;
     height: 100%;
     display: flex;
@@ -289,7 +295,7 @@
 /* ── Mobile ─────────────────────────────────────────────────── */
 @media (max-width: 767.98px) {
     .course-card { border-radius: 14px; }
-    .course-card-image { height: 200px; }
+    .course-card-image { padding-top: 56.25%; }
     .course-card-body { padding: 16px 16px 18px; }
     .course-title { font-size: 1rem; }
     .course-stats { gap: 8px; }
