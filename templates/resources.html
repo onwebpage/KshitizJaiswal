@@ -23,7 +23,9 @@
             <div class="col-lg-4 col-md-6">
                 <div class="resource-card h-100">
                     <div class="resource-image">
-                        <img src="{{ resource.image }}" alt="{{ resource.title }}" class="img-fluid"
+                        {% set _rimg = resource.image or '' %}
+                        <img src="{% if _rimg.startswith('http') %}{{ _rimg }}{% elif _rimg %}{{ url_for('static', filename=_rimg) }}{% else %}{{ url_for('static', filename='img/resource-placeholder.svg') }}{% endif %}"
+                             alt="{{ resource.title }}" class="img-fluid"
                              onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/resource-placeholder.svg') }}'">
                         {% if resource.get('coming_soon') %}
                         <div class="coming-soon-badge">Coming Soon</div>

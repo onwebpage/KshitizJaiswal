@@ -7,31 +7,58 @@ from flask import current_app
 from werkzeug.utils import secure_filename
 
 def save_uploaded_file(form_file, folder_name):
-    """Save uploaded file and return filename"""
-    if form_file and form_file.filename:
-        # Generate random filename
-        random_hex = secrets.token_hex(8)
-        _, file_ext = os.path.splitext(form_file.filename)
-        filename = random_hex + file_ext
-        
-        # Create folder if it doesn't exist
-        folder_path = os.path.join(current_app.config['UPLOAD_FOLDER'], folder_name)
-        os.makedirs(folder_path, exist_ok=True)
-        
-        file_path = os.path.join(folder_path, filename)
-        
-        # Resize image if it's an image file
-        if file_ext.lower() in ['.jpg', '.jpeg', '.png']:
+    """Save uploaded file and return relative path, or None on failure."""
+    import logging
+    if not form_file or not form_file.filename:
+        return None
+
+    random_hex = secrets.token_hex(8)
+    _, file_ext = os.path.splitext(form_file.filename)
+    file_ext = file_ext.lower()
+
+    folder_path = os.path.join(current_app.config['UPLOAD_FOLDER'], folder_name)
+    os.makedirs(folder_path, exist_ok=True)
+
+    # Always save as .jpg for image types so PIL never tries to write RGBA JPEG
+    if file_ext in ('.jpg', '.jpeg', '.png', '.gif', '.webp'):
+        save_ext = '.jpg'
+    else:
+        save_ext = file_ext
+
+    filename = random_hex + save_ext
+    file_path = os.path.join(folder_path, filename)
+
+    if file_ext in ('.jpg', '.jpeg', '.png', '.gif', '.webp'):
+        try:
+            form_file.seek(0)
             img = Image.open(form_file)
-            # Resize to max 1080x1920 — supports both portrait (9:16) and landscape (16:9)
-            img.thumbnail((1080, 1920), Image.Resampling.LANCZOS)
-            img.save(file_path, optimize=True, quality=85)
-        else:
+            # Convert any mode (RGBA, P, LA, …) → RGB so JPEG save never fails
+            if img.mode not in ('RGB', 'L'):
+                bg = Image.new('RGB', img.size, (255, 255, 255))
+                if img.mode in ('RGBA', 'LA'):
+                    bg.paste(img, mask=img.split()[-1])
+                else:
+                    bg.paste(img.convert('RGB'))
+                img = bg
+            # Resize to max 1920×1920 while keeping aspect ratio
+            img.thumbnail((1920, 1920), Image.Resampling.LANCZOS)
+            img.save(file_path, 'JPEG', optimize=True, quality=85)
+        except Exception as exc:
+            logging.error(f"save_uploaded_file PIL error ({folder_name}): {exc}")
+            try:
+                form_file.seek(0)
+                form_file.save(file_path)
+            except Exception as exc2:
+                logging.error(f"save_uploaded_file fallback save also failed: {exc2}")
+                return None
+    else:
+        try:
             form_file.save(file_path)
-        
-        return f"uploads/{folder_name}/{filename}"
-    
-    return None
+        except Exception as exc:
+            logging.error(f"save_uploaded_file non-image save failed: {exc}")
+            return None
+
+    return f"uploads/{folder_name}/{filename}"
 
 def save_video_file(form_file, folder_name, max_duration=15):
     """
