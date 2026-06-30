@@ -159,14 +159,18 @@ input[type="submit"], input[type="button"],
 @media (max-width: 767.98px) {
   .hero-section,
   .responsive-hero {
-    height: auto;
-    min-height: 100svh;
+    height: 60vw;
+    min-height: 260px;
+    max-height: 520px;
+    overflow: hidden;
     background-attachment: scroll !important;
   }
 
   .hero-banner-img {
     width: 100% !important;
-    height: auto !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center top !important;
     display: block !important;
   }
 
