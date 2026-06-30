@@ -450,9 +450,10 @@ if (pvBtn) {
 }
 .sr-nav-btn:hover { background:rgba(255,255,255,.28); }
 .sr-nav-btn:disabled { opacity:.3; cursor:default; }
-.sr-dots { display:flex; gap:6px; justify-content:center; margin-top:20px; }
-.sr-dot { width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,.3); cursor:pointer; transition:all .25s; border:none; padding:0; }
-.sr-dot.active { background:#fff; width:22px; border-radius:4px; }
+.sr-dots { display:flex; gap:8px; justify-content:center; align-items:center; }
+.sr-dot { width:10px; height:10px; border-radius:50%; background:rgba(255,255,255,.3); cursor:pointer; transition:all .25s; border:none; padding:0; }
+.sr-dot.active { background:#fff; width:26px; border-radius:5px; }
+.sr-counter { color:rgba(255,255,255,.85); font-size:.85rem; font-weight:600; min-width:38px; text-align:center; letter-spacing:.5px; }
 
 /* Video card */
 .sr-video-wrap { position:relative; padding-bottom:56.25%; height:0; background:#000 center/cover no-repeat; cursor:pointer; }
@@ -577,7 +578,10 @@ if (pvBtn) {
                 <button class="sr-nav-btn" id="srPrev" onclick="srMove(-1)" aria-label="Previous">
                     <i class="fas fa-chevron-left"></i>
                 </button>
-                <div class="sr-dots" id="srDots"></div>
+                <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
+                    <span class="sr-counter" id="srCounter"></span>
+                    <div class="sr-dots" id="srDots"></div>
+                </div>
                 <button class="sr-nav-btn" id="srNext" onclick="srMove(1)" aria-label="Next">
                     <i class="fas fa-chevron-right"></i>
                 </button>
@@ -626,6 +630,8 @@ if (pvBtn) {
         if (dots) {
             dots.querySelectorAll('.sr-dot').forEach((d,i) => d.classList.toggle('active', i === current));
         }
+        const counter = document.getElementById('srCounter');
+        if (counter) counter.textContent = (current + 1) + ' / ' + total;
         if (document.getElementById('srPrev')) {
             document.getElementById('srPrev').disabled = current === 0;
             document.getElementById('srNext').disabled = current >= maxIndex();
