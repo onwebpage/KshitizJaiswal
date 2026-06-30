@@ -1132,6 +1132,77 @@ class ChatbotFAQ(db.Model):
             return []
 
 
+class LessonProgress(db.Model):
+    """Tracks per-user watch progress for every lesson."""
+    __tablename__ = 'lesson_progress'
+
+    id               = db.Column(db.Integer, primary_key=True)
+    clerk_user_id    = db.Column(db.Text, nullable=False, index=True)
+    course_id        = db.Column(db.Integer, db.ForeignKey('course.id'), nullable=False)
+    module_id        = db.Column(db.Integer, db.ForeignKey('module.id'), nullable=False)
+    lesson_id        = db.Column(db.Integer, db.ForeignKey('lesson.id'), nullable=False)
+    watched_seconds  = db.Column(db.Float, default=0.0)
+    duration_seconds = db.Column(db.Float, default=0.0)
+    percent_complete = db.Column(db.Float, default=0.0)
+    completed        = db.Column(db.Boolean, default=False)
+    last_watched_at  = db.Column(db.DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        db.UniqueConstraint('clerk_user_id', 'lesson_id', name='uq_user_lesson_progress'),
+    )
+
+    @staticmethod
+    def get_or_create(clerk_user_id, course_id, module_id, lesson_id):
+        prog = LessonProgress.query.filter_by(
+            clerk_user_id=clerk_user_id, lesson_id=lesson_id).first()
+        if not prog:
+            prog = LessonProgress(
+                clerk_user_id=clerk_user_id,
+                course_id=course_id,
+                module_id=module_id,
+                lesson_id=lesson_id
+            )
+            db.session.add(prog)
+        return prog
+
+    @staticmethod
+    def get_last_lesson(clerk_user_id, course_id):
+        """Most recently watched lesson for this course."""
+        return LessonProgress.query.filter_by(
+            clerk_user_id=clerk_user_id,
+            course_id=course_id
+        ).order_by(LessonProgress.last_watched_at.desc()).first()
+
+    @staticmethod
+    def get_course_progress(clerk_user_id, course_id):
+        """All lesson progress records for this course."""
+        return LessonProgress.query.filter_by(
+            clerk_user_id=clerk_user_id,
+            course_id=course_id
+        ).all()
+
+    @staticmethod
+    def course_overall_percent(clerk_user_id, course_id, total_lessons):
+        """Overall completion % across all lessons in a course."""
+        if not total_lessons:
+            return 0
+        records = LessonProgress.get_course_progress(clerk_user_id, course_id)
+        completed = sum(1 for r in records if r.completed)
+        return round(completed / total_lessons * 100)
+
+    def to_dict(self):
+        return {
+            'lesson_id':        self.lesson_id,
+            'module_id':        self.module_id,
+            'course_id':        self.course_id,
+            'watched_seconds':  self.watched_seconds,
+            'duration_seconds': self.duration_seconds,
+            'percent_complete': self.percent_complete,
+            'completed':        self.completed,
+            'last_watched_at':  self.last_watched_at.isoformat() if self.last_watched_at else None,
+        }
+
+
 class ChatbotInquiry(db.Model):
     """Lead / inquiry captured via the chatbot contact form."""
     __tablename__ = 'chatbot_inquiry'

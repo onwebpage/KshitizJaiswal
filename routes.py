@@ -1,6 +1,6 @@
 from flask import render_template, request, jsonify, redirect, url_for, flash, session, abort
 from app import app, db, _error_log, log_app_error
-from models import DataManager, AdminUser, SiteContent, Reel, Opinion, Subscriber, SubscriptionTier, UserSubscription, Course, Module, Lesson, UserCourseAccess, SocialLink, ColumnVisibility, UserActivity, SiteConfig, CourseUser, StudentReview
+from models import DataManager, AdminUser, SiteContent, Reel, Opinion, Subscriber, SubscriptionTier, UserSubscription, Course, Module, Lesson, UserCourseAccess, SocialLink, ColumnVisibility, UserActivity, SiteConfig, CourseUser, StudentReview, LessonProgress
 from forms import NewsletterForm, PollVoteForm, AdminLoginForm, ReelForm, OpinionForm, HeroContentForm, PaymentSettingsForm, SubscriptionTierForm, CourseForm, ModuleForm, LessonForm, SocialLinkForm
 from utils import save_uploaded_file, save_video_file, calculate_poll_percentages, get_youtube_embed_url, get_video_info, slugify, load_whatsapp_settings
 from clerk_auth import clerk_auth_required, get_clerk_user, get_clerk_user_id
@@ -4760,6 +4760,58 @@ def poll_group_detail(topic):
                          polls=formatted_polls, 
                          analytics=analytics)
 
+# ─── Watch Progress API ───────────────────────────────────────────────────────
+
+@app.route('/api/progress/save', methods=['POST'])
+def api_save_progress():
+    """Auto-save lesson watch progress for logged-in Clerk users."""
+    clerk_user_id = get_clerk_user_id()
+    if not clerk_user_id:
+        return jsonify({'ok': False, 'error': 'not authenticated'}), 401
+
+    data = request.get_json(silent=True) or {}
+    course_id  = data.get('course_id')
+    module_id  = data.get('module_id')
+    lesson_id  = data.get('lesson_id')
+    watched    = float(data.get('watched_seconds', 0) or 0)
+    duration   = float(data.get('duration_seconds', 0) or 0)
+
+    if not all([course_id, module_id, lesson_id]):
+        return jsonify({'ok': False, 'error': 'missing fields'}), 400
+
+    percent   = round(watched / duration * 100, 1) if duration > 0 else 0
+    completed = percent >= 90
+
+    try:
+        prog = LessonProgress.get_or_create(clerk_user_id, course_id, module_id, lesson_id)
+        if watched > (prog.watched_seconds or 0) or completed:
+            prog.watched_seconds = watched
+        prog.duration_seconds = duration
+        prog.percent_complete  = max(prog.percent_complete or 0, percent)
+        prog.completed         = prog.completed or completed
+        prog.last_watched_at   = datetime.utcnow()
+        db.session.commit()
+        return jsonify({'ok': True, 'completed': prog.completed, 'percent': prog.percent_complete})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+
+@app.route('/api/progress/lesson/<int:lesson_id>')
+def api_get_lesson_progress(lesson_id):
+    """Return saved progress for a specific lesson (for seek-on-load)."""
+    clerk_user_id = get_clerk_user_id()
+    if not clerk_user_id:
+        return jsonify({'watched_seconds': 0, 'percent_complete': 0, 'completed': False})
+    prog = LessonProgress.query.filter_by(
+        clerk_user_id=clerk_user_id, lesson_id=lesson_id).first()
+    if not prog:
+        return jsonify({'watched_seconds': 0, 'percent_complete': 0, 'completed': False})
+    return jsonify(prog.to_dict())
+
+
+# ─── Courses ──────────────────────────────────────────────────────────────────
+
 @app.route('/courses')
 def courses():
     """Courses listing page"""
@@ -4807,11 +4859,19 @@ def my_courses():
         for access in UserCourseAccess.get_user_courses(clerk_user_id):
             course = Course.query.get(access.course_id)
             if course and course.is_active and course.id not in seen_course_ids:
-                course_dict = course.to_dict()
-                course_dict['has_access'] = True
-                course_dict['module_count'] = len(course.modules)
-                course_dict['lesson_count'] = sum([len(m.lessons) for m in course.modules])
-                course_dict['purchased_at'] = access.granted_at.strftime('%B %d, %Y') if access.granted_at else ''
+                total_lessons = sum(len(m.lessons) for m in course.modules)
+                overall_pct   = LessonProgress.course_overall_percent(clerk_user_id, course.id, total_lessons)
+                last_prog     = LessonProgress.get_last_lesson(clerk_user_id, course.id)
+                last_lesson   = Lesson.query.get(last_prog.lesson_id) if last_prog else None
+                course_dict   = course.to_dict()
+                course_dict['has_access']       = True
+                course_dict['module_count']     = len(course.modules)
+                course_dict['lesson_count']     = total_lessons
+                course_dict['purchased_at']     = access.granted_at.strftime('%B %d, %Y') if access.granted_at else ''
+                course_dict['overall_pct']      = overall_pct
+                course_dict['last_lesson_title']= last_lesson.title if last_lesson else None
+                course_dict['last_lesson_id']   = last_prog.lesson_id if last_prog else None
+                course_dict['last_watched_at']  = last_prog.last_watched_at.strftime('%b %d, %Y %I:%M %p') if last_prog else None
                 my_courses_data.append(course_dict)
                 seen_course_ids.add(course.id)
 
@@ -4820,11 +4880,16 @@ def my_courses():
             if access.course_id not in seen_course_ids:
                 course = Course.query.get(access.course_id)
                 if course and course.is_active:
-                    course_dict = course.to_dict()
-                    course_dict['has_access'] = True
-                    course_dict['module_count'] = len(course.modules)
-                    course_dict['lesson_count'] = sum([len(m.lessons) for m in course.modules])
-                    course_dict['purchased_at'] = access.granted_at.strftime('%B %d, %Y') if access.granted_at else ''
+                    total_lessons = sum(len(m.lessons) for m in course.modules)
+                    course_dict   = course.to_dict()
+                    course_dict['has_access']        = True
+                    course_dict['module_count']      = len(course.modules)
+                    course_dict['lesson_count']      = total_lessons
+                    course_dict['purchased_at']      = access.granted_at.strftime('%B %d, %Y') if access.granted_at else ''
+                    course_dict['overall_pct']       = 0
+                    course_dict['last_lesson_title'] = None
+                    course_dict['last_lesson_id']    = None
+                    course_dict['last_watched_at']   = None
                     my_courses_data.append(course_dict)
                     seen_course_ids.add(access.course_id)
 
@@ -4884,14 +4949,25 @@ def course_detail(course_id):
 
     is_logged_in = bool(clerk_user_id or get_course_user())
 
+    # Resume learning: find the last-watched lesson for this user
+    resume_lesson_id = None
+    resume_label = 'Start Learning'
+    if clerk_user_id and has_access:
+        last = LessonProgress.get_last_lesson(clerk_user_id, course_id)
+        if last:
+            resume_lesson_id = last.lesson_id
+            resume_label = 'Resume Learning' if not last.completed else 'Continue Learning'
+
     return render_template('course_detail.html', course=course_data, razorpay_key=razorpay_key,
                            curriculum_settings=curriculum_settings, testimonials=testimonials,
                            is_logged_in=is_logged_in, course_features=course_features_list,
-                           student_reviews=student_reviews)
+                           student_reviews=student_reviews,
+                           resume_lesson_id=resume_lesson_id,
+                           resume_label=resume_label)
 
 @app.route('/course/<int:course_id>/start')
 def course_start(course_id):
-    """Redirect to the first lesson of a course"""
+    """Redirect to the first lesson or resume from last-watched lesson."""
     course = Course.query.get_or_404(course_id)
     if not course.is_active:
         abort(404)
@@ -4909,13 +4985,34 @@ def course_start(course_id):
         flash('Please purchase this course to access lessons.', 'warning')
         return redirect(url_for('course_detail', course_id=course_id))
 
-    first_module = Module.query.filter_by(course_id=course_id).order_by(Module.sort_order).first()
-    if first_module:
-        first_lesson = Lesson.query.filter_by(module_id=first_module.id).order_by(Lesson.sort_order).first()
-        if first_lesson:
-            return redirect(url_for('lesson_view', course_id=course_id, lesson_id=first_lesson.id))
-    flash('No lessons available yet.', 'info')
-    return redirect(url_for('course_detail', course_id=course_id))
+    # Build ordered list of all visible lessons
+    all_lessons = []
+    for mod in Module.query.filter_by(course_id=course_id).order_by(Module.sort_order).all():
+        for les in Lesson.query.filter_by(module_id=mod.id).order_by(Lesson.sort_order).all():
+            all_lessons.append(les)
+
+    if not all_lessons:
+        flash('No lessons available yet.', 'info')
+        return redirect(url_for('course_detail', course_id=course_id))
+
+    # Resume: for Clerk users, find the last-watched non-completed lesson
+    if clerk_user_id:
+        completed_ids = {
+            r.lesson_id for r in LessonProgress.get_course_progress(clerk_user_id, course_id)
+            if r.completed
+        }
+        last = LessonProgress.get_last_lesson(clerk_user_id, course_id)
+        if last:
+            if not last.completed:
+                return redirect(url_for('lesson_view', course_id=course_id, lesson_id=last.lesson_id))
+            # Last lesson was completed — find next incomplete lesson in order
+            for les in all_lessons:
+                if les.id not in completed_ids:
+                    return redirect(url_for('lesson_view', course_id=course_id, lesson_id=les.id))
+            # All lessons completed — go back to the last one
+            return redirect(url_for('lesson_view', course_id=course_id, lesson_id=all_lessons[-1].id))
+
+    return redirect(url_for('lesson_view', course_id=course_id, lesson_id=all_lessons[0].id))
 
 
 @app.route('/course/<int:course_id>/lesson/<int:lesson_id>')
@@ -4973,12 +5070,22 @@ def lesson_view(course_id, lesson_id):
                 next_lesson = all_lessons[idx + 1]
             break
     
-    return render_template('lesson_view.html', 
+    # Fetch saved progress for this lesson (resume seek position)
+    lesson_progress = None
+    if clerk_user_id:
+        prog = LessonProgress.query.filter_by(
+            clerk_user_id=clerk_user_id, lesson_id=lesson_id).first()
+        if prog:
+            lesson_progress = prog.to_dict()
+
+    return render_template('lesson_view.html',
                          course=course_data,
                          module=module.to_dict(),
                          lesson=lesson_data,
                          prev_lesson=prev_lesson.to_dict() if prev_lesson else None,
-                         next_lesson=next_lesson.to_dict() if next_lesson else None)
+                         next_lesson=next_lesson.to_dict() if next_lesson else None,
+                         lesson_progress=lesson_progress,
+                         clerk_user_id=clerk_user_id or '')
 
 @app.route('/course/<int:course_id>/purchase', methods=['POST'])
 def purchase_course(course_id):

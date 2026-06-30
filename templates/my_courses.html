@@ -58,15 +58,54 @@
                             </div>
                         </div>
                         
-                        {% if course.purchased_at %}
+                        <!-- Progress bar -->
+                        {% if course.overall_pct is defined %}
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <small class="text-muted fw-semibold">Progress</small>
+                                <small class="fw-bold" style="color:{% if course.overall_pct == 100 %}#16a34a{% else %}#cc0000{% endif %};">{{ course.overall_pct }}%</small>
+                            </div>
+                            <div class="progress" style="height:7px;border-radius:8px;background:#e2e8f0;">
+                                <div class="progress-bar {% if course.overall_pct == 100 %}bg-success{% else %}bg-danger{% endif %}"
+                                     role="progressbar"
+                                     style="width:{{ course.overall_pct }}%;border-radius:8px;"
+                                     aria-valuenow="{{ course.overall_pct }}" aria-valuemin="0" aria-valuemax="100">
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Last lesson watched -->
+                        {% if course.last_lesson_title %}
+                        <div class="mb-3 p-2" style="background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fas fa-history text-muted" style="font-size:.8rem;"></i>
+                                <div>
+                                    <div style="font-size:.75rem;color:#64748b;">Last watched</div>
+                                    <div style="font-size:.82rem;font-weight:600;color:#1e293b;line-height:1.2;">{{ course.last_lesson_title|truncate(40) }}</div>
+                                    {% if course.last_watched_at %}
+                                    <div style="font-size:.72rem;color:#94a3b8;">{{ course.last_watched_at }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        {% if course.purchased_at and not course.last_lesson_title %}
                         <div class="purchase-info mb-3">
                             <i class="fas fa-calendar-check me-2"></i>
                             <small>Enrolled on {{ course.purchased_at }}</small>
                         </div>
                         {% endif %}
-                        
+
                         <a href="{{ url_for('course_start', course_id=course.id) }}" class="btn-continue-learning w-100">
-                            <i class="fas fa-play me-2"></i>Continue Learning
+                            {% if course.overall_pct == 100 %}
+                            <i class="fas fa-redo me-2"></i>Review Course
+                            {% elif course.last_lesson_id %}
+                            <i class="fas fa-play me-2"></i>Resume Learning
+                            {% else %}
+                            <i class="fas fa-play me-2"></i>Start Learning
+                            {% endif %}
                         </a>
                     </div>
                 </div>

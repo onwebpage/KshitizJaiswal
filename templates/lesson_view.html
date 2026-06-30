@@ -651,7 +651,7 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-/* ── YouTube IFrame API — custom play/pause + fullscreen ── */
+/* ── YouTube IFrame API — play/pause, fullscreen, watch progress ── */
 (function() {
     var overlay  = document.getElementById('ytOverlay');
     var playBtn  = document.getElementById('ytPlayBtn');
@@ -661,10 +661,53 @@ document.addEventListener('keydown', function(e) {
     var wrapper  = document.getElementById('videoWrapper');
     if (!overlay || !playBtn) return;
 
-    var player  = null;
-    var playing = false;
+    // Progress metadata injected from Flask
+    var COURSE_ID  = {{ course.id }};
+    var MODULE_ID  = {{ lesson.module_id }};
+    var LESSON_ID  = {{ lesson.id }};
+    var USER_ID    = '{{ clerk_user_id }}';
+    var RESUME_SEC = {{ (lesson_progress.watched_seconds if lesson_progress and not lesson_progress.completed else 0) | int }};
 
-    // Load YT IFrame API
+    var player   = null;
+    var playing  = false;
+    var saveTimer = null;
+
+    // ── Progress Save ──────────────────────────────────────────────────
+    function saveProgress(forceNow) {
+        if (!player || !USER_ID) return;
+        var currentTime = 0;
+        var duration    = 0;
+        try { currentTime = player.getCurrentTime() || 0; } catch(e) {}
+        try { duration    = player.getDuration()    || 0; } catch(e) {}
+        if (currentTime < 2) return;  // skip near-start saves
+
+        fetch('/api/progress/save', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                course_id:       COURSE_ID,
+                module_id:       MODULE_ID,
+                lesson_id:       LESSON_ID,
+                watched_seconds: currentTime,
+                duration_seconds: duration
+            }),
+            keepalive: true
+        }).catch(function() {});
+    }
+
+    function startAutoSave() {
+        if (saveTimer) clearInterval(saveTimer);
+        saveTimer = setInterval(saveProgress, 5000);
+    }
+    function stopAutoSave() {
+        if (saveTimer) { clearInterval(saveTimer); saveTimer = null; }
+    }
+
+    // Save on page close / navigation
+    window.addEventListener('beforeunload', function() { saveProgress(true); });
+    window.addEventListener('pagehide',     function() { saveProgress(true); });
+
+    // ── IFrame API ─────────────────────────────────────────────────────
     var tag = document.createElement('script');
     tag.src = 'https://www.youtube.com/iframe_api';
     document.head.appendChild(tag);
@@ -672,12 +715,31 @@ document.addEventListener('keydown', function(e) {
     window.onYouTubeIframeAPIReady = function() {
         player = new YT.Player('ytLessonPlayer', {
             events: {
-                onReady: function() { setIcon(false); },
+                onReady: function(e) {
+                    setIcon(false);
+                    // Seek to saved position (if > 5 s and not completed)
+                    if (RESUME_SEC > 5) {
+                        e.target.seekTo(RESUME_SEC, true);
+                    }
+                },
                 onStateChange: function(e) {
                     if (e.data === YT.PlayerState.PLAYING) {
                         playing = true;
                         overlay.classList.add('playing');
                         setIcon(true);
+                        startAutoSave();
+                    } else if (e.data === YT.PlayerState.PAUSED) {
+                        playing = false;
+                        overlay.classList.remove('playing');
+                        setIcon(false);
+                        stopAutoSave();
+                        saveProgress(true);   // save immediately on pause
+                    } else if (e.data === YT.PlayerState.ENDED) {
+                        playing = false;
+                        overlay.classList.remove('playing');
+                        setIcon(false);
+                        stopAutoSave();
+                        saveProgress(true);   // save on end
                     } else {
                         playing = false;
                         overlay.classList.remove('playing');
@@ -691,44 +753,36 @@ document.addEventListener('keydown', function(e) {
     function setIcon(isPlaying) {
         if (playIcon) playIcon.className = isPlaying ? 'fas fa-pause' : 'fas fa-play';
     }
-
     function togglePlay() {
         if (!player) return;
         if (playing) { player.pauseVideo(); } else { player.playVideo(); }
     }
 
-    // Clicking the overlay background toggles play/pause
     overlay.addEventListener('click', function(e) {
         if (e.target === overlay) togglePlay();
     });
-
-    // Play/pause button
     playBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        togglePlay();
+        e.stopPropagation(); togglePlay();
     });
 
-    // ── Fullscreen ──
+    // ── Fullscreen ─────────────────────────────────────────────────────
     if (fsBtn && wrapper) {
         fsBtn.addEventListener('click', function(e) {
             e.stopPropagation();
             if (!document.fullscreenElement) {
                 var el = wrapper;
-                if (el.requestFullscreen)       el.requestFullscreen();
+                if (el.requestFullscreen)            el.requestFullscreen();
                 else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
                 else if (el.mozRequestFullScreen)    el.mozRequestFullScreen();
                 if (fsIcon) fsIcon.className = 'fas fa-compress';
             } else {
-                if (document.exitFullscreen)       document.exitFullscreen();
-                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+                if (document.exitFullscreen)             document.exitFullscreen();
+                else if (document.webkitExitFullscreen)  document.webkitExitFullscreen();
                 if (fsIcon) fsIcon.className = 'fas fa-expand';
             }
         });
-
         document.addEventListener('fullscreenchange', function() {
-            if (fsIcon) {
-                fsIcon.className = document.fullscreenElement ? 'fas fa-compress' : 'fas fa-expand';
-            }
+            if (fsIcon) fsIcon.className = document.fullscreenElement ? 'fas fa-compress' : 'fas fa-expand';
         });
     }
 })();
