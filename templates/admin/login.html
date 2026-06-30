@@ -13,25 +13,54 @@
                         <h3 class="mt-3">Admin Login</h3>
                         <p class="text-muted">Access the admin panel</p>
                     </div>
-                    
-                    <form method="POST">
+
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}{% for cat, msg in messages %}
+                        <div class="alert alert-{{ 'danger' if cat == 'error' else cat }} alert-dismissible fade show">
+                            <i class="fas fa-{{ 'exclamation-triangle' if cat == 'error' else ('check-circle' if cat == 'success' else 'info-circle') }} me-2"></i>
+                            {{ msg }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endfor %}{% endif %}
+                    {% endwith %}
+
+                    {% if locked %}
+                    <div class="alert alert-danger text-center">
+                        <i class="fas fa-lock fa-2x mb-2 d-block"></i>
+                        <strong>Account Temporarily Locked</strong><br>
+                        <small>Too many failed attempts. Please wait before trying again.</small>
+                        <div id="lockoutTimer" class="mt-2 fw-bold text-danger fs-5"></div>
+                    </div>
+                    {% else %}
+                    <form method="POST" autocomplete="off">
                         {{ form.hidden_tag() }}
-                        
+
                         <div class="mb-3">
                             {{ form.username.label(class="form-label") }}
-                            {{ form.username(class="form-control", placeholder="Enter username") }}
+                            {{ form.username(class="form-control", placeholder="Enter username", autofocus=true) }}
                         </div>
-                        
+
                         <div class="mb-4">
                             {{ form.password.label(class="form-label") }}
-                            {{ form.password(class="form-control", placeholder="Enter password") }}
+                            <div class="input-group">
+                                {{ form.password(class="form-control", placeholder="Enter password", id="loginPassword") }}
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePwd('loginPassword', this)" tabindex="-1">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
                         </div>
-                        
+
                         <button type="submit" class="btn btn-primary w-100">
                             <i class="fas fa-sign-in-alt me-2"></i>Login
                         </button>
                     </form>
-                    
+
+                    <div class="mt-3 p-2 rounded text-center" style="background:rgba(0,0,0,.04);font-size:.78rem;color:#888;">
+                        <i class="fas fa-info-circle me-1"></i>
+                        5 failed attempts will lock this IP for 15 minutes.
+                    </div>
+                    {% endif %}
+
                     <div class="text-center mt-3">
                         <a href="{{ url_for('index') }}" class="text-muted">
                             <i class="fas fa-arrow-left me-1"></i>Back to Website
@@ -42,4 +71,30 @@
         </div>
     </div>
 </section>
+
+<script>
+function togglePwd(id, btn) {
+    const f = document.getElementById(id);
+    if (!f) return;
+    const show = f.type === 'password';
+    f.type = show ? 'text' : 'password';
+    btn.innerHTML = show ? '<i class="fas fa-eye-slash"></i>' : '<i class="fas fa-eye"></i>';
+}
+
+{% if locked and lockout_secs %}
+(function() {
+    let secs = {{ lockout_secs }};
+    const el = document.getElementById('lockoutTimer');
+    function tick() {
+        if (secs <= 0) { location.reload(); return; }
+        const m = String(Math.floor(secs / 60)).padStart(2,'0');
+        const s = String(secs % 60).padStart(2,'0');
+        if (el) el.textContent = m + ':' + s;
+        secs--;
+        setTimeout(tick, 1000);
+    }
+    tick();
+})();
+{% endif %}
+</script>
 {% endblock %}

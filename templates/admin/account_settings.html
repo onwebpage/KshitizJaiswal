@@ -6,6 +6,8 @@
 <div class="container-fluid p-4">
     <div class="row justify-content-center">
         <div class="col-xl-6 col-lg-7 col-md-9">
+
+            <!-- ── Credentials Card ─────────────────────────────────────── -->
             <div class="admin-card">
                 <div class="admin-header">
                     <h2><i class="fas fa-user-shield me-2 text-primary"></i>Admin Account Settings</h2>
@@ -17,6 +19,7 @@
                 {% with messages = get_flashed_messages(with_categories=true) %}
                     {% if messages %}{% for cat, msg in messages %}
                     <div class="alert alert-{{ 'danger' if cat == 'error' else cat }} alert-dismissible fade show mt-3">
+                        <i class="fas fa-{{ 'exclamation-triangle' if cat == 'error' else 'check-circle' }} me-2"></i>
                         {{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                     {% endfor %}{% endif %}
@@ -36,7 +39,10 @@
                             <label class="form-label fw-semibold">
                                 <i class="fas fa-lock me-1 text-danger"></i>{{ form.current_password.label.text }} <span class="text-danger">*</span>
                             </label>
-                            {{ form.current_password(class="form-control", autocomplete="current-password", placeholder="Enter your current password") }}
+                            <div class="input-group">
+                                {{ form.current_password(class="form-control", autocomplete="current-password", placeholder="Enter your current password", id="currentPass") }}
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePwd('currentPass',this)" tabindex="-1"><i class="fas fa-eye"></i></button>
+                            </div>
                             {% for err in form.current_password.errors %}<div class="invalid-feedback d-block">{{ err }}</div>{% endfor %}
                             <small class="text-muted">Required to verify your identity before making changes.</small>
                         </div>
@@ -54,13 +60,26 @@
 
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">{{ form.new_password.label.text }}</label>
-                            {{ form.new_password(class="form-control", id="newPass", autocomplete="new-password", placeholder="Leave blank to keep current") }}
+                            <div class="input-group">
+                                {{ form.new_password(class="form-control", id="newPass", autocomplete="new-password", placeholder="Leave blank to keep current") }}
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePwd('newPass',this)" tabindex="-1"><i class="fas fa-eye"></i></button>
+                            </div>
                             {% for err in form.new_password.errors %}<div class="invalid-feedback d-block">{{ err }}</div>{% endfor %}
+                            <!-- Strength meter -->
+                            <div id="strengthBar" class="mt-2" style="display:none;">
+                                <div class="progress" style="height:6px;">
+                                    <div id="strengthFill" class="progress-bar" style="width:0%;transition:width .3s,background .3s;"></div>
+                                </div>
+                                <small id="strengthLabel" class="text-muted"></small>
+                            </div>
                         </div>
 
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">{{ form.confirm_password.label.text }}</label>
-                            {{ form.confirm_password(class="form-control", id="confirmPass", autocomplete="new-password", placeholder="Repeat new password") }}
+                            <div class="input-group">
+                                {{ form.confirm_password(class="form-control", id="confirmPass", autocomplete="new-password", placeholder="Repeat new password") }}
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePwd('confirmPass',this)" tabindex="-1"><i class="fas fa-eye"></i></button>
+                            </div>
                             <div id="passMatchMsg" class="small mt-1"></div>
                         </div>
 
@@ -72,16 +91,80 @@
                 </form>
             </div>
 
-            <!-- Security tips -->
+            <!-- ── Security Info ─────────────────────────────────────────── -->
             <div class="admin-card mt-4">
-                <h6><i class="fas fa-shield-alt me-2 text-success"></i>Security Tips</h6>
-                <ul class="text-muted small mb-0">
+                <h6><i class="fas fa-shield-alt me-2 text-success"></i>Security Settings Active</h6>
+                <div class="row g-3 mt-1">
+                    <div class="col-sm-4">
+                        <div class="p-3 rounded text-center" style="background:#f8f9fa;border:1px solid #e9ecef;">
+                            <i class="fas fa-ban fa-lg text-danger mb-1 d-block"></i>
+                            <div class="fw-semibold small">Brute-Force Lock</div>
+                            <div class="text-muted" style="font-size:.75rem;">5 attempts → 15 min lockout</div>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="p-3 rounded text-center" style="background:#f8f9fa;border:1px solid #e9ecef;">
+                            <i class="fas fa-clock fa-lg text-warning mb-1 d-block"></i>
+                            <div class="fw-semibold small">Session Timeout</div>
+                            <div class="text-muted" style="font-size:.75rem;">Auto-logout after 30 min idle</div>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="p-3 rounded text-center" style="background:#f8f9fa;border:1px solid #e9ecef;">
+                            <i class="fas fa-key fa-lg text-primary mb-1 d-block"></i>
+                            <div class="fw-semibold small">Password Strength</div>
+                            <div class="text-muted" style="font-size:.75rem;">Min 8 characters enforced</div>
+                        </div>
+                    </div>
+                </div>
+                <ul class="text-muted small mb-0 mt-3">
                     <li>Use a strong password with uppercase, lowercase, numbers and symbols.</li>
                     <li>Never share your admin credentials with anyone.</li>
                     <li>Log out of admin sessions when using shared devices.</li>
-                    <li>If you forget your password, update the <code>ADMIN_PASSWORD</code> environment variable directly.</li>
                 </ul>
             </div>
+
+            <!-- ── Login Activity Log ──────────────────────────────────────── -->
+            {% if login_log %}
+            <div class="admin-card mt-4">
+                <h6><i class="fas fa-history me-2 text-info"></i>Recent Login Activity</h6>
+                <div class="table-responsive mt-2">
+                    <table class="table table-sm table-hover mb-0" style="font-size:.82rem;">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Time</th>
+                                <th>IP Address</th>
+                                <th>Username</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for entry in login_log %}
+                            <tr>
+                                <td class="text-muted">{{ entry.time }}</td>
+                                <td><code>{{ entry.ip }}</code></td>
+                                <td>{{ entry.username or '—' }}</td>
+                                <td>
+                                    {% if entry.status == 'success' %}
+                                    <span class="badge bg-success"><i class="fas fa-check me-1"></i>Success</span>
+                                    {% else %}
+                                    <span class="badge bg-danger"><i class="fas fa-times me-1"></i>Failed</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <small class="text-muted d-block mt-2">Showing last {{ login_log|length }} login event(s). Log resets on server restart.</small>
+            </div>
+            {% else %}
+            <div class="admin-card mt-4">
+                <h6><i class="fas fa-history me-2 text-info"></i>Recent Login Activity</h6>
+                <p class="text-muted small mt-2 mb-0"><i class="fas fa-info-circle me-1"></i>No login events recorded yet in this session.</p>
+            </div>
+            {% endif %}
+
         </div>
     </div>
 </div>
@@ -90,18 +173,56 @@
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
 <script>
-const np = document.getElementById('newPass');
-const cp = document.getElementById('confirmPass');
+function togglePwd(id, btn) {
+    const f = document.getElementById(id);
+    if (!f) return;
+    const show = f.type === 'password';
+    f.type = show ? 'text' : 'password';
+    btn.innerHTML = show ? '<i class="fas fa-eye-slash"></i>' : '<i class="fas fa-eye"></i>';
+}
+
+const np  = document.getElementById('newPass');
+const cp  = document.getElementById('confirmPass');
 const msg = document.getElementById('passMatchMsg');
+
+function scorePassword(p) {
+    let score = 0;
+    if (p.length >= 8)  score++;
+    if (p.length >= 12) score++;
+    if (/[A-Z]/.test(p)) score++;
+    if (/[0-9]/.test(p)) score++;
+    if (/[^A-Za-z0-9]/.test(p)) score++;
+    return score;
+}
+
+function updateStrength() {
+    const bar   = document.getElementById('strengthBar');
+    const fill  = document.getElementById('strengthFill');
+    const label = document.getElementById('strengthLabel');
+    if (!np || !bar) return;
+    const val = np.value;
+    if (!val) { bar.style.display = 'none'; return; }
+    bar.style.display = 'block';
+    const sc = scorePassword(val);
+    const pct = Math.min(100, sc * 20);
+    const colors = ['#dc3545','#fd7e14','#ffc107','#20c997','#198754'];
+    const labels = ['Very Weak','Weak','Fair','Strong','Very Strong'];
+    fill.style.width  = pct + '%';
+    fill.style.background = colors[Math.min(sc, 4)];
+    label.textContent = labels[Math.min(sc, 4)];
+    label.style.color  = colors[Math.min(sc, 4)];
+}
+
 function checkMatch() {
-    if (!cp.value) { msg.textContent = ''; return; }
+    if (!cp || !cp.value) { if (msg) msg.textContent = ''; return; }
     if (np.value === cp.value) {
         msg.innerHTML = '<span class="text-success"><i class="fas fa-check me-1"></i>Passwords match</span>';
     } else {
         msg.innerHTML = '<span class="text-danger"><i class="fas fa-times me-1"></i>Passwords do not match</span>';
     }
 }
-if (np) np.addEventListener('input', checkMatch);
+
+if (np) { np.addEventListener('input', updateStrength); np.addEventListener('input', checkMatch); }
 if (cp) cp.addEventListener('input', checkMatch);
 </script>
 {% endblock %}

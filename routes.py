@@ -10,7 +10,71 @@ import json
 import hmac
 import hashlib
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
+from collections import deque
+
+# ── Admin Security ────────────────────────────────────────────────────────────
+_LOCKOUT_MAX      = 5          # max failed attempts before lockout
+_LOCKOUT_DURATION = 15 * 60   # lockout duration in seconds (15 min)
+_SESSION_TIMEOUT  = 30 * 60   # admin session idle timeout (30 min)
+
+# {ip: {'count': int, 'lockout_until': datetime or None}}
+_login_attempts: dict = {}
+
+# Rolling log of last 20 login events for admin review
+_login_log: deque = deque(maxlen=20)
+
+
+def _client_ip():
+    """Best-effort client IP (respects X-Forwarded-For from ProxyFix)."""
+    return request.headers.get('X-Forwarded-For', request.remote_addr or 'unknown').split(',')[0].strip()
+
+
+def _is_locked_out(ip):
+    """Return (locked: bool, seconds_remaining: int)."""
+    rec = _login_attempts.get(ip)
+    if not rec or not rec.get('lockout_until'):
+        return False, 0
+    remaining = (rec['lockout_until'] - datetime.utcnow()).total_seconds()
+    if remaining > 0:
+        return True, int(remaining)
+    # lockout expired — reset
+    _login_attempts[ip] = {'count': 0, 'lockout_until': None}
+    return False, 0
+
+
+def _record_attempt(ip, success, username=''):
+    """Record a login attempt and apply lockout if threshold reached."""
+    now = datetime.utcnow()
+    _login_log.appendleft({
+        'time':    now.strftime('%d %b %Y %H:%M UTC'),
+        'ip':      ip,
+        'status':  'success' if success else 'failed',
+        'username': username,
+    })
+    if success:
+        _login_attempts[ip] = {'count': 0, 'lockout_until': None}
+        return
+    rec = _login_attempts.setdefault(ip, {'count': 0, 'lockout_until': None})
+    rec['count'] += 1
+    if rec['count'] >= _LOCKOUT_MAX:
+        rec['lockout_until'] = now + timedelta(seconds=_LOCKOUT_DURATION)
+        logging.warning(f"Admin login: IP {ip} locked out after {rec['count']} failed attempts.")
+
+
+@app.before_request
+def admin_session_timeout():
+    """Auto-logout admin after SESSION_TIMEOUT seconds of inactivity."""
+    if 'admin_logged_in' not in session:
+        return
+    last = session.get('admin_last_activity')
+    now  = datetime.utcnow().timestamp()
+    if last and (now - last) > _SESSION_TIMEOUT:
+        session.pop('admin_logged_in', None)
+        session.pop('admin_last_activity', None)
+        flash('Your session expired due to inactivity. Please log in again.', 'warning')
+        return redirect(url_for('admin_login'))
+    session['admin_last_activity'] = now
 
 # Initialize Razorpay client
 razorpay_client = razorpay.Client(auth=(
@@ -1287,18 +1351,40 @@ def admin_dashboard():
 
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
-    """Admin login"""
+    """Admin login with brute-force protection"""
+    if 'admin_logged_in' in session:
+        return redirect(url_for('admin_dashboard'))
+
     form = AdminLoginForm()
-    
+    ip   = _client_ip()
+
+    # Check lockout before processing
+    locked, secs = _is_locked_out(ip)
+    if locked:
+        mins = secs // 60
+        flash(f'Too many failed attempts. Try again in {mins} minute(s).', 'error')
+        return render_template('admin/login.html', form=form, locked=True, lockout_secs=secs)
+
     if form.validate_on_submit():
-        if AdminUser.verify_admin(form.username.data, form.password.data):
+        username = form.username.data.strip()
+        if AdminUser.verify_admin(username, form.password.data):
+            _record_attempt(ip, success=True, username=username)
             session['admin_logged_in'] = True
+            session['admin_last_activity'] = datetime.utcnow().timestamp()
             flash('Successfully logged in!', 'success')
             return redirect(url_for('admin_dashboard'))
         else:
-            flash('Invalid credentials!', 'error')
-    
-    return render_template('admin/login.html', form=form)
+            _record_attempt(ip, success=False, username=username)
+            locked, secs = _is_locked_out(ip)
+            rec = _login_attempts.get(ip, {})
+            remaining_attempts = max(0, _LOCKOUT_MAX - rec.get('count', 0))
+            if locked:
+                mins = secs // 60
+                flash(f'Too many failed attempts. Account locked for {mins} minute(s).', 'error')
+            else:
+                flash(f'Invalid credentials! {remaining_attempts} attempt(s) remaining before lockout.', 'error')
+
+    return render_template('admin/login.html', form=form, locked=False, lockout_secs=0)
 
 @app.route('/admin/logout')
 def admin_logout():
@@ -5980,7 +6066,15 @@ def admin_account():
         if form.new_password.data and form.new_password.data != form.confirm_password.data:
             flash('New passwords do not match.', 'error')
             return render_template('admin/account_settings.html', form=form,
-                                   title='Account Settings', current_username=stored_username)
+                                   title='Account Settings', current_username=stored_username,
+                                   login_log=list(_login_log))
+
+        # Password strength: min 8 chars
+        if form.new_password.data and len(form.new_password.data) < 8:
+            flash('New password must be at least 8 characters long.', 'error')
+            return render_template('admin/account_settings.html', form=form,
+                                   title='Account Settings', current_username=stored_username,
+                                   login_log=list(_login_log))
 
         SiteConfig.set('admin_username_override', form.new_username.data.strip())
         if form.new_password.data:
@@ -5994,7 +6088,8 @@ def admin_account():
         form.new_username.data = stored_username
 
     return render_template('admin/account_settings.html', form=form,
-                           title='Account Settings', current_username=stored_username)
+                           title='Account Settings', current_username=stored_username,
+                           login_log=list(_login_log))
 
 
 # ─── Course Purchases Admin ─────────────────────────────────────────────────
