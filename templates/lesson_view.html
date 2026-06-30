@@ -244,15 +244,18 @@
     padding-bottom: 56.25%;
     height: 0;
     background: #000;
+    overflow: hidden; /* clips extended iframe edges */
 }
 
 .bunny-video-iframe {
     border: 0;
     position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: 100%;
+    /* Extend iframe beyond the container on all sides to clip YouTube's
+       top bar (channel name) and bottom bar (Watch on YouTube) */
+    top: -40px;
+    left: -2px;
+    width: calc(100% + 4px);
+    height: calc(100% + 80px);
 }
 
 /* Custom YouTube overlay — fully covers iframe, hides all YouTube UI */
