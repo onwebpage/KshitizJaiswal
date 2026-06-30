@@ -180,6 +180,7 @@ with app.app_context():
         _add_column("course",             "preview_title",        "VARCHAR(300)")
         _add_column("course",             "preview_subtitle",     "TEXT")
         _add_column("course",             "course_features",      "TEXT")
+        _add_column("course",             "validity_days",        "INTEGER")
 
         # PostgreSQL-only migrations (silently ignored on SQLite)
         pg_only = [

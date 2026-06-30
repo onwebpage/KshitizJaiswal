@@ -341,21 +341,15 @@
 {%- set _mob_src  = (_mob_raw  if _mob_raw.startswith('http')  else url_for('static', filename=_mob_raw))  if _mob_raw  else _fallback_img -%}
 <!-- Hero Section -->
 {% if section_vis.hero %}
-<section class="hero-section responsive-hero" style="position:relative;min-height:280px;overflow:hidden;background:#1a0000;">
-    <!-- Desktop image -->
+<section class="hero-section responsive-hero">
     <img class="hero-banner-img d-none d-md-block"
          src="{{ _desk_src }}"
          alt="Hero Banner"
-         onerror="this.onerror=null;this.src='{{ _fallback_img }}';"
-         style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;">
-    <!-- Mobile image -->
+         onerror="this.onerror=null;this.src='{{ _fallback_img }}';">
     <img class="hero-banner-img d-md-none"
          src="{{ _mob_src }}"
          alt="Hero Banner"
-         onerror="this.onerror=null;this.src='{{ _fallback_img }}';"
-         style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;">
-    <!-- Fallback text shown when no image loads (covers empty state) -->
-    <noscript><style>.hero-fallback-text{display:flex!important}</style></noscript>
+         onerror="this.onerror=null;this.src='{{ _fallback_img }}';">
 </section>
 {% endif %}
 
