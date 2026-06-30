@@ -117,6 +117,20 @@ def inject_section_visibility():
         db.session.rollback()
         seo_config = {}
 
+    # Newsletter footer content — used in base.html footer
+    try:
+        _nl_rec = SiteContent.query.filter_by(content_key='page_content').first()
+        _nl_pc  = json.loads(_nl_rec.content_data) if _nl_rec else {}
+    except Exception:
+        db.session.rollback()
+        _nl_pc = {}
+    newsletter_footer = {
+        'title':        _nl_pc.get('newsletter_section_title', '') or 'Join the Inner Circle',
+        'subtitle':     _nl_pc.get('newsletter_section_subtitle', '') or 'Get unfiltered commentary and exclusive updates straight to your inbox. No spam, ever.',
+        'button_text':  _nl_pc.get('newsletter_button_text', '') or 'Subscribe',
+        'privacy_text': _nl_pc.get('newsletter_privacy_text', '') or '',
+    }
+
     return {
         'section_vis': section_vis,
         'site_settings': site_settings,
@@ -126,6 +140,7 @@ def inject_section_visibility():
         'whatsapp_web_link': whatsapp_web_link,
         'announcement': announcement,
         'seo_config': seo_config,
+        'newsletter_footer': newsletter_footer,
     }
 
 

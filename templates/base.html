@@ -236,9 +236,11 @@
                     <div class="col-lg-7">
                         <div class="footer-newsletter-block">
                             <h5 class="footer-newsletter-title">
-                                <i class="fas fa-envelope-open-text me-2"></i>Join the Inner Circle
+                                <i class="fas fa-envelope-open-text me-2"></i>{{ newsletter_footer.title }}
                             </h5>
-                            <p class="footer-newsletter-sub">Get unfiltered commentary and exclusive updates straight to your inbox. No spam, ever.</p>
+                            {% if newsletter_footer.subtitle %}
+                            <p class="footer-newsletter-sub">{{ newsletter_footer.subtitle }}</p>
+                            {% endif %}
                             <div id="footerNewsletterSuccess" class="footer-nl-success d-none">
                                 <i class="fas fa-check-circle me-2"></i>You're in! Welcome to the circle.
                             </div>
@@ -250,9 +252,12 @@
                                     <input type="text" name="name" class="footer-nl-input" placeholder="Your name" required autocomplete="name">
                                     <input type="email" name="email" class="footer-nl-input" placeholder="your@email.com" required autocomplete="email">
                                     <button type="submit" class="footer-nl-btn">
-                                        <i class="fas fa-paper-plane me-1"></i>Subscribe
+                                        <i class="fas fa-paper-plane me-1"></i>{{ newsletter_footer.button_text }}
                                     </button>
                                 </div>
+                                {% if newsletter_footer.privacy_text %}
+                                <p class="footer-nl-privacy mt-2 mb-0" style="font-size:.8rem;opacity:.6;">{{ newsletter_footer.privacy_text }}</p>
+                                {% endif %}
                             </form>
                         </div>
                     </div>
