@@ -125,6 +125,27 @@
             </div>
         </div>
 
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-shoe-prints me-2"></i>Footer Content</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="footer_description" class="form-label">Footer Brand Description</label>
+                    <textarea class="form-control" id="footer_description" name="footer_description" rows="3"
+                              placeholder="Unfiltered Commentator. The content here is selective, but the truth is never biased.">{{ settings.get('footer_description', '') }}</textarea>
+                    <div class="form-text">Yeh description footer mein brand name ke neeche dikhta hai.</div>
+                </div>
+                <div class="mb-3">
+                    <label for="footer_copyright" class="form-label">Copyright Text</label>
+                    <input type="text" class="form-control" id="footer_copyright" name="footer_copyright"
+                           value="{{ settings.get('footer_copyright', '') }}"
+                           placeholder="© Kshitiz Jaiswal. All rights reserved.">
+                    <div class="form-text">Footer ke bilkul neeche dikhta hai. Blank chhodo to default automatically set hoga.</div>
+                </div>
+            </div>
+        </div>
+
         <div class="text-center">
             <button type="submit" class="btn btn-primary btn-lg">
                 <i class="fas fa-save me-2"></i>Save All Settings

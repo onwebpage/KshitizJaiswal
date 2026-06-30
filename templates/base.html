@@ -289,7 +289,7 @@
                             <i class="fas fa-microphone-alt me-2"></i>
                             {{ _site_title }}
                         </h4>
-                        <p class="footer-description">Unfiltered Commentator. The content here is selective, but the truth is never biased.</p>
+                        <p class="footer-description">{{ site_settings.get('footer_description', 'Unfiltered Commentator. The content here is selective, but the truth is never biased.') if site_settings else 'Unfiltered Commentator. The content here is selective, but the truth is never biased.' }}</p>
                         
                         <div class="footer-social">
                             {% for link in social_links %}
@@ -367,7 +367,7 @@
             <div class="footer-bottom">
                 <div class="row align-items-center">
                     <div class="col-md-6">
-                        <p class="footer-copyright">&copy; {{ _site_title }}. All rights reserved.</p>
+                        <p class="footer-copyright">{{ site_settings.get('footer_copyright', '© ' + _site_title + '. All rights reserved.') if site_settings else ('© ' + _site_title + '. All rights reserved.') }}</p>
                     </div>
                     <div class="col-md-6 text-md-end">
                         <div class="footer-stats">

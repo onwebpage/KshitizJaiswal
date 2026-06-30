@@ -3585,7 +3585,9 @@ def admin_site_settings():
             'meta_keywords': request.form.get('meta_keywords', ''),
             'google_analytics_id': request.form.get('google_analytics_id', ''),
             'facebook_pixel_id': request.form.get('facebook_pixel_id', ''),
-            'clarity_id': request.form.get('clarity_id', '')
+            'clarity_id': request.form.get('clarity_id', ''),
+            'footer_description': request.form.get('footer_description', ''),
+            'footer_copyright': request.form.get('footer_copyright', ''),
         }
 
         # Sync the Instagram SocialLink is_active with the toggle
