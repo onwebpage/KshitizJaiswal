@@ -433,7 +433,9 @@ input[type="submit"], input[type="button"],
   .poll-detail-hero,
   .poll-group-hero,
   .resources-hero {
-    padding: 30px 0 20px;
+    padding: 28px 16px 20px !important;
+    min-height: auto !important;
+    height: auto !important;
   }
 
   .polls-hero-title,
