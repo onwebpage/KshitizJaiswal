@@ -453,8 +453,7 @@ input[type="submit"], input[type="button"],
 @media (max-width: 767.98px) {
   .polls-archive-hero,
   .poll-detail-hero,
-  .poll-group-hero,
-  .resources-hero {
+  .poll-group-hero {
     padding: 1.25rem 16px 1.25rem !important;
     min-height: auto !important;
     height: auto !important;
@@ -462,14 +461,20 @@ input[type="submit"], input[type="button"],
 
   .polls-hero-title,
   .poll-detail-title,
-  .group-detail-title,
-  .resources-hero-title {
+  .group-detail-title {
     font-size: clamp(1.6rem, 6vw, 2.5rem);
     margin-bottom: 12px;
   }
 
   .polls-hero-subtitle,
-  .poll-detail-subtitle,
+  .poll-detail-subtitle {
+    margin-bottom: 0;
+  }
+
+  .resources-hero-title {
+    font-size: clamp(1.6rem, 6vw, 2.5rem);
+  }
+
   .resources-hero-subtitle {
     margin-bottom: 0;
   }
@@ -688,8 +693,7 @@ input[type="submit"], input[type="button"],
 @media (max-width: 767.98px) {
   .archives-hero,
   .archive-hero,
-  .upcoming-hero,
-  [class*="-hero"] {
+  .upcoming-hero {
     padding: 90px 0 50px;
   }
 }
