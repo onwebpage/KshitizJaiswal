@@ -301,8 +301,13 @@ def index():
 
 @app.route('/reels')
 def reels_library():
-    """Showcase page — latest 6 Instagram reels + latest 6 YouTube videos"""
+    """Showcase page with search, platform, category and sort filters"""
     from utils import get_video_info
+
+    search   = request.args.get('search', '').strip()
+    platform = request.args.get('platform', '')   # 'instagram' | 'youtube' | ''
+    category = request.args.get('category', '')
+    sort_by  = request.args.get('sort', 'latest') # 'latest' | 'oldest' | 'popular'
 
     def _resolve_platform(r):
         vtype = r.get('video_type', 'auto') or 'auto'
@@ -310,7 +315,6 @@ def reels_library():
             return 'youtube'
         if vtype == 'instagram':
             return 'instagram'
-        # Direct uploads: use card_layout to decide — portrait → instagram, else → youtube
         if vtype == 'direct':
             layout = r.get('card_layout', 'portrait') or 'portrait'
             return 'instagram' if layout == 'portrait' else 'youtube'
@@ -324,21 +328,44 @@ def reels_library():
                 return 'instagram'
         return 'unknown'
 
-    all_reels = Reel.query.filter_by(is_visible=True).order_by(Reel.created_at.desc()).all()
+    # Base query — always filter by visibility
+    base_q = Reel.query.filter_by(is_visible=True)
+
+    if search:
+        base_q = base_q.filter(Reel.title.ilike(f'%{search}%'))
+    if category:
+        base_q = base_q.filter(Reel.category_tag == category)
+
+    if sort_by == 'oldest':
+        base_q = base_q.order_by(Reel.created_at.asc())
+    elif sort_by == 'popular':
+        base_q = base_q.order_by(Reel.view_count.desc())
+    else:
+        base_q = base_q.order_by(Reel.created_at.desc())
+
+    all_reels = base_q.all()
+
     instagram_featured = []
-    youtube_featured = []
+    youtube_featured   = []
+    is_filtered = bool(search or platform or category or sort_by != 'latest')
+    limit = None if is_filtered else 6   # no limit when filtering
 
     for reel in all_reels:
         r = reel.to_dict()
-        platform = _resolve_platform(r)
-        r['platform'] = platform
-        if platform == 'instagram' and len(instagram_featured) < 6:
-            instagram_featured.append(r)
-        elif platform == 'youtube' and len(youtube_featured) < 6:
-            youtube_featured.append(r)
-        if len(instagram_featured) >= 6 and len(youtube_featured) >= 6:
+        p = _resolve_platform(r)
+        r['platform'] = p
+        if platform and p != platform:
+            continue
+        if p == 'instagram':
+            if limit is None or len(instagram_featured) < limit:
+                instagram_featured.append(r)
+        elif p == 'youtube':
+            if limit is None or len(youtube_featured) < limit:
+                youtube_featured.append(r)
+        if limit and len(instagram_featured) >= limit and len(youtube_featured) >= limit:
             break
 
+    # Totals (unfiltered, for badge counts)
     instagram_total = Reel.query.filter(
         Reel.is_visible == True,
         db.or_(
@@ -354,11 +381,25 @@ def reels_library():
         )
     ).count()
 
+    # Available category tags for filter dropdown
+    all_categories = db.session.query(Reel.category_tag).filter(
+        Reel.is_visible == True,
+        Reel.category_tag != None,
+        Reel.category_tag != ''
+    ).distinct().all()
+    categories = [c[0] for c in all_categories]
+
     return render_template('reels_library.html',
                            instagram_featured=instagram_featured,
                            youtube_featured=youtube_featured,
                            instagram_total=instagram_total,
-                           youtube_total=youtube_total)
+                           youtube_total=youtube_total,
+                           categories=categories,
+                           current_search=search,
+                           current_platform=platform,
+                           current_category=category,
+                           current_sort=sort_by,
+                           is_filtered=is_filtered)
 
 
 @app.route('/reels/instagram')
