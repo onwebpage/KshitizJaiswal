@@ -157,21 +157,39 @@ input[type="submit"], input[type="button"],
 
 /* ── 5. HERO SECTION ─────────────────────────────────────────── */
 @media (max-width: 767.98px) {
+  /* Fix every element in the parent chain:
+     html > body > main > section.hero-section.responsive-hero > picture > img */
+
   .hero-section,
+  .hero-section.responsive-hero,
   .responsive-hero {
-    height: auto;
-    min-height: unset;
-    max-height: unset;
-    overflow: visible;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    position: static !important;   /* removes relative context that enabled overflow clipping */
     background-attachment: scroll !important;
+  }
+
+  /* picture element has no default sizing — must be explicit */
+  .hero-section picture,
+  .responsive-hero picture {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
   }
 
   .hero-banner-img {
     width: 100% !important;
     height: auto !important;
-    object-fit: unset !important;
+    max-height: none !important;
+    object-fit: none !important;      /* none, not unset — prevents any cover/fill behaviour */
     object-position: unset !important;
     display: block !important;
+    transform: none !important;       /* no transforms that could clip */
+    margin: 0 !important;
+    position: static !important;
   }
 
   .hero-cta {

@@ -656,7 +656,8 @@ h1, h2, h3, h4, h5, h6 {
 /* Responsive Hero Section */
 .responsive-hero {
   position: relative;
-  overflow: hidden;
+  /* overflow: hidden removed — it clips the hero image on mobile.
+     Each component that needs clipping sets it locally. */
 }
 
 .responsive-hero .hero-overlay {
