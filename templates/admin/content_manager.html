@@ -448,7 +448,7 @@
                             </div>
                             <div class="col-2 col-md-1 text-center">
                                 <div class="form-check form-switch d-flex justify-content-center mb-0">
-                                    <input class="form-check-input" type="checkbox" name="stat_visible_{{ i }}" value="1" {{ 'checked' if stat.get('visible', '1') != '0' }}>
+                                    <input class="form-check-input" type="checkbox" name="stat_visible_{{ i }}" value="1" {{ 'checked' if stat.get('is_active', True) }}>
                                 </div>
                             </div>
                             <div class="col-2 col-md-1 text-end">
