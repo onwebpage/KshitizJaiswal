@@ -80,7 +80,7 @@ if database_url:
         # Build connection kwargs — external providers (Railway, Aiven, Neon, Supabase)
         # require sslmode=require; Replit's internal helium does not.
         is_external = _is_external_db(database_url)
-        connect_kwargs = {}
+        connect_kwargs = {"connect_timeout": 10}
         if is_external and "sslmode" not in database_url:
             connect_kwargs["sslmode"] = "require"
 
@@ -90,9 +90,10 @@ if database_url:
         engine_options = {
             "pool_recycle": 300,
             "pool_pre_ping": True,
+            "pool_timeout": 10,
         }
         if is_external and "sslmode" not in database_url:
-            engine_options["connect_args"] = {"sslmode": "require"}
+            engine_options["connect_args"] = {"sslmode": "require", "connect_timeout": 10}
 
         logging.info(f"Using PostgreSQL database ({'external' if is_external else 'Replit internal'})")
         app.config["SQLALCHEMY_DATABASE_URI"] = database_url

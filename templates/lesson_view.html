@@ -128,29 +128,6 @@
                             </div>
                         </div>
 
-                        {% if wa_support_phone %}
-                        <div class="mt-4 p-4 rounded-3" style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1px solid #86efac;">
-                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
-                                <div class="d-flex align-items-center gap-3">
-                                    <div style="width:48px;height:48px;background:#25D366;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                                        <i class="fab fa-whatsapp text-white fa-lg"></i>
-                                    </div>
-                                    <div>
-                                        <p class="fw-bold text-dark mb-0">Got a question or need help?</p>
-                                        <p class="text-muted small mb-0">Reach our support team on WhatsApp — we're here to help.</p>
-                                    </div>
-                                </div>
-                                {% set _wa_lesson_url = 'https://api.whatsapp.com/send?phone=' ~ wa_support_phone ~ '&text=Hi%2C+I+need+help+with+the+lesson%3A+%22' ~ (lesson.title|urlencode) ~ '%22+in+' ~ (course.title|urlencode) %}
-                                <a href="{{ _wa_lesson_url }}"
-                                   data-whatsapp-link="{{ _wa_lesson_url }}"
-                                   data-whatsapp-fallback="https://web.whatsapp.com/send?phone={{ wa_support_phone }}"
-                                   class="btn fw-semibold flex-shrink-0 js-whatsapp-link"
-                                   style="background:#25D366;color:#fff;border:none;border-radius:10px;padding:12px 22px;">
-                                    <i class="fab fa-whatsapp me-2"></i>WhatsApp Support
-                                </a>
-                            </div>
-                        </div>
-                        {% endif %}
                     </div>
                 </div>
             </div>
