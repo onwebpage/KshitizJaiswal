@@ -763,7 +763,7 @@ h1, h2, h3, h4, h5, h6 {
 
 @media (max-width: 767.98px) {
   .resources-hero {
-    padding: 28px 16px 20px !important;
+    padding: calc(70px + 0.5rem) 16px 1.5rem !important;
     min-height: auto !important;
     height: auto !important;
   }
@@ -771,11 +771,12 @@ h1, h2, h3, h4, h5, h6 {
   .resources-hero-title {
     font-size: 1.75rem;
     letter-spacing: -.2px;
-    margin-bottom: 8px;
+    margin-bottom: 14px;
   }
 
   .resources-hero-subtitle {
     font-size: .9rem;
+    margin-bottom: 0;
   }
 }
 
