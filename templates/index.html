@@ -334,24 +334,28 @@
 {% endblock %}
 
 {% block content %}
-{% set hero_img = content.hero.desktop_url or content.hero.banner_url or content.hero.mobile_url %}
+{%- set _fallback_img = url_for('static', filename='uploads/hero/banner.jpg') -%}
+{%- set _desk_raw = content.hero.desktop_url or content.hero.banner_url or '' -%}
+{%- set _mob_raw  = content.hero.mobile_url  or content.hero.banner_url or '' -%}
+{%- set _desk_src = (_desk_raw if _desk_raw.startswith('http') else url_for('static', filename=_desk_raw)) if _desk_raw else _fallback_img -%}
+{%- set _mob_src  = (_mob_raw  if _mob_raw.startswith('http')  else url_for('static', filename=_mob_raw))  if _mob_raw  else _fallback_img -%}
 <!-- Hero Section -->
 {% if section_vis.hero %}
-<section class="hero-section responsive-hero">
-    {% if hero_img %}
-    {%- set _desk = content.hero.desktop_url or content.hero.banner_url -%}
-    {%- set _mob  = content.hero.mobile_url  or content.hero.banner_url -%}
-    {% if _desk %}
+<section class="hero-section responsive-hero" style="position:relative;min-height:280px;overflow:hidden;background:#1a0000;">
+    <!-- Desktop image -->
     <img class="hero-banner-img d-none d-md-block"
-         src="{% if _desk.startswith('http') %}{{ _desk }}{% else %}{{ url_for('static', filename=_desk) }}{% endif %}"
-         alt="Hero Banner">
-    {% endif %}
-    {% if _mob %}
+         src="{{ _desk_src }}"
+         alt="Hero Banner"
+         onerror="this.onerror=null;this.src='{{ _fallback_img }}';"
+         style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;">
+    <!-- Mobile image -->
     <img class="hero-banner-img d-md-none"
-         src="{% if _mob.startswith('http') %}{{ _mob }}{% else %}{{ url_for('static', filename=_mob) }}{% endif %}"
-         alt="Hero Banner">
-    {% endif %}
-    {% endif %}
+         src="{{ _mob_src }}"
+         alt="Hero Banner"
+         onerror="this.onerror=null;this.src='{{ _fallback_img }}';"
+         style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;">
+    <!-- Fallback text shown when no image loads (covers empty state) -->
+    <noscript><style>.hero-fallback-text{display:flex!important}</style></noscript>
 </section>
 {% endif %}
 

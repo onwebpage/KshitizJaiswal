@@ -4854,6 +4854,10 @@ def course_detail(course_id):
 
     course_data = course.to_dict()
     course_data['has_access'] = has_access
+    course_data['module_count'] = len(course.modules)
+    course_data['lesson_count'] = sum(len(m.lessons) for m in course.modules)
+    course_data['preview_title'] = course.preview_title or ''
+    course_data['preview_subtitle'] = course.preview_subtitle or ''
 
     # Parse course features for sidebar bullets
     _default_features = ['Lifetime access', 'Mobile & desktop friendly', 'Certificate of completion', 'Learn at your own pace']
