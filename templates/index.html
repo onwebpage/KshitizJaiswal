@@ -352,7 +352,7 @@
         {# Only inject the mobile source when a dedicated mobile image has been uploaded.
            If no mobile image exists the <img> src (desktop) serves on all screens — no cropping fallback. #}
         {%- if _mob_src %}
-        <source media="(max-width: 767px)" srcset="{{ _mob_src }}">
+        <source media="(max-width: 1024px)" srcset="{{ _mob_src }}">
         {%- endif %}
         <img class="hero-banner-img"
              src="{{ _desk_src }}"
