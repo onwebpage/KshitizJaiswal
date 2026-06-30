@@ -45,10 +45,13 @@
                                 sandbox="allow-scripts allow-same-origin allow-presentation">
                             </iframe>
                             {% if _lvid %}
-                            <!-- Overlay: blocks YouTube links, provides custom controls -->
+                            <!-- Full overlay: blocks all YouTube UI, provides custom controls -->
                             <div class="yt-overlay" id="ytOverlay">
                                 <button class="yt-play-btn" id="ytPlayBtn" aria-label="Play / Pause">
                                     <i class="fas fa-play" id="ytPlayIcon"></i>
+                                </button>
+                                <button class="yt-fs-btn" id="ytFsBtn" aria-label="Fullscreen">
+                                    <i class="fas fa-expand" id="ytFsIcon"></i>
                                 </button>
                             </div>
                             {% endif %}
@@ -252,7 +255,7 @@
     width: 100%;
 }
 
-/* Custom YouTube overlay — blocks branding links, provides play/pause */
+/* Custom YouTube overlay — fully covers iframe, hides all YouTube UI */
 .yt-overlay {
     position: absolute;
     inset: 0;
@@ -260,31 +263,48 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
-    /* Transparent — only the button area is visible */
     background: transparent;
+    pointer-events: auto; /* Block ALL YouTube UI clicks */
+    cursor: pointer;
 }
+/* Play/Pause button — centered */
 .yt-play-btn {
-    width: 64px; height: 64px;
+    width: 68px; height: 68px;
     border-radius: 50%;
-    background: rgba(0,0,0,0.65);
-    border: 2px solid rgba(255,255,255,0.8);
+    background: rgba(0,0,0,0.7);
+    border: 2px solid rgba(255,255,255,0.85);
     color: #fff;
-    font-size: 1.4rem;
+    font-size: 1.5rem;
     display: flex; align-items: center; justify-content: center;
     cursor: pointer;
-    transition: background .2s, transform .15s;
-    backdrop-filter: blur(4px);
+    transition: background .2s, transform .15s, opacity .2s;
+    backdrop-filter: blur(6px);
     padding: 0;
-    /* Only the button intercepts clicks; the rest of overlay passes through */
-    pointer-events: auto;
 }
-.yt-play-btn:hover { background: rgba(204,0,0,0.8); transform: scale(1.1); }
-/* Hide play button once video is playing; show it again on pause */
+.yt-play-btn:hover { background: rgba(204,0,0,0.85); transform: scale(1.1); }
+/* Hide play button while playing, show on hover */
 .yt-overlay.playing .yt-play-btn { opacity: 0; }
 .yt-overlay.playing:hover .yt-play-btn { opacity: 1; }
-.yt-overlay { pointer-events: none; } /* pass clicks through by default */
-.yt-overlay .yt-play-btn { pointer-events: auto; } /* but button still clickable */
+
+/* Fullscreen button — bottom-right corner */
+.yt-fs-btn {
+    position: absolute;
+    bottom: 12px; right: 12px;
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    background: rgba(0,0,0,0.6);
+    border: 1.5px solid rgba(255,255,255,0.5);
+    color: #fff;
+    font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: background .2s, opacity .2s;
+    backdrop-filter: blur(4px);
+    padding: 0;
+    opacity: 0;
+}
+.yt-overlay:hover .yt-fs-btn { opacity: 1; }
+.yt-fs-btn:hover { background: rgba(204,0,0,0.8); }
 
 .video-placeholder {
     position: relative;
@@ -628,14 +648,17 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-/* ── YouTube IFrame API — custom play/pause control ── */
+/* ── YouTube IFrame API — custom play/pause + fullscreen ── */
 (function() {
-    var overlay = document.getElementById('ytOverlay');
-    var playBtn = document.getElementById('ytPlayBtn');
+    var overlay  = document.getElementById('ytOverlay');
+    var playBtn  = document.getElementById('ytPlayBtn');
     var playIcon = document.getElementById('ytPlayIcon');
+    var fsBtn    = document.getElementById('ytFsBtn');
+    var fsIcon   = document.getElementById('ytFsIcon');
+    var wrapper  = document.getElementById('videoWrapper');
     if (!overlay || !playBtn) return;
 
-    var player = null;
+    var player  = null;
     var playing = false;
 
     // Load YT IFrame API
@@ -646,10 +669,7 @@ document.addEventListener('keydown', function(e) {
     window.onYouTubeIframeAPIReady = function() {
         player = new YT.Player('ytLessonPlayer', {
             events: {
-                onReady: function() {
-                    // Show pause icon initially (video starts paused)
-                    setIcon(false);
-                },
+                onReady: function() { setIcon(false); },
                 onStateChange: function(e) {
                     if (e.data === YT.PlayerState.PLAYING) {
                         playing = true;
@@ -666,20 +686,48 @@ document.addEventListener('keydown', function(e) {
     };
 
     function setIcon(isPlaying) {
-        if (playIcon) {
-            playIcon.className = isPlaying ? 'fas fa-pause' : 'fas fa-play';
-        }
+        if (playIcon) playIcon.className = isPlaying ? 'fas fa-pause' : 'fas fa-play';
     }
 
+    function togglePlay() {
+        if (!player) return;
+        if (playing) { player.pauseVideo(); } else { player.playVideo(); }
+    }
+
+    // Clicking the overlay background toggles play/pause
+    overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) togglePlay();
+    });
+
+    // Play/pause button
     playBtn.addEventListener('click', function(e) {
         e.stopPropagation();
-        if (!player) return;
-        if (playing) {
-            player.pauseVideo();
-        } else {
-            player.playVideo();
-        }
+        togglePlay();
     });
+
+    // ── Fullscreen ──
+    if (fsBtn && wrapper) {
+        fsBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (!document.fullscreenElement) {
+                var el = wrapper;
+                if (el.requestFullscreen)       el.requestFullscreen();
+                else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+                else if (el.mozRequestFullScreen)    el.mozRequestFullScreen();
+                if (fsIcon) fsIcon.className = 'fas fa-compress';
+            } else {
+                if (document.exitFullscreen)       document.exitFullscreen();
+                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+                if (fsIcon) fsIcon.className = 'fas fa-expand';
+            }
+        });
+
+        document.addEventListener('fullscreenchange', function() {
+            if (fsIcon) {
+                fsIcon.className = document.fullscreenElement ? 'fas fa-compress' : 'fas fa-expand';
+            }
+        });
+    }
 })();
 </script>
 {% endblock %}
