@@ -41,6 +41,8 @@
                                 allowfullscreen
                                 sandbox="allow-scripts allow-same-origin allow-presentation">
                             </iframe>
+                            <!-- Blocks all YouTube native UI clicks/touches -->
+                            <div class="prx-yt-blocker"></div>
                         </div>
 
                         <!-- Loading spinner -->
@@ -307,8 +309,18 @@
     border:0;
     pointer-events:none;
 }
-@media(max-width:576px){
-    .prx-iframe{top:-32px;height:calc(100% + 64px);}
+/* Transparent layer that sits on top of the iframe — blocks all YouTube native UI */
+.prx-yt-blocker{
+    position:absolute;
+    inset:0;
+    z-index:3;
+    background:transparent;
+    pointer-events:all;
+    touch-action:none;
+}
+@media(max-width:768px){
+    /* Clip YouTube channel header (~70px) and bottom bar (~70px) aggressively on mobile */
+    .prx-iframe{top:-70px;height:calc(100% + 140px);}
 }
 
 /* ── Spinner ── */
@@ -785,7 +797,7 @@ document.addEventListener('keydown',function(e){
                         el.pipBtn.style.display='flex';
                     }
                 },
-                onStateChange: function(e){
+                onStateChange: window._prxStateChange = function(e){
                     var S = YT.PlayerState;
                     if(e.data === S.PLAYING){
                         playing = true;
@@ -794,6 +806,7 @@ document.addEventListener('keydown',function(e){
                         saveTimer = setInterval(saveProgress, 5000);
                         clearInterval(progressTimer);
                         progressTimer = setInterval(updateTime, 250);
+                        if(el.spinner) el.spinner.classList.add('hidden');
                         scheduleHide();
                     } else if(e.data === S.PAUSED || e.data === S.ENDED){
                         playing = false;
@@ -803,14 +816,13 @@ document.addEventListener('keydown',function(e){
                         saveProgress(true);
                         cancelHide();
                         updateTime();
+                        if(el.spinner) el.spinner.classList.add('hidden');
                         if(e.data === S.ENDED && NEXT_URL){
                             setTimeout(function(){ window.location.href = NEXT_URL; }, 2000);
                         }
                     } else if(e.data === S.BUFFERING){
+                        /* do NOT update playing flag — buffering is transient */
                         if(el.spinner) el.spinner.classList.remove('hidden');
-                    }
-                    if(e.data !== S.BUFFERING){
-                        if(el.spinner) el.spinner.classList.add('hidden');
                     }
                 }
             }
@@ -819,8 +831,15 @@ document.addEventListener('keydown',function(e){
 
     function togglePlay(){
         if(!player) return;
-        if(playing){ player.pauseVideo(); }
-        else        { player.playVideo();  }
+        if(playing){
+            playing = false;
+            setPlayIcons(false);
+            player.pauseVideo();
+        } else {
+            playing = true;
+            setPlayIcons(true);
+            player.playVideo();
+        }
     }
     function skip(sec){
         if(!player) return;
@@ -978,7 +997,32 @@ document.addEventListener('keydown',function(e){
             e.stopPropagation();
             var q = this.dataset.qual;
             if(player){
+                var cur = 0, wasPaused = !playing;
+                try{ cur = player.getCurrentTime()||0; }catch(ex){}
+                // Try both quality APIs
                 try{ player.setPlaybackQuality(q); }catch(ex){}
+                try{ player.setPlaybackQualityRange(q,q); }catch(ex){}
+                // For reliable quality: reload src at current position with vq param
+                if(q !== 'default'){
+                    var iframe = document.getElementById('prxYT');
+                    if(iframe){
+                        var base = iframe.src.split('?')[0];
+                        var params = 'rel=0&modestbranding=1&showinfo=0&controls=0&iv_load_policy=3&fs=0&enablejsapi=1&disablekb=1&playsinline=1&vq='+q+'&start='+Math.floor(cur);
+                        iframe.src = base+'?'+params;
+                        // Re-init player after iframe reload
+                        setTimeout(function(){
+                            player = new YT.Player('prxYT',{
+                                events:{
+                                    onReady:function(ev){
+                                        ev.target.seekTo(cur,true);
+                                        if(!wasPaused) ev.target.playVideo();
+                                    },
+                                    onStateChange: window._prxStateChange
+                                }
+                            });
+                        }, 500);
+                    }
+                }
             }
             var labels = {default:'Auto',hd1080:'1080p',hd720:'720p',large:'480p',medium:'360p',small:'240p'};
             el.qualBtn.textContent = labels[q]||q;
