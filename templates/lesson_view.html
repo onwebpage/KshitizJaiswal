@@ -86,10 +86,6 @@
                                         <span class="prx-skip-label">10</span>
                                     </button>
 
-                                    <button class="prx-ctrl-btn prx-play-big" id="prxPlayBtn" title="Play / Pause">
-                                        <i class="fas fa-play" id="prxPlayIcon"></i>
-                                    </button>
-
                                     <button class="prx-ctrl-btn prx-skip-btn" id="prxSkipFwd" title="Forward 10s">
                                         <i class="fas fa-rotate-right"></i>
                                         <span class="prx-skip-label">10</span>
@@ -674,7 +670,6 @@ document.addEventListener('keydown',function(e){
         controls:  $('prxControls'),
         spinner:   $('prxSpinner'),
         centerZone:$('prxCenterZone'),
-        playBtn:   $('prxPlayBtn'),    playIcon:  $('prxPlayIcon'),
         playBar:   $('prxPlayBtnBar'), playBarIcon:$('prxPlayIconBar'),
         skipBack:  $('prxSkipBack'),   skipFwd:   $('prxSkipFwd'),
         muteBtn:   $('prxMuteBtn'),    volIcon:   $('prxVolIcon'),
@@ -700,7 +695,6 @@ document.addEventListener('keydown',function(e){
     }
     function setPlayIcons(isPlaying){
         var ic = isPlaying ? 'fas fa-pause' : 'fas fa-play';
-        if(el.playIcon)    el.playIcon.className    = ic;
         if(el.playBarIcon) el.playBarIcon.className = ic;
     }
     function setVolIcon(muted, vol){
@@ -870,7 +864,6 @@ document.addEventListener('keydown',function(e){
         lastTap = now;
     });
 
-    if(el.playBtn)  el.playBtn.addEventListener('click', function(e){e.stopPropagation(); togglePlay();});
     if(el.playBar)  el.playBar.addEventListener('click', function(e){e.stopPropagation(); togglePlay();});
     if(el.skipBack) el.skipBack.addEventListener('click', function(e){e.stopPropagation(); skip(-10);});
     if(el.skipFwd)  el.skipFwd.addEventListener('click',  function(e){e.stopPropagation(); skip(10);});
