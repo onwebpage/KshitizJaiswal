@@ -2,91 +2,196 @@
 
 {% block content %}
 <section class="lesson-viewer">
-    <div class="container-fluid">
-        <nav aria-label="breadcrumb" class="breadcrumb-nav py-3">
-            <div class="container-fluid px-4">
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ url_for('courses') }}">Courses</a></li>
-                    <li class="breadcrumb-item"><a href="{{ url_for('course_detail', course_id=course.id) }}">{{ course.title }}</a></li>
-                    <li class="breadcrumb-item active">{{ lesson.title }}</li>
-                </ol>
-            </div>
+    <div class="container-fluid p-0">
+        <nav aria-label="breadcrumb" class="breadcrumb-nav py-2 px-3">
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item"><a href="{{ url_for('courses') }}">Courses</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('course_detail', course_id=course.id) }}">{{ course.title }}</a></li>
+                <li class="breadcrumb-item active">{{ lesson.title }}</li>
+            </ol>
         </nav>
 
         <div class="row g-0">
             <div class="col-lg-9">
                 <div class="video-section">
-                    <div class="video-player-wrapper">
-                        {% if lesson.video_url %}
-                        {% set _lv = lesson.video_url %}
-                        {% if 'youtu.be/' in _lv %}
-                          {% set _lvid = _lv.split('youtu.be/')[1].split('?')[0].split('&')[0] %}
-                        {% elif 'youtube.com/watch' in _lv %}
-                          {% set _lvid = _lv.split('v=')[1].split('&')[0] if 'v=' in _lv else '' %}
-                        {% elif '/embed/' in _lv %}
-                          {% set _lvid = _lv.split('/embed/')[1].split('?')[0] %}
-                        {% else %}
-                          {% set _lvid = '' %}
-                        {% endif %}
-                        {% if _lvid %}
-                          {% set _lsrc = 'https://www.youtube-nocookie.com/embed/' ~ _lvid ~ '?rel=0&modestbranding=1&showinfo=0&controls=0&vq=hd1080&iv_load_policy=3&fs=0&color=white&enablejsapi=1&disablekb=1&playsinline=1' %}
-                        {% else %}
-                          {% set _lsrc = _lv %}
-                        {% endif %}
-                        <div class="bunny-video-container" id="videoWrapper" oncontextmenu="return false;">
-                            <iframe
-                                id="ytLessonPlayer"
+
+                    {% if lesson.video_url %}
+                    {% set _lv = lesson.video_url %}
+                    {% if 'youtu.be/' in _lv %}
+                      {% set _lvid = _lv.split('youtu.be/')[1].split('?')[0].split('&')[0] %}
+                    {% elif 'youtube.com/watch' in _lv %}
+                      {% set _lvid = _lv.split('v=')[1].split('&')[0] if 'v=' in _lv else '' %}
+                    {% elif '/embed/' in _lv %}
+                      {% set _lvid = _lv.split('/embed/')[1].split('?')[0] %}
+                    {% else %}
+                      {% set _lvid = '' %}
+                    {% endif %}
+                    {% set _lsrc = 'https://www.youtube-nocookie.com/embed/' ~ _lvid ~ '?rel=0&modestbranding=1&showinfo=0&controls=0&iv_load_policy=3&fs=0&enablejsapi=1&disablekb=1&playsinline=1&origin=' ~ request.host_url.rstrip('/') if _lvid else _lv %}
+
+                    <!-- ═══════════════ PREMIUM PLAYER ═══════════════ -->
+                    <div class="prx-player" id="prxPlayer" oncontextmenu="return false;">
+
+                        <!-- Hidden YouTube iframe -->
+                        <div class="prx-iframe-wrap">
+                            <iframe id="prxYT"
                                 src="{{ _lsrc }}"
                                 title="{{ lesson.title }}"
-                                loading="lazy"
-                                class="bunny-video-iframe"
-                                allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture"
-                                allowfullscreen="true"
+                                class="prx-iframe"
+                                allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                                allowfullscreen
                                 sandbox="allow-scripts allow-same-origin allow-presentation">
                             </iframe>
-                            {% if _lvid %}
-                            <!-- Full overlay: blocks all YouTube UI, provides custom controls -->
-                            <div class="yt-overlay" id="ytOverlay">
-                                <button class="yt-play-btn" id="ytPlayBtn" aria-label="Play / Pause">
-                                    <i class="fas fa-play" id="ytPlayIcon"></i>
-                                </button>
-                                <button class="yt-fs-btn" id="ytFsBtn" aria-label="Fullscreen">
-                                    <i class="fas fa-expand" id="ytFsIcon"></i>
-                                </button>
-                            </div>
-                            {% endif %}
                         </div>
-                        {% else %}
-                        <div class="video-placeholder">
-                            <div class="placeholder-content">
-                                <i class="fas fa-video fa-5x mb-4"></i>
-                                <h4>Video not available</h4>
-                                <p class="text-muted">This lesson video is being prepared</p>
-                            </div>
-                        </div>
-                        {% endif %}
-                    </div>
 
-                    <div class="lesson-content p-4">
-                        <div class="d-flex justify-content-between align-items-start mb-4">
-                            <div>
-                                <h2 class="lesson-title mb-2">{{ lesson.title }}</h2>
-                                <div class="lesson-meta">
-                                    <span class="meta-item">
-                                        <i class="fas fa-book-open me-2"></i>{{ module.title }}
-                                    </span>
-                                    {% if lesson.duration %}
-                                    <span class="meta-item">
-                                        <i class="far fa-clock me-2"></i>{{ lesson.duration }}
-                                    </span>
+                        <!-- Loading spinner -->
+                        <div class="prx-spinner" id="prxSpinner">
+                            <div class="prx-spin-ring"></div>
+                        </div>
+
+                        <!-- Tap-to-seek ripple -->
+                        <div class="prx-seek-ripple prx-ripple-left" id="prxRippleLeft">
+                            <i class="fas fa-backward"></i><span>10s</span>
+                        </div>
+                        <div class="prx-seek-ripple prx-ripple-right" id="prxRippleRight">
+                            <i class="fas fa-forward"></i><span>10s</span>
+                        </div>
+
+                        <!-- Controls overlay -->
+                        <div class="prx-controls" id="prxControls">
+
+                            <!-- Top bar -->
+                            <div class="prx-top-bar">
+                                <div class="prx-lesson-label">
+                                    <span class="prx-module-name">{{ module.title }}</span>
+                                    <span class="prx-lesson-name">{{ lesson.title }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Centre click zone -->
+                            <div class="prx-center-zone" id="prxCenterZone">
+                                <div class="prx-center-btns">
+                                    {% if prev_lesson %}
+                                    <a href="{{ url_for('lesson_view', course_id=course.id, lesson_id=prev_lesson.id) }}"
+                                       class="prx-ctrl-btn prx-prev-lesson" title="Previous lesson">
+                                        <i class="fas fa-step-backward"></i>
+                                    </a>
+                                    {% else %}
+                                    <span class="prx-ctrl-btn prx-disabled"><i class="fas fa-step-backward"></i></span>
+                                    {% endif %}
+
+                                    <button class="prx-ctrl-btn prx-skip-btn" id="prxSkipBack" title="Back 10s">
+                                        <i class="fas fa-rotate-left"></i>
+                                        <span class="prx-skip-label">10</span>
+                                    </button>
+
+                                    <button class="prx-ctrl-btn prx-play-big" id="prxPlayBtn" title="Play / Pause">
+                                        <i class="fas fa-play" id="prxPlayIcon"></i>
+                                    </button>
+
+                                    <button class="prx-ctrl-btn prx-skip-btn" id="prxSkipFwd" title="Forward 10s">
+                                        <i class="fas fa-rotate-right"></i>
+                                        <span class="prx-skip-label">10</span>
+                                    </button>
+
+                                    {% if next_lesson %}
+                                    <a href="{{ url_for('lesson_view', course_id=course.id, lesson_id=next_lesson.id) }}"
+                                       class="prx-ctrl-btn prx-next-lesson" title="Next lesson">
+                                        <i class="fas fa-step-forward"></i>
+                                    </a>
+                                    {% else %}
+                                    <span class="prx-ctrl-btn prx-disabled"><i class="fas fa-step-forward"></i></span>
                                     {% endif %}
                                 </div>
+                            </div>
+
+                            <!-- Progress + bottom bar -->
+                            <div class="prx-bottom-bar">
+                                <!-- Progress bar -->
+                                <div class="prx-progress-wrap" id="prxProgressWrap">
+                                    <div class="prx-progress-bg">
+                                        <div class="prx-progress-buf" id="prxBuf"></div>
+                                        <div class="prx-progress-fill" id="prxFill"></div>
+                                        <div class="prx-progress-thumb" id="prxThumb"></div>
+                                    </div>
+                                    <div class="prx-progress-tooltip" id="prxTooltip">0:00</div>
+                                </div>
+
+                                <!-- Bottom controls row -->
+                                <div class="prx-bottom-row">
+                                    <div class="prx-bottom-left">
+                                        <button class="prx-btn" id="prxPlayBtnBar" title="Play / Pause">
+                                            <i class="fas fa-play" id="prxPlayIconBar"></i>
+                                        </button>
+                                        <button class="prx-btn" id="prxMuteBtn" title="Mute">
+                                            <i class="fas fa-volume-up" id="prxVolIcon"></i>
+                                        </button>
+                                        <div class="prx-vol-slider-wrap" id="prxVolWrap">
+                                            <input type="range" class="prx-vol-slider" id="prxVolSlider"
+                                                   min="0" max="100" value="100">
+                                        </div>
+                                        <span class="prx-time" id="prxTime">0:00 / 0:00</span>
+                                    </div>
+                                    <div class="prx-bottom-right">
+                                        <div class="prx-popup-wrap" id="prxSpeedWrap">
+                                            <button class="prx-btn prx-text-btn" id="prxSpeedBtn" title="Speed">1×</button>
+                                            <div class="prx-popup" id="prxSpeedMenu">
+                                                <div class="prx-popup-title">Speed</div>
+                                                <button class="prx-popup-item" data-speed="0.5">0.5×</button>
+                                                <button class="prx-popup-item" data-speed="0.75">0.75×</button>
+                                                <button class="prx-popup-item prx-popup-active" data-speed="1">Normal</button>
+                                                <button class="prx-popup-item" data-speed="1.25">1.25×</button>
+                                                <button class="prx-popup-item" data-speed="1.5">1.5×</button>
+                                                <button class="prx-popup-item" data-speed="1.75">1.75×</button>
+                                                <button class="prx-popup-item" data-speed="2">2×</button>
+                                            </div>
+                                        </div>
+                                        <div class="prx-popup-wrap" id="prxQualWrap">
+                                            <button class="prx-btn prx-text-btn" id="prxQualBtn" title="Quality">Auto</button>
+                                            <div class="prx-popup" id="prxQualMenu">
+                                                <div class="prx-popup-title">Quality</div>
+                                                <button class="prx-popup-item prx-popup-active" data-qual="default">Auto</button>
+                                                <button class="prx-popup-item" data-qual="hd1080">1080p</button>
+                                                <button class="prx-popup-item" data-qual="hd720">720p</button>
+                                                <button class="prx-popup-item" data-qual="large">480p</button>
+                                                <button class="prx-popup-item" data-qual="medium">360p</button>
+                                                <button class="prx-popup-item" data-qual="small">240p</button>
+                                            </div>
+                                        </div>
+                                        <button class="prx-btn" id="prxPipBtn" title="Picture in Picture" style="display:none">
+                                            <i class="fas fa-clone"></i>
+                                        </button>
+                                        <button class="prx-btn" id="prxFsBtn" title="Fullscreen">
+                                            <i class="fas fa-expand" id="prxFsIcon"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- ═══════════════ END PLAYER ═══════════════ -->
+
+                    {% else %}
+                    <div class="prx-placeholder">
+                        <i class="fas fa-video fa-4x mb-3"></i>
+                        <h5>Video not available</h5>
+                        <p class="text-muted">This lesson video is being prepared</p>
+                    </div>
+                    {% endif %}
+
+                    <div class="lesson-content p-3 p-md-4">
+                        <div class="mb-3">
+                            <h2 class="lesson-title mb-1">{{ lesson.title }}</h2>
+                            <div class="lesson-meta">
+                                <span class="meta-item"><i class="fas fa-book-open me-1"></i>{{ module.title }}</span>
+                                {% if lesson.duration %}
+                                <span class="meta-item"><i class="far fa-clock me-1"></i>{{ lesson.duration }}</span>
+                                {% endif %}
                             </div>
                         </div>
 
                         {% if lesson.description %}
-                        <div class="lesson-description mb-4">
-                            <h5 class="section-title mb-3">
+                        <div class="lesson-description mb-3">
+                            <h5 class="section-title mb-2">
                                 <i class="fas fa-info-circle me-2"></i>About this lesson
                             </h5>
                             <p class="description-text">{{ lesson.description }}</p>
@@ -94,13 +199,11 @@
                         {% endif %}
 
                         {% if lesson.notes %}
-                        <div class="lesson-notes">
-                            <h6 class="section-title mb-3" style="font-size:0.95rem;">
+                        <div class="lesson-notes mb-3">
+                            <h6 class="section-title mb-2" style="font-size:0.95rem;">
                                 <i class="fas fa-file-alt me-2"></i>Lesson Notes & Resources
                             </h6>
-                            <div class="notes-content">
-                                {{ lesson.notes|linkify }}
-                            </div>
+                            <div class="notes-content">{{ lesson.notes|linkify }}</div>
                         </div>
                         {% endif %}
 
@@ -115,7 +218,6 @@
                                     </div>
                                 </a>
                                 {% endif %}
-
                                 {% if next_lesson %}
                                 <a href="{{ url_for('lesson_view', course_id=course.id, lesson_id=next_lesson.id) }}" class="btn-nav btn-next">
                                     <div class="nav-text">
@@ -127,7 +229,6 @@
                                 {% endif %}
                             </div>
                         </div>
-
                     </div>
                 </div>
             </div>
@@ -135,11 +236,8 @@
             <div class="col-lg-3 sidebar-col">
                 <div class="course-sidebar">
                     <div class="sidebar-header">
-                        <h5 class="mb-0">
-                            <i class="fas fa-list-ul me-2"></i>Course Content
-                        </h5>
+                        <h5 class="mb-0"><i class="fas fa-list-ul me-2"></i>Course Content</h5>
                     </div>
-                    
                     <div class="sidebar-content">
                         {% for mod in course.modules %}
                         <div class="sidebar-module">
@@ -147,23 +245,17 @@
                                 <div class="module-title-small">{{ mod.title }}</div>
                                 <div class="module-lessons-count">{{ mod.lessons|length }} lessons</div>
                             </div>
-                            
                             <div class="lessons-list-sidebar">
                                 {% for les in mod.lessons %}
-                                <a href="{{ url_for('lesson_view', course_id=course.id, lesson_id=les.id) }}" 
+                                <a href="{{ url_for('lesson_view', course_id=course.id, lesson_id=les.id) }}"
                                    class="lesson-item-sidebar {% if les.id == lesson.id %}active{% endif %}">
                                     <div class="lesson-icon-sidebar">
-                                        {% if les.id == lesson.id %}
-                                        <i class="fas fa-play-circle"></i>
-                                        {% else %}
-                                        <i class="far fa-play-circle"></i>
-                                        {% endif %}
+                                        {% if les.id == lesson.id %}<i class="fas fa-play-circle"></i>
+                                        {% else %}<i class="far fa-play-circle"></i>{% endif %}
                                     </div>
                                     <div class="lesson-info-sidebar">
                                         <div class="lesson-name">{{ les.title }}</div>
-                                        {% if les.duration %}
-                                        <div class="lesson-duration-small">{{ les.duration }}</div>
-                                        {% endif %}
+                                        {% if les.duration %}<div class="lesson-duration-small">{{ les.duration }}</div>{% endif %}
                                     </div>
                                 </a>
                                 {% endfor %}
@@ -178,642 +270,772 @@
 </section>
 
 <style>
-.lesson-viewer {
-    background: #f8fafc;
-    min-height: 100vh;
-}
-
-.breadcrumb-nav {
-    background: white;
-    border-bottom: 1px solid #e2e8f0;
-}
-
-.breadcrumb {
-    margin: 0;
-}
-
-.breadcrumb-item a {
-    color: #64748b;
-    text-decoration: none;
-    transition: color 0.2s;
-}
-
-.breadcrumb-item a:hover {
-    color: #cc0000;
-}
-
-.breadcrumb-item.active {
-    color: #1e293b;
-}
-
-.video-section {
-    background: #000;
-}
-
-.video-player-wrapper {
-    position: relative;
-    background: #000;
-}
-
-.bunny-video-container {
-    position: relative;
-    width: 100%;
-    padding-bottom: 56.25%;
-    height: 0;
-    background: #000;
-    overflow: hidden;
-}
-
-.bunny-video-iframe {
-    border: 0;
-    position: absolute;
-    top: -60px;
-    left: -2px;
-    width: calc(100% + 4px);
-    height: calc(100% + 120px);
-}
-
-@media (max-width: 576px) {
-    .bunny-video-iframe {
-        top: -30px;
-        height: calc(100% + 60px);
-    }
-}
-
-/* Custom YouTube overlay — fully covers iframe, hides all YouTube UI */
-.yt-overlay {
-    position: absolute;
-    inset: 0;
-    z-index: 10;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-    pointer-events: auto; /* Block ALL YouTube UI clicks */
-    cursor: pointer;
-}
-/* Play/Pause button — centered */
-.yt-play-btn {
-    width: 68px; height: 68px;
-    border-radius: 50%;
-    background: rgba(0,0,0,0.7);
-    border: 2px solid rgba(255,255,255,0.85);
-    color: #fff;
-    font-size: 1.5rem;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-    transition: background .2s, transform .15s, opacity .2s;
-    backdrop-filter: blur(6px);
-    padding: 0;
-}
-.yt-play-btn:hover { background: rgba(204,0,0,0.85); transform: scale(1.1); }
-/* Hide play button while playing, show on hover */
-.yt-overlay.playing .yt-play-btn { opacity: 0; }
-.yt-overlay.playing:hover .yt-play-btn { opacity: 1; }
-
-/* Fullscreen button — bottom-right corner */
-.yt-fs-btn {
-    position: absolute;
-    bottom: 12px; right: 12px;
-    width: 36px; height: 36px;
-    border-radius: 8px;
-    background: rgba(0,0,0,0.6);
-    border: 1.5px solid rgba(255,255,255,0.5);
-    color: #fff;
-    font-size: 0.85rem;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-    transition: background .2s, opacity .2s;
-    backdrop-filter: blur(4px);
-    padding: 0;
-    opacity: 0;
-}
-.yt-overlay:hover .yt-fs-btn { opacity: 1; }
-.yt-fs-btn:hover { background: rgba(204,0,0,0.8); }
-
-.video-placeholder {
-    position: relative;
-    width: 100%;
-    padding-bottom: 56.25%;
-    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-}
-
-.placeholder-content {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-    color: white;
-}
-
-.placeholder-content i {
-    opacity: 0.3;
-}
-
-.lesson-content {
-    background: white;
-}
-
-.lesson-title {
-    color: #1e293b;
-    font-weight: 700;
-    font-size: 1.75rem;
-    line-height: 1.3;
-}
-
-.lesson-meta {
-    display: flex;
-    gap: 24px;
-    flex-wrap: wrap;
-}
-
-.meta-item {
-    color: #64748b;
-    font-size: 0.95rem;
-    display: flex;
-    align-items: center;
-}
-
-.section-title {
-    color: #1e293b;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-}
-
-.section-title i {
-    color: #cc0000;
-}
-
-.description-text {
-    color: #475569;
-    line-height: 1.8;
-    font-size: 1.05rem;
-}
-
-.lesson-notes {
-    background: #f8fafc;
-    padding: 20px;
-    border-radius: 12px;
-    border: 1px solid #e2e8f0;
-}
-
-.notes-content {
-    color: #475569;
-    line-height: 1.8;
-}
-
-.notes-content h1, .notes-content h2, .notes-content h3, 
-.notes-content h4, .notes-content h5, .notes-content h6 {
-    margin-top: 1.5rem;
-    margin-bottom: 1rem;
-    color: #1e293b;
-    font-weight: 600;
-}
-
-.notes-content ul, .notes-content ol {
-    padding-left: 1.5rem;
-    margin-bottom: 1rem;
-}
-
-.notes-content li {
-    margin-bottom: 0.5rem;
-}
-
-.notes-content code {
-    background: #e2e8f0;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-family: 'Monaco', 'Courier New', monospace;
-    font-size: 0.9em;
-    color: #be123c;
-}
-
-.notes-content pre {
-    background: #0f172a;
-    color: #e2e8f0;
-    padding: 20px;
-    border-radius: 8px;
-    overflow-x: auto;
-    margin: 1.5rem 0;
-}
-
-.notes-content pre code {
-    background: none;
-    padding: 0;
-    color: inherit;
-}
-
-.notes-url-link {
-    color: #be123c;
-    text-decoration: underline;
-    word-break: break-all;
-    cursor: pointer;
-}
-
-.lesson-navigation {
-    border-top: 1px solid #e2e8f0;
-    padding-top: 24px;
-}
-
-.nav-buttons {
-    display: flex;
-    justify-content: space-between;
-    gap: 16px;
-}
-
-.btn-nav {
-    display: flex;
-    align-items: center;
-    padding: 16px 24px;
-    background: white;
-    border: 2px solid #e2e8f0;
-    border-radius: 12px;
-    text-decoration: none;
-    color: #1e293b;
-    transition: all 0.3s ease;
-    flex: 1;
-    max-width: 300px;
-}
-
-.btn-nav:hover {
-    border-color: #cc0000;
-    background: #fff8f8;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(204, 0, 0, 0.15);
-    color: #cc0000;
-}
-
-.btn-prev {
-    justify-content: flex-start;
-}
-
-.btn-next {
-    justify-content: flex-end;
-    margin-left: auto;
-}
-
-.nav-text {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.nav-text small {
-    color: #94a3b8;
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-}
-
-.nav-text span {
-    font-weight: 600;
-}
-
-.sidebar-col {
-    background: white;
-    border-left: 1px solid #e2e8f0;
-    max-height: calc(100vh - 60px);
-    overflow-y: auto;
-}
-
-.course-sidebar {
-    position: sticky;
-    top: 0;
-}
-
-.sidebar-header {
-    padding: 20px;
-    border-bottom: 1px solid #e2e8f0;
-    background: #f8fafc;
-}
-
-.sidebar-header h5 {
-    color: #1e293b;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-}
-
-.sidebar-content {
-    padding: 12px;
-}
-
-.sidebar-module {
-    margin-bottom: 24px;
-}
-
-.module-header-sidebar {
-    padding: 12px;
-    background: #f8fafc;
-    border-radius: 8px;
-    margin-bottom: 8px;
-}
-
-.module-title-small {
-    font-weight: 600;
-    color: #1e293b;
-    font-size: 0.95rem;
-    margin-bottom: 4px;
-}
-
-.module-lessons-count {
-    font-size: 0.8rem;
-    color: #64748b;
-}
-
-.lessons-list-sidebar {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.lesson-item-sidebar {
-    display: flex;
-    align-items: center;
-    padding: 12px;
-    border-radius: 8px;
-    text-decoration: none;
-    color: #475569;
-    transition: all 0.2s ease;
-}
-
-.lesson-item-sidebar:hover {
-    background: #f1f5f9;
-    color: #cc0000;
-}
-
-.lesson-item-sidebar.active {
-    background: linear-gradient(135deg, #cc0000 0%, #8b0000 100%);
-    color: white;
-}
-
-.lesson-item-sidebar.active .lesson-duration-small {
-    color: rgba(255, 255, 255, 0.8);
-}
-
-.lesson-icon-sidebar {
-    margin-right: 12px;
-    font-size: 1.1rem;
-}
-
-.lesson-info-sidebar {
-    flex: 1;
-    min-width: 0;
-}
-
-.lesson-name {
-    font-size: 0.9rem;
-    font-weight: 500;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.lesson-duration-small {
-    font-size: 0.75rem;
-    color: #94a3b8;
-    margin-top: 2px;
-}
-
-@media (max-width: 991px) {
-    .sidebar-col {
-        max-height: none;
-        border-left: none;
-        border-top: 1px solid #e2e8f0;
-    }
-    
-    .lesson-title {
-        font-size: 1.5rem;
-    }
-    
-    .nav-buttons {
-        flex-direction: column;
-    }
-    
-    .btn-nav {
-        max-width: none;
-    }
-    
-    .btn-next {
-        margin-left: 0;
-    }
-}
-
-@media (max-width: 576px) {
-    .lesson-content {
-        padding: 20px !important;
-    }
-    
-    .lesson-title {
-        font-size: 1.25rem;
-    }
-}
-
-.sidebar-col::-webkit-scrollbar {
-    width: 8px;
-}
-
-.sidebar-col::-webkit-scrollbar-track {
-    background: #f1f5f9;
-}
-
-.sidebar-col::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 4px;
-}
-
-.sidebar-col::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
+/* ═══════════════════════════════════════════════════════
+   PREMIUM PLAYER — PRX
+═══════════════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;}
+
+.lesson-viewer{background:#0d0d0d;min-height:100vh;}
+
+.breadcrumb-nav{background:rgba(0,0,0,0.85);border-bottom:1px solid #222;}
+.breadcrumb-item a{color:#aaa;text-decoration:none;}
+.breadcrumb-item a:hover{color:#e53935;}
+.breadcrumb-item.active{color:#eee;}
+.breadcrumb-item+.breadcrumb-item::before{color:#555;}
+
+/* ── Player shell ── */
+.prx-player{
+    position:relative;
+    width:100%;
+    background:#000;
+    aspect-ratio:16/9;
+    overflow:hidden;
+    user-select:none;
+    -webkit-user-select:none;
+}
+
+.prx-iframe-wrap{
+    position:absolute;
+    inset:0;
+    overflow:hidden;
+}
+.prx-iframe{
+    position:absolute;
+    top:-62px; left:-2px;
+    width:calc(100% + 4px);
+    height:calc(100% + 124px);
+    border:0;
+    pointer-events:none;
+}
+@media(max-width:576px){
+    .prx-iframe{top:-32px;height:calc(100% + 64px);}
+}
+
+/* ── Spinner ── */
+.prx-spinner{
+    position:absolute;inset:0;
+    display:flex;align-items:center;justify-content:center;
+    z-index:5;pointer-events:none;
+    opacity:1;transition:opacity .3s;
+}
+.prx-spinner.hidden{opacity:0;}
+.prx-spin-ring{
+    width:52px;height:52px;
+    border:4px solid rgba(255,255,255,0.15);
+    border-top-color:#e53935;
+    border-radius:50%;
+    animation:prxSpin .8s linear infinite;
+}
+@keyframes prxSpin{to{transform:rotate(360deg);}}
+
+/* ── Seek ripple ── */
+.prx-seek-ripple{
+    position:absolute;top:50%;transform:translateY(-50%);
+    display:flex;flex-direction:column;align-items:center;gap:4px;
+    color:#fff;font-size:0.85rem;font-weight:600;
+    background:rgba(255,255,255,0.12);
+    border-radius:50%;width:80px;height:80px;
+    justify-content:center;
+    pointer-events:none;z-index:20;
+    opacity:0;transition:opacity .25s;
+}
+.prx-seek-ripple.show{opacity:1;}
+.prx-ripple-left{left:10%;}
+.prx-ripple-right{right:10%;}
+.prx-seek-ripple i{font-size:1.4rem;}
+
+/* ── Controls overlay ── */
+.prx-controls{
+    position:absolute;inset:0;
+    z-index:10;
+    display:flex;flex-direction:column;justify-content:space-between;
+    opacity:1;
+    transition:opacity .35s ease;
+    background:linear-gradient(
+        to bottom,
+        rgba(0,0,0,0.72) 0%,
+        transparent 25%,
+        transparent 60%,
+        rgba(0,0,0,0.85) 100%
+    );
+}
+.prx-controls.hidden{
+    opacity:0;pointer-events:none;
+    cursor:none;
+}
+
+/* ── Top bar ── */
+.prx-top-bar{
+    padding:14px 16px 0;
+    display:flex;align-items:flex-start;
+}
+.prx-lesson-label{display:flex;flex-direction:column;gap:2px;}
+.prx-module-name{font-size:0.7rem;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:.6px;}
+.prx-lesson-name{font-size:0.95rem;color:#fff;font-weight:600;line-height:1.3;
+    max-width:60vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* ── Centre zone ── */
+.prx-center-zone{
+    flex:1;display:flex;align-items:center;justify-content:center;
+}
+.prx-center-btns{
+    display:flex;align-items:center;gap:20px;
+}
+
+/* ── Control buttons base ── */
+.prx-ctrl-btn{
+    background:none;border:none;color:#fff;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:0;transition:transform .15s,opacity .15s;
+}
+.prx-ctrl-btn:hover{transform:scale(1.12);}
+.prx-ctrl-btn:active{transform:scale(0.92);}
+.prx-ctrl-btn.prx-disabled{opacity:.3;pointer-events:none;cursor:default;}
+
+.prx-play-big{
+    width:68px;height:68px;
+    border-radius:50%;
+    background:rgba(229,57,53,0.9);
+    box-shadow:0 0 0 8px rgba(229,57,53,0.2);
+    font-size:1.6rem;
+}
+.prx-play-big:hover{background:#c62828;box-shadow:0 0 0 12px rgba(229,57,53,0.25);}
+
+.prx-skip-btn{
+    width:52px;height:52px;font-size:1.3rem;position:relative;
+    border-radius:50%;background:rgba(255,255,255,0.1);
+}
+.prx-skip-label{
+    position:absolute;bottom:6px;
+    font-size:0.6rem;font-weight:700;letter-spacing:.4px;
+    color:rgba(255,255,255,0.85);
+}
+.prx-prev-lesson,.prx-next-lesson{
+    width:44px;height:44px;font-size:1.2rem;
+    border-radius:50%;background:rgba(255,255,255,0.08);
+    text-decoration:none;color:#fff;
+}
+
+/* ── Bottom bar ── */
+.prx-bottom-bar{padding:0 12px 12px;}
+
+/* Progress */
+.prx-progress-wrap{
+    position:relative;
+    padding:10px 0 6px;cursor:pointer;
+}
+.prx-progress-bg{
+    position:relative;height:4px;border-radius:4px;
+    background:rgba(255,255,255,0.25);
+    transition:height .15s,margin .15s;
+}
+.prx-progress-wrap:hover .prx-progress-bg,
+.prx-progress-wrap.dragging .prx-progress-bg{height:6px;}
+.prx-progress-buf{
+    position:absolute;top:0;left:0;height:100%;
+    background:rgba(255,255,255,0.35);border-radius:4px;width:0%;
+}
+.prx-progress-fill{
+    position:absolute;top:0;left:0;height:100%;
+    background:linear-gradient(90deg,#e53935,#ff1744);
+    border-radius:4px;width:0%;
+}
+.prx-progress-thumb{
+    position:absolute;top:50%;transform:translate(-50%,-50%) scale(0);
+    width:14px;height:14px;border-radius:50%;
+    background:#ff1744;left:0%;
+    box-shadow:0 0 6px rgba(255,23,68,.7);
+    transition:transform .15s;
+}
+.prx-progress-wrap:hover .prx-progress-thumb,
+.prx-progress-wrap.dragging .prx-progress-thumb{transform:translate(-50%,-50%) scale(1);}
+
+.prx-progress-tooltip{
+    position:absolute;bottom:24px;
+    background:rgba(0,0,0,0.85);color:#fff;
+    font-size:0.72rem;padding:3px 8px;border-radius:5px;
+    transform:translateX(-50%);white-space:nowrap;
+    pointer-events:none;opacity:0;transition:opacity .15s;
+}
+.prx-progress-wrap:hover .prx-progress-tooltip{opacity:1;}
+
+/* Bottom row */
+.prx-bottom-row{
+    display:flex;align-items:center;
+    justify-content:space-between;gap:4px;
+    flex-wrap:nowrap;
+}
+.prx-bottom-left,.prx-bottom-right{
+    display:flex;align-items:center;gap:4px;
+}
+
+.prx-btn{
+    background:none;border:none;color:#fff;cursor:pointer;
+    width:38px;height:38px;border-radius:8px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:1rem;padding:0;
+    transition:background .15s,transform .1s;
+    flex-shrink:0;
+}
+.prx-btn:hover{background:rgba(255,255,255,0.12);}
+.prx-btn:active{transform:scale(.9);}
+
+.prx-text-btn{
+    width:auto;padding:0 8px;font-size:0.78rem;font-weight:700;
+    letter-spacing:.5px;min-width:38px;
+}
+
+.prx-time{
+    font-size:0.76rem;color:rgba(255,255,255,0.85);
+    white-space:nowrap;padding:0 4px;
+    font-variant-numeric:tabular-nums;
+}
+
+/* Volume slider */
+.prx-vol-slider-wrap{
+    width:0;overflow:hidden;
+    transition:width .2s;display:flex;align-items:center;
+}
+.prx-bottom-left:hover .prx-vol-slider-wrap,
+.prx-vol-slider-wrap:focus-within{width:70px;}
+.prx-vol-slider{
+    -webkit-appearance:none;appearance:none;
+    width:70px;height:4px;border-radius:4px;
+    background:rgba(255,255,255,0.3);outline:none;cursor:pointer;
+}
+.prx-vol-slider::-webkit-slider-thumb{
+    -webkit-appearance:none;width:14px;height:14px;border-radius:50%;
+    background:#ff1744;cursor:pointer;
+}
+
+/* Popup menus */
+.prx-popup-wrap{position:relative;}
+.prx-popup{
+    position:absolute;bottom:calc(100% + 8px);right:0;
+    background:#1a1a1a;border:1px solid #333;border-radius:10px;
+    padding:6px 0;min-width:120px;
+    z-index:30;
+    opacity:0;pointer-events:none;transform:translateY(6px);
+    transition:opacity .18s,transform .18s;
+}
+.prx-popup-wrap.open .prx-popup{opacity:1;pointer-events:auto;transform:translateY(0);}
+.prx-popup-title{
+    font-size:0.68rem;color:#888;text-transform:uppercase;letter-spacing:.6px;
+    padding:4px 14px 6px;border-bottom:1px solid #333;
+}
+.prx-popup-item{
+    display:block;width:100%;padding:8px 14px;
+    background:none;border:none;color:#ddd;
+    font-size:0.82rem;cursor:pointer;text-align:left;
+    transition:background .15s,color .15s;
+}
+.prx-popup-item:hover{background:rgba(255,255,255,0.08);color:#fff;}
+.prx-popup-item.prx-popup-active{color:#ff1744;font-weight:600;}
+
+/* ── Placeholder ── */
+.prx-placeholder{
+    aspect-ratio:16/9;width:100%;
+    background:#111;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;color:#555;
+}
+
+/* ── Lesson content ── */
+.lesson-content{background:#fff;}
+.lesson-title{color:#1e293b;font-weight:700;font-size:1.5rem;line-height:1.3;}
+.lesson-meta{display:flex;gap:16px;flex-wrap:wrap;margin-top:4px;}
+.meta-item{color:#64748b;font-size:0.9rem;display:flex;align-items:center;}
+.section-title{color:#1e293b;font-weight:600;display:flex;align-items:center;}
+.section-title i{color:#cc0000;}
+.description-text{color:#475569;line-height:1.8;font-size:1rem;}
+.lesson-notes{background:#f8fafc;padding:16px;border-radius:10px;border:1px solid #e2e8f0;}
+.notes-content{color:#475569;line-height:1.8;}
+.notes-content h1,.notes-content h2,.notes-content h3,
+.notes-content h4,.notes-content h5,.notes-content h6{margin-top:1.2rem;margin-bottom:.8rem;color:#1e293b;font-weight:600;}
+.notes-content ul,.notes-content ol{padding-left:1.4rem;margin-bottom:.8rem;}
+.notes-content li{margin-bottom:.4rem;}
+.notes-content code{background:#e2e8f0;padding:2px 6px;border-radius:4px;font-size:.88em;color:#be123c;}
+.notes-content pre{background:#0f172a;color:#e2e8f0;padding:16px;border-radius:8px;overflow-x:auto;margin:1rem 0;}
+.notes-content pre code{background:none;padding:0;color:inherit;}
+.notes-url-link{color:#be123c;text-decoration:underline;word-break:break-all;cursor:pointer;}
+
+/* Navigation */
+.lesson-navigation{border-top:1px solid #e2e8f0;padding-top:20px;}
+.nav-buttons{display:flex;justify-content:space-between;gap:12px;}
+.btn-nav{display:flex;align-items:center;padding:14px 20px;background:#fff;border:2px solid #e2e8f0;
+    border-radius:12px;text-decoration:none;color:#1e293b;transition:all .25s ease;flex:1;max-width:300px;}
+.btn-nav:hover{border-color:#cc0000;background:#fff8f8;transform:translateY(-2px);
+    box-shadow:0 4px 12px rgba(204,0,0,.15);color:#cc0000;}
+.btn-prev{justify-content:flex-start;}
+.btn-next{justify-content:flex-end;margin-left:auto;}
+.nav-text{display:flex;flex-direction:column;gap:2px;}
+.nav-text small{color:#94a3b8;font-size:0.75rem;text-transform:uppercase;font-weight:600;letter-spacing:.5px;}
+.nav-text span{font-weight:600;}
+
+/* ── Sidebar ── */
+.sidebar-col{background:#fff;border-left:1px solid #e2e8f0;max-height:calc(100vh - 48px);overflow-y:auto;}
+.sidebar-header{padding:16px 20px;border-bottom:1px solid #e2e8f0;background:#f8fafc;}
+.sidebar-header h5{color:#1e293b;font-weight:600;font-size:0.95rem;display:flex;align-items:center;margin:0;}
+.sidebar-content{padding:10px;}
+.sidebar-module{margin-bottom:20px;}
+.module-header-sidebar{padding:10px;background:#f8fafc;border-radius:8px;margin-bottom:6px;}
+.module-title-small{font-weight:600;color:#1e293b;font-size:0.9rem;margin-bottom:2px;}
+.module-lessons-count{font-size:0.75rem;color:#64748b;}
+.lessons-list-sidebar{display:flex;flex-direction:column;gap:2px;}
+.lesson-item-sidebar{display:flex;align-items:center;padding:10px;border-radius:8px;text-decoration:none;color:#475569;transition:all .2s ease;}
+.lesson-item-sidebar:hover{background:#f1f5f9;color:#cc0000;}
+.lesson-item-sidebar.active{background:linear-gradient(135deg,#cc0000,#8b0000);color:#fff;}
+.lesson-item-sidebar.active .lesson-duration-small{color:rgba(255,255,255,0.7);}
+.lesson-icon-sidebar{margin-right:10px;font-size:1rem;}
+.lesson-info-sidebar{flex:1;min-width:0;}
+.lesson-name{font-size:0.85rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.lesson-duration-small{font-size:0.72rem;color:#94a3b8;margin-top:2px;}
+.sidebar-col::-webkit-scrollbar{width:6px;}
+.sidebar-col::-webkit-scrollbar-track{background:#f1f5f9;}
+.sidebar-col::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px;}
+
+/* ── Responsive ── */
+@media(max-width:991px){
+    .sidebar-col{max-height:none;border-left:none;border-top:1px solid #e2e8f0;}
+    .nav-buttons{flex-direction:column;}
+    .btn-nav{max-width:none;}
+    .btn-next{margin-left:0;}
+}
+@media(max-width:576px){
+    .lesson-title{font-size:1.2rem;}
+    .prx-play-big{width:58px;height:58px;font-size:1.4rem;}
+    .prx-skip-btn{width:44px;height:44px;font-size:1.1rem;}
+    .prx-center-btns{gap:14px;}
+    .prx-prev-lesson,.prx-next-lesson{width:38px;height:38px;font-size:1rem;}
+    .prx-lesson-name{font-size:0.82rem;max-width:75vw;}
+    .prx-time{font-size:0.7rem;}
+    .prx-text-btn{font-size:0.72rem;}
+    .prx-btn{width:34px;height:34px;font-size:0.9rem;}
+    .prx-vol-slider-wrap{display:none;}
+    .lesson-content{padding:14px !important;}
+}
+
+/* Fullscreen */
+:fullscreen .prx-player,
+:-webkit-full-screen .prx-player{
+    width:100vw;height:100vh;aspect-ratio:unset;
+}
+:fullscreen .prx-iframe,
+:-webkit-full-screen .prx-iframe{
+    top:-10%;height:120%;
 }
 </style>
 
 <script>
-document.addEventListener('contextmenu', function(e) {
-    if (e.target.closest('#videoWrapper')) e.preventDefault();
-});
-document.addEventListener('keydown', function(e) {
-    if ((e.ctrlKey || e.metaKey) && ['s','u','p'].includes(e.key.toLowerCase())) {
-        e.preventDefault();
-    }
+/* Block context menu & key combos */
+document.addEventListener('contextmenu',function(e){if(e.target.closest('#prxPlayer'))e.preventDefault();});
+document.addEventListener('keydown',function(e){
+    if((e.ctrlKey||e.metaKey)&&['s','u','p'].includes(e.key.toLowerCase()))e.preventDefault();
 });
 
-/* ── YouTube IFrame API — play/pause, fullscreen, watch progress ── */
-(function() {
-    var overlay  = document.getElementById('ytOverlay');
-    var playBtn  = document.getElementById('ytPlayBtn');
-    var playIcon = document.getElementById('ytPlayIcon');
-    var fsBtn    = document.getElementById('ytFsBtn');
-    var fsIcon   = document.getElementById('ytFsIcon');
-    var wrapper  = document.getElementById('videoWrapper');
-    if (!overlay || !playBtn) return;
-
-    // Progress metadata injected from Flask
+/* ═══════════════════════════════════════════════════════
+   PRX PLAYER ENGINE
+═══════════════════════════════════════════════════════ */
+(function(){
     var COURSE_ID  = {{ course.id }};
     var MODULE_ID  = {{ lesson.module_id }};
     var LESSON_ID  = {{ lesson.id }};
-    var USER_ID    = '{{ clerk_user_id }}';
+    var USER_ID    = '{{ clerk_user_id | default("") }}';
     var RESUME_SEC = {{ (lesson_progress.watched_seconds if lesson_progress and not lesson_progress.completed else 0) | int }};
+    {% if prev_lesson %}
+    var PREV_URL   = '{{ url_for("lesson_view", course_id=course.id, lesson_id=prev_lesson.id) }}';
+    {% else %}
+    var PREV_URL   = null;
+    {% endif %}
+    {% if next_lesson %}
+    var NEXT_URL   = '{{ url_for("lesson_view", course_id=course.id, lesson_id=next_lesson.id) }}';
+    {% else %}
+    var NEXT_URL   = null;
+    {% endif %}
 
-    var player   = null;
-    var playing  = false;
-    var saveTimer = null;
+    var player = null, playing = false, duration = 0;
+    var saveTimer = null, hideTimer = null, progressTimer = null;
 
-    // ── Progress Save ──────────────────────────────────────────────────
-    function saveProgress(forceNow) {
-        if (!player || !USER_ID) return;
-        var currentTime = 0;
-        var duration    = 0;
-        try { currentTime = player.getCurrentTime() || 0; } catch(e) {}
-        try { duration    = player.getDuration()    || 0; } catch(e) {}
-        if (currentTime < 2) return;  // skip near-start saves
+    /* ── Refs ── */
+    var $  = function(id){return document.getElementById(id);};
+    var el = {
+        player:    $('prxPlayer'),
+        controls:  $('prxControls'),
+        spinner:   $('prxSpinner'),
+        centerZone:$('prxCenterZone'),
+        playBtn:   $('prxPlayBtn'),    playIcon:  $('prxPlayIcon'),
+        playBar:   $('prxPlayBtnBar'), playBarIcon:$('prxPlayIconBar'),
+        skipBack:  $('prxSkipBack'),   skipFwd:   $('prxSkipFwd'),
+        muteBtn:   $('prxMuteBtn'),    volIcon:   $('prxVolIcon'),
+        volSlider: $('prxVolSlider'),
+        time:      $('prxTime'),
+        fill:      $('prxFill'),       buf:       $('prxBuf'),
+        thumb:     $('prxThumb'),      tooltip:   $('prxTooltip'),
+        progWrap:  $('prxProgressWrap'),
+        speedBtn:  $('prxSpeedBtn'),   speedMenu: $('prxSpeedMenu'), speedWrap: $('prxSpeedWrap'),
+        qualBtn:   $('prxQualBtn'),    qualMenu:  $('prxQualMenu'),  qualWrap:  $('prxQualWrap'),
+        pipBtn:    $('prxPipBtn'),
+        fsBtn:     $('prxFsBtn'),      fsIcon:    $('prxFsIcon'),
+        ripL:      $('prxRippleLeft'), ripR:      $('prxRippleRight'),
+    };
+    if(!el.player) return;
 
-        fetch('/api/progress/save', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                course_id:       COURSE_ID,
-                module_id:       MODULE_ID,
-                lesson_id:       LESSON_ID,
-                watched_seconds: currentTime,
-                duration_seconds: duration
-            }),
-            keepalive: true
-        }).catch(function() {});
+    /* ── Helpers ── */
+    function fmt(s){
+        s = Math.max(0,Math.floor(s||0));
+        var h=Math.floor(s/3600), m=Math.floor((s%3600)/60), sec=s%60;
+        if(h) return h+':'+(m<10?'0'+m:m)+':'+(sec<10?'0'+sec:sec);
+        return m+':'+(sec<10?'0'+sec:sec);
+    }
+    function setPlayIcons(isPlaying){
+        var ic = isPlaying ? 'fas fa-pause' : 'fas fa-play';
+        if(el.playIcon)    el.playIcon.className    = ic;
+        if(el.playBarIcon) el.playBarIcon.className = ic;
+    }
+    function setVolIcon(muted, vol){
+        var ic = (muted || vol===0) ? 'fas fa-volume-mute'
+               : vol < 40           ? 'fas fa-volume-down'
+               :                      'fas fa-volume-up';
+        if(el.volIcon) el.volIcon.className = ic;
+    }
+    function updateTime(){
+        if(!player) return;
+        try{
+            var cur = player.getCurrentTime()||0;
+            var dur = player.getDuration()||0;
+            if(dur && dur !== duration){ duration = dur; }
+            if(el.time) el.time.textContent = fmt(cur)+' / '+fmt(duration);
+            var pct = duration ? (cur/duration*100) : 0;
+            if(el.fill)  el.fill.style.width  = pct+'%';
+            if(el.thumb) el.thumb.style.left   = pct+'%';
+        }catch(e){}
+        try{
+            var buf = player.getVideoLoadedFraction()||0;
+            if(el.buf) el.buf.style.width = (buf*100)+'%';
+        }catch(e){}
     }
 
-    function startAutoSave() {
-        if (saveTimer) clearInterval(saveTimer);
-        saveTimer = setInterval(saveProgress, 5000);
+    /* ── Controls visibility ── */
+    function showCtrl(){
+        el.controls.classList.remove('hidden');
+        el.controls.style.pointerEvents='';
+        if(el.player) el.player.style.cursor='';
     }
-    function stopAutoSave() {
-        if (saveTimer) { clearInterval(saveTimer); saveTimer = null; }
+    function hideCtrl(){
+        el.controls.classList.add('hidden');
+        if(el.player) el.player.style.cursor='none';
     }
+    function scheduleHide(){
+        clearTimeout(hideTimer);
+        showCtrl();
+        if(playing){
+            hideTimer = setTimeout(function(){
+                if(playing) hideCtrl();
+            }, 3000);
+        }
+    }
+    function cancelHide(){ clearTimeout(hideTimer); showCtrl(); }
 
-    // Save on page close / navigation
-    window.addEventListener('beforeunload', function() { saveProgress(true); });
-    window.addEventListener('pagehide',     function() { saveProgress(true); });
+    el.player.addEventListener('mousemove', scheduleHide);
+    el.player.addEventListener('touchstart', function(){
+        if(el.controls.classList.contains('hidden')){
+            scheduleHide();
+        } else {
+            if(playing) scheduleHide();
+        }
+    }, {passive:true});
 
-    // ── IFrame API ─────────────────────────────────────────────────────
+    /* ── Progress save ── */
+    function saveProgress(){
+        if(!player||!USER_ID) return;
+        var cur=0, dur=0;
+        try{cur=player.getCurrentTime()||0;}catch(e){}
+        try{dur=player.getDuration()||0;}catch(e){}
+        if(cur<2) return;
+        fetch('/api/progress/save',{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({course_id:COURSE_ID,module_id:MODULE_ID,lesson_id:LESSON_ID,
+                                 watched_seconds:cur,duration_seconds:dur}),
+            keepalive:true
+        }).catch(function(){});
+    }
+    window.addEventListener('beforeunload', saveProgress);
+    window.addEventListener('pagehide',     saveProgress);
+
+    /* ── IFrame API ── */
     var tag = document.createElement('script');
     tag.src = 'https://www.youtube.com/iframe_api';
     document.head.appendChild(tag);
 
-    window.onYouTubeIframeAPIReady = function() {
-        player = new YT.Player('ytLessonPlayer', {
-            events: {
-                onReady: function(e) {
-                    setIcon(false);
-                    // Seek to saved position (if > 5 s and not completed)
-                    if (RESUME_SEC > 5) {
+    window.onYouTubeIframeAPIReady = function(){
+        player = new YT.Player('prxYT',{
+            events:{
+                onReady: function(e){
+                    if(el.spinner) el.spinner.classList.add('hidden');
+                    // Try to set high quality
+                    try{ e.target.setPlaybackQualityRange('hd1080','hd1080'); }catch(ex){}
+                    if(RESUME_SEC > 5){
                         e.target.seekTo(RESUME_SEC, true);
+                        e.target.pauseVideo();
+                    }
+                    updateTime();
+                    // PiP support
+                    var iframe = document.getElementById('prxYT');
+                    if(iframe && document.pictureInPictureEnabled){
+                        el.pipBtn.style.display='flex';
                     }
                 },
-                onStateChange: function(e) {
-                    if (e.data === YT.PlayerState.PLAYING) {
+                onStateChange: function(e){
+                    var S = YT.PlayerState;
+                    if(e.data === S.PLAYING){
                         playing = true;
-                        overlay.classList.add('playing');
-                        setIcon(true);
-                        startAutoSave();
-                        if (document.fullscreenElement) scheduleHide();
-                    } else if (e.data === YT.PlayerState.PAUSED) {
+                        setPlayIcons(true);
+                        clearInterval(saveTimer);
+                        saveTimer = setInterval(saveProgress, 5000);
+                        clearInterval(progressTimer);
+                        progressTimer = setInterval(updateTime, 250);
+                        scheduleHide();
+                    } else if(e.data === S.PAUSED || e.data === S.ENDED){
                         playing = false;
-                        overlay.classList.remove('playing');
-                        setIcon(false);
-                        stopAutoSave();
+                        setPlayIcons(false);
+                        clearInterval(saveTimer);
+                        clearInterval(progressTimer);
                         saveProgress(true);
-                        if (hideTimer) clearTimeout(hideTimer);
-                        showControls();
-                    } else if (e.data === YT.PlayerState.ENDED) {
-                        playing = false;
-                        overlay.classList.remove('playing');
-                        setIcon(false);
-                        stopAutoSave();
-                        saveProgress(true);
-                        if (hideTimer) clearTimeout(hideTimer);
-                        showControls();
-                    } else {
-                        playing = false;
-                        overlay.classList.remove('playing');
-                        setIcon(false);
+                        cancelHide();
+                        updateTime();
+                        if(e.data === S.ENDED && NEXT_URL){
+                            setTimeout(function(){ window.location.href = NEXT_URL; }, 2000);
+                        }
+                    } else if(e.data === S.BUFFERING){
+                        if(el.spinner) el.spinner.classList.remove('hidden');
+                    }
+                    if(e.data !== S.BUFFERING){
+                        if(el.spinner) el.spinner.classList.add('hidden');
                     }
                 }
             }
         });
     };
 
-    function setIcon(isPlaying) {
-        if (playIcon) playIcon.className = isPlaying ? 'fas fa-pause' : 'fas fa-play';
+    function togglePlay(){
+        if(!player) return;
+        if(playing){ player.pauseVideo(); }
+        else        { player.playVideo();  }
     }
-    function togglePlay() {
-        if (!player) return;
-        if (playing) { player.pauseVideo(); } else { player.playVideo(); }
+    function skip(sec){
+        if(!player) return;
+        var cur = 0;
+        try{cur=player.getCurrentTime()||0;}catch(e){}
+        player.seekTo(cur+sec, true);
+        updateTime();
+        showRipple(sec > 0 ? 'right' : 'left');
+    }
+    function showRipple(side){
+        var el2 = side==='left' ? el.ripL : el.ripR;
+        el2.classList.add('show');
+        clearTimeout(el2._rt);
+        el2._rt = setTimeout(function(){el2.classList.remove('show');}, 700);
     }
 
-    overlay.addEventListener('click', function(e) {
-        if (e.target === overlay) togglePlay();
+    /* ── Centre zone tap ── */
+    var lastTap = 0, tapTimer = null;
+    el.centerZone.addEventListener('click', function(e){
+        if(e.target.closest('.prx-ctrl-btn')) return;
+        var now = Date.now();
+        if(now - lastTap < 300){
+            clearTimeout(tapTimer);
+            // double-tap: no skip needed on desktop (handled by buttons)
+        } else {
+            tapTimer = setTimeout(function(){ togglePlay(); }, 250);
+        }
+        lastTap = now;
     });
-    playBtn.addEventListener('click', function(e) {
-        e.stopPropagation(); togglePlay();
+
+    if(el.playBtn)  el.playBtn.addEventListener('click', function(e){e.stopPropagation(); togglePlay();});
+    if(el.playBar)  el.playBar.addEventListener('click', function(e){e.stopPropagation(); togglePlay();});
+    if(el.skipBack) el.skipBack.addEventListener('click', function(e){e.stopPropagation(); skip(-10);});
+    if(el.skipFwd)  el.skipFwd.addEventListener('click',  function(e){e.stopPropagation(); skip(10);});
+
+    /* ── Volume ── */
+    var muted = false;
+    if(el.muteBtn) el.muteBtn.addEventListener('click', function(){
+        if(!player) return;
+        if(muted){ player.unMute(); muted=false; }
+        else      { player.mute();  muted=true;  }
+        setVolIcon(muted, player.getVolume());
+        if(el.volSlider) el.volSlider.value = muted ? 0 : player.getVolume();
+    });
+    if(el.volSlider) el.volSlider.addEventListener('input', function(){
+        if(!player) return;
+        var v = parseInt(this.value);
+        player.setVolume(v);
+        if(v===0){ player.mute(); muted=true; }
+        else{ player.unMute(); muted=false; }
+        setVolIcon(muted, v);
     });
 
-    // ── Fullscreen ─────────────────────────────────────────────────────
-    var hideTimer = null;
-
-    function showControls() {
-        overlay.style.opacity = '1';
-        overlay.style.pointerEvents = 'auto';
+    /* ── Progress bar seek ── */
+    var dragging = false;
+    function progressFromEvent(e){
+        var rect = el.progWrap.getBoundingClientRect();
+        var clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        var pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+        return pct;
     }
-    function scheduleHide() {
-        if (hideTimer) clearTimeout(hideTimer);
-        showControls();
-        if (document.fullscreenElement && playing) {
-            hideTimer = setTimeout(function() {
-                overlay.style.opacity = '0';
-                overlay.style.pointerEvents = 'none';
-            }, 3000);
+    function seekTo(pct){
+        if(!player||!duration) return;
+        player.seekTo(pct * duration, true);
+        if(el.fill)  el.fill.style.width  = (pct*100)+'%';
+        if(el.thumb) el.thumb.style.left   = (pct*100)+'%';
+        if(el.time)  el.time.textContent   = fmt(pct*duration)+' / '+fmt(duration);
+    }
+    function tooltipAt(e){
+        if(!duration) return;
+        var pct = progressFromEvent(e);
+        var px = pct * el.progWrap.getBoundingClientRect().width;
+        if(el.tooltip){
+            el.tooltip.textContent = fmt(pct*duration);
+            el.tooltip.style.left  = px+'px';
         }
     }
+    el.progWrap.addEventListener('mousedown', function(e){
+        dragging=true; el.progWrap.classList.add('dragging');
+        seekTo(progressFromEvent(e)); tooltipAt(e);
+    });
+    el.progWrap.addEventListener('mousemove', function(e){
+        tooltipAt(e);
+        if(dragging) seekTo(progressFromEvent(e));
+    });
+    el.progWrap.addEventListener('mouseup',   function(e){ dragging=false; el.progWrap.classList.remove('dragging'); });
+    el.progWrap.addEventListener('touchstart', function(e){ dragging=true; el.progWrap.classList.add('dragging'); seekTo(progressFromEvent(e)); },{passive:true});
+    el.progWrap.addEventListener('touchmove',  function(e){ if(dragging) seekTo(progressFromEvent(e)); e.preventDefault(); },{passive:false});
+    el.progWrap.addEventListener('touchend',   function(){  dragging=false; el.progWrap.classList.remove('dragging'); });
+    document.addEventListener('mouseup', function(){ dragging=false; el.progWrap.classList.remove('dragging'); });
 
-    // When mouse moves inside the wrapper, show controls temporarily
-    if (wrapper) {
-        wrapper.addEventListener('mousemove', function() {
-            if (document.fullscreenElement) scheduleHide();
-        });
-        wrapper.addEventListener('touchstart', function() {
-            if (document.fullscreenElement) scheduleHide();
-        }, { passive: true });
-    }
-
-    document.addEventListener('fullscreenchange', function() {
-        if (fsIcon) fsIcon.className = document.fullscreenElement ? 'fas fa-compress' : 'fas fa-expand';
-        if (!document.fullscreenElement) {
-            // Exiting fullscreen — always restore controls
-            if (hideTimer) clearTimeout(hideTimer);
-            showControls();
-        } else if (playing) {
-            // Entered fullscreen while playing — start hide timer
-            scheduleHide();
+    /* ── Fullscreen ── */
+    if(el.fsBtn) el.fsBtn.addEventListener('click', function(e){
+        e.stopPropagation();
+        if(!document.fullscreenElement && !document.webkitFullscreenElement){
+            var p = el.player;
+            if(p.requestFullscreen)          p.requestFullscreen();
+            else if(p.webkitRequestFullscreen) p.webkitRequestFullscreen();
+        } else {
+            if(document.exitFullscreen)            document.exitFullscreen();
+            else if(document.webkitExitFullscreen) document.webkitExitFullscreen();
         }
     });
+    document.addEventListener('fullscreenchange', onFsChange);
+    document.addEventListener('webkitfullscreenchange', onFsChange);
+    function onFsChange(){
+        var isFs = !!(document.fullscreenElement||document.webkitFullscreenElement);
+        if(el.fsIcon) el.fsIcon.className = isFs ? 'fas fa-compress' : 'fas fa-expand';
+        if(!isFs){ cancelHide(); }
+        else if(playing){ scheduleHide(); }
+    }
 
-    if (fsBtn && wrapper) {
-        fsBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            if (!document.fullscreenElement) {
-                var el = wrapper;
-                if (el.requestFullscreen)            el.requestFullscreen();
-                else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-                else if (el.mozRequestFullScreen)    el.mozRequestFullScreen();
+    /* ── PiP ── */
+    if(el.pipBtn) el.pipBtn.addEventListener('click', function(){
+        var iframe = document.getElementById('prxYT');
+        if(!iframe) return;
+        // PiP on iframe requires requesting from the iframe's video element
+        // We toggle via message since we can't access cross-origin video
+        try{
+            if(document.pictureInPictureElement){
+                document.exitPictureInPicture();
             } else {
-                if (document.exitFullscreen)             document.exitFullscreen();
-                else if (document.webkitExitFullscreen)  document.webkitExitFullscreen();
+                // Request fullscreen as fallback for cross-origin iframes
+                if(el.player.requestFullscreen) el.player.requestFullscreen();
             }
-        });
-    }
-})();
+        }catch(ex){}
+    });
 
+    /* ── Speed ── */
+    el.speedWrap.addEventListener('click', function(e){
+        e.stopPropagation();
+        el.speedWrap.classList.toggle('open');
+        el.qualWrap.classList.remove('open');
+    });
+    el.speedMenu.querySelectorAll('.prx-popup-item').forEach(function(btn){
+        btn.addEventListener('click', function(e){
+            e.stopPropagation();
+            var spd = parseFloat(this.dataset.speed);
+            if(player) player.setPlaybackRate(spd);
+            el.speedBtn.textContent = spd===1 ? '1×' : spd+'×';
+            el.speedMenu.querySelectorAll('.prx-popup-item').forEach(function(b){ b.classList.remove('prx-popup-active'); });
+            this.classList.add('prx-popup-active');
+            el.speedWrap.classList.remove('open');
+        });
+    });
+
+    /* ── Quality ── */
+    el.qualWrap.addEventListener('click', function(e){
+        e.stopPropagation();
+        el.qualWrap.classList.toggle('open');
+        el.speedWrap.classList.remove('open');
+    });
+    el.qualMenu.querySelectorAll('.prx-popup-item').forEach(function(btn){
+        btn.addEventListener('click', function(e){
+            e.stopPropagation();
+            var q = this.dataset.qual;
+            if(player){
+                try{ player.setPlaybackQuality(q); }catch(ex){}
+            }
+            var labels = {default:'Auto',hd1080:'1080p',hd720:'720p',large:'480p',medium:'360p',small:'240p'};
+            el.qualBtn.textContent = labels[q]||q;
+            el.qualMenu.querySelectorAll('.prx-popup-item').forEach(function(b){ b.classList.remove('prx-popup-active'); });
+            this.classList.add('prx-popup-active');
+            el.qualWrap.classList.remove('open');
+        });
+    });
+
+    /* Close popups on outside click */
+    document.addEventListener('click', function(){
+        el.speedWrap.classList.remove('open');
+        el.qualWrap.classList.remove('open');
+    });
+
+    /* ── Keyboard shortcuts ── */
+    document.addEventListener('keydown', function(e){
+        var tag = document.activeElement.tagName;
+        if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT') return;
+        if(!el.player) return;
+        switch(e.key){
+            case ' ':case 'k': e.preventDefault(); togglePlay(); break;
+            case 'ArrowLeft':  e.preventDefault(); skip(-10); break;
+            case 'ArrowRight': e.preventDefault(); skip(10);  break;
+            case 'ArrowUp':    e.preventDefault();
+                if(player){ var v=Math.min(100,(player.getVolume()||0)+10); player.setVolume(v); player.unMute(); muted=false; if(el.volSlider) el.volSlider.value=v; setVolIcon(false,v); } break;
+            case 'ArrowDown':  e.preventDefault();
+                if(player){ var v2=Math.max(0,(player.getVolume()||0)-10); player.setVolume(v2); if(el.volSlider) el.volSlider.value=v2; setVolIcon(v2===0,v2); } break;
+            case 'f': case 'F': e.preventDefault(); if(el.fsBtn) el.fsBtn.click(); break;
+            case 'm': case 'M': e.preventDefault(); if(el.muteBtn) el.muteBtn.click(); break;
+            case 'j': e.preventDefault(); skip(-10); break;
+            case 'l': e.preventDefault(); skip(10);  break;
+        }
+    });
+
+    /* ── Double-tap to seek on mobile ── */
+    var tapSide = null, tapCount = 0;
+    el.player.addEventListener('touchend', function(e){
+        if(e.target.closest('.prx-bottom-bar,.prx-top-bar,.prx-ctrl-btn')) return;
+        var x = e.changedTouches[0].clientX;
+        var rect = el.player.getBoundingClientRect();
+        var isRight = x > rect.left + rect.width * 0.65;
+        var isLeft  = x < rect.left + rect.width * 0.35;
+        if(!isLeft && !isRight) return;
+        var side = isLeft ? 'left' : 'right';
+        tapCount++;
+        if(tapCount === 1){
+            tapSide = side;
+            setTimeout(function(){
+                if(tapCount >= 2 && tapSide === side){
+                    skip(side==='right' ? 10 : -10);
+                }
+                tapCount = 0; tapSide = null;
+            }, 300);
+        }
+    }, {passive:true});
+
+})();
 </script>
 {% endblock %}
