@@ -579,6 +579,14 @@
     transition: transform 0.38s cubic-bezier(.23,1,.32,1);
     display: block;
 }
+/* Instagram portrait cards — show full thumbnail without cropping */
+.ig-grid .showcase-card-thumb {
+    background: #0a0a0a;
+}
+.ig-grid .showcase-card-thumb img {
+    object-fit: contain;
+    object-position: center center;
+}
 .showcase-card:hover .showcase-card-thumb img { transform: scale(1.08); }
 
 .showcase-card-play {
