@@ -1,6 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="360" height="560" viewBox="0 0 360 560">
-  <rect width="360" height="560" fill="#0d0d1a"/>
-  <circle cx="180" cy="240" r="48" fill="none" stroke="#2a2a3e" stroke-width="2"/>
-  <polygon points="168,222 168,258 204,240" fill="#2a2a3e"/>
-  <text x="180" y="316" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#444">No Thumbnail</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="450" viewBox="0 0 360 450">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a0000;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3d0a0a;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="ring" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#cc0000;stop-opacity:0.6" />
+      <stop offset="100%" style="stop-color:#800000;stop-opacity:0.3" />
+    </linearGradient>
+  </defs>
+  <rect width="360" height="450" fill="url(#bg)"/>
+  <circle cx="180" cy="200" r="52" fill="none" stroke="url(#ring)" stroke-width="2"/>
+  <circle cx="180" cy="200" r="38" fill="rgba(204,0,0,0.15)"/>
+  <polygon points="170,183 170,217 206,200" fill="rgba(204,0,0,0.7)"/>
+  <text x="180" y="284" text-anchor="middle" font-family="sans-serif" font-size="13" fill="rgba(255,255,255,0.45)" letter-spacing="1">No Thumbnail</text>
+  <text x="180" y="308" text-anchor="middle" font-family="sans-serif" font-size="10" fill="rgba(255,255,255,0.2)">Add via Admin Panel</text>
 </svg>
