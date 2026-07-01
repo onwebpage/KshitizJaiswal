@@ -506,14 +506,17 @@
 /* ── Showcase grid ───────────────────────────────── */
 .showcase-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.5rem;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem;
 }
-@media (max-width: 991px) {
-    .showcase-grid { grid-template-columns: repeat(2, 1fr); gap: 1.25rem; }
+@media (max-width: 1199px) {
+    .showcase-grid { grid-template-columns: repeat(3, 1fr); gap: 1.1rem; }
 }
-@media (max-width: 575px) {
+@media (max-width: 767px) {
     .showcase-grid { grid-template-columns: repeat(2, 1fr); gap: 0.875rem; }
+}
+@media (max-width: 479px) {
+    .showcase-grid { grid-template-columns: repeat(2, 1fr); gap: 0.625rem; }
 }
 
 /* ── Showcase card — glassmorphism dark ─────────── */
@@ -559,12 +562,12 @@
     z-index: 1;
 }
 
-/* Instagram portrait (4:5) — compact card ratio */
+/* Instagram portrait — compact ratio */
 .ig-grid .showcase-card-thumb {
-    aspect-ratio: 4/5;
+    aspect-ratio: 3/2;
 }
 
-/* YouTube landscape (16:9) — already default, explicit for clarity */
+/* YouTube landscape (16:9) */
 .yt-grid .showcase-card-thumb {
     aspect-ratio: 16/9;
 }
@@ -572,6 +575,7 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: center center;
     transition: transform 0.38s cubic-bezier(.23,1,.32,1);
     display: block;
 }
