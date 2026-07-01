@@ -184,10 +184,10 @@ input[type="submit"], input[type="button"],
     width: 100% !important;
     height: auto !important;
     max-height: none !important;
-    object-fit: none !important;      /* none, not unset — prevents any cover/fill behaviour */
+    object-fit: fill !important;      /* fill = stretch to 100% width, auto height — no cropping */
     object-position: unset !important;
     display: block !important;
-    transform: none !important;       /* no transforms that could clip */
+    transform: none !important;
     margin: 0 !important;
     position: static !important;
   }
