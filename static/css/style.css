@@ -211,6 +211,13 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--gray-800);
 }
 
+.text-white h1, .text-white h2, .text-white h3,
+.text-white h4, .text-white h5, .text-white h6,
+h1.text-white, h2.text-white, h3.text-white,
+h4.text-white, h5.text-white, h6.text-white {
+  color: #ffffff !important;
+}
+
 .section-title {
   font-size: 2.5rem;
   font-weight: 700;
