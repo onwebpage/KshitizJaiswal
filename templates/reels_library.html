@@ -14,12 +14,13 @@
     </div>
 </section>
 
-{% macro reel_card(reel) %}
+{% macro reel_card(reel, platform='youtube') %}
 {% set _thumb = reel.thumbnail %}
 {% set _auto  = reel.auto_thumbnail %}
 {% set _ph    = url_for('static', filename='img/reel-placeholder.svg') %}
+{% set _is_ig = (platform == 'instagram') %}
 <a href="{{ url_for('reel_detail', reel_id=reel.id) }}" class="showcase-card">
-    <div class="showcase-card-thumb">
+    <div class="showcase-card-thumb" style="{% if _is_ig %}background:#0a0a0a;{% endif %}">
         {% if reel.category_tag %}
         <div class="showcase-tag {{ reel.category_tag }}">
             {% if reel.category_tag == 'trending' %}🔥 Trending
@@ -33,6 +34,7 @@
         {% endif %}
         <img src="{% if _thumb %}{{ url_for('static', filename=_thumb) if not _thumb.startswith('http') else _thumb }}{% elif _auto %}{{ _auto }}{% else %}{{ _ph }}{% endif %}"
              alt="{{ reel.title }}"
+             style="{% if _is_ig %}object-fit:contain;object-position:center center;{% else %}object-fit:cover;object-position:center center;{% endif %}"
              data-auto-thumb="{% if not _thumb %}{{ _auto }}{% endif %}"
              onerror="var a=this.dataset.autoThumb;if(a&&this.src!==a){this.onerror=function(){this.src='{{ _ph }}'};this.src=a;}else{this.onerror=null;this.src='{{ _ph }}'}">
         <div class="showcase-card-play"><i class="fas fa-play-circle"></i></div>
@@ -167,7 +169,7 @@
                 {% endif %}
             </div>
             <div class="showcase-grid ig-grid">
-                {% for reel in instagram_featured %}{{ reel_card(reel) }}{% endfor %}
+                {% for reel in instagram_featured %}{{ reel_card(reel, platform='instagram') }}{% endfor %}
             </div>
         </div>
         {% endif %}
