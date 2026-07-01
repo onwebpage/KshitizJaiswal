@@ -26,7 +26,12 @@
                 <div class="my-course-card h-100">
                     <div class="course-image-wrapper">
                         {% if course.thumbnail %}
-                        <img src="{{ url_for('static', filename=course.thumbnail) if not course.thumbnail.startswith('http') else course.thumbnail }}" alt="{{ course.title }}">
+                        <img src="{{ url_for('static', filename=course.thumbnail) if not course.thumbnail.startswith('http') else course.thumbnail }}"
+                             alt="{{ course.title }}"
+                             onerror="this.onerror=null;this.style.display='none';this.parentElement.querySelector('.placeholder-img').style.display='flex';">
+                        <div class="placeholder-img" style="display:none">
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
                         {% else %}
                         <div class="placeholder-img">
                             <i class="fas fa-graduation-cap"></i>
