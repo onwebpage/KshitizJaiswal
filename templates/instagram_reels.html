@@ -102,17 +102,6 @@
             {% set _ph    = url_for('static', filename='img/reel-placeholder.svg') %}
             <a href="{{ url_for('reel_detail', reel_id=reel.id) }}" class="showcase-card">
                 <div class="showcase-card-thumb">
-                    {% if reel.category_tag %}
-                    <div class="showcase-tag {{ reel.category_tag }}">
-                        {% if reel.category_tag == 'trending' %}🔥 Trending
-                        {% elif reel.category_tag == 'new' %}🆕 New
-                        {% elif reel.category_tag == 'fan_favourite' %}❤ Fan Favourite
-                        {% elif reel.category_tag == 'exclusive' %}⭐ Exclusive
-                        {% elif reel.category_tag == 'must_watch' %}👀 Must Watch
-                        {% elif reel.category_tag == 'behind_scenes' %}🎬 BTS
-                        {% endif %}
-                    </div>
-                    {% endif %}
                     <img src="{% if _thumb %}{{ url_for('static', filename=_thumb) if not _thumb.startswith('http') else _thumb }}{% elif _auto %}{{ _auto }}{% else %}{{ _ph }}{% endif %}"
                          alt="{{ reel.title }}"
                          data-auto-thumb="{% if not _thumb %}{{ _auto }}{% endif %}"
@@ -120,7 +109,20 @@
                     <div class="showcase-card-play"><i class="fas fa-play-circle"></i></div>
                 </div>
                 <div class="showcase-card-body">
-                    <h6 class="showcase-card-title">{{ reel.title }}</h6>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <h6 class="showcase-card-title mb-0">{{ reel.title }}</h6>
+                        {% if reel.category_tag %}
+                        <span class="showcase-tag {{ reel.category_tag }}">
+                            {% if reel.category_tag == 'trending' %}🔥 Trending
+                            {% elif reel.category_tag == 'new' %}🆕 New
+                            {% elif reel.category_tag == 'fan_favourite' %}❤ Fan Favourite
+                            {% elif reel.category_tag == 'exclusive' %}⭐ Exclusive
+                            {% elif reel.category_tag == 'must_watch' %}👀 Must Watch
+                            {% elif reel.category_tag == 'behind_scenes' %}🎬 BTS
+                            {% endif %}
+                        </span>
+                        {% endif %}
+                    </div>
                     {% if reel.topic_tag %}
                     <span class="showcase-card-topic">{{ reel.topic_tag }}</span>
                     {% endif %}
@@ -258,15 +260,14 @@
 .showcase-card:hover .showcase-card-play { opacity: 1; }
 .showcase-card-play i { font-size: 2.8rem; color: #fff; }
 .showcase-tag {
-    position: absolute;
-    top: 10px; right: 10px;
-    padding: 3px 10px;
+    display: inline-block;
+    flex-shrink: 0;
+    padding: 2px 9px;
     border-radius: 20px;
-    font-size: 0.72rem;
+    font-size: 0.68rem;
     font-weight: 600;
-    z-index: 2;
-    background: rgba(255,255,255,0.95);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    white-space: nowrap;
+    box-shadow: 0 2px 6px rgba(0,0,0,.25);
 }
 .showcase-tag.trending   { background: linear-gradient(135deg,#ff6b6b,#ff5252); color:#fff; }
 .showcase-tag.new        { background: linear-gradient(135deg,#4CAF50,#45a049); color:#fff; }
