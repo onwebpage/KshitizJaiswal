@@ -939,8 +939,8 @@ document.addEventListener('keydown',function(e){
                         progressTimer = setInterval(updateTime, 250);
                         if(el.spinner) el.spinner.classList.add('hidden');
                         if(el.poster) el.poster.classList.add('hidden');
-                        clearTimeout(hideTimer);
-                        hideCtrl();
+                        /* Show controls briefly then auto-hide after 2.5s */
+                        scheduleHide();
                     } else if(e.data === S.PAUSED || e.data === S.ENDED){
                         playing = false;
                         setPlayIcons(false);
@@ -948,7 +948,10 @@ document.addEventListener('keydown',function(e){
                         clearInterval(progressTimer);
                         // forceComplete=true only on ENDED so we guarantee the 90% threshold
                         saveProgress(e.data === S.ENDED);
-                        cancelHide();
+                        /* Show controls on pause, then auto-hide after 4s of inactivity */
+                        showCtrl();
+                        clearTimeout(hideTimer);
+                        hideTimer = setTimeout(function(){ if(!playing) hideCtrl(); }, 4000);
                         updateTime();
                         if(el.spinner) el.spinner.classList.add('hidden');
                         if(e.data === S.ENDED && NEXT_URL){
