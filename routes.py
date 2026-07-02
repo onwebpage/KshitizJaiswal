@@ -491,7 +491,7 @@ def instagram_reels():
     page = request.args.get('page', 1, type=int)
     per_page = 18
 
-    query = Reel.query.filter(Reel.video_type == 'instagram')
+    query = Reel.query.filter(Reel.video_type == 'instagram', Reel.is_visible == True)
     if search:
         query = query.filter(Reel.title.ilike(f'%{search}%'))
     if category:
@@ -538,7 +538,7 @@ def youtube_reels():
     page = request.args.get('page', 1, type=int)
     per_page = 18
 
-    query = Reel.query.filter(Reel.video_type.in_(['youtube', 'youtube_short']))
+    query = Reel.query.filter(Reel.video_type.in_(['youtube', 'youtube_short']), Reel.is_visible == True)
     if search:
         query = query.filter(Reel.title.ilike(f'%{search}%'))
     if category:
@@ -5184,9 +5184,28 @@ def verify_course_payment():
         })
         logging.info(f"[RAZORPAY] Signature verified OK: order_id={order_id}, payment_id={payment_id}")
 
+        # Guard: reject duplicate payment_id
+        if UserCourseAccess.query.filter_by(payment_id=payment_id).first():
+            logging.warning(f"[RAZORPAY] Duplicate payment_id rejected: {payment_id}")
+            return jsonify({'success': False, 'message': 'Payment already processed'}), 400
+
+        # Fetch order server-side and validate course binding & amount
+        rz_order = client.order.fetch(order_id)
+        notes = rz_order.get('notes', {})
+        server_course_id = notes.get('course_id')
+        if str(server_course_id) != str(course_id):
+            logging.error(f"[RAZORPAY] course_id mismatch: order says {server_course_id}, client sent {course_id}")
+            return jsonify({'success': False, 'message': 'Payment does not match course'}), 400
+
         course = Course.query.get(course_id)
         if not course:
             return jsonify({'success': False, 'message': 'Course not found'}), 404
+
+        # Validate amount matches course price
+        expected_amount = int(course.price) * 100
+        if rz_order.get('amount') != expected_amount:
+            logging.error(f"[RAZORPAY] Amount mismatch: order has {rz_order.get('amount')}, expected {expected_amount}")
+            return jsonify({'success': False, 'message': 'Payment amount does not match course price'}), 400
 
         from datetime import timedelta as _td
         _expires = None
@@ -6178,7 +6197,8 @@ def admin_account():
             except Exception:
                 valid = False
         else:
-            valid = form.current_password.data == os.environ.get('ADMIN_PASSWORD', 'kshitiz2025')
+            env_pw = os.environ.get('ADMIN_PASSWORD')
+            valid = bool(env_pw) and form.current_password.data == env_pw
 
         if not valid:
             flash('Current password is incorrect.', 'error')

@@ -198,9 +198,19 @@ with app.app_context():
 
         # ── Seed default data on fresh databases ─────────────────────────────
         try:
-            from models import SocialLink, AdminUser as _AdminUser
+            from models import SocialLink, AdminUser as _AdminUser, SiteConfig as _SiteConfig
             SocialLink.seed_missing_platforms()   # adds any missing platform rows
             _AdminUser.create_default_tiers()     # creates subscription tiers if none
+
+            # Warn at startup if no admin credentials are configured
+            _has_db_hash = bool(_SiteConfig.get('admin_password_hash'))
+            _has_env_pw  = bool(os.environ.get('ADMIN_PASSWORD'))
+            if not _has_db_hash and not _has_env_pw:
+                logging.critical(
+                    "ADMIN LOGIN IS DISABLED: neither admin_password_hash (DB) nor "
+                    "ADMIN_PASSWORD (env var) is set. "
+                    "Set the ADMIN_PASSWORD secret in Replit Secrets to enable admin access."
+                )
             logging.info("Default data seeding complete")
         except Exception as _seed_err:
             logging.warning(f"Seeding skipped: {_seed_err}")

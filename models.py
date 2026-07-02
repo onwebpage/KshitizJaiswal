@@ -837,7 +837,10 @@ class AdminUser:
             except Exception:
                 pass
 
-        actual_password = os.environ.get('ADMIN_PASSWORD', 'kshitiz2025')
+        # Fall back to ADMIN_PASSWORD env var only — no hardcoded default
+        actual_password = os.environ.get('ADMIN_PASSWORD')
+        if not actual_password:
+            return False
         return password == actual_password
     
     @staticmethod
