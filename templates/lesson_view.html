@@ -47,14 +47,7 @@
                         <!-- Dark cover that hides YouTube branding before first play -->
                         <div class="prx-poster" id="prxPoster"></div>
 
-                        <!-- Splash: ONLY the branded play button, visible before first play -->
-                        <div class="prx-splash" id="prxSplash">
-                            <button class="prx-splash-play" id="prxSplashPlay" title="Play">
-                                <i class="fas fa-play"></i>
-                            </button>
-                        </div>
-
-                        <!-- Loading spinner (hidden until splash is clicked) -->
+                        <!-- Loading spinner -->
                         <div class="prx-spinner hidden" id="prxSpinner">
                             <div class="prx-spin-ring"></div>
                         </div>
@@ -67,8 +60,8 @@
                             <i class="fas fa-forward"></i><span>10s</span>
                         </div>
 
-                        <!-- Controls overlay (hidden until after first play) -->
-                        <div class="prx-controls hidden" id="prxControls">
+                        <!-- Controls overlay -->
+                        <div class="prx-controls" id="prxControls">
 
                             <!-- Top bar -->
                             <div class="prx-top-bar">
@@ -1000,25 +993,17 @@ document.addEventListener('keydown',function(e){
         if(hasStarted) scheduleHide();
     });
 
-    if(el.playBar) el.playBar.addEventListener('click', function(e){e.stopPropagation(); togglePlay();});
+    if(el.playBar) el.playBar.addEventListener('click', function(e){
+        e.stopPropagation();
+        if(isPlayerReady && player){
+            if(el.spinner) el.spinner.classList.remove('hidden');
+            togglePlay();
+        } else {
+            pendingPlay = true;
+            if(el.spinner) el.spinner.classList.remove('hidden');
+        }
+    });
     if(el.centerPlay) el.centerPlay.addEventListener('click', function(e){e.stopPropagation(); togglePlay();});
-
-    /* Splash — first-play button: hide splash, show spinner, start video.
-       If the YouTube player isn't ready yet, queue the intent and fulfil it in onReady. */
-    if(el.splash){
-        el.splash.addEventListener('click', function(){
-            if(isPlayerReady && player){
-                el.splash.classList.add('hidden');
-                if(el.spinner) el.spinner.classList.remove('hidden');
-                player.playVideo();
-            } else {
-                // Player not ready yet: show loading state on splash button and queue play
-                pendingPlay = true;
-                var btn = document.getElementById('prxSplashPlay');
-                if(btn) btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>';
-            }
-        });
-    }
     if(el.skipBack) el.skipBack.addEventListener('click', function(e){e.stopPropagation(); skip(-10);});
     if(el.skipFwd)  el.skipFwd.addEventListener('click',  function(e){e.stopPropagation(); skip(10);});
 
