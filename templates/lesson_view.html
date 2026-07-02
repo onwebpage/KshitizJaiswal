@@ -48,8 +48,15 @@
                         <!-- Dark cover that hides YouTube branding before first play -->
                         <div class="prx-poster" id="prxPoster"></div>
 
-                        <!-- Loading spinner -->
-                        <div class="prx-spinner" id="prxSpinner">
+                        <!-- Splash: ONLY the branded play button, visible before first play -->
+                        <div class="prx-splash" id="prxSplash">
+                            <button class="prx-splash-play" id="prxSplashPlay" title="Play">
+                                <i class="fas fa-play"></i>
+                            </button>
+                        </div>
+
+                        <!-- Loading spinner (hidden until splash is clicked) -->
+                        <div class="prx-spinner hidden" id="prxSpinner">
                             <div class="prx-spin-ring"></div>
                         </div>
 
@@ -61,8 +68,8 @@
                             <i class="fas fa-forward"></i><span>10s</span>
                         </div>
 
-                        <!-- Controls overlay -->
-                        <div class="prx-controls" id="prxControls">
+                        <!-- Controls overlay (hidden until after first play) -->
+                        <div class="prx-controls hidden" id="prxControls">
 
                             <!-- Top bar -->
                             <div class="prx-top-bar">
@@ -87,10 +94,6 @@
                                     <button class="prx-ctrl-btn prx-skip-btn" id="prxSkipBack" title="Back 10s">
                                         <i class="fas fa-rotate-left"></i>
                                         <span class="prx-skip-label">10</span>
-                                    </button>
-
-                                    <button class="prx-ctrl-btn prx-play-big" id="prxPlayBtnCenter" title="Play / Pause">
-                                        <i class="fas fa-play" id="prxPlayIconCenter"></i>
                                     </button>
 
                                     <button class="prx-ctrl-btn prx-skip-btn" id="prxSkipFwd" title="Forward 10s">
@@ -352,6 +355,31 @@
     transition:opacity .25s;
 }
 .prx-poster.hidden{opacity:0;pointer-events:none;}
+
+/* ── Splash overlay — branded play button shown before first play ── */
+.prx-splash{
+    position:absolute;inset:0;z-index:6;
+    display:flex;align-items:center;justify-content:center;
+    pointer-events:all;
+    transition:opacity .25s;
+}
+.prx-splash.hidden{opacity:0;pointer-events:none;}
+.prx-splash-play{
+    width:72px;height:72px;border-radius:50%;
+    background:rgba(229,57,53,0.92);
+    box-shadow:0 0 0 10px rgba(229,57,53,0.22),0 4px 24px rgba(0,0,0,0.5);
+    border:none;color:#fff;font-size:1.7rem;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    padding-left:5px; /* optical centre for play triangle */
+    transition:background .2s,box-shadow .2s,transform .15s;
+}
+.prx-splash-play:hover{
+    background:#c62828;
+    box-shadow:0 0 0 16px rgba(229,57,53,0.28),0 4px 24px rgba(0,0,0,0.5);
+    transform:scale(1.07);
+}
+.prx-splash-play:active{transform:scale(0.94);}
+
 @media(max-width:768px){
     /* Clip YouTube channel header (~70px) and bottom bar (~70px) aggressively on mobile */
     .prx-iframe{top:-70px;height:calc(100% + 140px);}
@@ -648,7 +676,7 @@
 }
 @media(max-width:576px){
     .lesson-title{font-size:1.2rem;}
-    .prx-play-big{width:58px;height:58px;font-size:1.4rem;}
+    .prx-splash-play{width:60px;height:60px;font-size:1.4rem;}
     .prx-skip-btn{width:44px;height:44px;font-size:1.1rem;}
     .prx-center-btns{gap:14px;}
     .prx-prev-lesson,.prx-next-lesson{width:38px;height:38px;font-size:1rem;}
@@ -700,6 +728,7 @@ document.addEventListener('keydown',function(e){
 
     var player = null, playing = false, duration = 0;
     var saveTimer = null, hideTimer = null, progressTimer = null;
+    var isPlayerReady = false, pendingPlay = false;
 
     /* ── Refs ── */
     var $  = function(id){return document.getElementById(id);};
@@ -709,7 +738,7 @@ document.addEventListener('keydown',function(e){
         spinner:   $('prxSpinner'),
         centerZone:$('prxCenterZone'),
         playBar:   $('prxPlayBtnBar'), playBarIcon:$('prxPlayIconBar'),
-        playCenter:$('prxPlayBtnCenter'), playCenterIcon:$('prxPlayIconCenter'),
+        splash:    $('prxSplash'),
         skipBack:  $('prxSkipBack'),   skipFwd:   $('prxSkipFwd'),
         muteBtn:   $('prxMuteBtn'),    volIcon:   $('prxVolIcon'),
         volSlider: $('prxVolSlider'),
@@ -736,7 +765,6 @@ document.addEventListener('keydown',function(e){
     function setPlayIcons(isPlaying){
         var ic = isPlaying ? 'fas fa-pause' : 'fas fa-play';
         if(el.playBarIcon) el.playBarIcon.className = ic;
-        if(el.playCenterIcon) el.playCenterIcon.className = ic;
     }
     function setVolIcon(muted, vol){
         var ic = (muted || vol===0) ? 'fas fa-volume-mute'
@@ -852,18 +880,24 @@ document.addEventListener('keydown',function(e){
         player = new YT.Player('prxYT',{
             events:{
                 onReady: function(e){
-                    if(el.spinner) el.spinner.classList.add('hidden');
+                    isPlayerReady = true;
                     // Try to set high quality
                     try{ e.target.setPlaybackQualityRange('hd1080','hd1080'); }catch(ex){}
                     if(RESUME_SEC > 5){
                         e.target.seekTo(RESUME_SEC, true);
-                        e.target.pauseVideo();
                     }
                     updateTime();
                     // PiP support
                     var iframe = document.getElementById('prxYT');
                     if(iframe && document.pictureInPictureEnabled){
                         el.pipBtn.style.display='flex';
+                    }
+                    // User clicked play before the API was ready — fulfil the queued intent now
+                    if(pendingPlay){
+                        pendingPlay = false;
+                        if(el.splash) el.splash.classList.add('hidden');
+                        if(el.spinner) el.spinner.classList.remove('hidden');
+                        e.target.playVideo();
                     }
                 },
                 onStateChange: window._prxStateChange = function(e){
@@ -942,8 +976,24 @@ document.addEventListener('keydown',function(e){
         lastTap = now;
     });
 
-    if(el.playBar)    el.playBar.addEventListener('click', function(e){e.stopPropagation(); togglePlay();});
-    if(el.playCenter) el.playCenter.addEventListener('click', function(e){e.stopPropagation(); togglePlay();});
+    if(el.playBar) el.playBar.addEventListener('click', function(e){e.stopPropagation(); togglePlay();});
+
+    /* Splash — first-play button: hide splash, show spinner, start video.
+       If the YouTube player isn't ready yet, queue the intent and fulfil it in onReady. */
+    if(el.splash){
+        el.splash.addEventListener('click', function(){
+            if(isPlayerReady && player){
+                el.splash.classList.add('hidden');
+                if(el.spinner) el.spinner.classList.remove('hidden');
+                player.playVideo();
+            } else {
+                // Player not ready yet: show loading state on splash button and queue play
+                pendingPlay = true;
+                var btn = document.getElementById('prxSplashPlay');
+                if(btn) btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i>';
+            }
+        });
+    }
     if(el.skipBack) el.skipBack.addEventListener('click', function(e){e.stopPropagation(); skip(-10);});
     if(el.skipFwd)  el.skipFwd.addEventListener('click',  function(e){e.stopPropagation(); skip(10);});
 
