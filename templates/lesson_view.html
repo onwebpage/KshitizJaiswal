@@ -297,6 +297,9 @@
     overflow:hidden;
     user-select:none;
     -webkit-user-select:none;
+    /* Force GPU compositing layer so overflow:hidden clips the iframe on mobile WebKit/iOS */
+    transform:translateZ(0);
+    -webkit-transform:translateZ(0);
 }
 
 .prx-iframe-wrap{
