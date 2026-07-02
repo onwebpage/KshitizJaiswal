@@ -126,9 +126,6 @@
                                 <!-- Bottom controls row -->
                                 <div class="prx-bottom-row">
                                     <div class="prx-bottom-left">
-                                        <button class="prx-btn" id="prxPlayBtnBar" title="Play / Pause">
-                                            <i class="fas fa-play" id="prxPlayIconBar"></i>
-                                        </button>
                                         <button class="prx-btn" id="prxMuteBtn" title="Mute">
                                             <i class="fas fa-volume-up" id="prxVolIcon"></i>
                                         </button>
@@ -138,6 +135,10 @@
                                         </div>
                                         <span class="prx-time" id="prxTime">0:00 / 0:00</span>
                                     </div>
+                                    <!-- Centre play/pause — large tap target -->
+                                    <button class="prx-bar-play-btn" id="prxPlayBtnBar" title="Play / Pause">
+                                        <i class="fas fa-play" id="prxPlayIconBar"></i>
+                                    </button>
                                     <div class="prx-bottom-right">
                                         <div class="prx-popup-wrap" id="prxSpeedWrap">
                                             <button class="prx-btn prx-text-btn" id="prxSpeedBtn" title="Speed">1×</button>
@@ -537,6 +538,20 @@
     display:flex;align-items:center;
     justify-content:space-between;gap:4px;
     flex-wrap:nowrap;
+}
+/* Centre play/pause button in bottom bar — large tap target */
+.prx-bar-play-btn{
+    background:rgba(229,57,53,0.85);
+    border:none;color:#fff;cursor:pointer;
+    width:46px;height:46px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-size:1.1rem;padding:0;flex-shrink:0;
+    transition:background .15s,transform .1s;
+}
+.prx-bar-play-btn:hover{background:#c62828;}
+.prx-bar-play-btn:active{transform:scale(.9);}
+@media(max-width:576px){
+    .prx-bar-play-btn{width:52px;height:52px;font-size:1.3rem;}
 }
 .prx-bottom-left,.prx-bottom-right{
     display:flex;align-items:center;gap:4px;
