@@ -685,7 +685,7 @@ document.addEventListener('keydown',function(e){
     var COURSE_ID  = {{ course.id }};
     var MODULE_ID  = {{ lesson.module_id }};
     var LESSON_ID  = {{ lesson.id }};
-    var USER_ID    = '{{ clerk_user_id | default("") }}';
+    var USER_ID    = '{{ progress_user_id | default("") }}';
     var RESUME_SEC = {{ (lesson_progress.watched_seconds if lesson_progress and not lesson_progress.completed else 0) | int }};
     {% if prev_lesson %}
     var PREV_URL   = '{{ url_for("lesson_view", course_id=course.id, lesson_id=prev_lesson.id) }}';

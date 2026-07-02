@@ -105,6 +105,21 @@ def get_course_user_id():
     return session.get('course_user_id')
 
 
+def get_progress_user_id():
+    """Return a unified identifier for progress tracking.
+    Clerk users → their clerk_user_id.
+    CourseUsers  → 'cu_<id>' so both share the same LessonProgress column.
+    Returns None if not authenticated at all.
+    """
+    cid = get_clerk_user_id()
+    if cid:
+        return cid
+    uid = session.get('course_user_id')
+    if uid:
+        return f'cu_{uid}'
+    return None
+
+
 def get_course_user():
     """Return the logged-in CourseUser object, or None."""
     uid = session.get('course_user_id')
@@ -4764,8 +4779,8 @@ def poll_group_detail(topic):
 
 @app.route('/api/progress/save', methods=['POST'])
 def api_save_progress():
-    """Auto-save lesson watch progress for logged-in Clerk users."""
-    clerk_user_id = get_clerk_user_id()
+    """Auto-save lesson watch progress for logged-in users (Clerk or CourseUser)."""
+    clerk_user_id = get_progress_user_id()
     if not clerk_user_id:
         return jsonify({'ok': False, 'error': 'not authenticated'}), 401
 
@@ -4808,7 +4823,7 @@ def api_save_progress():
 @app.route('/api/progress/lesson/<int:lesson_id>')
 def api_get_lesson_progress(lesson_id):
     """Return saved progress for a specific lesson (for seek-on-load)."""
-    clerk_user_id = get_clerk_user_id()
+    clerk_user_id = get_progress_user_id()
     if not clerk_user_id:
         return jsonify({'watched_seconds': 0, 'percent_complete': 0, 'completed': False})
     prog = LessonProgress.query.filter_by(
@@ -4821,7 +4836,7 @@ def api_get_lesson_progress(lesson_id):
 @app.route('/api/progress/course/<int:course_id>')
 def api_get_course_progress(course_id):
     """Return overall course progress for the current user."""
-    clerk_user_id = get_clerk_user_id()
+    clerk_user_id = get_progress_user_id()
     if not clerk_user_id:
         return jsonify({'overall_pct': 0, 'completed_lesson_ids': [], 'total_lessons': 0, 'completed_count': 0})
     course = Course.query.get_or_404(course_id)
@@ -4903,20 +4918,24 @@ def my_courses():
                 seen_course_ids.add(course.id)
 
     if course_user:
+        cu_progress_id = f'cu_{course_user.id}'
         for access in course_user.get_course_accesses():
             if access.course_id not in seen_course_ids:
                 course = Course.query.get(access.course_id)
                 if course and course.is_active:
                     total_lessons = sum(len(m.lessons) for m in course.modules)
+                    cu_pct        = LessonProgress.course_overall_percent(cu_progress_id, course.id, total_lessons)
+                    cu_last       = LessonProgress.get_last_lesson(cu_progress_id, course.id)
+                    cu_last_les   = Lesson.query.get(cu_last.lesson_id) if cu_last else None
                     course_dict   = course.to_dict()
                     course_dict['has_access']        = True
                     course_dict['module_count']      = len(course.modules)
                     course_dict['lesson_count']      = total_lessons
                     course_dict['purchased_at']      = access.granted_at.strftime('%B %d, %Y') if access.granted_at else ''
-                    course_dict['overall_pct']       = 0
-                    course_dict['last_lesson_title'] = None
-                    course_dict['last_lesson_id']    = None
-                    course_dict['last_watched_at']   = None
+                    course_dict['overall_pct']       = cu_pct
+                    course_dict['last_lesson_title'] = cu_last_les.title if cu_last_les else None
+                    course_dict['last_lesson_id']    = cu_last.lesson_id if cu_last else None
+                    course_dict['last_watched_at']   = cu_last.last_watched_at.strftime('%b %d, %Y %I:%M %p') if cu_last else None
                     my_courses_data.append(course_dict)
                     seen_course_ids.add(access.course_id)
 
@@ -5098,19 +5117,20 @@ def lesson_view(course_id, lesson_id):
             break
     
     # Fetch saved progress for this lesson (resume seek position)
+    progress_user_id = get_progress_user_id()
     lesson_progress = None
     completed_lesson_ids = set()
     overall_pct = 0
-    if clerk_user_id:
+    if progress_user_id:
         prog = LessonProgress.query.filter_by(
-            clerk_user_id=clerk_user_id, lesson_id=lesson_id).first()
+            clerk_user_id=progress_user_id, lesson_id=lesson_id).first()
         if prog:
             lesson_progress = prog.to_dict()
         # Overall course progress for sidebar display
-        records = LessonProgress.get_course_progress(clerk_user_id, course_id)
+        records = LessonProgress.get_course_progress(progress_user_id, course_id)
         completed_lesson_ids = {r.lesson_id for r in records if r.completed}
         total_lessons = len(all_lessons)
-        overall_pct = LessonProgress.course_overall_percent(clerk_user_id, course_id, total_lessons)
+        overall_pct = LessonProgress.course_overall_percent(progress_user_id, course_id, total_lessons)
 
     return render_template('lesson_view.html',
                          course=course_data,
@@ -5121,7 +5141,7 @@ def lesson_view(course_id, lesson_id):
                          lesson_progress=lesson_progress,
                          completed_lesson_ids=completed_lesson_ids,
                          overall_pct=overall_pct,
-                         clerk_user_id=clerk_user_id or '')
+                         progress_user_id=progress_user_id or '')
 
 @app.route('/course/<int:course_id>/purchase', methods=['POST'])
 def purchase_course(course_id):
