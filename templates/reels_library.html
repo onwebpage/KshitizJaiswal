@@ -558,20 +558,21 @@
 
 .showcase-card-thumb {
     position: relative;
-    aspect-ratio: 16/9;
+    aspect-ratio: 9/16;
     overflow: hidden;
     background: #111;
     z-index: 1;
 }
 
-/* Instagram portrait (4:5) */
+/* Instagram vertical (9:16) */
 .ig-grid .showcase-card-thumb {
-    aspect-ratio: 4/5 !important;
+    aspect-ratio: 9/16 !important;
+    background: #0a0a0a !important;
 }
 
-/* YouTube landscape (16:9) */
+/* YouTube vertical (9:16) */
 .yt-grid .showcase-card-thumb {
-    aspect-ratio: 16/9 !important;
+    aspect-ratio: 9/16 !important;
 }
 .showcase-card-thumb img {
     width: 100%;
@@ -581,12 +582,8 @@
     transition: transform 0.38s cubic-bezier(.23,1,.32,1);
     display: block;
 }
-/* Instagram portrait cards — show full thumbnail without cropping */
-.ig-grid .showcase-card-thumb {
-    background: #0a0a0a !important;
-}
 .ig-grid .showcase-card-thumb img {
-    object-fit: contain !important;
+    object-fit: cover !important;
     object-position: center center !important;
 }
 .showcase-card:hover .showcase-card-thumb img { transform: scale(1.08); }
