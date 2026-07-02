@@ -60,8 +60,8 @@
                             <i class="fas fa-forward"></i><span>10s</span>
                         </div>
 
-                        <!-- Controls overlay -->
-                        <div class="prx-controls" id="prxControls">
+                        <!-- Controls overlay (top bar + center only — auto-hides while playing) -->
+                        <div class="prx-controls hidden" id="prxControls">
 
                             <!-- Top bar -->
                             <div class="prx-top-bar">
@@ -104,67 +104,68 @@
                                 </div>
                             </div>
 
-                            <!-- Progress + bottom bar -->
-                            <div class="prx-bottom-bar">
-                                <!-- Progress bar -->
-                                <div class="prx-progress-wrap" id="prxProgressWrap">
-                                    <div class="prx-progress-bg">
-                                        <div class="prx-progress-buf" id="prxBuf"></div>
-                                        <div class="prx-progress-fill" id="prxFill"></div>
-                                        <div class="prx-progress-thumb" id="prxThumb"></div>
-                                    </div>
-                                    <div class="prx-progress-tooltip" id="prxTooltip">0:00</div>
-                                </div>
+                        </div>
 
-                                <!-- Bottom controls row -->
-                                <div class="prx-bottom-row">
-                                    <div class="prx-bottom-left">
-                                        <button class="prx-btn" id="prxMuteBtn" title="Mute">
-                                            <i class="fas fa-volume-up" id="prxVolIcon"></i>
-                                        </button>
-                                        <div class="prx-vol-slider-wrap" id="prxVolWrap">
-                                            <input type="range" class="prx-vol-slider" id="prxVolSlider"
-                                                   min="0" max="100" value="100">
-                                        </div>
-                                        <span class="prx-time" id="prxTime">0:00 / 0:00</span>
-                                    </div>
-                                    <!-- Centre play/pause — large tap target -->
-                                    <button class="prx-bar-play-btn" id="prxPlayBtnBar" title="Play / Pause">
-                                        <i class="fas fa-play" id="prxPlayIconBar"></i>
+                        <!-- Bottom bar — always visible, independent of overlay -->
+                        <div class="prx-bottom-bar" id="prxBottomBar">
+                            <!-- Progress bar -->
+                            <div class="prx-progress-wrap" id="prxProgressWrap">
+                                <div class="prx-progress-bg">
+                                    <div class="prx-progress-buf" id="prxBuf"></div>
+                                    <div class="prx-progress-fill" id="prxFill"></div>
+                                    <div class="prx-progress-thumb" id="prxThumb"></div>
+                                </div>
+                                <div class="prx-progress-tooltip" id="prxTooltip">0:00</div>
+                            </div>
+
+                            <!-- Bottom controls row -->
+                            <div class="prx-bottom-row">
+                                <div class="prx-bottom-left">
+                                    <button class="prx-btn" id="prxMuteBtn" title="Mute">
+                                        <i class="fas fa-volume-up" id="prxVolIcon"></i>
                                     </button>
-                                    <div class="prx-bottom-right">
-                                        <div class="prx-popup-wrap" id="prxSpeedWrap">
-                                            <button class="prx-btn prx-text-btn" id="prxSpeedBtn" title="Speed">1×</button>
-                                            <div class="prx-popup" id="prxSpeedMenu">
-                                                <div class="prx-popup-title">Speed</div>
-                                                <button class="prx-popup-item" data-speed="0.5">0.5×</button>
-                                                <button class="prx-popup-item" data-speed="0.75">0.75×</button>
-                                                <button class="prx-popup-item prx-popup-active" data-speed="1">Normal</button>
-                                                <button class="prx-popup-item" data-speed="1.25">1.25×</button>
-                                                <button class="prx-popup-item" data-speed="1.5">1.5×</button>
-                                                <button class="prx-popup-item" data-speed="1.75">1.75×</button>
-                                                <button class="prx-popup-item" data-speed="2">2×</button>
-                                            </div>
-                                        </div>
-                                        <div class="prx-popup-wrap" id="prxQualWrap">
-                                            <button class="prx-btn prx-text-btn" id="prxQualBtn" title="Quality">Auto</button>
-                                            <div class="prx-popup" id="prxQualMenu">
-                                                <div class="prx-popup-title">Quality</div>
-                                                <button class="prx-popup-item prx-popup-active" data-qual="default">Auto</button>
-                                                <button class="prx-popup-item" data-qual="hd1080">1080p</button>
-                                                <button class="prx-popup-item" data-qual="hd720">720p</button>
-                                                <button class="prx-popup-item" data-qual="large">480p</button>
-                                                <button class="prx-popup-item" data-qual="medium">360p</button>
-                                                <button class="prx-popup-item" data-qual="small">240p</button>
-                                            </div>
-                                        </div>
-                                        <button class="prx-btn" id="prxPipBtn" title="Picture in Picture" style="display:none">
-                                            <i class="fas fa-clone"></i>
-                                        </button>
-                                        <button class="prx-btn" id="prxFsBtn" title="Fullscreen">
-                                            <i class="fas fa-expand" id="prxFsIcon"></i>
-                                        </button>
+                                    <div class="prx-vol-slider-wrap" id="prxVolWrap">
+                                        <input type="range" class="prx-vol-slider" id="prxVolSlider"
+                                               min="0" max="100" value="100">
                                     </div>
+                                    <span class="prx-time" id="prxTime">0:00 / 0:00</span>
+                                </div>
+                                <!-- Centre play/pause — large tap target -->
+                                <button class="prx-bar-play-btn" id="prxPlayBtnBar" title="Play / Pause">
+                                    <i class="fas fa-play" id="prxPlayIconBar"></i>
+                                </button>
+                                <div class="prx-bottom-right">
+                                    <div class="prx-popup-wrap" id="prxSpeedWrap">
+                                        <button class="prx-btn prx-text-btn" id="prxSpeedBtn" title="Speed">1×</button>
+                                        <div class="prx-popup" id="prxSpeedMenu">
+                                            <div class="prx-popup-title">Speed</div>
+                                            <button class="prx-popup-item" data-speed="0.5">0.5×</button>
+                                            <button class="prx-popup-item" data-speed="0.75">0.75×</button>
+                                            <button class="prx-popup-item prx-popup-active" data-speed="1">Normal</button>
+                                            <button class="prx-popup-item" data-speed="1.25">1.25×</button>
+                                            <button class="prx-popup-item" data-speed="1.5">1.5×</button>
+                                            <button class="prx-popup-item" data-speed="1.75">1.75×</button>
+                                            <button class="prx-popup-item" data-speed="2">2×</button>
+                                        </div>
+                                    </div>
+                                    <div class="prx-popup-wrap" id="prxQualWrap">
+                                        <button class="prx-btn prx-text-btn" id="prxQualBtn" title="Quality">Auto</button>
+                                        <div class="prx-popup" id="prxQualMenu">
+                                            <div class="prx-popup-title">Quality</div>
+                                            <button class="prx-popup-item prx-popup-active" data-qual="default">Auto</button>
+                                            <button class="prx-popup-item" data-qual="hd1080">1080p</button>
+                                            <button class="prx-popup-item" data-qual="hd720">720p</button>
+                                            <button class="prx-popup-item" data-qual="large">480p</button>
+                                            <button class="prx-popup-item" data-qual="medium">360p</button>
+                                            <button class="prx-popup-item" data-qual="small">240p</button>
+                                        </div>
+                                    </div>
+                                    <button class="prx-btn" id="prxPipBtn" title="Picture in Picture" style="display:none">
+                                        <i class="fas fa-clone"></i>
+                                    </button>
+                                    <button class="prx-btn" id="prxFsBtn" title="Fullscreen">
+                                        <i class="fas fa-expand" id="prxFsIcon"></i>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -412,24 +413,33 @@
 .prx-ripple-right{right:10%;}
 .prx-seek-ripple i{font-size:1.4rem;}
 
-/* ── Controls overlay ── */
+/* ── Controls overlay (top bar + center only) ── */
 .prx-controls{
-    position:absolute;inset:0;
+    position:absolute;top:0;left:0;right:0;bottom:0;
     z-index:10;
-    display:flex;flex-direction:column;justify-content:space-between;
+    display:flex;flex-direction:column;justify-content:flex-start;
     opacity:1;
     transition:opacity .35s ease;
     background:linear-gradient(
         to bottom,
         rgba(0,0,0,0.72) 0%,
-        transparent 25%,
-        transparent 60%,
-        rgba(0,0,0,0.85) 100%
+        transparent 30%,
+        transparent 100%
     );
+    pointer-events:none;
 }
+.prx-controls > * { pointer-events:auto; }
 .prx-controls.hidden{
     opacity:0;pointer-events:none;
     cursor:none;
+}
+
+/* ── Bottom bar — always visible ── */
+.prx-bottom-bar{
+    position:absolute;bottom:0;left:0;right:0;
+    z-index:15;
+    padding:0 12px 12px;
+    background:linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 100%);
 }
 
 /* ── Top bar ── */
@@ -482,9 +492,6 @@
     border-radius:50%;background:rgba(255,255,255,0.08);
     text-decoration:none;color:#fff;
 }
-
-/* ── Bottom bar ── */
-.prx-bottom-bar{padding:0 12px 12px;}
 
 /* Progress */
 .prx-progress-wrap{
