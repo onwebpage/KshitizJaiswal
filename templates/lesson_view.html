@@ -97,6 +97,11 @@
                                         <span class="prx-skip-label">10</span>
                                     </button>
 
+                                    <!-- Big centre play/pause button -->
+                                    <button class="prx-ctrl-btn prx-play-big" id="prxCenterPlay" title="Play / Pause">
+                                        <i class="fas fa-play" id="prxCenterPlayIcon"></i>
+                                    </button>
+
                                     <button class="prx-ctrl-btn prx-skip-btn" id="prxSkipFwd" title="Forward 10s">
                                         <i class="fas fa-rotate-right"></i>
                                         <span class="prx-skip-label">10</span>
@@ -464,7 +469,7 @@
     flex:1;display:flex;align-items:center;justify-content:center;
 }
 .prx-center-btns{
-    display:flex;align-items:center;gap:20px;
+    display:flex;align-items:center;gap:28px;
 }
 
 /* ── Control buttons base ── */
@@ -749,6 +754,7 @@ document.addEventListener('keydown',function(e){
         spinner:   $('prxSpinner'),
         centerZone:$('prxCenterZone'),
         playBar:   $('prxPlayBtnBar'), playBarIcon:$('prxPlayIconBar'),
+        centerPlay:$('prxCenterPlay'), centerPlayIcon:$('prxCenterPlayIcon'),
         splash:    $('prxSplash'),
         skipBack:  $('prxSkipBack'),   skipFwd:   $('prxSkipFwd'),
         muteBtn:   $('prxMuteBtn'),    volIcon:   $('prxVolIcon'),
@@ -776,6 +782,7 @@ document.addEventListener('keydown',function(e){
     function setPlayIcons(isPlaying){
         var ic = isPlaying ? 'fas fa-pause' : 'fas fa-play';
         if(el.playBarIcon) el.playBarIcon.className = ic;
+        if(el.centerPlayIcon) el.centerPlayIcon.className = ic;
     }
     function setVolIcon(muted, vol){
         var ic = (muted || vol===0) ? 'fas fa-volume-mute'
@@ -998,6 +1005,7 @@ document.addEventListener('keydown',function(e){
     });
 
     if(el.playBar) el.playBar.addEventListener('click', function(e){e.stopPropagation(); togglePlay();});
+    if(el.centerPlay) el.centerPlay.addEventListener('click', function(e){e.stopPropagation(); togglePlay();});
 
     /* Splash — first-play button: hide splash, show spinner, start video.
        If the YouTube player isn't ready yet, queue the intent and fulfil it in onReady. */
