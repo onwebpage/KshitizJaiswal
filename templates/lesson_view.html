@@ -729,7 +729,7 @@ document.addEventListener('keydown',function(e){
 
     var player = null, playing = false, duration = 0;
     var saveTimer = null, hideTimer = null, progressTimer = null;
-    var isPlayerReady = false, pendingPlay = false;
+    var isPlayerReady = false, pendingPlay = false, hasStarted = false;
 
     /* ── Refs ── */
     var $  = function(id){return document.getElementById(id);};
@@ -792,6 +792,7 @@ document.addEventListener('keydown',function(e){
 
     /* ── Controls visibility ── */
     function showCtrl(){
+        if(!hasStarted) return;   /* never show controls before first play */
         el.controls.classList.remove('hidden');
         el.controls.style.pointerEvents='';
         if(el.player) el.player.style.cursor='';
@@ -801,6 +802,7 @@ document.addEventListener('keydown',function(e){
         if(el.player) el.player.style.cursor='none';
     }
     function scheduleHide(){
+        if(!hasStarted) return;
         clearTimeout(hideTimer);
         showCtrl();
         if(playing){
@@ -813,6 +815,7 @@ document.addEventListener('keydown',function(e){
 
     el.player.addEventListener('mousemove', scheduleHide);
     el.player.addEventListener('touchstart', function(){
+        if(!hasStarted) return;
         if(el.controls.classList.contains('hidden')){
             scheduleHide();
         } else {
@@ -905,7 +908,10 @@ document.addEventListener('keydown',function(e){
                     var S = YT.PlayerState;
                     if(e.data === S.PLAYING){
                         playing = true;
+                        hasStarted = true;
                         setPlayIcons(true);
+                        /* Ensure splash is gone the moment video actually plays */
+                        if(el.splash) el.splash.classList.add('hidden');
                         clearInterval(saveTimer);
                         saveTimer = setInterval(saveProgress, 5000);
                         clearInterval(progressTimer);
