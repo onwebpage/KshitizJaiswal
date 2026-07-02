@@ -986,18 +986,11 @@ document.addEventListener('keydown',function(e){
         el2._rt = setTimeout(function(){el2.classList.remove('show');}, 700);
     }
 
-    /* ── Centre zone tap ── */
-    var lastTap = 0, tapTimer = null;
+    /* ── Centre zone tap — only shows/hides controls, does NOT toggle play ── */
     el.centerZone.addEventListener('click', function(e){
         if(e.target.closest('.prx-ctrl-btn')) return;
-        var now = Date.now();
-        if(now - lastTap < 300){
-            clearTimeout(tapTimer);
-            // double-tap: no skip needed on desktop (handled by buttons)
-        } else {
-            tapTimer = setTimeout(function(){ togglePlay(); }, 250);
-        }
-        lastTap = now;
+        // clicking the video area just keeps controls visible; play/pause only via buttons
+        if(hasStarted) scheduleHide();
     });
 
     if(el.playBar) el.playBar.addEventListener('click', function(e){e.stopPropagation(); togglePlay();});
