@@ -89,6 +89,10 @@
                                         <span class="prx-skip-label">10</span>
                                     </button>
 
+                                    <button class="prx-ctrl-btn prx-play-big" id="prxPlayBtnCenter" title="Play / Pause">
+                                        <i class="fas fa-play" id="prxPlayIconCenter"></i>
+                                    </button>
+
                                     <button class="prx-ctrl-btn prx-skip-btn" id="prxSkipFwd" title="Forward 10s">
                                         <i class="fas fa-rotate-right"></i>
                                         <span class="prx-skip-label">10</span>
@@ -684,6 +688,7 @@ document.addEventListener('keydown',function(e){
         spinner:   $('prxSpinner'),
         centerZone:$('prxCenterZone'),
         playBar:   $('prxPlayBtnBar'), playBarIcon:$('prxPlayIconBar'),
+        playCenter:$('prxPlayBtnCenter'), playCenterIcon:$('prxPlayIconCenter'),
         skipBack:  $('prxSkipBack'),   skipFwd:   $('prxSkipFwd'),
         muteBtn:   $('prxMuteBtn'),    volIcon:   $('prxVolIcon'),
         volSlider: $('prxVolSlider'),
@@ -710,6 +715,7 @@ document.addEventListener('keydown',function(e){
     function setPlayIcons(isPlaying){
         var ic = isPlaying ? 'fas fa-pause' : 'fas fa-play';
         if(el.playBarIcon) el.playBarIcon.className = ic;
+        if(el.playCenterIcon) el.playCenterIcon.className = ic;
     }
     function setVolIcon(muted, vol){
         var ic = (muted || vol===0) ? 'fas fa-volume-mute'
@@ -880,7 +886,8 @@ document.addEventListener('keydown',function(e){
         lastTap = now;
     });
 
-    if(el.playBar)  el.playBar.addEventListener('click', function(e){e.stopPropagation(); togglePlay();});
+    if(el.playBar)    el.playBar.addEventListener('click', function(e){e.stopPropagation(); togglePlay();});
+    if(el.playCenter) el.playCenter.addEventListener('click', function(e){e.stopPropagation(); togglePlay();});
     if(el.skipBack) el.skipBack.addEventListener('click', function(e){e.stopPropagation(); skip(-10);});
     if(el.skipFwd)  el.skipFwd.addEventListener('click',  function(e){e.stopPropagation(); skip(10);});
 
