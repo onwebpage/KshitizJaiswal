@@ -26,7 +26,7 @@
                     {% else %}
                       {% set _lvid = '' %}
                     {% endif %}
-                    {% set _lsrc = 'https://www.youtube-nocookie.com/embed/' ~ _lvid ~ '?rel=0&modestbranding=1&showinfo=0&controls=0&iv_load_policy=3&fs=0&enablejsapi=1&disablekb=1&playsinline=1&origin=' ~ request.host_url.rstrip('/') if _lvid else _lv %}
+                    {% set _lsrc = 'https://www.youtube-nocookie.com/embed/' ~ _lvid ~ '?rel=0&modestbranding=1&showinfo=0&controls=0&iv_load_policy=3&fs=0&enablejsapi=1&disablekb=1&playsinline=1' if _lvid else _lv %}
 
                     <!-- ═══════════════ PREMIUM PLAYER ═══════════════ -->
                     <div class="prx-player" id="prxPlayer" oncontextmenu="return false;">
@@ -38,8 +38,7 @@
                                 title="{{ lesson.title }}"
                                 class="prx-iframe"
                                 allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-                                allowfullscreen
-                                sandbox="allow-scripts allow-same-origin allow-presentation">
+                                allowfullscreen>
                             </iframe>
                             <!-- Blocks all YouTube native UI clicks/touches -->
                             <div class="prx-yt-blocker"></div>
@@ -876,6 +875,14 @@ document.addEventListener('keydown',function(e){
     window.addEventListener('pagehide',     function(){ saveProgress(false); });
 
     /* ── IFrame API ── */
+    /* Fix origin for Replit proxy: server-side host_url is wrong, use actual browser origin */
+    (function(){
+        var iframe = document.getElementById('prxYT');
+        if(iframe && iframe.src && iframe.src.indexOf('youtube') !== -1){
+            var origin = window.location.origin;
+            iframe.src = iframe.src.replace(/[&?]origin=[^&]*/,'') + '&origin=' + encodeURIComponent(origin);
+        }
+    })();
     var tag = document.createElement('script');
     tag.src = 'https://www.youtube.com/iframe_api';
     document.head.appendChild(tag);
