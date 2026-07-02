@@ -4779,6 +4779,14 @@ def api_save_progress():
     if not all([course_id, module_id, lesson_id]):
         return jsonify({'ok': False, 'error': 'missing fields'}), 400
 
+    # Validate lesson belongs to the claimed module and course (prevents cross-course corruption)
+    lesson_obj = Lesson.query.get(lesson_id)
+    if not lesson_obj or lesson_obj.module_id != int(module_id):
+        return jsonify({'ok': False, 'error': 'invalid lesson/module'}), 400
+    module_obj = Module.query.get(module_id)
+    if not module_obj or module_obj.course_id != int(course_id):
+        return jsonify({'ok': False, 'error': 'invalid module/course'}), 400
+
     percent   = round(watched / duration * 100, 1) if duration > 0 else 0
     completed = percent >= 90
 
@@ -4808,6 +4816,25 @@ def api_get_lesson_progress(lesson_id):
     if not prog:
         return jsonify({'watched_seconds': 0, 'percent_complete': 0, 'completed': False})
     return jsonify(prog.to_dict())
+
+
+@app.route('/api/progress/course/<int:course_id>')
+def api_get_course_progress(course_id):
+    """Return overall course progress for the current user."""
+    clerk_user_id = get_clerk_user_id()
+    if not clerk_user_id:
+        return jsonify({'overall_pct': 0, 'completed_lesson_ids': [], 'total_lessons': 0, 'completed_count': 0})
+    course = Course.query.get_or_404(course_id)
+    total_lessons = sum(len(m.lessons) for m in course.modules)
+    records = LessonProgress.get_course_progress(clerk_user_id, course_id)
+    completed_ids = [r.lesson_id for r in records if r.completed]
+    overall_pct = LessonProgress.course_overall_percent(clerk_user_id, course_id, total_lessons)
+    return jsonify({
+        'overall_pct': overall_pct,
+        'completed_lesson_ids': completed_ids,
+        'total_lessons': total_lessons,
+        'completed_count': len(completed_ids)
+    })
 
 
 # ─── Courses ──────────────────────────────────────────────────────────────────
@@ -5072,11 +5099,18 @@ def lesson_view(course_id, lesson_id):
     
     # Fetch saved progress for this lesson (resume seek position)
     lesson_progress = None
+    completed_lesson_ids = set()
+    overall_pct = 0
     if clerk_user_id:
         prog = LessonProgress.query.filter_by(
             clerk_user_id=clerk_user_id, lesson_id=lesson_id).first()
         if prog:
             lesson_progress = prog.to_dict()
+        # Overall course progress for sidebar display
+        records = LessonProgress.get_course_progress(clerk_user_id, course_id)
+        completed_lesson_ids = {r.lesson_id for r in records if r.completed}
+        total_lessons = len(all_lessons)
+        overall_pct = LessonProgress.course_overall_percent(clerk_user_id, course_id, total_lessons)
 
     return render_template('lesson_view.html',
                          course=course_data,
@@ -5085,6 +5119,8 @@ def lesson_view(course_id, lesson_id):
                          prev_lesson=prev_lesson.to_dict() if prev_lesson else None,
                          next_lesson=next_lesson.to_dict() if next_lesson else None,
                          lesson_progress=lesson_progress,
+                         completed_lesson_ids=completed_lesson_ids,
+                         overall_pct=overall_pct,
                          clerk_user_id=clerk_user_id or '')
 
 @app.route('/course/<int:course_id>/purchase', methods=['POST'])

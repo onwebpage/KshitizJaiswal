@@ -242,6 +242,18 @@
                 <div class="course-sidebar">
                     <div class="sidebar-header">
                         <h5 class="mb-0"><i class="fas fa-list-ul me-2"></i>Course Content</h5>
+                        {% if clerk_user_id %}
+                        <div class="mt-2">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <small class="text-muted">Your Progress</small>
+                                <small id="sidebarProgressPct" class="fw-bold" style="color:{% if overall_pct == 100 %}#16a34a{% else %}#cc0000{% endif %}">{{ overall_pct }}%</small>
+                            </div>
+                            <div style="height:5px;background:#e2e8f0;border-radius:4px;overflow:hidden;">
+                                <div id="sidebarProgressBar"
+                                     style="height:100%;width:{{ overall_pct }}%;background:{% if overall_pct == 100 %}#16a34a{% else %}#cc0000{% endif %};border-radius:4px;transition:width 0.5s ease;"></div>
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
                     <div class="sidebar-content">
                         {% for mod in course.modules %}
@@ -253,10 +265,16 @@
                             <div class="lessons-list-sidebar">
                                 {% for les in mod.lessons %}
                                 <a href="{{ url_for('lesson_view', course_id=course.id, lesson_id=les.id) }}"
-                                   class="lesson-item-sidebar {% if les.id == lesson.id %}active{% endif %}">
-                                    <div class="lesson-icon-sidebar">
-                                        {% if les.id == lesson.id %}<i class="fas fa-play-circle"></i>
-                                        {% else %}<i class="far fa-play-circle"></i>{% endif %}
+                                   class="lesson-item-sidebar {% if les.id == lesson.id %}active{% endif %}"
+                                   data-lesson-id="{{ les.id }}">
+                                    <div class="lesson-icon-sidebar" id="lesson-icon-{{ les.id }}">
+                                        {% if les.id == lesson.id %}
+                                            <i class="fas fa-play-circle"></i>
+                                        {% elif les.id in completed_lesson_ids %}
+                                            <i class="fas fa-check-circle" style="color:#16a34a;"></i>
+                                        {% else %}
+                                            <i class="far fa-play-circle"></i>
+                                        {% endif %}
                                     </div>
                                     <div class="lesson-info-sidebar">
                                         <div class="lesson-name">{{ les.title }}</div>
@@ -773,23 +791,57 @@ document.addEventListener('keydown',function(e){
         }
     }, {passive:true});
 
+    /* ── Progress UI helpers ── */
+    function markLessonCompleted(lessonId){
+        var iconEl = document.getElementById('lesson-icon-'+lessonId);
+        if(iconEl){
+            iconEl.innerHTML = '<i class="fas fa-check-circle" style="color:#16a34a;"></i>';
+        }
+    }
+    function updateProgressBar(pct){
+        var bar   = document.getElementById('sidebarProgressBar');
+        var label = document.getElementById('sidebarProgressPct');
+        if(bar){
+            bar.style.width = pct+'%';
+            bar.style.background = (pct>=100) ? '#16a34a' : '#cc0000';
+        }
+        if(label){
+            label.textContent = pct+'%';
+            label.style.color = (pct>=100) ? '#16a34a' : '#cc0000';
+        }
+    }
+    function refreshCourseProgress(){
+        fetch('/api/progress/course/'+COURSE_ID)
+            .then(function(r){return r.json();})
+            .then(function(d){ updateProgressBar(d.overall_pct||0); })
+            .catch(function(){});
+    }
+
     /* ── Progress save ── */
-    function saveProgress(){
+    function saveProgress(forceComplete){
         if(!player||!USER_ID) return;
         var cur=0, dur=0;
         try{cur=player.getCurrentTime()||0;}catch(e){}
         try{dur=player.getDuration()||0;}catch(e){}
-        if(cur<2) return;
+        if(cur<2 && !forceComplete) return;
+        // On video end, use full duration so the 90% threshold is always met
+        if(forceComplete && dur>0){ cur = dur; }
         fetch('/api/progress/save',{
             method:'POST',
             headers:{'Content-Type':'application/json'},
             body:JSON.stringify({course_id:COURSE_ID,module_id:MODULE_ID,lesson_id:LESSON_ID,
                                  watched_seconds:cur,duration_seconds:dur}),
             keepalive:true
+        }).then(function(r){return r.json();}).then(function(data){
+            if(data.ok && data.completed){
+                markLessonCompleted(LESSON_ID);
+                refreshCourseProgress();
+            }
         }).catch(function(){});
     }
-    window.addEventListener('beforeunload', saveProgress);
-    window.addEventListener('pagehide',     saveProgress);
+    // Wrap so browser's Event object is never treated as forceComplete
+    window.addEventListener('beforeunload', function(){ saveProgress(false); });
+    window.addEventListener('pagehide',     function(){ saveProgress(false); });
 
     /* ── IFrame API ── */
     var tag = document.createElement('script');
@@ -832,7 +884,8 @@ document.addEventListener('keydown',function(e){
                         setPlayIcons(false);
                         clearInterval(saveTimer);
                         clearInterval(progressTimer);
-                        saveProgress(true);
+                        // forceComplete=true only on ENDED so we guarantee the 90% threshold
+                        saveProgress(e.data === S.ENDED);
                         cancelHide();
                         updateTime();
                         if(el.spinner) el.spinner.classList.add('hidden');
