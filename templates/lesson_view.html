@@ -1205,27 +1205,7 @@ document.addEventListener('keydown',function(e){
         }
     });
 
-    /* ── Double-tap to seek on mobile ── */
-    var tapSide = null, tapCount = 0;
-    el.player.addEventListener('touchend', function(e){
-        if(e.target.closest('.prx-bottom-bar,.prx-top-bar,.prx-ctrl-btn')) return;
-        var x = e.changedTouches[0].clientX;
-        var rect = el.player.getBoundingClientRect();
-        var isRight = x > rect.left + rect.width * 0.65;
-        var isLeft  = x < rect.left + rect.width * 0.35;
-        if(!isLeft && !isRight) return;
-        var side = isLeft ? 'left' : 'right';
-        tapCount++;
-        if(tapCount === 1){
-            tapSide = side;
-            setTimeout(function(){
-                if(tapCount >= 2 && tapSide === side){
-                    skip(side==='right' ? 10 : -10);
-                }
-                tapCount = 0; tapSide = null;
-            }, 300);
-        }
-    }, {passive:true});
+    /* Double-tap-to-seek removed — skip buttons in controls handle this */
 
 })();
 </script>
