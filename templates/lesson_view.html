@@ -131,9 +131,6 @@
                                 <!-- Bottom controls row -->
                                 <div class="prx-bottom-row">
                                     <div class="prx-bottom-left">
-                                        <button class="prx-btn" id="prxPlayBtnBar" title="Play / Pause">
-                                            <i class="fas fa-play" id="prxPlayIconBar"></i>
-                                        </button>
                                         <button class="prx-btn" id="prxMuteBtn" title="Mute">
                                             <i class="fas fa-volume-up" id="prxVolIcon"></i>
                                         </button>
@@ -684,8 +681,7 @@
     .prx-splash-play{width:60px;height:60px;font-size:1.4rem;}
     .prx-skip-btn{width:44px;height:44px;font-size:1.1rem;}
     .prx-center-btns{gap:14px;}
-    /* mobile: center play button is primary — hide bottom bar play btn */
-    #prxPlayBtnBar{display:none !important;}
+    /* mobile: center play button handles play/pause */
     .prx-prev-lesson,.prx-next-lesson{width:38px;height:38px;font-size:1rem;}
     .prx-lesson-name{font-size:0.82rem;max-width:75vw;}
     .prx-time{font-size:0.7rem;}
@@ -695,10 +691,6 @@
     .lesson-content{padding:14px !important;}
 }
 
-/* Desktop: hide center play button — bottom bar play btn is sufficient */
-@media(min-width:577px){
-    #prxCenterPlay{display:none;}
-}
 
 /* Fullscreen */
 :fullscreen .prx-player,
