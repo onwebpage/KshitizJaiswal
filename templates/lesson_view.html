@@ -42,8 +42,6 @@
                             </iframe>
                             <!-- Blocks all YouTube native UI clicks/touches -->
                             <div class="prx-yt-blocker"></div>
-                            <!-- Hides the YouTube logo watermark (top-right corner) -->
-                            <div class="prx-yt-logo-cover"></div>
                         </div>
 
                         <!-- Dark cover that hides YouTube branding before first play -->
@@ -350,15 +348,6 @@
     background:transparent;
     pointer-events:all;
     touch-action:none;
-}
-/* Covers the YouTube watermark logo in the top-right corner */
-.prx-yt-logo-cover{
-    position:absolute;
-    top:0; right:0;
-    width:140px; height:44px;
-    background:#000;
-    z-index:4;
-    pointer-events:none;
 }
 /* Dark cover hides YouTube logo/play button before first play */
 .prx-poster{
