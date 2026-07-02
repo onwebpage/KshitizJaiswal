@@ -360,7 +360,7 @@
 .prx-splash{
     position:absolute;inset:0;z-index:6;
     display:flex;align-items:center;justify-content:center;
-    pointer-events:all;
+    pointer-events:none;   /* transparent to clicks — only the button itself is clickable */
     transition:opacity .25s;
 }
 .prx-splash.hidden{opacity:0;pointer-events:none;}
@@ -371,6 +371,7 @@
     border:none;color:#fff;font-size:1.7rem;cursor:pointer;
     display:flex;align-items:center;justify-content:center;
     padding-left:5px; /* optical centre for play triangle */
+    pointer-events:all;    /* only the button captures clicks */
     transition:background .2s,box-shadow .2s,transform .15s;
 }
 .prx-splash-play:hover{
