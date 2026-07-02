@@ -558,7 +558,7 @@
 
 .showcase-card-thumb {
     position: relative;
-    aspect-ratio: 9/16;
+    aspect-ratio: 16/9;
     overflow: hidden;
     background: #111;
     z-index: 1;
@@ -570,9 +570,13 @@
     background: #0a0a0a !important;
 }
 
-/* YouTube vertical (9:16) */
+/* YouTube landscape (16:9) */
 .yt-grid .showcase-card-thumb {
-    aspect-ratio: 9/16 !important;
+    aspect-ratio: 16/9 !important;
+}
+.yt-grid .showcase-card-thumb img {
+    object-fit: cover !important;
+    object-position: center center !important;
 }
 .showcase-card-thumb img {
     width: 100%;
