@@ -364,7 +364,7 @@
     pointer-events:none;   /* transparent to clicks — only the button itself is clickable */
     transition:opacity .25s;
 }
-.prx-splash.hidden{opacity:0;pointer-events:none;}
+.prx-splash.hidden{opacity:0;pointer-events:none;display:none;}
 .prx-splash-play{
     width:72px;height:72px;border-radius:50%;
     background:rgba(229,57,53,0.92);
@@ -472,10 +472,9 @@
     width:68px;height:68px;
     border-radius:50%;
     background:rgba(229,57,53,0.9);
-    box-shadow:0 0 0 8px rgba(229,57,53,0.2);
     font-size:1.6rem;
 }
-.prx-play-big:hover{background:#c62828;box-shadow:0 0 0 12px rgba(229,57,53,0.25);}
+.prx-play-big:hover{background:#c62828;}
 
 .prx-skip-btn{
     width:52px;height:52px;font-size:1.3rem;position:relative;
