@@ -45,6 +45,9 @@
                             <div class="prx-yt-blocker"></div>
                         </div>
 
+                        <!-- Dark cover that hides YouTube branding before first play -->
+                        <div class="prx-poster" id="prxPoster"></div>
+
                         <!-- Loading spinner -->
                         <div class="prx-spinner" id="prxSpinner">
                             <div class="prx-spin-ring"></div>
@@ -314,6 +317,16 @@
     pointer-events:all;
     touch-action:none;
 }
+/* Dark cover hides YouTube logo/play button before first play */
+.prx-poster{
+    position:absolute;
+    inset:0;
+    z-index:4;
+    background:#000;
+    pointer-events:none;
+    transition:opacity .25s;
+}
+.prx-poster.hidden{opacity:0;pointer-events:none;}
 @media(max-width:768px){
     /* Clip YouTube channel header (~70px) and bottom bar (~70px) aggressively on mobile */
     .prx-iframe{top:-70px;height:calc(100% + 140px);}
@@ -683,6 +696,7 @@ document.addEventListener('keydown',function(e){
         pipBtn:    $('prxPipBtn'),
         fsBtn:     $('prxFsBtn'),      fsIcon:    $('prxFsIcon'),
         ripL:      $('prxRippleLeft'), ripR:      $('prxRippleRight'),
+        poster:    $('prxPoster'),
     };
     if(!el.player) return;
 
@@ -801,6 +815,7 @@ document.addEventListener('keydown',function(e){
                         clearInterval(progressTimer);
                         progressTimer = setInterval(updateTime, 250);
                         if(el.spinner) el.spinner.classList.add('hidden');
+                        if(el.poster) el.poster.classList.add('hidden');
                         scheduleHide();
                     } else if(e.data === S.PAUSED || e.data === S.ENDED){
                         playing = false;
