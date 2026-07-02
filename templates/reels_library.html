@@ -34,7 +34,7 @@
         {% endif %}
         <img src="{% if _thumb %}{{ url_for('static', filename=_thumb) if not _thumb.startswith('http') else _thumb }}{% elif _auto %}{{ _auto }}{% else %}{{ _ph }}{% endif %}"
              alt="{{ reel.title }}"
-             style="{% if _is_ig %}object-fit:contain;object-position:center center;{% else %}object-fit:cover;object-position:center center;{% endif %}"
+             style="object-fit:cover;object-position:top center;"
              data-auto-thumb="{% if not _thumb %}{{ _auto }}{% endif %}"
              onerror="var a=this.dataset.autoThumb;if(a&&this.src!==a){this.onerror=function(){this.src='{{ _ph }}'};this.src=a;}else{this.onerror=null;this.src='{{ _ph }}'}">
         <div class="showcase-card-play"><i class="fas fa-play-circle"></i></div>
