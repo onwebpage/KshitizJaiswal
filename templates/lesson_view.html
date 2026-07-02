@@ -939,12 +939,8 @@ document.addEventListener('keydown',function(e){
     function togglePlay(){
         if(!player) return;
         if(playing){
-            playing = false;
-            setPlayIcons(false);
             player.pauseVideo();
         } else {
-            playing = true;
-            setPlayIcons(true);
             player.playVideo();
         }
     }
