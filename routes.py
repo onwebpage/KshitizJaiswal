@@ -3112,7 +3112,10 @@ def admin_delete_lesson(lesson_id):
     
     lesson = Lesson.query.get_or_404(lesson_id)
     lesson_title = lesson.title
-    
+
+    # Delete related progress records first to avoid FK constraint errors
+    LessonProgress.query.filter_by(lesson_id=lesson_id).delete()
+
     db.session.delete(lesson)
     db.session.commit()
     
