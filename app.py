@@ -32,7 +32,10 @@ db = SQLAlchemy(model_class=Base)
 
 # Create the app
 app = Flask(__name__)
-app.secret_key = os.environ.get("SESSION_SECRET")
+_session_secret = os.environ.get("SESSION_SECRET")
+if not _session_secret:
+    raise RuntimeError("SESSION_SECRET environment variable is not set. Set it in Replit Secrets before starting the app.")
+app.secret_key = _session_secret
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 # Configure upload folder

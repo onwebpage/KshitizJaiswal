@@ -5661,19 +5661,22 @@ def razorpay_webhook():
     raw_body = request.get_data(as_text=True)
     signature = request.headers.get('X-Razorpay-Signature', '')
 
-    # Verify signature if secret is configured
-    if webhook_secret:
-        if not signature:
-            logging.warning("Razorpay webhook: missing signature header")
-            return jsonify({'error': 'Missing signature'}), 400
-        expected = hmac.new(
-            webhook_secret.encode('utf-8'),
-            raw_body.encode('utf-8'),
-            hashlib.sha256
-        ).hexdigest()
-        if not hmac.compare_digest(expected, signature):
-            logging.warning("Razorpay webhook: signature mismatch — rejected")
-            return jsonify({'error': 'Invalid signature'}), 400
+    # Reject all webhook requests unless RAZORPAY_WEBHOOK_SECRET is configured
+    if not webhook_secret:
+        logging.error("Razorpay webhook: RAZORPAY_WEBHOOK_SECRET is not set — rejecting request to prevent unsigned payload acceptance")
+        return jsonify({'error': 'Webhook secret not configured'}), 503
+
+    if not signature:
+        logging.warning("Razorpay webhook: missing signature header")
+        return jsonify({'error': 'Missing signature'}), 400
+    expected = hmac.new(
+        webhook_secret.encode('utf-8'),
+        raw_body.encode('utf-8'),
+        hashlib.sha256
+    ).hexdigest()
+    if not hmac.compare_digest(expected, signature):
+        logging.warning("Razorpay webhook: signature mismatch — rejected")
+        return jsonify({'error': 'Invalid signature'}), 400
 
     try:
         payload = json.loads(raw_body)
