@@ -66,6 +66,7 @@
                 </a>
                 <form action="{{ url_for('admin_delete_module', module_id=module.id) }}" method="POST" class="d-inline"
                       onsubmit="return confirm('Delete this module and all its lessons?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Module">
                         <i class="fas fa-trash"></i>
                     </button>
@@ -110,6 +111,7 @@
                             </a>
                             <form action="{{ url_for('admin_delete_lesson', lesson_id=lesson.id) }}" method="POST" class="d-inline"
                                   onsubmit="return confirm('Delete this lesson?');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Lesson">
                                     <i class="fas fa-trash"></i>
                                 </button>
