@@ -3008,7 +3008,14 @@ def admin_delete_module(module_id):
     
     module = Module.query.get_or_404(module_id)
     module_title = module.title
-    
+
+    # Delete LessonProgress records for every lesson in this module first
+    # to avoid FK constraint errors (LessonProgress refs both module_id and lesson_id)
+    lesson_ids = [l.id for l in module.lessons]
+    if lesson_ids:
+        LessonProgress.query.filter(LessonProgress.lesson_id.in_(lesson_ids)).delete(synchronize_session=False)
+    LessonProgress.query.filter_by(module_id=module_id).delete(synchronize_session=False)
+
     db.session.delete(module)
     db.session.commit()
     

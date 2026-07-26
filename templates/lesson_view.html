@@ -1060,6 +1060,9 @@ document.addEventListener('keydown',function(e){
                 if(q !== 'default'){
                     var iframe = document.getElementById('prxYT');
                     if(iframe){
+                        // Show dark cover immediately to hide YouTube native UI during reload
+                        if(el.poster){ el.poster.classList.remove('hidden'); }
+                        if(el.spinner){ el.spinner.classList.remove('hidden'); }
                         var base = iframe.src.split('?')[0];
                         var params = 'rel=0&modestbranding=1&showinfo=0&controls=0&iv_load_policy=3&fs=0&enablejsapi=1&disablekb=1&playsinline=1&vq='+q+'&start='+Math.floor(cur);
                         iframe.src = base+'?'+params;
@@ -1070,6 +1073,11 @@ document.addEventListener('keydown',function(e){
                                     onReady:function(ev){
                                         ev.target.seekTo(cur,true);
                                         if(!wasPaused) ev.target.playVideo();
+                                        else {
+                                            // Video stays paused — hide spinner but keep poster hidden
+                                            // so YouTube icon doesn't show; poster stays until play
+                                            if(el.spinner){ el.spinner.classList.add('hidden'); }
+                                        }
                                     },
                                     onStateChange: window._prxStateChange
                                 }
