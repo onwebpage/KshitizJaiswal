@@ -167,6 +167,7 @@ with app.app_context():
         _add_column("subscription_tier",  "razorpay_plan_id",     "VARCHAR(100)")
         _add_column("subscription_tier",  "payment_link",         "TEXT")
         _add_column("subscriber",         "phone",                "VARCHAR(20)")
+        _add_column("reel",               "is_visible",           "BOOLEAN DEFAULT TRUE")
         _add_column("reel",               "video_type",           "VARCHAR(20) DEFAULT 'auto'")
         _add_column("reel",               "card_layout",          "VARCHAR(20) DEFAULT 'standard'")
         _add_column("course",             "created_at",           "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
