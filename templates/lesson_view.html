@@ -47,6 +47,13 @@
                         <!-- Dark cover that hides YouTube branding before first play -->
                         <div class="prx-poster" id="prxPoster"></div>
 
+                        <!-- Splash — shown before first play, hides once video starts -->
+                        <div class="prx-splash" id="prxSplash">
+                            <button class="prx-splash-play" id="prxSplashPlay" title="Play">
+                                <i class="fas fa-play"></i>
+                            </button>
+                        </div>
+
                         <!-- Loading spinner -->
                         <div class="prx-spinner hidden" id="prxSpinner">
                             <div class="prx-spin-ring"></div>
@@ -63,8 +70,13 @@
                                 </div>
                             </div>
 
-                            <!-- Centre click zone -->
+                            <!-- Centre click zone with play/pause button -->
                             <div class="prx-center-zone" id="prxCenterZone">
+                                <div class="prx-center-btns">
+                                    <button class="prx-ctrl-btn prx-play-big" id="prxCenterPlay" title="Play / Pause">
+                                        <i class="fas fa-play" id="prxCenterPlayIcon"></i>
+                                    </button>
+                                </div>
                             </div>
 
                         </div>
@@ -689,7 +701,7 @@ document.addEventListener('keydown',function(e){
         centerZone:$('prxCenterZone'),
         playBar:   $('prxPlayBtnBar'), playBarIcon:$('prxPlayIconBar'),
         centerPlay:$('prxCenterPlay'), centerPlayIcon:$('prxCenterPlayIcon'),
-        splash:    $('prxSplash'),
+        splash:    $('prxSplash'),    splashPlay:$('prxSplashPlay'),
         muteBtn:   $('prxMuteBtn'),    volIcon:   $('prxVolIcon'),
         volSlider: $('prxVolSlider'),
         time:      $('prxTime'),
@@ -917,16 +929,20 @@ document.addEventListener('keydown',function(e){
         if(hasStarted) scheduleHide();
     });
 
-    if(el.playBar) el.playBar.addEventListener('click', function(e){
+    function startOrToggle(e){
         e.stopPropagation();
         if(isPlayerReady && player){
+            if(el.splash) el.splash.classList.add('hidden');
             if(el.spinner) el.spinner.classList.remove('hidden');
             togglePlay();
         } else {
             pendingPlay = true;
+            if(el.splash) el.splash.classList.add('hidden');
             if(el.spinner) el.spinner.classList.remove('hidden');
         }
-    });
+    }
+    if(el.splashPlay) el.splashPlay.addEventListener('click', startOrToggle);
+    if(el.playBar)    el.playBar.addEventListener('click',    startOrToggle);
     if(el.centerPlay) el.centerPlay.addEventListener('click', function(e){e.stopPropagation(); togglePlay();});
 
     /* ── Volume ── */
