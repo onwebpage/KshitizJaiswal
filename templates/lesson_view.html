@@ -896,6 +896,8 @@ document.addEventListener('keydown',function(e){
                         clearInterval(progressTimer);
                         // forceComplete=true only on ENDED so we guarantee the 90% threshold
                         saveProgress(e.data === S.ENDED);
+                        /* Show dark poster to block YouTube's native center play button */
+                        if(el.poster) el.poster.classList.remove('hidden');
                         /* Show controls on pause, then auto-hide after 4s of inactivity */
                         showCtrl();
                         clearTimeout(hideTimer);
