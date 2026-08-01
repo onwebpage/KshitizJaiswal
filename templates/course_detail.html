@@ -170,6 +170,9 @@
                         <i class="fas fa-unlock me-2"></i>Enrol Free
                         {% else %}
                         <i class="fas fa-shopping-cart me-2"></i>Buy Now — ₹{{ course.price }}
+                        {% if course.original_price and course.original_price > course.price %}
+                        <span style="font-size:.8rem;opacity:.75;text-decoration:line-through;margin-left:4px;">₹{{ course.original_price }}</span>
+                        {% endif %}
                         {% endif %}
                     </button>
                 </div>
@@ -388,6 +391,13 @@ if (pvBtn) {
                             <span class="price-amount text-success">FREE</span>
                         </div>
                         {% else %}
+                        {% if course.original_price and course.original_price > course.price %}
+                        <div class="text-center mb-1">
+                            <span style="font-size:1rem;color:#888;text-decoration:line-through;">₹{{ course.original_price }}</span>
+                            {% set discount_pct = ((course.original_price - course.price) * 100 // course.original_price) %}
+                            <span style="font-size:.8rem;background:#e8f5e9;color:#2e7d32;font-weight:700;padding:2px 8px;border-radius:20px;margin-left:6px;">{{ discount_pct }}% OFF</span>
+                        </div>
+                        {% endif %}
                         <div class="price-tag">
                             <span class="price-currency">₹</span>
                             <span class="price-amount">{{ course.price }}</span>

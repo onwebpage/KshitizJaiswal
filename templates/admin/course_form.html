@@ -127,12 +127,24 @@
                         <div class="row g-3">
                             <div class="col-md-3">
                                 <label class="form-label fw-semibold">
+                                    {{ form.original_price.label.text }}
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">₹</span>
+                                    {{ form.original_price(class="form-control", placeholder="e.g. 2799") }}
+                                </div>
+                                <small class="form-text text-muted">MRP — strikethrough price (jaise Amazon pe). Khali chhodo = no discount shown.</small>
+                                {% for err in form.original_price.errors %}<div class="invalid-feedback d-block">{{ err }}</div>{% endfor %}
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold">
                                     {{ form.price.label.text }} <span class="text-danger">*</span>
                                 </label>
                                 <div class="input-group">
                                     <span class="input-group-text">₹</span>
                                     {{ form.price(class="form-control", placeholder="0") }}
                                 </div>
+                                <small class="form-text text-muted">Actual / discounted price.</small>
                                 {% for err in form.price.errors %}<div class="invalid-feedback d-block">{{ err }}</div>{% endfor %}
                             </div>
                             <div class="col-md-3">

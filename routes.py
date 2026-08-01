@@ -2841,6 +2841,7 @@ def admin_add_course():
             preview_subtitle=form.preview_subtitle.data or '',
             course_features=_json.dumps(features_list),
             price=form.price.data,
+            original_price=form.original_price.data if form.original_price.data else None,
             validity_days=_vd if _vd and _vd > 0 else None,
             is_active=bool(int(form.is_active.data)),
             sort_order=form.sort_order.data
@@ -2884,6 +2885,7 @@ def admin_edit_course(course_id):
         course.preview_subtitle = form.preview_subtitle.data or ''
         course.course_features = _json.dumps(features_list)
         course.price = form.price.data
+        course.original_price = form.original_price.data if form.original_price.data else None
         course.validity_days = _vd if _vd and _vd > 0 else None
         course.is_active = bool(int(form.is_active.data))
         course.sort_order = form.sort_order.data
@@ -2909,6 +2911,7 @@ def admin_edit_course(course_id):
         _feats = []
     form.course_features.data = '\n'.join(_feats)
     form.price.data = course.price
+    form.original_price.data = course.original_price
     form.validity_days.data = course.validity_days
     form.is_active.data = '1' if course.is_active else '0'
     form.sort_order.data = course.sort_order
