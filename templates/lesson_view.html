@@ -321,9 +321,13 @@
     z-index:4;
     background:#000;
     pointer-events:none;
-    transition:opacity .25s;
+    /* No transition when SHOWING — poster appears instantly to block YouTube UI */
 }
-.prx-poster.hidden{opacity:0;pointer-events:none;}
+.prx-poster.hidden{
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .25s; /* Smooth fade only when HIDING (video starts playing) */
+}
 
 /* ── Splash overlay — branded play button shown before first play ── */
 .prx-splash{
